@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+httpx
+supabase
+redis
+python-dotenv
+anthropic
+pydantic
+
