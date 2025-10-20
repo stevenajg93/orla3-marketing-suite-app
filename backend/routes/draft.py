@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, List
 from anthropic import Anthropic
-import os, json
+import os, json, re
 
 router = APIRouter()
 
@@ -37,34 +37,66 @@ class DraftOutput(BaseModel):
     internal_links_used: Optional[list] = None
     sources: Optional[List[str]] = None
 
+def extract_json_from_response(text: str) -> dict:
+    """Extract JSON from Claude's response, handling markdown code blocks"""
+    # Remove markdown code blocks if present
+    text = re.sub(r'```json\s*', '', text)
+    text = re.sub(r'```\s*$', '', text)
+    text = text.strip()
+    
+    # Try to parse as JSON
+    return json.loads(text)
+
 @router.post("/content/draft", response_model=DraftOutput)
 def generate_draft(data: DraftInput):
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    prompt = f"""
-You are Orla3’s senior content writer and SEO strategist.
+    
+    system_prompt = """You are Orla3's senior content writer and SEO strategist.
 Write authoritative, cinematic, practical longform content for videography buyers and sellers.
-Respect UK English. Enforce Orla brand tone via centroid guidance.
+Respect UK English. Return ONLY valid JSON matching the exact schema provided - no markdown, no code blocks, just pure JSON."""
+    
+    user_prompt = f"""Generate a blog article with these inputs:
+- Keyword: {data.keyword}
+- Search Intent: {data.search_intent}
+- Outline: {data.outline}
+- Target Length: {data.target_length_words} words
 
-Input summary:
-Keyword: {data.keyword}
-Intent: {data.search_intent}
-Outline: {data.outline}
-Entities: {data.entities}
-Competitor Notes: {data.competitor_notes}
-Brand Tone Rules: {data.brand_tone_rules}
+Return ONLY a JSON object with these exact fields:
+{{
+  "title": "SEO-optimized title",
+  "slug": "kebab-case-slug",
+  "meta_title": "60 chars max",
+  "meta_description": "155 chars max",
+  "og_title": "Same as meta_title",
+  "og_description": "Same as meta_description",
+  "tags": ["tag1", "tag2", "tag3"],
+  "category": "Videography",
+  "estimated_read_time_min": 5,
+  "body_md": "Full markdown content here",
+  "cta": {{
+    "headline": "Ready to find your perfect videographer?",
+    "button_label": "Browse Orla3",
+    "url": "https://orla3.com"
+  }},
+  "internal_links_used": [],
+  "sources": []
+}}
 
-Return ONLY valid JSON matching A.schema.
-    """
+Write the article now. Return ONLY the JSON, nothing else."""
 
     completion = client.messages.create(
-        model="claude-3-opus-20240229",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_prompt}]
     )
 
     try:
-        content = json.loads(completion.content[0].text)
+        raw_text = completion.content[0].text
+        content = extract_json_from_response(raw_text)
         return content
-    except Exception as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": completion.content[0].text}
+    except json.JSONDecodeError as e:
+        return {
+            "error": f"Invalid JSON: {str(e)}",
+            "raw": completion.content[0].text[:500]
+        }

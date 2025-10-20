@@ -1,24 +1,38 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import draft as draft_route
-from load_env import load_environment
+from backend.routes import draft as draft_route
+from backend.load_env import load_environment
+from backend.routes import primer as primer_route
+from backend.routes import carousel as carousel_route
+from backend.routes import brand_voice as brand_voice_route
+from backend.routes import analytics as analytics_route
+from backend.routes import ads as ads_route
+from backend.routes import crm as crm_route
+from backend.routes import publisher as publisher_route
+from backend.routes import comments as comments_route
+from backend.routes import competitor as competitor_route
+from backend.routes import media as media_route
+from backend.routes import collaboration as collaboration_route
 
-# Load .env.local
 load_environment()
 
 app = FastAPI(title="Orla Marketing Suite API")
 
-# Allow local dev + any dashboard origin
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/")
 def read_root():
-    return {"status": "orla-backend-online"}
+    return {"status": "orla-backend-online", "subsystems": 12}
 
-# Subsystem A — Draft Generation
 app.include_router(draft_route.router)
+app.include_router(primer_route.router)
+app.include_router(carousel_route.router)
+app.include_router(brand_voice_route.router)
+app.include_router(analytics_route.router)
+app.include_router(ads_route.router)
+app.include_router(crm_route.router)
+app.include_router(publisher_route.router)
+app.include_router(comments_route.router)
+app.include_router(competitor_route.router)
+app.include_router(media_route.router)
+app.include_router(collaboration_route.router)
