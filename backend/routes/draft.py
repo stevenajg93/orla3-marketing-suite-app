@@ -39,12 +39,9 @@ class DraftOutput(BaseModel):
 
 def extract_json_from_response(text: str) -> dict:
     """Extract JSON from Claude's response, handling markdown code blocks"""
-    # Remove markdown code blocks if present
     text = re.sub(r'```json\s*', '', text)
     text = re.sub(r'```\s*$', '', text)
     text = text.strip()
-    
-    # Try to parse as JSON
     return json.loads(text)
 
 @router.post("/content/draft", response_model=DraftOutput)
@@ -53,7 +50,21 @@ def generate_draft(data: DraftInput):
     
     system_prompt = """You are Orla3's senior content writer and SEO strategist.
 Write authoritative, cinematic, practical longform content for videography buyers and sellers.
-Respect UK English. Return ONLY valid JSON matching the exact schema provided - no markdown, no code blocks, just pure JSON."""
+Respect UK English. Return ONLY valid JSON matching the exact schema provided - no markdown, no code blocks, just pure JSON.
+
+CRITICAL WRITING RULES TO SOUND HUMAN:
+- Write naturally like a seasoned expert, not an AI
+- NO asterisks for emphasis - use strong word choice instead
+- NO hashtags anywhere in the content
+- NO bullet points with hyphens at the start of paragraphs
+- Use varied sentence structures and lengths
+- Include specific examples and real scenarios
+- Write with confidence and authority
+- Avoid corporate jargon and buzzwords
+- Use contractions naturally (don't, can't, won't)
+- Write like you're having an informed conversation with a colleague
+- Use active voice predominantly
+- Vary paragraph lengths for natural rhythm"""
     
     user_prompt = f"""Generate a blog article with these inputs:
 - Keyword: {data.keyword}
