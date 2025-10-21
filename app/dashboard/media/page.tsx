@@ -11,7 +11,7 @@ type MediaAsset = {
   url?: string;
   thumbnail?: string;
   size?: string;
-  created_at?: string;
+  webViewLink?: string;
 };
 
 type MediaFolder = {
@@ -26,17 +26,25 @@ export default function MediaLibrary() {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [selectedFolderName, setSelectedFolderName] = useState<string>('All Files');
+  const [breadcrumbs, setBreadcrumbs] = useState<{id: string, name: string}[]>([]);
   const [mediaType, setMediaType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [unsplashImages, setUnsplashImages] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  const [previewAsset, setPreviewAsset] = useState<MediaAsset | null>(null);
 
   useEffect(() => {
     loadStatus();
     loadFolders();
-    loadAssets();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'drive' && selectedFolder) {
+      loadAssets();
+    }
+  }, [selectedFolder, mediaType, activeTab]);
 
   const loadStatus = async () => {
     try {
@@ -72,6 +80,7 @@ export default function MediaLibrary() {
       setAssets(data.assets || []);
     } catch (err) {
       console.error('Failed to load assets');
+      setAssets([]);
     } finally {
       setLoading(false);
     }
@@ -92,9 +101,48 @@ export default function MediaLibrary() {
     }
   };
 
-  useEffect(() => {
-    loadAssets();
-  }, [selectedFolder, mediaType]);
+  const handleFolderClick = (folderId: string, folderName: string) => {
+    setSelectedFolder(folderId);
+    setSelectedFolderName(folderName);
+    setBreadcrumbs([...breadcrumbs, { id: folderId, name: folderName }]);
+  };
+
+  const handleAssetClick = (asset: MediaAsset) => {
+    if (asset.type === 'folder') {
+      handleFolderClick(asset.id, asset.name);
+    } else {
+      setPreviewAsset(asset);
+    }
+  };
+
+  const handleDownload = (asset: MediaAsset) => {
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${asset.id}`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleBreadcrumbClick = (index: number) => {
+    const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
+    setBreadcrumbs(newBreadcrumbs);
+    const folder = newBreadcrumbs[newBreadcrumbs.length - 1];
+    setSelectedFolder(folder.id);
+    setSelectedFolderName(folder.name);
+  };
+
+  const handleAllFilesClick = () => {
+    setSelectedFolder('');
+    setSelectedFolderName('All Files');
+    setBreadcrumbs([]);
+  };
+
+  const getFileIcon = (type: string) => {
+    switch(type) {
+      case 'folder': return '📁';
+      case 'video': return '🎬';
+      case 'image': return '🖼️';
+      case 'document': return '📄';
+      default: return '📄';
+    }
+  };
 
   const currentAssets = activeTab === 'drive' ? assets : unsplashImages;
 
@@ -113,7 +161,6 @@ export default function MediaLibrary() {
           </div>
         </div>
 
-        {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className={`rounded-2xl p-6 border ${
             status?.drive?.connected 
@@ -123,7 +170,7 @@ export default function MediaLibrary() {
             <h3 className="text-xl font-bold text-white mb-2">🔗 Google Drive</h3>
             <p className="text-gray-300">{status?.drive?.status}</p>
             {status?.drive?.connected && (
-              <p className="text-sm text-gray-400 mt-2">{assets.length} assets found</p>
+              <p className="text-sm text-gray-400 mt-2">{folders.length} folders found</p>
             )}
           </div>
 
@@ -137,7 +184,6 @@ export default function MediaLibrary() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('drive')}
@@ -162,7 +208,6 @@ export default function MediaLibrary() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             {activeTab === 'drive' ? (
               <>
@@ -184,7 +229,7 @@ export default function MediaLibrary() {
 
                 <h3 className="text-lg font-bold text-white mb-3">Folders</h3>
                 <button
-                  onClick={() => setSelectedFolder('')}
+                  onClick={handleAllFilesClick}
                   className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
                     selectedFolder === ''
                       ? 'bg-yellow-600 text-white'
@@ -197,15 +242,14 @@ export default function MediaLibrary() {
                 {folders.map((folder) => (
                   <button
                     key={folder.id}
-                    onClick={() => setSelectedFolder(folder.id)}
+                    onClick={() => handleFolderClick(folder.id, folder.name)}
                     className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
                       selectedFolder === folder.id
                         ? 'bg-yellow-600 text-white'
                         : 'bg-white/10 text-gray-300 hover:bg-white/20'
                     }`}
                   >
-                    <div className="font-bold text-sm">{folder.name}</div>
-                    <div className="text-xs opacity-75">{folder.asset_count} files</div>
+                    <div className="font-bold text-sm truncate">{folder.name}</div>
                   </button>
                 ))}
               </>
@@ -231,19 +275,39 @@ export default function MediaLibrary() {
             )}
           </div>
 
-          {/* Assets Grid */}
           <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              {activeTab === 'drive' ? '🔗 Your Assets' : '✨ Unsplash Images'}
-            </h2>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {activeTab === 'drive' ? '🔗 Your Assets' : '✨ Unsplash Images'}
+              </h2>
+              {activeTab === 'drive' && breadcrumbs.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
+                  <span className="cursor-pointer hover:text-yellow-400" onClick={handleAllFilesClick}>Marketing</span>
+                  {breadcrumbs.map((crumb, index) => (
+                    <span key={`breadcrumb-${index}-${crumb.id}`} className="flex items-center gap-2">
+                      <span>/</span>
+                      <span 
+                        className="cursor-pointer hover:text-yellow-400"
+                        onClick={() => handleBreadcrumbClick(index)}
+                      >
+                        {crumb.name}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {loading ? (
-              <p className="text-gray-400">Loading...</p>
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
+                <p className="text-gray-400 mt-4">Loading...</p>
+              </div>
             ) : currentAssets.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-400 text-lg">
                   {activeTab === 'drive' 
-                    ? 'No assets found. Upload files to your Google Drive.'
+                    ? 'Select a folder to view files.'
                     : 'Search for images above to get started.'}
                 </p>
               </div>
@@ -252,37 +316,62 @@ export default function MediaLibrary() {
                 {currentAssets.map((asset) => (
                   <div
                     key={asset.id}
-                    className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all cursor-pointer"
+                    className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all"
                   >
-                    {asset.thumbnail ? (
-                      <img 
-                        src={asset.thumbnail} 
-                        alt={asset.name}
-                        className="w-full h-40 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-40 bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center">
+                    <div 
+                      onClick={() => handleAssetClick(asset)}
+                      className="cursor-pointer"
+                    >
+                      {asset.thumbnail && asset.type !== 'folder' ? (
+                        <img 
+                          src={asset.thumbnail} 
+                          alt={asset.name}
+                          className="w-full h-40 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-40 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center ${asset.thumbnail && asset.type !== 'folder' ? 'hidden' : ''}`}>
                         <span className="text-6xl">
-                          {asset.type === 'video' ? '🎬' : asset.type === 'image' ? '🖼️' : '📄'}
+                          {getFileIcon(asset.type)}
                         </span>
                       </div>
-                    )}
-                    
-                    <div className="p-4">
-                      <h3 className="text-white font-bold text-sm mb-1 truncate">{asset.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          asset.source === 'drive' ? 'bg-blue-600' : 'bg-purple-600'
-                        }`}>
-                          {asset.source === 'drive' ? '🔗 Drive' : '✨ Unsplash'}
-                        </span>
-                        {asset.size && (
-                          <span className="text-gray-400 text-xs">
-                            {(parseInt(asset.size) / 1024 / 1024).toFixed(2)} MB
+                      
+                      <div className="p-4 bg-slate-800/50">
+                        <h3 className="text-white font-bold text-sm mb-2 truncate">{asset.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs px-2 py-1 rounded font-medium ${
+                            asset.type === 'folder' ? 'bg-yellow-600 text-white' : asset.source === 'drive' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+                          }`}>
+                            {asset.type === 'folder' ? '📁 Folder' : asset.source === 'drive' ? '🔗 Drive' : '✨ Unsplash'}
                           </span>
-                        )}
+                          {asset.size && parseInt(asset.size) > 0 && (
+                            <span className="text-gray-300 text-xs">
+                              {(parseInt(asset.size) / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    
+                    {asset.type !== 'folder' && (
+                      <div className="px-4 pb-4 bg-slate-800/50 flex gap-2">
+                        <button
+                          onClick={() => handleDownload(asset)}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                        >
+                          ⬇️ Download
+                        </button>
+                        <button
+                          onClick={() => window.open(`https://drive.google.com/file/d/${asset.id}/view`, '_blank')}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                        >
+                          👁️ View
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -290,6 +379,66 @@ export default function MediaLibrary() {
           </div>
         </div>
       </div>
+
+      {previewAsset && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8"
+          onClick={() => setPreviewAsset(null)}
+        >
+          <div className="max-w-6xl w-full max-h-full overflow-auto bg-slate-900 rounded-2xl border border-white/20" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-white">{previewAsset.name}</h3>
+              <button
+                onClick={() => setPreviewAsset(null)}
+                className="text-white hover:text-red-400 text-3xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              {previewAsset.type === 'image' ? (
+                <img 
+                  src={previewAsset.url || `https://drive.google.com/uc?export=view&id=${previewAsset.id}`}
+                  alt={previewAsset.name}
+                  className="w-full h-auto rounded-lg"
+                />
+              ) : previewAsset.type === 'video' ? (
+                <video 
+                  controls 
+                  className="w-full h-auto rounded-lg"
+                  src={`https://drive.google.com/uc?export=view&id=${previewAsset.id}`}
+                >
+                  Your browser doesn't support video playback.
+                </video>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg mb-4">Preview not available for this file type</p>
+                  <button
+                    onClick={() => window.open(`https://drive.google.com/file/d/${previewAsset.id}/view`, '_blank')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                  >
+                    Open in Google Drive
+                  </button>
+                </div>
+              )}
+              <div className="mt-6 flex gap-4 justify-center">
+                <button
+                  onClick={() => handleDownload(previewAsset)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
+                >
+                  ⬇️ Download
+                </button>
+                <button
+                  onClick={() => window.open(`https://drive.google.com/file/d/${previewAsset.id}/view`, '_blank')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                >
+                  👁️ Open in Drive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
