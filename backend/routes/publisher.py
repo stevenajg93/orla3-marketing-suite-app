@@ -1,94 +1,146 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Literal, Optional
-from anthropic import Anthropic
-import os, json, re
+from typing import List, Optional
+import os
 
 router = APIRouter()
 
-class PublishInput(BaseModel):
+class PublishRequest(BaseModel):
     content: str
-    platforms: List[Literal["wordpress", "youtube", "linkedin", "x", "instagram", "facebook", "tiktok", "reddit", "tumblr"]]
-    content_type: Literal["article", "video", "image", "carousel"]
-    brand_tone_rules: str = "Cinematic, confident, fair"
+    platforms: List[str]  # ["linkedin", "twitter", "facebook", "instagram", "tiktok", "youtube", "reddit", "tumblr"]
+    media_url: Optional[str] = None
+    schedule_time: Optional[str] = None
 
-class PlatformContent(BaseModel):
+class PublishResponse(BaseModel):
     platform: str
-    title: str
-    body: str
-    hashtags: List[str]
-    character_count: int
-    aspect_ratio: Optional[str] = None
-    optimal_post_time: str
+    status: str
+    post_url: Optional[str] = None
+    error: Optional[str] = None
 
-class PublishOutput(BaseModel):
-    adaptations: List[PlatformContent]
-
-def extract_json_from_response(text: str) -> dict:
-    text = re.sub(r'```json\s*', '', text)
-    text = re.sub(r'```\s*$', '', text)
-    text = text.strip()
-    return json.loads(text)
-
-@router.post("/publish/adapt", response_model=PublishOutput)
-def adapt_for_platforms(data: PublishInput):
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+@router.post("/publisher/post")
+async def publish_to_platforms(data: PublishRequest):
+    """Publish content to multiple social platforms"""
+    results = []
     
-    system_prompt = """You adapt content for multiple social platforms with platform-specific optimization.
-Return JSON ONLY without markdown code blocks."""
+    for platform in data.platforms:
+        if platform == "linkedin":
+            result = await publish_to_linkedin(data.content, data.media_url)
+        elif platform == "twitter":
+            result = await publish_to_twitter(data.content, data.media_url)
+        elif platform == "facebook":
+            result = await publish_to_facebook(data.content, data.media_url)
+        elif platform == "instagram":
+            result = await publish_to_instagram(data.content, data.media_url)
+        elif platform == "tiktok":
+            result = await publish_to_tiktok(data.content, data.media_url)
+        elif platform == "youtube":
+            result = await publish_to_youtube(data.content, data.media_url)
+        elif platform == "reddit":
+            result = await publish_to_reddit(data.content, data.media_url)
+        elif platform == "tumblr":
+            result = await publish_to_tumblr(data.content, data.media_url)
+        else:
+            result = {"platform": platform, "status": "unsupported", "error": "Platform not supported"}
+        
+        results.append(result)
     
-    user_prompt = f"""Adapt this content for these platforms: {', '.join(data.platforms)}
+    return {"results": results}
 
-ORIGINAL CONTENT:
-{data.content[:500]}...
+async def publish_to_linkedin(content: str, media_url: Optional[str] = None):
+    """Publish to LinkedIn"""
+    # TODO: Implement LinkedIn API
+    # Requires: LINKEDIN_ACCESS_TOKEN
+    return {
+        "platform": "linkedin",
+        "status": "ready",
+        "message": "LinkedIn API integration pending - needs access token"
+    }
 
-CONTENT TYPE: {data.content_type}
-BRAND TONE: {data.brand_tone_rules}
+async def publish_to_twitter(content: str, media_url: Optional[str] = None):
+    """Publish to Twitter/X"""
+    # TODO: Implement Twitter API v2
+    # Requires: TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET
+    return {
+        "platform": "twitter",
+        "status": "ready",
+        "message": "Twitter API integration pending - needs API credentials"
+    }
 
-For each platform, provide:
-- title (platform-appropriate length)
-- body (adapted to character limits and platform style)
-- hashtags (3-5 relevant, platform-appropriate)
-- character_count (total chars used)
-- aspect_ratio (for visual content: "16:9", "1:1", "9:16")
-- optimal_post_time (best time to post, e.g., "Tuesday 10:00 GMT")
+async def publish_to_facebook(content: str, media_url: Optional[str] = None):
+    """Publish to Facebook"""
+    # TODO: Implement Facebook Graph API
+    # Requires: FACEBOOK_PAGE_ACCESS_TOKEN
+    return {
+        "platform": "facebook",
+        "status": "ready",
+        "message": "Facebook API integration pending - needs page access token"
+    }
 
-Platform specs to follow:
-- WordPress: Long-form, SEO-focused
-- YouTube: Video description, keywords, chapters
-- LinkedIn: Professional, max 3000 chars
-- X: Concise, max 280 chars (thread if needed)
-- Instagram: Visual-first, max 2200 chars
-- Facebook: Conversational, max 63206 chars
-- TikTok: Short, trendy, max 2200 chars
-- Reddit: Community-focused, conversational
-- Tumblr: Creative, blog-style
+async def publish_to_instagram(content: str, media_url: Optional[str] = None):
+    """Publish to Instagram"""
+    # TODO: Implement Instagram Graph API
+    # Requires: INSTAGRAM_ACCESS_TOKEN
+    return {
+        "platform": "instagram",
+        "status": "ready",
+        "message": "Instagram API integration pending - requires media_url and access token"
+    }
 
-Return ONLY this JSON:
-{{
-  "adaptations": [
-    {{
-      "platform": "linkedin",
-      "title": "string",
-      "body": "string",
-      "hashtags": ["tag1", "tag2"],
-      "character_count": 250,
-      "aspect_ratio": "1:1",
-      "optimal_post_time": "Tuesday 10:00 GMT"
-    }}
-  ]
-}}"""
+async def publish_to_tiktok(content: str, media_url: Optional[str] = None):
+    """Publish to TikTok"""
+    # TODO: Implement TikTok API
+    # Requires: TIKTOK_ACCESS_TOKEN
+    return {
+        "platform": "tiktok",
+        "status": "ready",
+        "message": "TikTok API integration pending - requires video file and access token"
+    }
 
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=3500,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
-    )
+async def publish_to_youtube(content: str, media_url: Optional[str] = None):
+    """Publish to YouTube"""
+    # TODO: Implement YouTube Data API v3
+    # Requires: YOUTUBE_API_KEY, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET
+    return {
+        "platform": "youtube",
+        "status": "ready",
+        "message": "YouTube API integration pending - requires video file and OAuth"
+    }
 
-    try:
-        raw_text = completion.content[0].text
-        content = extract_json_from_response(raw_text)
-        return content
-    except json.JSONDecodeError as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": completion.content[0].text[:500]}
+async def publish_to_reddit(content: str, media_url: Optional[str] = None):
+    """Publish to Reddit"""
+    # TODO: Implement Reddit API
+    # Requires: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD
+    return {
+        "platform": "reddit",
+        "status": "ready",
+        "message": "Reddit API integration pending - needs API credentials"
+    }
+
+async def publish_to_tumblr(content: str, media_url: Optional[str] = None):
+    """Publish to Tumblr"""
+    # TODO: Implement Tumblr API
+    # Requires: TUMBLR_CONSUMER_KEY, TUMBLR_CONSUMER_SECRET, TUMBLR_OAUTH_TOKEN, TUMBLR_OAUTH_SECRET
+    return {
+        "platform": "tumblr",
+        "status": "ready",
+        "message": "Tumblr API integration pending - needs OAuth credentials"
+    }
+
+@router.get("/publisher/status")
+async def get_publisher_status():
+    """Check which platforms are configured and ready"""
+    platforms = {
+        "linkedin": bool(os.getenv("LINKEDIN_ACCESS_TOKEN")),
+        "twitter": bool(os.getenv("TWITTER_API_KEY")),
+        "facebook": bool(os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN")),
+        "instagram": bool(os.getenv("INSTAGRAM_ACCESS_TOKEN")),
+        "tiktok": bool(os.getenv("TIKTOK_ACCESS_TOKEN")),
+        "youtube": bool(os.getenv("YOUTUBE_API_KEY")),
+        "reddit": bool(os.getenv("REDDIT_CLIENT_ID")),
+        "tumblr": bool(os.getenv("TUMBLR_CONSUMER_KEY"))
+    }
+    
+    return {
+        "configured": [p for p, ready in platforms.items() if ready],
+        "pending": [p for p, ready in platforms.items() if not ready]
+    }
