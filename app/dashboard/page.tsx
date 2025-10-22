@@ -3,10 +3,10 @@
 import Link from 'next/link';
 
 const tools = [
-  { name: 'Blog Writer', icon: '✍️', href: '/dashboard/blog-writer', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
+  { name: 'Blog Writer', icon: '✍️', href: '/dashboard/blog', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
   { name: 'Carousel Maker', icon: '🎨', href: '/dashboard/carousel', description: 'Engaging social carousels', color: 'from-purple-500 to-purple-600' },
-  { name: 'Caption Generator', icon: '💬', href: '/dashboard/captions', description: 'Perfect social captions', color: 'from-pink-500 to-pink-600' },
-  { name: 'Text Publisher', icon: '📱', href: '/dashboard/text-publisher', description: 'Schedule text posts', color: 'from-green-500 to-green-600' },
+  { name: 'Caption Generator', icon: '💬', href: '/dashboard/caption', description: 'Perfect social captions', color: 'from-pink-500 to-pink-600' },
+  { name: 'Text Publisher', icon: '📱', href: '/dashboard/publisher', description: 'Schedule text posts', color: 'from-green-500 to-green-600' },
   { name: 'Video Publisher', icon: '🎬', href: '/dashboard/video-publisher', description: 'AI video captions & scheduling', color: 'from-red-500 to-red-600' },
   { name: 'Media Library', icon: '📁', href: '/dashboard/media', description: 'Browse & manage assets', color: 'from-yellow-500 to-yellow-600' },
   { name: 'Content Calendar', icon: '📅', href: '/dashboard/calendar', description: 'Plan & schedule content', color: 'from-indigo-500 to-indigo-600' },

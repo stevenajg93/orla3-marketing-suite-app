@@ -21,7 +21,7 @@ export default function BlogWriter() {
     
     try {
       // Step 1: Get strategic keyword
-      const strategyRes = await fetch('http://localhost:8000/strategy/next-keyword');
+      const strategyRes = await fetch('http://localhost:8000/strategy/strategy/next-keyword');
       const strategy = await strategyRes.json();
       const nextKw = strategy.recommended_next;
       
@@ -29,7 +29,7 @@ export default function BlogWriter() {
       setSearchIntent(nextKw.search_intent);
       
       // Step 2: Market research
-      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
+      const researchRes = await fetch('http://localhost:8000/strategy/strategy/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword: nextKw.keyword })
@@ -43,7 +43,7 @@ export default function BlogWriter() {
       setResearching(false);
       
       // Step 3: Generate blog with market intel
-      const response = await fetch('http://localhost:8000/content/draft', {
+      const response = await fetch('http://localhost:8000/draft/content/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,7 +75,7 @@ export default function BlogWriter() {
     setError('');
     
     try {
-      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
+      const researchRes = await fetch('http://localhost:8000/strategy/strategy/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword })
@@ -99,7 +99,7 @@ export default function BlogWriter() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8000/content/draft', {
+      const response = await fetch('http://localhost:8000/draft/content/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

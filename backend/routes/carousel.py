@@ -1,3 +1,4 @@
+from dotenv import load_dotenv; load_dotenv('.env.local', override=True)
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Literal
