@@ -1,185 +1,86 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+
+const tools = [
+  { name: 'Blog Writer', icon: '✍️', href: '/dashboard/blog-writer', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
+  { name: 'Carousel Maker', icon: '🎨', href: '/dashboard/carousel', description: 'Engaging social carousels', color: 'from-purple-500 to-purple-600' },
+  { name: 'Caption Generator', icon: '💬', href: '/dashboard/captions', description: 'Perfect social captions', color: 'from-pink-500 to-pink-600' },
+  { name: 'Text Publisher', icon: '📱', href: '/dashboard/text-publisher', description: 'Schedule text posts', color: 'from-green-500 to-green-600' },
+  { name: 'Video Publisher', icon: '🎬', href: '/dashboard/video-publisher', description: 'AI video captions & scheduling', color: 'from-red-500 to-red-600' },
+  { name: 'Media Library', icon: '📁', href: '/dashboard/media', description: 'Browse & manage assets', color: 'from-yellow-500 to-yellow-600' },
+  { name: 'Content Calendar', icon: '📅', href: '/dashboard/calendar', description: 'Plan & schedule content', color: 'from-indigo-500 to-indigo-600' },
+  { name: 'Analytics', icon: '📊', href: '/dashboard/analytics', description: 'Track performance', color: 'from-teal-500 to-teal-600', disabled: true },
+  { name: 'Collaboration', icon: '👥', href: '/dashboard/collaboration', description: 'Team workflows', color: 'from-orange-500 to-orange-600', disabled: true },
+  { name: 'Brand Voice', icon: '🎯', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cyan-500 to-cyan-600', disabled: true },
+  { name: 'Competitor Analysis', icon: '🔍', href: '/dashboard/competitor', description: 'Market insights', color: 'from-rose-500 to-rose-600', disabled: true },
+  { name: 'Strategy Planner', icon: '🎪', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-violet-500 to-violet-600', disabled: true },
+];
 
 export default function Dashboard() {
-  const tools = [
-    {
-      id: 'blog',
-      title: 'Blog Writer',
-      icon: '✍️',
-      description: 'Generate SEO-optimized blog posts',
-      status: 'READY',
-      color: 'from-blue-600 to-purple-600',
-      href: '/dashboard/blog'
-    },
-    {
-      id: 'carousel',
-      title: 'Carousel Maker',
-      icon: '🎠',
-      description: 'Create Instagram/LinkedIn carousels',
-      status: 'READY',
-      color: 'from-pink-600 to-rose-600',
-      href: '/dashboard/carousel'
-    },
-    {
-      id: 'caption',
-      title: 'Caption Generator',
-      icon: '💬',
-      description: 'Multi-platform social captions',
-      status: 'READY',
-      color: 'from-green-600 to-emerald-600',
-      href: '/dashboard/caption'
-    },
-    {
-      id: 'video-script',
-      title: 'Video Script Writer',
-      icon: '🎬',
-      description: 'YouTube/TikTok scripts',
-      status: 'SOON',
-      color: 'from-red-600 to-orange-600',
-      href: '/dashboard/video-script'
-    },
-    {
-      id: 'ad-copy',
-      title: 'Ad Copy Generator',
-      icon: '🎯',
-      description: 'Facebook/Google/LinkedIn ads',
-      status: 'SOON',
-      color: 'from-yellow-600 to-amber-600',
-      href: '/dashboard/ad-copy'
-    },
-    {
-      id: 'calendar',
-      title: 'Content Calendar',
-      icon: '📅',
-      description: 'Visual scheduling interface',
-      status: 'SOON',
-      color: 'from-indigo-600 to-blue-600',
-      href: '/dashboard/calendar'
-    },
-    {
-      id: 'analytics',
-      title: 'Analytics Dashboard',
-      icon: '📊',
-      description: 'GA4, GSC, social metrics',
-      status: 'SOON',
-      color: 'from-purple-600 to-pink-600',
-      href: '/dashboard/analytics'
-    },
-    {
-      id: 'text-publisher',
-      title: 'Text Publisher',
-      icon: '📝',
-      description: 'LinkedIn, Twitter, Facebook, Reddit',
-      status: 'READY',
-      color: 'from-cyan-600 to-blue-600',
-      href: '/dashboard/publisher'
-    },
-    {
-      id: 'video-publisher',
-      title: 'Video Publisher',
-      icon: '🎬',
-      description: 'TikTok, Instagram, YouTube Shorts',
-      status: 'READY',
-      color: 'from-fuchsia-600 to-purple-600',
-      href: '/dashboard/video-publisher'
-    },
-    {
-      id: 'media-library',
-      title: 'Media Library',
-      icon: '📁',
-      description: 'Digital asset management',
-      status: 'SOON',
-      color: 'from-teal-600 to-cyan-600',
-      href: '/dashboard/media'
-    },
-    {
-      id: 'competitor',
-      title: 'Competitor Monitor',
-      icon: '🔍',
-      description: 'Track competitor content',
-      status: 'SOON',
-      color: 'from-orange-600 to-red-600',
-      href: '/dashboard/competitor'
-    },
-    {
-      id: 'engagement-bot',
-      title: 'Engagement Bot',
-      icon: '🤖',
-      description: 'Auto-reply + proactive commenting',
-      status: 'SOON',
-      color: 'from-lime-600 to-green-600',
-      href: '/dashboard/engagement'
-    }
-  ];
-
-  const stats = [
-    { label: 'Traffic', value: '0', icon: '📈' },
-    { label: 'Engagement', value: '0', icon: '💬' },
-    { label: 'Posts Published', value: '0', icon: '📤' },
-    { label: 'Bot Comments', value: '0', icon: '🤖' }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-12">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-400 mb-4">
-            ORLA³ Marketing Suite
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 mb-4">
+            🎪 Orla3 Marketing Suite
           </h1>
-          <p className="text-gray-400 text-xl">Autonomous content engine for videography marketplace growth</p>
+          <p className="text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, i) => (
-            <div key={i} className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-              <div className="text-4xl mb-2">{stat.icon}</div>
-              <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-              <div className="text-gray-400 text-sm">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tools.map((tool) => (
             <Link
-              key={tool.id}
-              href={tool.href}
-              className={`group relative bg-gradient-to-br ${tool.color} rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
-                tool.status === 'SOON' ? 'opacity-50 cursor-not-allowed' : ''
+              key={tool.name}
+              href={tool.disabled ? '#' : tool.href}
+              className={`group relative overflow-hidden rounded-2xl border border-white/10 transition-all ${
+                tool.disabled 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:scale-105 hover:border-white/30 cursor-pointer'
               }`}
             >
-              <div className="text-5xl mb-4">{tool.icon}</div>
-              <h3 className="text-xl font-bold text-white mb-2">{tool.title}</h3>
-              <p className="text-white/80 text-sm mb-4">{tool.description}</p>
-              <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                tool.status === 'READY' ? 'bg-green-500 text-white' :
-                tool.status === 'NEXT' ? 'bg-blue-500 text-white' :
-                'bg-gray-500 text-white'
-              }`}>
-                {tool.status}
+              <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
+              <div className="relative p-6 bg-white/5 backdrop-blur-lg">
+                <div className="text-5xl mb-4">{tool.icon}</div>
+                <h3 className="text-2xl font-bold text-white mb-2">{tool.name}</h3>
+                <p className="text-gray-400">{tool.description}</p>
+                {tool.disabled && (
+                  <span className="inline-block mt-3 px-3 py-1 bg-yellow-600/30 text-yellow-400 text-xs font-bold rounded-full">
+                    Coming Soon
+                  </span>
+                )}
               </div>
             </Link>
           ))}
         </div>
 
-        <div className="bg-gradient-to-r from-yellow-600 to-amber-600 rounded-2xl p-8 border border-yellow-400/30">
-          <h2 className="text-3xl font-black text-white mb-4">🚀 Getting Started</h2>
-          <p className="text-white/90 mb-6">
-            ORLA³ Marketing Suite automates your entire content lifecycle. Start with Blog Writer, then use the publishers to distribute across 8+ platforms.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/dashboard/blog" className="bg-white hover:bg-gray-100 text-yellow-700 font-bold py-3 px-6 rounded-lg transition-all">
-              Generate Your First Blog
-            </Link>
-            <Link href="/dashboard/publisher" className="bg-yellow-800 hover:bg-yellow-900 text-white font-bold py-3 px-6 rounded-lg transition-all">
-              Publish to Text Platforms
-            </Link>
-            <Link href="/dashboard/video-publisher" className="bg-purple-800 hover:bg-purple-900 text-white font-bold py-3 px-6 rounded-lg transition-all">
-              Publish Videos
-            </Link>
+        <div className="mt-12 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
+          <h2 className="text-3xl font-bold text-white mb-4">✅ Progress Tracker</h2>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-500 to-green-600 h-full" style={{ width: '58%' }}></div>
+              </div>
+              <span className="text-white font-bold">7/12 Tools Complete</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-4">
+                <div className="text-3xl mb-2">✅</div>
+                <div className="text-green-400 font-bold">7 Complete</div>
+              </div>
+              <div className="bg-yellow-900/40 border border-yellow-400/30 rounded-xl p-4">
+                <div className="text-3xl mb-2">🚧</div>
+                <div className="text-yellow-400 font-bold">0 In Progress</div>
+              </div>
+              <div className="bg-blue-900/40 border border-blue-400/30 rounded-xl p-4">
+                <div className="text-3xl mb-2">📋</div>
+                <div className="text-blue-400 font-bold">5 Planned</div>
+              </div>
+              <div className="bg-purple-900/40 border border-purple-400/30 rounded-xl p-4">
+                <div className="text-3xl mb-2">🎯</div>
+                <div className="text-purple-400 font-bold">58% Done</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
