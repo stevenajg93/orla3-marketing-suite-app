@@ -25,7 +25,7 @@ def extract_json_from_response(text: str) -> dict:
     text = text.strip()
     return json.loads(text)
 
-@router.post("/social/caption", response_model=CaptionOutput)
+@router.post("/caption", response_model=CaptionOutput)
 async def generate_caption(data: CaptionInput):
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     
