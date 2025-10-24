@@ -13,6 +13,7 @@ export default function CarouselMakerPage() {
   const [editMode, setEditMode] = useState(false);
   const [caption, setCaption] = useState("");
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [saveMessage, setSaveMessage] = useState("");
 
   const [formData, setFormData] = useState({
     post_summary: "Learn how to hire the perfect corporate videographer in the UK. Discover pricing factors, quality indicators, and expert tips.",
@@ -46,6 +47,32 @@ export default function CarouselMakerPage() {
     }
   };
 
+
+  const saveToLibrary = async () => {
+    if (!result) return;
+    setSaveMessage("");
+    try {
+      const carouselContent = result.slides?.map((slide: any, i: number) => 
+        `Slide ${i + 1}:\nTitle: ${slide.headline || slide.title}\nContent: ${slide.body || slide.content}`
+      ).join("\n\n");
+      await fetch("http://localhost:8000/library/content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: Date.now().toString(),
+          title: result.slides?.[0]?.headline || "Carousel Post",
+          content_type: "carousel",
+          content: `${carouselContent}\n\nCaption:\n${caption}`,
+          created_at: new Date().toISOString(),
+          status: "draft",
+          platform: formData.target_platform,
+          tags: [formData.target_platform, formData.angle]
+        })
+      });
+      setSaveMessage("✅ Saved!");
+      setTimeout(() => setSaveMessage(""), 2000);
+    } catch (err) { setSaveMessage("❌ Failed"); }
+  };
   const handleExport = async () => {
     if (!result?.slides) return;
     
@@ -482,6 +509,7 @@ export default function CarouselMakerPage() {
               })}
             </div>
 
+            {saveMessage && <div className="mb-3 text-center bg-green-500/20 border border-green-500 rounded px-3 py-1 text-green-200 text-sm font-bold">{saveMessage}</div>}
             <div className="flex gap-4">
               <button
                 onClick={() => {
@@ -491,6 +519,9 @@ export default function CarouselMakerPage() {
                 className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-semibold transition"
               >
                 ← Start Over
+              </button>
+              <button onClick={saveToLibrary} className="flex-1 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-lg text-black font-semibold transition">
+                💾 Save
               </button>
               <button
                 onClick={handleExport}
