@@ -12,6 +12,7 @@ export default function BlogWriter() {
   const [marketResearch, setMarketResearch] = useState<any>(null);
   const [blog, setBlog] = useState<any>(null);
   const [error, setError] = useState('');
+  const [saveMessage, setSaveMessage] = useState('');
 
   const autoGenerate = async () => {
     setLoading(true);
@@ -20,7 +21,6 @@ export default function BlogWriter() {
     setMarketResearch(null);
     
     try {
-      // Step 1: Get strategic keyword
       const strategyRes = await fetch('http://localhost:8000/strategy/strategy/next-keyword');
       const strategy = await strategyRes.json();
       const nextKw = strategy.recommended_next;
@@ -28,7 +28,6 @@ export default function BlogWriter() {
       setKeyword(nextKw.keyword);
       setSearchIntent(nextKw.search_intent);
       
-      // Step 2: Market research
       const researchRes = await fetch('http://localhost:8000/strategy/strategy/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,7 +41,6 @@ export default function BlogWriter() {
       
       setResearching(false);
       
-      // Step 3: Generate blog with market intel
       const response = await fetch('http://localhost:8000/draft/content/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,6 +118,35 @@ export default function BlogWriter() {
     }
   };
 
+  const saveToLibrary = async () => {
+    if (!blog) return;
+    
+    setSaveMessage('');
+    
+    try {
+      const response = await fetch('http://localhost:8000/library/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: Date.now().toString(),
+          title: blog.title,
+          content_type: 'blog',
+          content: blog.body_md,
+          created_at: new Date().toISOString(),
+          status: 'draft',
+          tags: [keyword, searchIntent]
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save');
+      
+      setSaveMessage('✅ Saved to Media Library!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (err) {
+      setSaveMessage('❌ Failed to save');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
@@ -135,7 +162,6 @@ export default function BlogWriter() {
           </div>
         </div>
 
-        {/* Auto-Generate Button */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 border border-green-400/30 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -152,7 +178,6 @@ export default function BlogWriter() {
           </div>
         </div>
 
-        {/* Manual Input Form */}
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
           <h3 className="text-xl font-bold text-white mb-4">Manual Mode (Optional)</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -217,7 +242,6 @@ export default function BlogWriter() {
           )}
         </div>
 
-        {/* Market Research Results */}
         {marketResearch && (
           <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 backdrop-blur-lg rounded-2xl p-8 border border-blue-400/30 mb-6">
             <h3 className="text-2xl font-bold text-white mb-6">🔍 Market Intelligence</h3>
@@ -270,7 +294,6 @@ export default function BlogWriter() {
           </div>
         )}
 
-        {/* Generated Blog */}
         {blog && (
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
             <div className="flex items-center justify-between mb-6">
@@ -284,7 +307,19 @@ export default function BlogWriter() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-white/10">
+            {saveMessage && (
+              <div className="mb-4 bg-green-500/20 border border-green-500 rounded-lg p-4 text-green-200 text-center font-bold">
+                {saveMessage}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+              <button 
+                onClick={saveToLibrary}
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
+              >
+                💾 Save to Library
+              </button>
               <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
                 📤 Publish to WordPress
               </button>

@@ -21,8 +21,18 @@ type MediaFolder = {
   asset_count: number;
 };
 
+type GeneratedContent = {
+  id: string;
+  title: string;
+  content_type: string;
+  content: string;
+  created_at: string;
+  status: string;
+  tags?: string[];
+};
+
 export default function MediaLibrary() {
-  const [activeTab, setActiveTab] = useState<'drive' | 'unsplash'>('drive');
+  const [activeTab, setActiveTab] = useState<'drive' | 'unsplash' | 'generated'>('drive');
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -31,13 +41,16 @@ export default function MediaLibrary() {
   const [mediaType, setMediaType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [unsplashImages, setUnsplashImages] = useState<MediaAsset[]>([]);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
   const [previewAsset, setPreviewAsset] = useState<MediaAsset | null>(null);
+  const [previewContent, setPreviewContent] = useState<GeneratedContent | null>(null);
 
   useEffect(() => {
     loadStatus();
     loadFolders();
+    loadGeneratedContent();
   }, []);
 
   useEffect(() => {
@@ -65,6 +78,26 @@ export default function MediaLibrary() {
       }
     } catch (err) {
       console.error('Failed to load folders');
+    }
+  };
+
+  const loadGeneratedContent = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/library/content');
+      const data = await res.json();
+      setGeneratedContent(data.items || []);
+    } catch (err) {
+      console.error('Failed to load generated content');
+    }
+  };
+
+  const deleteGeneratedContent = async (id: string) => {
+    try {
+      await fetch(`http://localhost:8000/library/content/${id}`, { method: 'DELETE' });
+      loadGeneratedContent();
+      setPreviewContent(null);
+    } catch (err) {
+      console.error('Failed to delete content');
     }
   };
 
@@ -140,11 +173,23 @@ export default function MediaLibrary() {
       case 'video': return '🎬';
       case 'image': return '🖼️';
       case 'document': return '📄';
+      case 'blog': return '📝';
+      case 'carousel': return '🎨';
+      case 'caption': return '💬';
       default: return '📄';
     }
   };
 
-  const currentAssets = activeTab === 'drive' ? assets : unsplashImages;
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'published': return 'bg-green-600';
+      case 'scheduled': return 'bg-blue-600';
+      case 'draft': return 'bg-yellow-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
+  const currentAssets = activeTab === 'drive' ? assets : activeTab === 'unsplash' ? unsplashImages : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
@@ -157,11 +202,11 @@ export default function MediaLibrary() {
             <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
               📁 Media Library
             </h1>
-            <p className="text-gray-400 mt-2">Manage Google Drive assets & generate AI content</p>
+            <p className="text-gray-400 mt-2">Manage Google Drive assets & generated AI content</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className={`rounded-2xl p-6 border ${
             status?.drive?.connected 
               ? 'bg-green-900/40 border-green-400/30' 
@@ -181,6 +226,11 @@ export default function MediaLibrary() {
           }`}>
             <h3 className="text-xl font-bold text-white mb-2">✨ Unsplash API</h3>
             <p className="text-gray-300">{status?.unsplash?.status}</p>
+          </div>
+
+          <div className="rounded-2xl p-6 border bg-purple-900/40 border-purple-400/30">
+            <h3 className="text-xl font-bold text-white mb-2">💾 Generated Content</h3>
+            <p className="text-gray-300">{generatedContent.length} items saved</p>
           </div>
         </div>
 
@@ -204,6 +254,16 @@ export default function MediaLibrary() {
             }`}
           >
             ✨ Generate from Unsplash
+          </button>
+          <button
+            onClick={() => setActiveTab('generated')}
+            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+              activeTab === 'generated'
+                ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            }`}
+          >
+            💾 Generated Content
           </button>
         </div>
 
@@ -253,7 +313,7 @@ export default function MediaLibrary() {
                   </button>
                 ))}
               </>
-            ) : (
+            ) : activeTab === 'unsplash' ? (
               <>
                 <h2 className="text-xl font-bold text-white mb-4">Search Unsplash</h2>
                 <input
@@ -272,13 +332,18 @@ export default function MediaLibrary() {
                   {loading ? '🔍 Searching...' : '🔍 Search'}
                 </button>
               </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold text-white mb-4">Filters</h2>
+                <p className="text-gray-400 text-sm">All your generated blogs, carousels, and captions in one place.</p>
+              </>
             )}
           </div>
 
           <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {activeTab === 'drive' ? '🔗 Your Assets' : '✨ Unsplash Images'}
+                {activeTab === 'drive' ? '🔗 Your Drive Assets' : activeTab === 'unsplash' ? '✨ Unsplash Images' : '💾 Generated Content'}
               </h2>
               {activeTab === 'drive' && breadcrumbs.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
@@ -298,7 +363,39 @@ export default function MediaLibrary() {
               )}
             </div>
 
-            {loading ? (
+            {activeTab === 'generated' ? (
+              generatedContent.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-400 text-lg">No generated content yet. Create some blogs or carousels to get started!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {generatedContent.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all cursor-pointer"
+                      onClick={() => setPreviewContent(item)}
+                    >
+                      <div className="w-full h-40 bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center">
+                        <span className="text-6xl">{getFileIcon(item.content_type)}</span>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-800/50">
+                        <h3 className="text-white font-bold text-sm mb-2 truncate">{item.title}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusColor(item.status)}`}>
+                            {item.status}
+                          </span>
+                          <span className="text-gray-400 text-xs">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : loading ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
                 <p className="text-gray-400 mt-4">Loading...</p>
@@ -433,6 +530,54 @@ export default function MediaLibrary() {
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
                 >
                   👁️ Open in Drive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewContent && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8"
+          onClick={() => setPreviewContent(null)}
+        >
+          <div className="max-w-4xl w-full max-h-full overflow-auto bg-slate-900 rounded-2xl border border-white/20" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-white">{previewContent.title}</h3>
+                <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusColor(previewContent.status)} mt-2 inline-block`}>
+                  {previewContent.status}
+                </span>
+              </div>
+              <button
+                onClick={() => setPreviewContent(null)}
+                className="text-white hover:text-red-400 text-3xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="prose prose-invert max-w-none">
+                <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {previewContent.content}
+                </div>
+              </div>
+              <div className="mt-6 flex gap-4 justify-center pt-6 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(previewContent.content);
+                    alert('Copied to clipboard!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                >
+                  📋 Copy Content
+                </button>
+                <button
+                  onClick={() => deleteGeneratedContent(previewContent.id)}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg"
+                >
+                  🗑️ Delete
                 </button>
               </div>
             </div>
