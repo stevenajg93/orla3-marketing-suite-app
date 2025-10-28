@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type ContentEvent = {
   id: string;
@@ -14,7 +15,19 @@ type ContentEvent = {
   media_url?: string;
 };
 
+const platformConfig = {
+  instagram: { icon: '📷', color: 'from-pink-500 to-purple-500', name: 'Instagram' },
+  linkedin: { icon: '💼', color: 'from-blue-600 to-blue-700', name: 'LinkedIn' },
+  facebook: { icon: '👍', color: 'from-blue-500 to-blue-600', name: 'Facebook' },
+  x: { icon: '❌', color: 'from-slate-800 to-slate-900', name: 'X' },
+  tiktok: { icon: '🎵', color: 'from-black to-pink-500', name: 'TikTok' },
+  youtube: { icon: '▶️', color: 'from-red-600 to-red-700', name: 'YouTube' },
+  reddit: { icon: '🤖', color: 'from-orange-500 to-red-500', name: 'Reddit' },
+  tumblr: { icon: '🔷', color: 'from-indigo-500 to-blue-600', name: 'Tumblr' },
+};
+
 export default function ContentCalendar() {
+  const router = useRouter();
   const [events, setEvents] = useState<ContentEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -118,10 +131,10 @@ export default function ContentCalendar() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published': return 'bg-green-600';
-      case 'scheduled': return 'bg-blue-600';
-      case 'draft': return 'bg-yellow-600';
-      default: return 'bg-gray-600';
+      case 'published': return 'bg-green-600/80';
+      case 'scheduled': return 'bg-blue-600/80';
+      case 'draft': return 'bg-yellow-600/80';
+      default: return 'bg-gray-600/80';
     }
   };
 
@@ -135,31 +148,46 @@ export default function ContentCalendar() {
     }
   };
 
+  const getPlatformIcon = (platform?: string) => {
+    if (!platform) return '📱';
+    return platformConfig[platform as keyof typeof platformConfig]?.icon || '📱';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
+            <Link href="/dashboard" className="text-purple-400 hover:text-purple-300 mb-2 inline-block text-sm">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
               📅 Content Calendar
             </h1>
-            <p className="text-gray-400 mt-2">Plan and schedule your content</p>
+            <p className="text-purple-300 mt-2">Plan and schedule your content across all platforms</p>
           </div>
-          <button
-            onClick={() => {
-              setSelectedDate(new Date());
-              setShowAddModal(true);
-            }}
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all"
-          >
-            ➕ Add Content
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/dashboard/social')}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+            >
+              📱 Create in Social Manager
+            </button>
+            <button
+              onClick={() => {
+                setSelectedDate(new Date());
+                setShowAddModal(true);
+              }}
+              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
+            >
+              ➕ Quick Add
+            </button>
+          </div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+        {/* Calendar */}
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 mb-6">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={previousMonth}
@@ -178,14 +206,16 @@ export default function ContentCalendar() {
             </button>
           </div>
 
+          {/* Day Headers */}
           <div className="grid grid-cols-7 gap-2 mb-2">
             {dayNames.map(day => (
-              <div key={day} className="text-center text-gray-400 font-bold text-sm py-2">
+              <div key={day} className="text-center text-purple-300 font-bold text-sm py-2">
                 {day}
               </div>
             ))}
           </div>
 
+          {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-2">
             {days.map((day, index) => {
               const dayEvents = getEventsForDate(day);
@@ -198,28 +228,30 @@ export default function ContentCalendar() {
                   className={`min-h-32 p-2 rounded-lg border transition-all ${
                     day
                       ? isToday
-                        ? 'bg-yellow-900/30 border-yellow-500 cursor-pointer hover:bg-yellow-900/40'
-                        : 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10'
+                        ? 'bg-purple-900/30 border-purple-500 cursor-pointer hover:bg-purple-900/40'
+                        : 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 hover:border-purple-500/30'
                       : 'bg-transparent border-transparent'
                   }`}
                 >
                   {day && (
                     <>
-                      <div className={`text-sm font-bold mb-2 ${isToday ? 'text-yellow-400' : 'text-white'}`}>
+                      <div className={`text-sm font-bold mb-2 ${isToday ? 'text-purple-400' : 'text-white'}`}>
                         {day.getDate()}
                       </div>
                       <div className="space-y-1">
                         {dayEvents.slice(0, 3).map(event => (
                           <div
                             key={event.id}
-                            className={`text-xs p-1 rounded ${getStatusColor(event.status)} text-white truncate`}
-                            title={event.title}
+                            className={`text-xs p-1.5 rounded ${getStatusColor(event.status)} text-white truncate flex items-center gap-1`}
+                            title={`${event.title} - ${event.platform}`}
                           >
-                            {getTypeIcon(event.content_type)} {event.title}
+                            <span>{getPlatformIcon(event.platform)}</span>
+                            <span>{getTypeIcon(event.content_type)}</span>
+                            <span className="flex-1 truncate">{event.title}</span>
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-purple-400 font-semibold">
                             +{dayEvents.length - 3} more
                           </div>
                         )}
@@ -232,7 +264,8 @@ export default function ContentCalendar() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-4">
             <h3 className="text-white font-bold mb-2">✅ Published</h3>
             <p className="text-3xl font-black text-green-400">
@@ -260,10 +293,11 @@ export default function ContentCalendar() {
         </div>
       </div>
 
+      {/* Add Event Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-8" onClick={() => setShowAddModal(false)}>
           <div className="bg-slate-900 rounded-2xl border border-white/20 max-w-2xl w-full p-8" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold text-white mb-6">Add Content to Calendar</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">Quick Add to Calendar</h3>
             <p className="text-gray-400 mb-6">
               📅 {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
@@ -275,7 +309,7 @@ export default function ContentCalendar() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="e.g., Morning motivation post"
                   required
                 />
@@ -287,7 +321,7 @@ export default function ContentCalendar() {
                   <select
                     value={formData.content_type}
                     onChange={(e) => setFormData({...formData, content_type: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="text">💬 Text Post</option>
                     <option value="video">🎬 Video</option>
@@ -301,13 +335,16 @@ export default function ContentCalendar() {
                   <select
                     value={formData.platform}
                     onChange={(e) => setFormData({...formData, platform: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="instagram">Instagram</option>
-                    <option value="facebook">Facebook</option>
-                    <option value="twitter">Twitter</option>
-                    <option value="linkedin">LinkedIn</option>
-                    <option value="tiktok">TikTok</option>
+                    <option value="instagram">📷 Instagram</option>
+                    <option value="linkedin">💼 LinkedIn</option>
+                    <option value="facebook">👍 Facebook</option>
+                    <option value="x">❌ X</option>
+                    <option value="tiktok">🎵 TikTok</option>
+                    <option value="youtube">▶️ YouTube</option>
+                    <option value="reddit">🤖 Reddit</option>
+                    <option value="tumblr">🔷 Tumblr</option>
                   </select>
                 </div>
               </div>
@@ -317,7 +354,7 @@ export default function ContentCalendar() {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="draft">📝 Draft</option>
                   <option value="scheduled">📅 Scheduled</option>
@@ -330,7 +367,7 @@ export default function ContentCalendar() {
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 h-32"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 h-32 resize-none"
                   placeholder="Add your caption or content here..."
                 />
               </div>
@@ -338,7 +375,7 @@ export default function ContentCalendar() {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold py-3 px-6 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all"
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
                 >
                   ✅ Add to Calendar
                 </button>
