@@ -5,24 +5,73 @@ import { useRouter } from "next/navigation";
 
 type PostType = "text" | "video" | "carousel";
 type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr";
+type Tab = "create" | "engage" | "schedule";
+type EngageSubTab = "inbox" | "discovery" | "settings";
+
+type Comment = {
+  id: string;
+  platform: Platform;
+  postTitle: string;
+  author: string;
+  content: string;
+  timestamp: string;
+  sentiment: "positive" | "negative" | "neutral" | "question";
+};
+
+type DiscoveryPost = {
+  id: string;
+  platform: Platform;
+  author: string;
+  content: string;
+  hashtags: string[];
+  engagement: number;
+  timestamp: string;
+};
 
 export default function SocialManagerPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>("create");
+  const [engageSubTab, setEngageSubTab] = useState<EngageSubTab>("inbox");
   const [postType, setPostType] = useState<PostType>("text");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["instagram"]);
   const [caption, setCaption] = useState("");
   const [generatingCaption, setGeneratingCaption] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
+  
+  // Engagement state
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [aiReplies, setAiReplies] = useState<string[]>([]);
+  const [generatingReplies, setGeneratingReplies] = useState(false);
+  const [manualReply, setManualReply] = useState("");
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  
+  // Discovery state
+  const [searchKeywords, setSearchKeywords] = useState("");
+  const [discoveryPosts, setDiscoveryPosts] = useState<DiscoveryPost[]>([]);
+  const [searchingPosts, setSearchingPosts] = useState(false);
 
   const platforms = [
-    { id: "instagram" as Platform, name: "Instagram", icon: "📷", color: "from-pink-500 to-purple-500" },
-    { id: "linkedin" as Platform, name: "LinkedIn", icon: "💼", color: "from-blue-600 to-blue-700" },
-    { id: "facebook" as Platform, name: "Facebook", icon: "👍", color: "from-blue-500 to-blue-600" },
-    { id: "x" as Platform, name: "X", icon: "❌", color: "from-slate-800 to-slate-900" },
-    { id: "tiktok" as Platform, name: "TikTok", icon: "🎵", color: "from-black to-pink-500" },
-    { id: "youtube" as Platform, name: "YouTube", icon: "▶️", color: "from-red-600 to-red-700" },
-    { id: "reddit" as Platform, name: "Reddit", icon: "🤖", color: "from-orange-500 to-red-500" },
-    { id: "tumblr" as Platform, name: "Tumblr", icon: "🔷", color: "from-indigo-500 to-blue-600" },
+    { id: "instagram" as Platform, name: "Instagram", icon: "📷", color: "from-pink-500 to-purple-500", discovery: true, autoReply: true },
+    { id: "linkedin" as Platform, name: "LinkedIn", icon: "💼", color: "from-blue-600 to-blue-700", discovery: true, autoReply: true },
+    { id: "facebook" as Platform, name: "Facebook", icon: "👍", color: "from-blue-500 to-blue-600", discovery: true, autoReply: true },
+    { id: "x" as Platform, name: "X", icon: "❌", color: "from-slate-800 to-slate-900", discovery: true, autoReply: true },
+    { id: "tiktok" as Platform, name: "TikTok", icon: "🎵", color: "from-black to-pink-500", discovery: false, autoReply: true },
+    { id: "youtube" as Platform, name: "YouTube", icon: "▶️", color: "from-red-600 to-red-700", discovery: true, autoReply: true },
+    { id: "reddit" as Platform, name: "Reddit", icon: "🤖", color: "from-orange-500 to-red-500", discovery: true, autoReply: false },
+    { id: "tumblr" as Platform, name: "Tumblr", icon: "🔷", color: "from-indigo-500 to-blue-600", discovery: true, autoReply: true },
+  ];
+
+  const mockComments: Comment[] = [
+    { id: "1", platform: "instagram", postTitle: "UK Videographer Guide", author: "@sarah_designs", content: "This is so helpful! Do you have recommendations for London specifically?", timestamp: "2 hours ago", sentiment: "question" },
+    { id: "2", platform: "linkedin", postTitle: "Corporate Video Tips", author: "John Marketing", content: "Great insights! We just hired a videographer and wish we'd seen this first.", timestamp: "5 hours ago", sentiment: "positive" },
+    { id: "3", platform: "x", postTitle: "Video Production Costs", author: "@tech_startup", content: "These prices seem way too high for small businesses", timestamp: "1 day ago", sentiment: "negative" },
+    { id: "4", platform: "tiktok", postTitle: "Behind the Scenes", author: "CreativeStudio22", content: "Love this content! Following for more", timestamp: "3 hours ago", sentiment: "positive" },
+  ];
+
+  const mockDiscoveryPosts: DiscoveryPost[] = [
+    { id: "1", platform: "instagram", author: "@startup_tales", content: "Looking for a corporate videographer in Manchester. Any recommendations?", hashtags: ["videography", "manchester", "business"], engagement: 24, timestamp: "3 hours ago" },
+    { id: "2", platform: "x", author: "@ukbusiness", content: "Just wrapped our first brand video. The difference between cheap and quality videography is night and day!", hashtags: ["branding", "videoproduction"], engagement: 156, timestamp: "5 hours ago" },
+    { id: "3", platform: "linkedin", author: "Marketing Director", content: "We're hiring a videographer for our product launch. What should we look for in their portfolio?", hashtags: ["hiring", "videography", "productlaunch"], engagement: 89, timestamp: "1 day ago" },
   ];
 
   const togglePlatform = (platform: Platform) => {
@@ -35,167 +84,317 @@ export default function SocialManagerPage() {
 
   const generateCaption = async () => {
     setGeneratingCaption(true);
-    // TODO: Call caption API
     setTimeout(() => {
       setCaption("🎬 Finding the perfect videographer for your brand? Here's what you need to know!\n\nSwipe through to learn the key factors that separate great from mediocre. 👉\n\n#VideoMarketing #ContentCreation #UKBusiness");
       setGeneratingCaption(false);
     }, 2000);
   };
 
+  const generateAIReplies = async (comment: Comment) => {
+    setSelectedComment(comment);
+    setGeneratingReplies(true);
+    setAiReplies([]);
+    
+    setTimeout(() => {
+      setAiReplies([
+        "Thanks for asking! We have a great list of London-based videographers. DM us and we'll send you some recommendations!",
+        "Great question! London has some amazing talent. Check out our directory at orla3.com/london for vetted professionals in your area!",
+        "Absolutely! We work with several excellent videographers in London. What's your budget and project type? Happy to point you in the right direction!"
+      ]);
+      setGeneratingReplies(false);
+    }, 2000);
+  };
+
+  const searchRelevantPosts = async () => {
+    setSearchingPosts(true);
+    setDiscoveryPosts([]);
+    
+    setTimeout(() => {
+      setDiscoveryPosts(mockDiscoveryPosts);
+      setSearchingPosts(false);
+    }, 2000);
+  };
+
+  const getSentimentColor = (sentiment: string) => {
+    switch (sentiment) {
+      case "positive": return "text-green-400";
+      case "negative": return "text-red-400";
+      case "question": return "text-blue-400";
+      default: return "text-gray-400";
+    }
+  };
+
+  const getSentimentIcon = (sentiment: string) => {
+    switch (sentiment) {
+      case "positive": return "😊";
+      case "negative": return "😕";
+      case "question": return "❓";
+      default: return "💬";
+    }
+  };
+
+  const getPlatformIcon = (platform: Platform) => {
+    return platforms.find(p => p.id === platform)?.icon || "📱";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
       <div className="bg-white/5 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="text-purple-400 hover:text-purple-300 mb-2 flex items-center gap-2 text-sm"
-          >
+          <button onClick={() => router.push("/dashboard")} className="text-purple-400 hover:text-purple-300 mb-2 flex items-center gap-2 text-sm">
             ← Back to Dashboard
           </button>
           <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
             📱 Social Manager
           </h1>
-          <p className="text-purple-300 mt-1">Create, schedule, and manage all your social content</p>
+          <p className="text-purple-300 mt-1">Create, engage, and schedule all your social content</p>
+        </div>
+      </div>
+
+      <div className="bg-white/5 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-2">
+            <button onClick={() => setActiveTab("create")} className={`px-6 py-4 font-semibold transition ${activeTab === "create" ? "text-white border-b-2 border-green-500" : "text-gray-400 hover:text-white"}`}>
+              📝 Create
+            </button>
+            <button onClick={() => setActiveTab("engage")} className={`px-6 py-4 font-semibold transition ${activeTab === "engage" ? "text-white border-b-2 border-purple-500" : "text-gray-400 hover:text-white"}`}>
+              💬 Engage
+            </button>
+            <button onClick={() => setActiveTab("schedule")} className={`px-6 py-4 font-semibold transition ${activeTab === "schedule" ? "text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}>
+              📅 Schedule
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT COLUMN - Post Creation */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Post Type Selector */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">Post Type</h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setPostType("text")}
-                  className={`flex-1 py-3 rounded-lg font-semibold transition ${
-                    postType === "text"
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                      : "bg-white/10 text-gray-400 hover:bg-white/20"
-                  }`}
-                >
-                  📝 Text Post
-                </button>
-                <button
-                  onClick={() => setPostType("video")}
-                  className={`flex-1 py-3 rounded-lg font-semibold transition ${
-                    postType === "video"
-                      ? "bg-gradient-to-r from-red-500 to-pink-500 text-white"
-                      : "bg-white/10 text-gray-400 hover:bg-white/20"
-                  }`}
-                >
-                  🎬 Video Post
-                </button>
-                <button
-                  onClick={() => setPostType("carousel")}
-                  className={`flex-1 py-3 rounded-lg font-semibold transition ${
-                    postType === "carousel"
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                      : "bg-white/10 text-gray-400 hover:bg-white/20"
-                  }`}
-                >
-                  🎨 Carousel
-                </button>
+        {activeTab === "create" && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Post Type</h2>
+                <div className="flex gap-3">
+                  <button onClick={() => setPostType("text")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>📝 Text Post</button>
+                  <button onClick={() => setPostType("video")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "video" ? "bg-gradient-to-r from-red-500 to-pink-500 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>🎬 Video Post</button>
+                  <button onClick={() => setPostType("carousel")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "carousel" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>🎨 Carousel</button>
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-white">Caption</h2>
+                  <button onClick={generateCaption} disabled={generatingCaption} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50">
+                    {generatingCaption ? "✨ Generating..." : "✨ Generate Caption"}
+                  </button>
+                </div>
+                <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write your caption here or generate one with AI..." rows={8} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none" />
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-sm text-gray-400">{caption.length} characters</span>
+                  {selectedPlatforms.includes("x") && caption.length > 280 && (<span className="text-sm text-red-400 font-semibold">⚠️ Too long for X (280 char limit)</span>)}
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Media</h2>
+                <div className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
+                  <div className="text-6xl mb-4">📁</div>
+                  <p className="text-gray-400 mb-2">Click to browse Media Library</p>
+                  <p className="text-sm text-gray-500">or drag and drop files here</p>
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Schedule</h2>
+                <div className="flex gap-4">
+                  <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500" />
+                  <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition">Post Now</button>
+                </div>
               </div>
             </div>
 
-            {/* Caption Editor */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">Caption</h2>
-                <button
-                  onClick={generateCaption}
-                  disabled={generatingCaption}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
-                >
-                  {generatingCaption ? "✨ Generating..." : "✨ Generate Caption"}
-                </button>
+            <div className="space-y-6">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Platforms</h2>
+                <div className="space-y-3">
+                  {platforms.map((platform) => (
+                    <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`w-full p-4 rounded-lg border-2 transition ${selectedPlatforms.includes(platform.id) ? `border-transparent bg-gradient-to-r ${platform.color} text-white` : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{platform.icon}</span>
+                          <span className="font-semibold">{platform.name}</span>
+                        </div>
+                        {selectedPlatforms.includes(platform.id) && (<span className="text-xl">✓</span>)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <textarea
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Write your caption here or generate one with AI..."
-                rows={8}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none"
-              />
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-sm text-gray-400">{caption.length} characters</span>
-                {selectedPlatforms.includes("x") && caption.length > 280 && (
-                  <span className="text-sm text-red-400 font-semibold">⚠️ Too long for X (280 char limit)</span>
-                )}
-              </div>
-            </div>
 
-            {/* Media Selection */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">Media</h2>
-              <div className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
-                <div className="text-6xl mb-4">📁</div>
-                <p className="text-gray-400 mb-2">Click to browse Media Library</p>
-                <p className="text-sm text-gray-500">or drag and drop files here</p>
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">Schedule</h2>
-              <div className="flex gap-4">
-                <input
-                  type="datetime-local"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                />
-                <button className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg text-white font-semibold transition">
-                  Post Now
-                </button>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Preview</h2>
+                <div className="bg-white rounded-lg p-4 aspect-square flex items-center justify-center">
+                  <p className="text-gray-400 text-center">Select platforms to see preview</p>
+                </div>
               </div>
             </div>
           </div>
+        )}
+        {activeTab === "engage" && (
+          <>
+            <div className="flex gap-3 mb-6">
+              <button onClick={() => setEngageSubTab("inbox")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "inbox" ? "bg-purple-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
+                💬 Inbox ({mockComments.length})
+              </button>
+              <button onClick={() => setEngageSubTab("discovery")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "discovery" ? "bg-purple-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
+                🔍 Discovery
+              </button>
+              <button onClick={() => setEngageSubTab("settings")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "settings" ? "bg-purple-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
+                ⚙️ Settings
+              </button>
+            </div>
 
-          {/* RIGHT COLUMN - Platform Selection & Preview */}
-          <div className="space-y-6">
-            {/* Platform Selector */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">Platforms</h2>
-              <div className="space-y-3">
-                {platforms.map((platform) => (
-                  <button
-                    key={platform.id}
-                    onClick={() => togglePlatform(platform.id)}
-                    className={`w-full p-4 rounded-lg border-2 transition ${
-                      selectedPlatforms.includes(platform.id)
-                        ? `border-transparent bg-gradient-to-r ${platform.color} text-white`
-                        : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{platform.icon}</span>
-                        <span className="font-semibold">{platform.name}</span>
+            {engageSubTab === "inbox" && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                  <h2 className="text-2xl font-bold text-white mb-6">💬 Comments Inbox</h2>
+                  <div className="space-y-4">
+                    {mockComments.map((comment) => (
+                      <div key={comment.id} className="bg-white/5 border border-white/10 rounded-lg p-4 hover:border-purple-500/50 transition cursor-pointer" onClick={() => generateAIReplies(comment)}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{getPlatformIcon(comment.platform)}</span>
+                            <div>
+                              <p className="text-white font-semibold">{comment.author}</p>
+                              <p className="text-sm text-gray-400">{comment.postTitle}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xl ${getSentimentColor(comment.sentiment)}`}>{getSentimentIcon(comment.sentiment)}</span>
+                            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                          </div>
+                        </div>
+                        <p className="text-white/90">{comment.content}</p>
                       </div>
-                      {selectedPlatforms.includes(platform.id) && (
-                        <span className="text-xl">✓</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                  <h2 className="text-xl font-bold text-white mb-4">✨ AI Reply</h2>
+                  {!selectedComment ? (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">💬</div>
+                      <p className="text-gray-400">Select a comment to generate AI replies</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <p className="text-sm text-gray-400 mb-2">Replying to:</p>
+                        <p className="text-white">{selectedComment.content}</p>
+                      </div>
+                      {generatingReplies ? (
+                        <div className="text-center py-8">
+                          <div className="text-4xl mb-2">✨</div>
+                          <p className="text-purple-400">Generating replies...</p>
+                        </div>
+                      ) : aiReplies.length > 0 && (
+                        <>
+                          <div className="space-y-3">
+                            {aiReplies.map((reply, idx) => (
+                              <div key={idx} className="bg-white/10 rounded-lg p-4 hover:bg-white/20 transition cursor-pointer" onClick={() => setManualReply(reply)}>
+                                <div className="flex items-start justify-between mb-2">
+                                  <span className="text-xs font-semibold text-purple-400">Option {idx + 1}</span>
+                                  <button className="text-xs text-green-400 hover:text-green-300">Use this →</button>
+                                </div>
+                                <p className="text-white text-sm">{reply}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="border-t border-white/10 pt-4">
+                            <label className="block text-white font-semibold mb-2">Manual Reply</label>
+                            <textarea value={manualReply} onChange={(e) => setManualReply(e.target.value)} placeholder="Edit AI suggestion or write your own..." rows={4} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none" />
+                            <button className="w-full mt-3 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition">Send Reply</button>
+                          </div>
+                        </>
                       )}
                     </div>
-                  </button>
-                ))}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Preview */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">Preview</h2>
-              <div className="bg-white rounded-lg p-4 aspect-square flex items-center justify-center">
-                <p className="text-gray-400 text-center">
-                  Select platforms to see preview
-                </p>
+            {engageSubTab === "discovery" && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-2xl font-bold text-white mb-4">🔍 Find Relevant Posts</h2>
+                <div className="flex gap-3 mb-6">
+                  <input type="text" value={searchKeywords} onChange={(e) => setSearchKeywords(e.target.value)} placeholder="Enter keywords or hashtags" className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500" />
+                  <button onClick={searchRelevantPosts} disabled={searchingPosts} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50">
+                    {searchingPosts ? "🔍 Searching..." : "🔍 Search"}
+                  </button>
+                </div>
+                {discoveryPosts.length > 0 && (
+                  <div className="space-y-4">
+                    {discoveryPosts.map((post) => (
+                      <div key={post.id} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{getPlatformIcon(post.platform)}</span>
+                            <p className="text-white font-semibold">{post.author}</p>
+                          </div>
+                          <p className="text-sm text-gray-400">{post.engagement} engagements</p>
+                        </div>
+                        <p className="text-white/90 mb-3">{post.content}</p>
+                        <div className="flex gap-2 mb-3">
+                          {post.hashtags.map((tag, idx) => (
+                            <span key={idx} className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">#{tag}</span>
+                          ))}
+                        </div>
+                        <button className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition text-sm">
+                          ✨ Generate Comment
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+
+            {engageSubTab === "settings" && (
+              <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                <h2 className="text-2xl font-bold text-white mb-6">⚙️ Engagement Settings</h2>
+                <div className="bg-white/5 rounded-lg p-6 mb-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">🤖 Auto-Reply</h3>
+                      <p className="text-gray-400 text-sm">Let AI automatically respond to comments</p>
+                    </div>
+                    <button onClick={() => setAutoReplyEnabled(!autoReplyEnabled)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${autoReplyEnabled ? "bg-green-500" : "bg-gray-600"}`}>
+                      <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${autoReplyEnabled ? "translate-x-7" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  {autoReplyEnabled && (
+                    <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <p className="text-yellow-400 text-sm font-semibold">⚠️ Auto-reply is enabled</p>
+                    </div>
+                  )}
+                </div>
+                <button className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
+                  💾 Save Settings
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === "schedule" && (
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
+            <div className="text-6xl mb-4">📅</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Schedule View</h2>
+            <button onClick={() => router.push("/dashboard/calendar")} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition">
+              Open Content Calendar
+            </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
