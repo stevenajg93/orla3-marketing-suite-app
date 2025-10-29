@@ -16,7 +16,7 @@ const planningAnalysis = [
   { name: 'Content Calendar', icon: '📅', href: '/dashboard/calendar', description: 'Plan & schedule content', color: 'from-indigo-500 to-indigo-600' },
   { name: 'Analytics', icon: '📊', href: '/dashboard/analytics', description: 'Track performance', color: 'from-teal-500 to-teal-600', disabled: true },
   { name: 'Brand Voice', icon: '🎯', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cyan-500 to-cyan-600', disabled: true },
-  { name: 'Competitor Analysis', icon: '🔍', href: '/dashboard/competitor', description: 'Market insights', color: 'from-rose-500 to-rose-600', disabled: true },
+  { name: 'Competitor Analysis', icon: '🔍', href: '/dashboard/competitor', description: 'Market insights', color: 'from-rose-500 to-rose-600', disabled: false },
   { name: 'Strategy Planner', icon: '🎪', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-violet-500 to-violet-600', disabled: true },
 ];
 
