@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, strategy, calendar, library
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, strategy, calendar, library, competitor
 
 app.include_router(carousel.router, prefix="/carousel", tags=["carousel"])
 app.include_router(publisher.router, prefix="/publisher", tags=["publisher"])
@@ -32,6 +32,7 @@ app.include_router(brand_voice.router, prefix="/brand-voice", tags=["brand-voice
 app.include_router(strategy.router, prefix="/strategy", tags=["strategy"])
 app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 app.include_router(library.router, prefix="/library", tags=["library"])
+app.include_router(competitor.router, prefix="/competitor", tags=["competitor"])
 
 @app.on_event("startup")
 async def startup_event():
