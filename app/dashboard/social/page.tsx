@@ -54,6 +54,12 @@ export default function SocialManagerPage() {
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
   const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'unsplash'>('generated');
+  const [driveAssets, setDriveAssets] = useState<any[]>([]);
+  const [driveFolders, setDriveFolders] = useState<any[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [unsplashImages, setUnsplashImages] = useState<any[]>([]);
+  const [unsplashQuery, setUnsplashQuery] = useState('');
+  const [mediaLoading, setMediaLoading] = useState(false);
   const [libraryContent, setLibraryContent] = useState<any[]>([]);
 
 
@@ -100,6 +106,45 @@ export default function SocialManagerPage() {
     }
   };
 
+  const loadDriveFolders = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/media/folders');
+      const data = await res.json();
+      setDriveFolders(data.folders || []);
+    } catch (err) {
+      console.error('Failed to load Drive folders');
+    }
+  };
+
+  const loadDriveAssets = async (folderId?: string) => {
+    setMediaLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (folderId) params.append('folder_id', folderId);
+      const res = await fetch(`http://localhost:8000/media/library?${params}`);
+      const data = await res.json();
+      setDriveAssets(data.assets || []);
+    } catch (err) {
+      console.error('Failed to load Drive assets');
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const searchUnsplash = async () => {
+    if (!unsplashQuery.trim()) return;
+    setMediaLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/media/unsplash?query=${encodeURIComponent(unsplashQuery)}&per_page=20`);
+      const data = await res.json();
+      setUnsplashImages(data.images || []);
+    } catch (err) {
+      console.error('Failed to search Unsplash');
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
   const handleMediaSelect = (item: any) => {
     console.log('🎯 Media selected:', item);
     if (item.content_type === 'carousel') {
@@ -111,9 +156,13 @@ export default function SocialManagerPage() {
       } catch (e) {
         console.error('Failed to parse carousel', e);
       }
+    } else if (item.thumbnail || item.url) {
+      // Handle Drive/Unsplash images
+      console.log('📷 Drive/Unsplash media selected');
+      setSelectedMedia([item.thumbnail || item.url]);
     } else {
-      // Handle other media types (images, etc)
-      console.log('📷 Non-carousel media selected');
+      // Handle other media types
+      console.log('📄 Other media selected');
       setSelectedMedia([item.content || item.url]);
     }
     setShowMediaLibrary(false);
@@ -234,7 +283,11 @@ export default function SocialManagerPage() {
 
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-4">Media</h2>
-                <div onClick={() => { loadMediaLibrary(); setShowMediaLibrary(true); }} className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
+                <div onClick={() => { 
+                  loadMediaLibrary(); 
+                  loadDriveFolders();
+                  setShowMediaLibrary(true); 
+                }} className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
                   <div className="text-6xl mb-4">📁</div>
                   <p className="text-gray-400 mb-2">Click to browse Media Library</p>
                   <p className="text-sm text-gray-500">or drag and drop files here</p>
@@ -522,19 +575,116 @@ export default function SocialManagerPage() {
                 
                 {/* Google Drive Tab */}
                 {mediaLibraryTab === 'drive' && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">📁</div>
-                    <h3 className="text-xl font-bold text-white mb-2">Google Drive Integration</h3>
-                    <p className="text-gray-400 mb-4">Coming soon - browse your Drive files</p>
+                  <div>
+                    {driveFolders.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">📁</div>
+                        <h3 className="text-xl font-bold text-white mb-2">Connect Google Drive</h3>
+                        <p className="text-gray-400 mb-4">No folders found. Connect Drive from Media Library.</p>
+                        <button 
+                          onClick={() => window.open('/dashboard/media', '_blank')}
+                          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold transition"
+                        >
+                          Open Media Library
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-4">
+                          <select 
+                            value={selectedFolder}
+                            onChange={(e) => { setSelectedFolder(e.target.value); loadDriveAssets(e.target.value); }}
+                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                          >
+                            <option value="">All Files</option>
+                            {driveFolders.map((folder: any) => (
+                              <option key={folder.id} value={folder.id}>{folder.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {mediaLoading ? (
+                          <div className="text-center py-12">
+                            <p className="text-gray-400">Loading...</p>
+                          </div>
+                        ) : driveAssets.length === 0 ? (
+                          <div className="text-center py-12">
+                            <p className="text-gray-400">No assets found in this folder</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-4">
+                            {driveAssets.map((asset: any) => (
+                              <div 
+                                key={asset.id} 
+                                onClick={() => handleMediaSelect(asset)}
+                                className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-blue-500"
+                              >
+                                <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center">
+                                  {asset.thumbnail ? (
+                                    <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-6xl">📄</span>
+                                  )}
+                                </div>
+                                <div className="p-3">
+                                  <h4 className="text-white font-bold text-sm truncate">{asset.name}</h4>
+                                  <p className="text-xs text-gray-400">{asset.type}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 
                 {/* Unsplash Tab */}
                 {mediaLibraryTab === 'unsplash' && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">✨</div>
-                    <h3 className="text-xl font-bold text-white mb-2">Unsplash Stock Photos</h3>
-                    <p className="text-gray-400 mb-4">Coming soon - search millions of free images</p>
+                  <div>
+                    <div className="mb-6 flex gap-3">
+                      <input
+                        type="text"
+                        value={unsplashQuery}
+                        onChange={(e) => setUnsplashQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchUnsplash()}
+                        placeholder="Search free stock photos..."
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                      />
+                      <button
+                        onClick={searchUnsplash}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition"
+                      >
+                        Search
+                      </button>
+                    </div>
+                    {mediaLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400">Searching...</p>
+                      </div>
+                    ) : unsplashImages.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">✨</div>
+                        <h3 className="text-xl font-bold text-white mb-2">Search Unsplash</h3>
+                        <p className="text-gray-400">Search millions of free stock photos</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {unsplashImages.map((image: any) => (
+                          <div 
+                            key={image.id}
+                            onClick={() => handleMediaSelect(image)}
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-pink-500"
+                          >
+                            <div className="aspect-square">
+                              <img src={image.thumbnail} alt={image.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="p-3">
+                              <p className="text-xs text-gray-400 truncate">{image.name}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
