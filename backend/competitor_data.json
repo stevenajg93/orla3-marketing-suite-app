@@ -1,0 +1,22 @@
+{
+  "competitors": [
+    {
+      "id": "comp_20251029114113",
+      "name": "Fiverr",
+      "handles": {
+        "instagram": "@fiverr",
+        "linkedin": null,
+        "x": null,
+        "tiktok": null,
+        "youtube": null
+      },
+      "industry": "Freelancer Marketplace",
+      "location": "Global",
+      "analysis": {
+        "insights": "```json\n{\n  \"content_themes\": [\n    \"Freelancer success stories and case studies showcasing platform outcomes\",\n    \"Small business and entrepreneur-focused content about scaling with freelance talent\",\n    \"Creative showcase content featuring work done through their platform\",\n    \"Educational content about freelancing best practices and skill development\",\n    \"Behind-the-scenes content from freelancers and buyers using the platform\",\n    \"Trend-based content around gig economy, remote work, and digital services\",\n    \"User-generated content featuring completed projects and testimonials\",\n    \"Industry-specific content targeting different service categories (design, writing, marketing, etc.)\"\n  ],\n  \"content_gaps\": [\n    \"Limited professional B2B content due to absence on LinkedIn - missing enterprise and corporate client acquisition\",\n    \"No real-time customer service or community engagement on Twitter/X - gap in immediate support and viral marketing\",\n    \"Missing thought leadership content about future of work and gig economy trends\",\n    \"Limited ability to engage with business decision-makers and HR professionals\",\n    \"Reduced reach for time-sensitive promotional campaigns across multiple platforms\",\n    \"Missing opportunities for professional networking and B2B partnerships\",\n    \"Limited crisis communication channels and real-time feedback collection\",\n    \"Reduced ability to capitalize on trending business topics and news\"\n  ],\n  \"platform_strategy\": [\n    \"Establish strong LinkedIn presence targeting business owners, startup founders, and corporate decision-makers\",\n    \"Create LinkedIn thought leadership content about remote work trends and freelance economy\",\n    \"Use Twitter/X for real-time customer support, trending topic engagement, and viral marketing campaigns\",\n    \"Leverage Twitter for live-tweeting events, quick tips, and community building\",\n    \"Cross-promote Instagram content on LinkedIn and Twitter to maximize reach\",\n    \"Develop platform-specific content calendars rather than one-size-fits-all approach\",\n    \"Create LinkedIn newsletters about freelancing insights and business growth\",\n    \"Use Twitter Spaces or LinkedIn Live for expert discussions and Q&A sessions\"\n  ],\n  \"engagement_tactics\": [\n    \"Partner with business influencers and thought leaders on LinkedIn for collaborative content\",\n    \"Create Twitter chats and hashtag campaigns around freelancing topics\",\n    \"Implement LinkedIn polls about business challenges that freelancers can solve\",\n    \"Use Twitter for flash promotions and time-sensitive offers with countdown timers\",\n    \"Engage with business publications and industry leaders' content on LinkedIn\",\n    \"Create Twitter threads sharing freelancing tips and success strategies\",\n    \"Host LinkedIn networking events and virtual meetups for freelancers and buyers\",\n    \"Implement social listening on Twitter to join conversations about remote work and business needs\",\n    \"Create shareable infographics optimized for LinkedIn's professional audience\",\n    \"Use Twitter for customer testimonials in thread format with visual storytelling\"\n  ]\n}\n```"
+      },
+      "last_analyzed": "2025-10-29T11:41:33.442652",
+      "added_at": "2025-10-29T11:41:13.663262"
+    }
+  ]
+}

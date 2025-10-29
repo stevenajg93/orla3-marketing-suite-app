@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Literal, List
 from anthropic import Anthropic
@@ -24,6 +24,38 @@ def extract_json_from_response(text: str) -> dict:
     text = re.sub(r'```\s*$', '', text)
     text = text.strip()
     return json.loads(text)
+
+def resolve_drive_shortcut(service, file_id):
+    """
+    Resolve Google Drive shortcut to actual target file.
+    Returns: (target_file_id, mime_type)
+    """
+    try:
+        from config import Config
+        
+        file_metadata = service.files().get(
+            fileId=file_id,
+            fields='id, name, mimeType, shortcutDetails',
+            supportsAllDrives=True
+        ).execute()
+        
+        mime_type = file_metadata.get('mimeType')
+        
+        # Check if it's a shortcut
+        if mime_type == 'application/vnd.google-apps.shortcut':
+            shortcut_details = file_metadata.get('shortcutDetails', {})
+            target_id = shortcut_details.get('targetId')
+            target_mime_type = shortcut_details.get('targetMimeType')
+            
+            if not target_id:
+                raise HTTPException(status_code=400, detail="Shortcut has no target")
+            
+            return target_id, target_mime_type
+        else:
+            return file_id, mime_type
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not resolve file: {str(e)}")
 
 @router.post("/caption", response_model=CaptionOutput)
 async def generate_caption(data: CaptionInput):
@@ -85,3 +117,38 @@ Make each caption UNIQUE - different hooks, angles, and CTAs."""
         return content
     except json.JSONDecodeError as e:
         return {"error": f"Invalid JSON: {str(e)}", "raw": completion.content[0].text[:500]}
+
+@router.get("/drive-file/{file_id}")
+async def get_drive_file_url(file_id: str):
+    """Get a usable URL for a Drive file (resolves shortcuts)"""
+    try:
+        import sys
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from routes.drive import get_drive_service
+        
+        service = get_drive_service()
+        if not service:
+            raise HTTPException(status_code=503, detail="Google Drive not connected")
+        
+        # Resolve shortcut if needed
+        target_file_id, mime_type = resolve_drive_shortcut(service, file_id)
+        
+        # Get file metadata with webContentLink
+        file_metadata = service.files().get(
+            fileId=target_file_id,
+            fields='id, name, mimeType, webViewLink, webContentLink, thumbnailLink',
+            supportsAllDrives=True
+        ).execute()
+        
+        return {
+            "success": True,
+            "file_id": target_file_id,
+            "name": file_metadata.get('name'),
+            "mime_type": file_metadata.get('mimeType'),
+            "web_view_link": file_metadata.get('webViewLink'),
+            "web_content_link": file_metadata.get('webContentLink'),
+            "thumbnail_link": file_metadata.get('thumbnailLink')
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
