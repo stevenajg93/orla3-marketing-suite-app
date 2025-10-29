@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import carousel, publisher, media, drive, draft, social, brand_voice, strategy, calendar, library
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, strategy, calendar, library
 
 app.include_router(carousel.router, prefix="/carousel", tags=["carousel"])
 app.include_router(publisher.router, prefix="/publisher", tags=["publisher"])
@@ -27,6 +27,7 @@ app.include_router(media.router, tags=["media"])
 app.include_router(drive.router, prefix="/drive", tags=["drive"])
 app.include_router(draft.router, prefix="/draft", tags=["draft"])
 app.include_router(social.router, prefix="/social", tags=["social"])
+app.include_router(social_caption.router, prefix="/social-caption", tags=["social"])
 app.include_router(brand_voice.router, prefix="/brand-voice", tags=["brand-voice"])
 app.include_router(strategy.router, prefix="/strategy", tags=["strategy"])
 app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])

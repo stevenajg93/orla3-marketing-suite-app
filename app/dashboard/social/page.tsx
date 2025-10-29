@@ -35,6 +35,7 @@ export default function SocialManagerPage() {
   const [postType, setPostType] = useState<PostType>("text");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["instagram"]);
   const [caption, setCaption] = useState("");
+  const [captionPrompt, setCaptionPrompt] = useState("");
   const [generatingCaption, setGeneratingCaption] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   
@@ -174,11 +175,36 @@ export default function SocialManagerPage() {
 
 
   const generateCaption = async () => {
+    if (!captionPrompt.trim()) {
+      alert('Please enter a prompt describing what you want the caption to be about');
+      return;
+    }
+    
     setGeneratingCaption(true);
-    setTimeout(() => {
-      setCaption("🎬 Finding the perfect videographer for your brand? Here's what you need to know!\n\nSwipe through to learn the key factors that separate great from mediocre. 👉\n\n#VideoMarketing #ContentCreation #UKBusiness");
+    try {
+      const context = {
+        prompt: captionPrompt,
+        platforms: selectedPlatforms,
+        postType: postType,
+        hasMedia: selectedMedia.length > 0,
+        mediaCount: selectedMedia.length
+      };
+      
+      const response = await fetch('http://localhost:8000/social-caption/generate-caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(context)
+      });
+      
+      const data = await response.json();
+      setCaption(data.caption || 'Generated caption');
+      setCaptionPrompt(''); // Clear prompt after generation
+    } catch (err) {
+      console.error('Failed to generate caption:', err);
+      alert('Failed to generate caption');
+    } finally {
       setGeneratingCaption(false);
-    }, 2000);
+    }
   };
 
   const generateAIReplies = async (comment: Comment) => {
@@ -272,13 +298,28 @@ export default function SocialManagerPage() {
               </div>
 
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-white">Caption</h2>
-                  <button onClick={generateCaption} disabled={generatingCaption} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50">
-                    {generatingCaption ? "✨ Generating..." : "✨ Generate Caption"}
+                <h2 className="text-xl font-bold text-white mb-4">Caption</h2>
+                
+                {/* AI Caption Generator */}
+                <div className="mb-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={captionPrompt}
+                    onChange={(e) => setCaptionPrompt(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && generateCaption()}
+                    placeholder="Describe what you want the caption about... (e.g. 'Promote videography for weddings')"
+                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                  />
+                  <button 
+                    onClick={generateCaption} 
+                    disabled={generatingCaption || !captionPrompt.trim()}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {generatingCaption ? "✨ Generating..." : "✨ Generate"}
                   </button>
                 </div>
-                <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write your caption here or generate one with AI..." rows={8} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none" />
+                
+                <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Your AI-generated caption will appear here... Or write your own!" rows={8} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none" />
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-sm text-gray-400">{caption.length} characters</span>
                   {selectedPlatforms.includes("x") && caption.length > 280 && (<span className="text-sm text-red-400 font-semibold">⚠️ Too long for X (280 char limit)</span>)}
