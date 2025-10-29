@@ -146,8 +146,10 @@ export default function SocialManagerPage() {
     }
   };
 
-  const handleMediaSelect = (item: any) => {
+  const handleMediaSelect = async (item: any) => {
     console.log('🎯 Media selected:', item);
+    
+    // Handle carousel content from library
     if (item.content_type === 'carousel') {
       try {
         const slides = JSON.parse(item.content);
@@ -157,19 +159,49 @@ export default function SocialManagerPage() {
       } catch (e) {
         console.error('Failed to parse carousel', e);
       }
-    } else if (item.content_type === 'blog') {
-      // Blogs are text content - populate caption with blog excerpt
+    } 
+    // Handle blog content
+    else if (item.content_type === 'blog') {
       console.log('📝 Blog selected - adding to caption');
       const excerpt = item.content;
       setCaption(excerpt);
-      setSelectedMedia([]); // Clear any images
-    } else if (item.thumbnail || item.url) {
-      // Handle Drive/Unsplash images
-      console.log('📷 Drive/Unsplash media selected');
+      setSelectedMedia([]);
+    } 
+    // Handle Google Drive files - fetch actual file URL
+    else if (item.source === 'drive') {
+      console.log('📁 Drive file selected, fetching URL...');
+      try {
+        const res = await fetch(`http://localhost:8000/social/drive-file/${item.id}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // Use thumbnail for images/videos, or web view link for other files
+          const fileUrl = data.thumbnail_link || data.web_content_link || data.web_view_link;
+          console.log('✅ Drive file URL:', fileUrl);
+          setSelectedMedia([fileUrl]);
+        } else {
+          console.error('Failed to get Drive file URL');
+          alert('Could not load Drive file. It may be a shortcut or restricted file.');
+        }
+      } catch (err) {
+        console.error('Error fetching Drive file:', err);
+        alert('Failed to load Drive file');
+      }
+    }
+    // Handle Unsplash images
+    else if (item.source === 'unsplash' && item.url) {
+      console.log('✨ Unsplash image selected');
+      setSelectedMedia([item.url]);
+    }
+    // Fallback for direct URLs
+    else if (item.thumbnail || item.url) {
+      console.log('📷 Generic media selected');
       setSelectedMedia([item.thumbnail || item.url]);
-    } else {
+    } 
+    else {
       console.log('📄 Unknown media type');
     }
+    
     setShowMediaLibrary(false);
   };
 
@@ -660,12 +692,23 @@ export default function SocialManagerPage() {
                             {driveAssets.map((asset: any) => (
                               <div 
                                 key={asset.id} 
-                                onClick={() => handleMediaSelect(asset)}
+                                onClick={() => {
+                  if (asset.type === 'folder') {
+                    // Navigate into folder
+                    setSelectedFolder(asset.id);
+                    loadDriveAssets(asset.id);
+                  } else {
+                    // Import file
+                    handleMediaSelect(asset);
+                  }
+                }}
                                 className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-blue-500"
                               >
                                 <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center">
                                   {asset.thumbnail ? (
                                     <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
+                                  ) : asset.type === 'folder' ? (
+                                    <span className="text-6xl">📁</span>
                                   ) : (
                                     <span className="text-6xl">📄</span>
                                   )}
