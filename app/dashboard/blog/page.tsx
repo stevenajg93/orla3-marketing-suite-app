@@ -326,8 +326,8 @@ export default function BlogWriter() {
               <Link href="/dashboard/carousel" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
                 🎠 Atomize to Carousel
               </Link>
-              <Link href="/dashboard/caption" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
-                💬 Atomize to Caption
+              <Link href="/dashboard/social" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
+                📱 Open Social Manager
               </Link>
             </div>
           </div>
