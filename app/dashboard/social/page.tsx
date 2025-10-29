@@ -175,10 +175,16 @@ export default function SocialManagerPage() {
         const data = await res.json();
         
         if (data.success) {
-          // Use thumbnail for images/videos, or web view link for other files
-          const fileUrl = data.thumbnail_link || data.web_content_link || data.web_view_link;
-          console.log('✅ Drive file URL:', fileUrl);
-          setSelectedMedia([fileUrl]);
+          // Store file with metadata for proper display
+          const mediaItem = {
+            url: data.thumbnail_link || data.web_content_link || data.web_view_link,
+            type: data.mime_type || '',
+            name: data.name || 'Unknown File',
+            source: 'drive',
+            folder: item.folderName || 'Drive'
+          };
+          console.log('✅ Drive file selected:', mediaItem);
+          setSelectedMedia([...selectedMedia, mediaItem]);
         } else {
           console.error('Failed to get Drive file URL');
           alert('Could not load Drive file. It may be a shortcut or restricted file.');
@@ -191,12 +197,13 @@ export default function SocialManagerPage() {
     // Handle Unsplash images
     else if (item.source === 'unsplash' && item.url) {
       console.log('✨ Unsplash image selected');
-      setSelectedMedia([item.url]);
+      setSelectedMedia([...selectedMedia, { url: item.url, type: 'image', name: item.name || 'Unsplash Image', source: 'unsplash' }]);
     }
     // Fallback for direct URLs
     else if (item.thumbnail || item.url) {
       console.log('📷 Generic media selected');
-      setSelectedMedia([item.thumbnail || item.url]);
+      const url = item.thumbnail || item.url;
+      setSelectedMedia([...selectedMedia, typeof url === 'string' ? url : url]);
     } 
     else {
       console.log('📄 Unknown media type');
@@ -373,22 +380,93 @@ export default function SocialManagerPage() {
                 {/* Selected Media Preview */}
                 {selectedMedia.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-400 mb-2">Selected Media ({selectedMedia.length})</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {selectedMedia.map((media, idx) => (
-                        <div key={idx} className="relative group">
-                          <img src={media} alt={`Selected ${idx + 1}`} className="w-full h-24 object-cover rounded-lg border border-white/20" />
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedMedia(selectedMedia.filter((_, i) => i !== idx));
-                            }}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold text-white">Selected Media ({selectedMedia.length})</p>
+                      <button 
+                        onClick={() => setSelectedMedia([])}
+                        className="text-xs text-red-400 hover:text-red-300 transition font-medium"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedMedia.map((media, idx) => {
+                        // Handle both object format (new) and string format (old/carousel)
+                        console.log('📺 Preview media item:', media, 'Type:', typeof media);
+                        const mediaUrl = typeof media === 'object' ? media.url : media;
+                        const mediaType = typeof media === 'object' ? media.type : '';
+                        const mediaName = typeof media === 'object' ? media.name : `Media ${idx + 1}`;
+                        const mediaSource = typeof media === 'object' ? media.source : 'unknown';
+                        
+                        const isVideo = mediaType.includes('video') || 
+                          mediaUrl.includes('video') || 
+                          mediaUrl.endsWith('.mp4') || 
+                          mediaUrl.endsWith('.mov') || 
+                          mediaUrl.endsWith('.avi') ||
+                          mediaUrl.endsWith('.webm');
+                        
+                        const isImage = mediaType.includes('image') ||
+                          mediaUrl.includes('image') ||
+                          mediaUrl.endsWith('.jpg') ||
+                          mediaUrl.endsWith('.jpeg') ||
+                          mediaUrl.endsWith('.png') ||
+                          mediaUrl.endsWith('.gif') ||
+                          mediaUrl.endsWith('.webp');
+                        
+                        return (
+                          <div key={idx} className="relative group bg-black/20 rounded-lg overflow-hidden border border-white/10 hover:border-purple-500 transition">
+                            <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
+                              {isVideo ? (
+                                <div className="text-center p-4">
+                                  <span className="text-4xl mb-2 block">🎥</span>
+                                  <p className="text-xs text-gray-400">Video File</p>
+                                </div>
+                              ) : isImage ? (
+                                <img 
+                                  src={mediaUrl} 
+                                  alt={`Selected ${idx + 1}`} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `
+                                        <div class="text-center p-4">
+                                          <span class="text-4xl mb-2 block">📄</span>
+                                          <p class="text-xs text-gray-400">Media ${idx + 1}</p>
+                                        </div>
+                                      `;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <div className="text-center p-4">
+                                  <span className="text-4xl mb-2 block">📄</span>
+                                  <p className="text-xs text-gray-400">Document</p>
+                                </div>
+                              )}
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedMedia(selectedMedia.filter((_, i) => i !== idx));
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg font-bold"
+                            >
+                              ×
+                            </button>
+                            <div className="p-2 bg-black/40">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs text-white font-medium truncate flex-1">
+                                  {isVideo ? '🎬 Video' : isImage ? '🖼️ Image' : '📄 File'} {idx + 1}
+                                </p>
+                                <span className="text-xs text-blue-400 ml-2">📁 Drive</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -691,31 +769,62 @@ export default function SocialManagerPage() {
                           <div className="grid grid-cols-3 gap-4">
                             {driveAssets.map((asset: any) => (
                               <div 
-                                key={asset.id} 
-                                onClick={() => {
-                  if (asset.type === 'folder') {
-                    // Navigate into folder
-                    setSelectedFolder(asset.id);
-                    loadDriveAssets(asset.id);
-                  } else {
-                    // Import file
-                    handleMediaSelect(asset);
-                  }
-                }}
-                                className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-blue-500"
+                                key={asset.id}
+                                className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-500 transition"
                               >
-                                <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center">
+                                <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center relative group">
                                   {asset.thumbnail ? (
                                     <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
                                   ) : asset.type === 'folder' ? (
                                     <span className="text-6xl">📁</span>
+                                  ) : asset.type === 'video' ? (
+                                    <span className="text-6xl">🎬</span>
+                                  ) : asset.type === 'image' ? (
+                                    <span className="text-6xl">🖼️</span>
                                   ) : (
                                     <span className="text-6xl">📄</span>
+                                  )}
+                                  
+                                  {/* Hover buttons for files */}
+                                  {asset.type !== 'folder' && (
+                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(`https://drive.google.com/file/d/${asset.id}/view`, '_blank');
+                                        }}
+                                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-semibold transition"
+                                      >
+                                        👁️ Preview in Drive
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // Add current folder name to asset
+                                          const folderName = driveFolders.find(f => f.id === selectedFolder)?.name || 'Drive';
+                                          handleMediaSelect({ ...asset, folderName });
+                                        }}
+                                        className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm font-semibold transition"
+                                      >
+                                        ✓ Select for Post
+                                      </button>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Click overlay for folders */}
+                                  {asset.type === 'folder' && (
+                                    <div 
+                                      onClick={() => {
+                                        setSelectedFolder(asset.id);
+                                        loadDriveAssets(asset.id);
+                                      }}
+                                      className="absolute inset-0 cursor-pointer"
+                                    />
                                   )}
                                 </div>
                                 <div className="p-3">
                                   <h4 className="text-white font-bold text-sm truncate">{asset.name}</h4>
-                                  <p className="text-xs text-gray-400">{asset.type}</p>
+                                  <p className="text-xs text-gray-400 capitalize">{asset.type}</p>
                                 </div>
                               </div>
                             ))}
