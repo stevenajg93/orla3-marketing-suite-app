@@ -6,6 +6,11 @@ from googleapiclient.discovery import build
 import pickle
 import os
 
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger import setup_logger
+
+logger = setup_logger(__name__)
 router = APIRouter()
 
 class DriveFile(BaseModel):
@@ -33,7 +38,7 @@ def get_drive_service():
         print(f"Drive auth error: {e}")
         return None
 
-@router.get("/drive/videos")
+@router.get("/videos")
 async def list_videos(folder_id: Optional[str] = None):
     """List video files from Google Drive folder"""
     service = get_drive_service()
@@ -67,36 +72,42 @@ async def list_videos(folder_id: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Drive API error: {str(e)}")
 
-@router.get("/drive/folders")
+@router.get("/folders")
 async def list_folders():
-    """List folders in Google Drive"""
+    """List folders in the Marketing folder"""
     service = get_drive_service()
     
     if not service:
-        return {
-            "status": "not_configured",
-            "message": "Google Drive not connected",
-            "folders": []
-        }
+        return {"folders": []}
     
     try:
+        from config import Config
+        marketing_id = find_marketing_folder_id(service)
+        if not marketing_id:
+            return {"folders": []}
+        
+        query = f"'{marketing_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
         results = service.files().list(
-            q="mimeType='application/vnd.google-apps.folder'",
-            pageSize=50,
-            fields="files(id, name)",
-            orderBy="name"
+            q=query,
+            corpora='drive',
+            driveId=Config.SHARED_DRIVE_ID,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            fields='files(id, name)',
+            pageSize=100
         ).execute()
         
-        folders = results.get('files', [])
+        folders = [{"id": marketing_id, "name": "📁 Marketing (Root)"}]
+        for file in results.get('files', []):
+            if not file['name'].startswith('.'):
+                folders.append({"id": file['id'], "name": file['name']})
         
-        return {
-            "status": "success",
-            "folders": folders
-        }
+        return {"folders": folders}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Drive API error: {str(e)}")
+        logger.error(f"Error loading folders: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/drive/status")
+@router.get("/status")
 async def drive_status():
     """Check Google Drive connection status"""
     service = get_drive_service()
@@ -105,3 +116,88 @@ async def drive_status():
         "connected": service is not None,
         "message": "Google Drive connected ✅" if service else "Run auth_drive.py to connect"
     }
+
+@router.get("/file/{file_id}/download")
+async def download_file(file_id: str):
+    """Download a file from Google Drive"""
+    try:
+        service = get_drive_service()
+        if not service:
+            raise HTTPException(status_code=503, detail="Google Drive not connected")
+        
+        # Get file metadata
+        file_metadata = service.files().get(fileId=file_id, fields="name,mimeType").execute()
+        
+        # Download file content
+        request = service.files().get_media(fileId=file_id)
+        file_content = request.execute()
+        
+        return {
+            "success": True,
+            "filename": file_metadata['name'],
+            "mimeType": file_metadata['mimeType'],
+            "content": file_content
+        }
+    except Exception as e:
+        logger.error(f"Error downloading file from Drive: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def find_marketing_folder_id(service):
+    """Find the Marketing folder in the shared drive"""
+    try:
+        from config import Config
+        query = f"'{Config.SHARED_DRIVE_ID}' in parents and name='{Config.MARKETING_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        results = service.files().list(
+            q=query,
+            corpora='drive',
+            driveId=Config.SHARED_DRIVE_ID,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            fields='files(id)',
+            pageSize=1
+        ).execute()
+        files = results.get('files', [])
+        if files:
+            logger.info(f"Found Marketing folder: {files[0]['id']}")
+            return files[0]['id']
+        else:
+            logger.warning(f"Marketing folder not found")
+            return None
+    except Exception as e:
+        logger.error(f"Error finding Marketing folder: {e}")
+        return None
+
+
+@router.get("/folder/{folder_id}/files")
+async def list_folder_files(folder_id: str):
+    """List files in a specific folder from Marketing shared drive"""
+    service = get_drive_service()
+    
+    if not service:
+        return {"files": []}
+    
+    try:
+        from config import Config
+        query = f"'{folder_id}' in parents and trashed=false"
+        results = service.files().list(
+            q=query,
+            corpora='drive',
+            driveId=Config.SHARED_DRIVE_ID,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            fields='files(id, name, mimeType, shortcutDetails)',
+            pageSize=1000
+        ).execute()
+        
+        files = []
+        for file in results.get('files', []):
+            # Skip hidden files and folders
+            if not file['name'].startswith('.'):
+                files.append(file)
+        
+        logger.info(f"Found {len(files)} files in folder {folder_id}")
+        return {"files": files}
+    except Exception as e:
+        logger.error(f"Error loading files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
