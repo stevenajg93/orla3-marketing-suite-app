@@ -156,14 +156,18 @@ export default function SocialManagerPage() {
       } catch (e) {
         console.error('Failed to parse carousel', e);
       }
+    } else if (item.content_type === 'blog') {
+      // Blogs are text content - populate caption with blog excerpt
+      console.log('📝 Blog selected - adding to caption');
+      const excerpt = item.content;
+      setCaption(excerpt);
+      setSelectedMedia([]); // Clear any images
     } else if (item.thumbnail || item.url) {
       // Handle Drive/Unsplash images
       console.log('📷 Drive/Unsplash media selected');
       setSelectedMedia([item.thumbnail || item.url]);
     } else {
-      // Handle other media types
-      console.log('📄 Other media selected');
-      setSelectedMedia([item.content || item.url]);
+      console.log('📄 Unknown media type');
     }
     setShowMediaLibrary(false);
   };
