@@ -558,11 +558,35 @@ export default function MediaLibrary() {
               </button>
             </div>
             <div className="p-6">
-              <div className="prose prose-invert max-w-none">
-                <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                  {previewContent.content}
+              {previewContent.content_type === "carousel" ? (
+                <div className="space-y-4">
+                  {(() => {
+                    try {
+                      const slides = JSON.parse(previewContent.content);
+                      return slides.map((slide: any, idx: number) => (
+                        <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <div className="flex gap-4">
+                            <img src={slide.branded_image || slide.image_url} alt={slide.alt_hint} className="w-32 h-32 object-cover rounded-lg" />
+                            <div className="flex-1">
+                              <h4 className="text-white font-bold mb-2">Slide {idx + 1}: {slide.title}</h4>
+                              <p className="text-gray-300 text-sm">{slide.body}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    } catch (e) {
+                      return <div className="text-red-400">Error parsing carousel data</div>;
+                    }
+                  })()}
                 </div>
-              </div>
+              ) : (
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {previewContent.content}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 flex gap-4 justify-center pt-6 border-t border-white/10">
                 <button
                   onClick={() => {

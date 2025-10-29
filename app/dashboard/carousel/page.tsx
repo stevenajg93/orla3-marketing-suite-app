@@ -50,28 +50,61 @@ export default function CarouselMakerPage() {
 
   const saveToLibrary = async () => {
     if (!result) return;
-    setSaveMessage("");
+    setSaveMessage("Exporting slides...");
+    
     try {
-      const carouselContent = result.slides?.map((slide: any, i: number) => 
-        `Slide ${i + 1}:\nTitle: ${slide.headline || slide.title}\nContent: ${slide.body || slide.content}`
-      ).join("\n\n");
+      const brandedSlides = [];
+      
+      for (let i = 0; i < exportRefs.current.length; i++) {
+        const slideElement = exportRefs.current[i];
+        if (!slideElement) continue;
+
+        slideElement.style.display = "block";
+        const canvas = await html2canvas(slideElement, {
+          backgroundColor: "#ffffff",
+          scale: 1,
+          width: 1080,
+          height: 1080,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+        });
+        slideElement.style.display = "none";
+
+        const imageData = canvas.toDataURL("image/png");
+        brandedSlides.push({
+          ...result.slides[i],
+          branded_image: imageData
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       await fetch("http://localhost:8000/library/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: Date.now().toString(),
-          title: result.slides?.[0]?.headline || "Carousel Post",
+          title: result.slides?.[0]?.title || "Carousel Post",
           content_type: "carousel",
-          content: `${carouselContent}\n\nCaption:\n${caption}`,
+          content: JSON.stringify(brandedSlides),
           created_at: new Date().toISOString(),
           status: "draft",
           platform: formData.target_platform,
-          tags: [formData.target_platform, formData.angle]
+          tags: [formData.target_platform, formData.angle],
+          metadata: {
+            caption: caption,
+            slideCount: result.slides?.length || 0
+          }
         })
       });
+
       setSaveMessage("✅ Saved!");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch (err) { setSaveMessage("❌ Failed"); }
+    } catch (err) {
+      console.error(err);
+      setSaveMessage("❌ Failed");
+    }
   };
   const handleExport = async () => {
     if (!result?.slides) return;
