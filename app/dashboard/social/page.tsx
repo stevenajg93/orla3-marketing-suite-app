@@ -50,6 +50,13 @@ export default function SocialManagerPage() {
   const [discoveryPosts, setDiscoveryPosts] = useState<DiscoveryPost[]>([]);
   const [searchingPosts, setSearchingPosts] = useState(false);
 
+  // Media library state
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
+  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'unsplash'>('generated');
+  const [libraryContent, setLibraryContent] = useState<any[]>([]);
+
+
   const platforms = [
     { id: "instagram" as Platform, name: "Instagram", icon: "📷", color: "from-pink-500 to-purple-500", discovery: true, autoReply: true },
     { id: "linkedin" as Platform, name: "LinkedIn", icon: "💼", color: "from-blue-600 to-blue-700", discovery: true, autoReply: true },
@@ -81,6 +88,37 @@ export default function SocialManagerPage() {
       setSelectedPlatforms([...selectedPlatforms, platform]);
     }
   };
+
+
+  const loadMediaLibrary = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/library/content');
+      const data = await res.json();
+      setLibraryContent(data.items || []);
+    } catch (err) {
+      console.error('Failed to load media library');
+    }
+  };
+
+  const handleMediaSelect = (item: any) => {
+    console.log('🎯 Media selected:', item);
+    if (item.content_type === 'carousel') {
+      try {
+        const slides = JSON.parse(item.content);
+        const images = slides.map((s: any) => s.branded_image || s.image_url).filter(Boolean);
+        console.log('📸 Extracted images:', images);
+        setSelectedMedia(images);
+      } catch (e) {
+        console.error('Failed to parse carousel', e);
+      }
+    } else {
+      // Handle other media types (images, etc)
+      console.log('📷 Non-carousel media selected');
+      setSelectedMedia([item.content || item.url]);
+    }
+    setShowMediaLibrary(false);
+  };
+
 
   const generateCaption = async () => {
     setGeneratingCaption(true);
@@ -196,11 +234,34 @@ export default function SocialManagerPage() {
 
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-4">Media</h2>
-                <div className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
+                <div onClick={() => { loadMediaLibrary(); setShowMediaLibrary(true); }} className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-purple-500/50 transition cursor-pointer">
                   <div className="text-6xl mb-4">📁</div>
                   <p className="text-gray-400 mb-2">Click to browse Media Library</p>
                   <p className="text-sm text-gray-500">or drag and drop files here</p>
                 </div>
+                
+                {/* Selected Media Preview */}
+                {selectedMedia.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-400 mb-2">Selected Media ({selectedMedia.length})</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedMedia.map((media, idx) => (
+                        <div key={idx} className="relative group">
+                          <img src={media} alt={`Selected ${idx + 1}`} className="w-full h-24 object-cover rounded-lg border border-white/20" />
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedMedia(selectedMedia.filter((_, i) => i !== idx));
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
@@ -396,6 +457,91 @@ export default function SocialManagerPage() {
           </div>
         )}
       </div>
+
+        {/* Media Library Modal */}
+        {showMediaLibrary && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8" onClick={() => setShowMediaLibrary(false)}>
+            <div className="max-w-6xl w-full max-h-[80vh] bg-slate-900 rounded-2xl border border-white/20 flex flex-col" onClick={(e) => e.stopPropagation()}>
+              {/* Modal Header */}
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white">Browse Media Library</h3>
+                <button onClick={() => setShowMediaLibrary(false)} className="text-white hover:text-red-400 text-3xl">×</button>
+              </div>
+              
+              {/* Tabs */}
+              <div className="px-6 pt-4 flex gap-3 border-b border-white/10">
+                <button 
+                  onClick={() => setMediaLibraryTab('generated')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'generated' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  🎨 Generated Content
+                </button>
+                <button 
+                  onClick={() => setMediaLibraryTab('drive')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'drive' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  📁 Google Drive
+                </button>
+                <button 
+                  onClick={() => setMediaLibraryTab('unsplash')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'unsplash' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  ✨ Unsplash
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 overflow-auto p-6">
+                {/* Generated Content Tab */}
+                {mediaLibraryTab === 'generated' && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {libraryContent.map((item) => (
+                      <div key={item.id} onClick={() => handleMediaSelect(item)} className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-purple-500">
+                        <div className="aspect-square bg-gradient-to-br from-purple-900 to-slate-900 flex items-center justify-center">
+                          {item.content_type === 'carousel' ? (
+                            <span className="text-6xl">🎨</span>
+                          ) : item.content_type === 'blog' ? (
+                            <span className="text-6xl">📝</span>
+                          ) : (
+                            <span className="text-6xl">📄</span>
+                          )}
+                        </div>
+                        <div className="p-3">
+                      <h4 className="text-white font-bold text-sm truncate">{item.title}</h4>
+                      <p className="text-xs text-gray-400 capitalize">{item.content_type}</p>
+                    </div>
+                  </div>
+                ))}
+                {libraryContent.length === 0 && (
+                  <div className="col-span-3 text-center py-12">
+                    <p className="text-gray-400">No content in library yet</p>
+                  </div>
+                )}
+                  </div>
+                )}
+                
+                {/* Google Drive Tab */}
+                {mediaLibraryTab === 'drive' && (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📁</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Google Drive Integration</h3>
+                    <p className="text-gray-400 mb-4">Coming soon - browse your Drive files</p>
+                  </div>
+                )}
+                
+                {/* Unsplash Tab */}
+                {mediaLibraryTab === 'unsplash' && (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">✨</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Unsplash Stock Photos</h3>
+                    <p className="text-gray-400 mb-4">Coming soon - search millions of free images</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 }
