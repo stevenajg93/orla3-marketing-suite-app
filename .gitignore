@@ -39,3 +39,27 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Backend runtime data
+backend/brand_voice_index.json
+backend/competitor_data.json
+backend/content_library.json
+backend/credentials/token.pickle
+
+# Logs
+*.log
+
+# Temporary files
+*.backup
+*.bak
+*.bak2
+*.bak4
