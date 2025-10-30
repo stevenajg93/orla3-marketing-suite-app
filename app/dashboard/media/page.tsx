@@ -46,6 +46,10 @@ export default function MediaLibrary() {
   const [status, setStatus] = useState<any>(null);
   const [previewAsset, setPreviewAsset] = useState<MediaAsset | null>(null);
   const [previewContent, setPreviewContent] = useState<GeneratedContent | null>(null);
+  const [contentTypeFilter, setContentTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [contentSearchQuery, setContentSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState<string>('all');
 
   useEffect(() => {
     loadStatus();
@@ -335,7 +339,78 @@ export default function MediaLibrary() {
             ) : (
               <>
                 <h2 className="text-xl font-bold text-white mb-4">Filters</h2>
-                <p className="text-gray-400 text-sm">All your generated blogs, carousels, and captions in one place.</p>
+                <p className="text-gray-400 text-sm mb-4">All your generated blogs, carousels, and captions in one place.</p>
+                
+                {/* Search */}
+                <div className="mb-4">
+                  <label className="block text-white font-bold mb-2 text-sm">Search</label>
+                  <input
+                    type="text"
+                    value={contentSearchQuery}
+                    onChange={(e) => setContentSearchQuery(e.target.value)}
+                    placeholder="Search by title..."
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+
+                {/* Content Type */}
+                <div className="mb-4">
+                  <label className="block text-white font-bold mb-2 text-sm">Content Type</label>
+                  <select
+                    value={contentTypeFilter}
+                    onChange={(e) => setContentTypeFilter(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="blog">📝 Blogs</option>
+                    <option value="carousel">🎨 Carousels</option>
+                    <option value="caption">💬 Captions</option>
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div className="mb-4">
+                  <label className="block text-white font-bold mb-2 text-sm">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="draft">📝 Draft</option>
+                    <option value="published">✅ Published</option>
+                    <option value="scheduled">📅 Scheduled</option>
+                  </select>
+                </div>
+
+                {/* Date Range */}
+                <div className="mb-4">
+                  <label className="block text-white font-bold mb-2 text-sm">Date Range</label>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                  </select>
+                </div>
+
+                {/* Clear Filters */}
+                <button
+                  onClick={() => {
+                    setContentTypeFilter('all');
+                    setStatusFilter('all');
+                    setContentSearchQuery('');
+                    setDateFilter('all');
+                  }}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
+                >
+                  Clear All Filters
+                </button>
               </>
             )}
           </div>
@@ -364,13 +439,76 @@ export default function MediaLibrary() {
             </div>
 
             {activeTab === 'generated' ? (
-              generatedContent.length === 0 ? (
+              (() => {
+                // Apply filters
+                let filtered = generatedContent;
+                
+                // Filter by content type
+                if (contentTypeFilter !== 'all') {
+                  filtered = filtered.filter(item => item.content_type === contentTypeFilter);
+                }
+                
+                // Filter by status
+                if (statusFilter !== 'all') {
+                  filtered = filtered.filter(item => item.status === statusFilter);
+                }
+                
+                // Filter by search query
+                if (contentSearchQuery.trim()) {
+                  filtered = filtered.filter(item => 
+                    item.title.toLowerCase().includes(contentSearchQuery.toLowerCase())
+                  );
+                }
+                
+                // Filter by date
+                if (dateFilter !== 'all') {
+                  const now = new Date();
+                  filtered = filtered.filter(item => {
+                    const itemDate = new Date(item.created_at);
+                    switch(dateFilter) {
+                      case 'today':
+                        return itemDate.toDateString() === now.toDateString();
+                      case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        return itemDate >= weekAgo;
+                      case 'month':
+                        return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+                      case 'year':
+                        return itemDate.getFullYear() === now.getFullYear();
+                      default:
+                        return true;
+                    }
+                  });
+                }
+                
+                return filtered;
+              })().length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-400 text-lg">No generated content yet. Create some blogs or carousels to get started!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {generatedContent.map((item) => (
+                  {(() => {
+                    // Apply same filters
+                    let filtered = generatedContent;
+                    if (contentTypeFilter !== 'all') filtered = filtered.filter(item => item.content_type === contentTypeFilter);
+                    if (statusFilter !== 'all') filtered = filtered.filter(item => item.status === statusFilter);
+                    if (contentSearchQuery.trim()) filtered = filtered.filter(item => item.title.toLowerCase().includes(contentSearchQuery.toLowerCase()));
+                    if (dateFilter !== 'all') {
+                      const now = new Date();
+                      filtered = filtered.filter(item => {
+                        const itemDate = new Date(item.created_at);
+                        switch(dateFilter) {
+                          case 'today': return itemDate.toDateString() === now.toDateString();
+                          case 'week': return itemDate >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                          case 'month': return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+                          case 'year': return itemDate.getFullYear() === now.getFullYear();
+                          default: return true;
+                        }
+                      });
+                    }
+                    return filtered;
+                  })().map((item) => (
                     <div
                       key={item.id}
                       className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all cursor-pointer"
