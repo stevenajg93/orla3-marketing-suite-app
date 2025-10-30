@@ -1,74 +1,75 @@
-# ORLA3 Marketing Automation System
+# Orla³ Marketing Automation Suite
 
-## ✅ What's Working Now
+AI-powered marketing content generation and automation platform for videographers and creative professionals.
 
-### Core Features Built:
-- **API Integration**: Claude API connected and working ($5/month started)
-- **Content Generation**: Creates 3 articles with one command
-- **Dashboard**: Beautiful command center at /dashboard
-- **Articles Viewer**: Full article display at /dashboard/articles
-- **Storage System**: Articles persist in memory
-- **One-Click Generation**: Button generates content instantly
+## 🎯 Current Features
 
-### Commands Available:
-- `npm run dev` - Start development server
-- `npm run orla:automate` - Run daily automation (terminal)
-- Dashboard button - Generate content from UI
+### ✅ Content Generation
+- **Blog Writer** - AI-generated SEO-optimized blog posts with Claude
+- **Carousel Creator** - Multi-slide social media content with branded images
+- **Social Media Manager** - AI caption generation for Instagram, LinkedIn, Twitter, etc.
+- **Competitor Analysis** - Track and analyze competitor strategies with AI insights
 
-## 🚀 What's Next
+### ✅ Brand Voice Training
+- **Brand Voice Manager** - Import brand assets from Google Drive
+- Train AI on your authentic voice using documents, chat logs, and guidelines
+- Automatic Google Drive shortcut resolution
 
-### Immediate Priority:
-1. **Upload ORLA3 Context Files** - Feed your brand guidelines
-2. **WordPress Integration** - Auto-publish to your site
-3. **Supabase Database** - Permanent storage (free tier)
-4. **Social Media Posts** - Generate Twitter/LinkedIn content
+### ✅ Media Management
+- **Media Library** - Browse and manage Google Drive assets
+- **Folder Navigation** - Deep folder browsing with breadcrumbs
+- **Multi-Select** - Select multiple files for social posts
+- **Preview & Import** - Preview files in Drive before importing
+- **Advanced Filters** - Filter by content type, status, date range, and search
 
-### This Week:
-- SEO optimization module
-- Content scheduler
-- Analytics tracking
-- Email automation
+### ✅ Content Library
+- View all generated blogs, carousels, and captions in one place
+- Filter by type, status, and date
+- Search by title
+- Preview and copy content
 
-## 💰 Current Costs
-- Claude API: ~$0.01 per article (3000 articles = $30/month)
-- Hosting: $0 (Vercel free tier)
-- Database: $0 (Supabase free tier)
-- **Total: Under $50/month as promised**
+## 🛠️ Tech Stack
 
-## 📁 Project Structure
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **Backend**: FastAPI (Python)
+- **AI**: Anthropic Claude Sonnet 4.5
+- **Storage**: JSON files (simple, no database required)
+- **APIs**: Google Drive API, Unsplash API
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Python 3.9+
+- Google Drive API credentials
+- Anthropic API key
+
+### Installation
+
+1. Clone and install
+```bash
+git clone https://github.com/stevenajg93/orla3-marketing-suite-app.git
+cd orla3-marketing-suite-app
+npm install
+cd backend && pip install -r requirements.txt
 ```
-orla3/
-├── app/
-│   ├── api/
-│   │   └── generate/     # Content generation API
-│   └── dashboard/         # Control center
-│       └── articles/      # Article viewer
-├── lib/
-│   └── storage.ts        # Article storage
-├── scripts/
-│   └── daily.js          # Automation script
-└── .env.local            # Your API keys
+
+2. Set up `.env` with your API keys
+
+3. Authorize Google Drive
+```bash
+cd backend && python auth_drive.py
 ```
 
-## 🎯 Quick Start (Daily Use)
-1. Open http://localhost:3000/dashboard
-2. Click "Generate Today's Content"
-3. Review articles
-4. Publish to WordPress (coming soon)
+### Running
 
-## 🔧 Troubleshooting
-- If server stops: `npm run dev`
-- If generation fails: Check API credits at console.anthropic.com
-- If dashboard blank: Hard refresh (Cmd+Shift+R)
+**Frontend:** `npm run dev` → http://localhost:3000  
+**Backend:** `cd backend && python main.py` → http://localhost:8000
 
-## 📈 Success Metrics
-- [x] System generates content automatically
-- [x] Beautiful, professional interface
-- [x] Under $50/month operating cost
-- [ ] Publishing to WordPress
-- [ ] Social media integration
-- [ ] SEO optimization active
-- [ ] Lead generation tracking
+## 💰 Cost Estimate
+- Claude API: ~$10-30/month
+- Hosting: Free tier available
+- Drive & Unsplash APIs: Free
 
 ---
-Built with ORLA3 Blueprint | Ready for production
+**Ready for production** | Built with ❤️ for videographers and creatives
