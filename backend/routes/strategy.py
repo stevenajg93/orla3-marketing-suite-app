@@ -1,172 +1,336 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException
 from anthropic import Anthropic
-import os, json, re
+import json
+import os
+from datetime import datetime
+from pathlib import Path
 
 router = APIRouter()
 
-class KeywordStrategy(BaseModel):
-    keyword: str
-    search_intent: str
-    priority: str
-    ai_search_optimized: bool
-    target_platforms: List[str]
-    market_gap: Optional[str] = None
-    top_competitor_topics: Optional[List[str]] = None
+# Initialize Anthropic client
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-class MarketResearch(BaseModel):
-    keyword: str
-    top_ranking_urls: List[str]
-    competitor_angles: List[str]
-    content_gaps: List[str]
-    orla3_unique_angles: List[str]
+BRAND_VOICE_INDEX_PATH = "brand_voice_index.json"
+BRAND_STRATEGY_PATH = "brand_strategy.json"
+COMPETITOR_FILE = "competitor_data.json"
 
-class StrategyOutput(BaseModel):
-    keywords: List[KeywordStrategy]
-    recommended_next: KeywordStrategy
-    market_research: Optional[MarketResearch] = None
-
-def extract_json_from_response(text: str) -> dict:
-    text = re.sub(r'```json\s*', '', text)
-    text = re.sub(r'```\s*$', '', text)
-    return json.loads(text.strip())
-
-@router.get("/strategy/next-keyword")
-def get_next_keyword():
-    """Returns the next keyword + search intent to write about for ORLA³ SEO dominance"""
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+def load_brand_voice_assets():
+    """Load all uploaded brand voice assets"""
+    if not os.path.exists(BRAND_VOICE_INDEX_PATH):
+        return []
     
-    system_prompt = """You are ORLA³'s SEO strategist and keyword researcher.
-Your mission: Dominate videography search across Google AND AI search engines (ChatGPT, Claude, Perplexity).
+    with open(BRAND_VOICE_INDEX_PATH, 'r') as f:
+        data = json.load(f)
+        return data.get('assets', [])
 
-ORLA³ CONTEXT (use this to inform strategy):
-- P2P videography marketplace in UK
-- Escrow payments (funds held safely, released on download or day 7)
-- 10% fee split (client + videographer)
-- No subscriptions, no pay-to-rank
-- Ranking: 50% reliability (Wilson score reviews), 50% relevancy (semantic matching)
-- Protects videographers: watermarked previews, fast payouts (2-3 days)
-- Protects clients: escrow safety, clear packages, dispute resolution
-- Target: Corporate video, weddings, events, product videos, drone footage
-- UK cities: London, Manchester, Birmingham, Edinburgh, Glasgow, Bristol
+def load_competitor_summary():
+    """Load competitor marketing insights summary"""
+    if not os.path.exists(COMPETITOR_FILE):
+        return None
+    
+    with open(COMPETITOR_FILE, 'r') as f:
+        data = json.load(f)
+        competitors = data.get('competitors', [])
+        
+        if not competitors:
+            return None
+        
+        # Build summary
+        analyzed = [c for c in competitors if c.get('analysis')]
+        
+        if not analyzed:
+            return None
+        
+        summary = {
+            'total': len(competitors),
+            'analyzed': len(analyzed),
+            'competitors': []
+        }
+        
+        for comp in analyzed:
+            analysis = comp.get('analysis', {})
+            summary['competitors'].append({
+                'name': comp['name'],
+                'threat_level': analysis.get('threat_level', 'unknown'),
+                'marketing_they_do_well': analysis.get('marketing_they_do_well', []),
+                'content_gaps': analysis.get('content_gaps', []),
+                'positioning_messaging': analysis.get('positioning_messaging', ''),
+                'content_opportunities': analysis.get('content_opportunities', [])
+            })
+        
+        return summary
 
-Target keywords must:
-- Be high-intent (ready to hire or research videographers)
-- Work for both traditional SEO and AI search optimization
-- Include location-based terms where relevant
-- Address pain points ORLA³ solves (late payment, unclear scope, deposit risk)
-
-Return ONLY valid JSON."""
-
-    user_prompt = """Generate 5 strategic keywords for ORLA³'s next blog posts.
-
-Return JSON in this exact format:
-{
-  "keywords": [
-    {
-      "keyword": "corporate video production london",
-      "search_intent": "Business owner searching for professional videographer for company video",
-      "priority": "high",
-      "ai_search_optimized": true,
-      "target_platforms": ["ChatGPT", "Claude", "Google"],
-      "market_gap": "Most content ignores payment protection and scope clarity"
-    }
-  ],
-  "recommended_next": {
-    "keyword": "best wedding videographer uk escrow payment",
-    "search_intent": "Engaged couple worried about deposit safety when booking videographer",
-    "priority": "high",
-    "ai_search_optimized": true,
-    "target_platforms": ["ChatGPT", "Perplexity", "Google"],
-    "market_gap": "No content addresses payment security for wedding video bookings"
-  }
-}
-
-Focus on HIGH COMMERCIAL INTENT keywords that convert to ORLA³ bookings.
-Identify market gaps where competitors don't address payment safety, scope protection, or fast hiring."""
-
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=2000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
-    )
-
+def extract_text_from_file(file_path: str) -> str:
+    """Extract text from various file formats"""
+    file_ext = Path(file_path).suffix.lower()
+    
     try:
-        raw_text = completion.content[0].text
-        content = extract_json_from_response(raw_text)
-        return content
-    except json.JSONDecodeError as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": raw_text[:500]}
+        # TXT files
+        if file_ext == '.txt':
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        
+        # DOCX files
+        elif file_ext == '.docx':
+            try:
+                from docx import Document
+                doc = Document(file_path)
+                return '\n'.join([para.text for para in doc.paragraphs])
+            except Exception as e:
+                return f"Could not extract DOCX text: {str(e)}"
+        
+        # PDF files
+        elif file_ext == '.pdf':
+            try:
+                import PyPDF2
+                text = []
+                with open(file_path, 'rb') as f:
+                    pdf = PyPDF2.PdfReader(f)
+                    for page in pdf.pages:
+                        text.append(page.extract_text())
+                return '\n'.join(text)
+            except Exception as e:
+                return f"Could not extract PDF text: {str(e)}"
+        
+        # Excel files (Discord exports)
+        elif file_ext in ['.xlsx', '.xls', '.csv']:
+            try:
+                import pandas as pd
+                if file_ext == '.csv':
+                    df = pd.read_csv(file_path)
+                else:
+                    df = pd.read_excel(file_path)
+                return df.to_string()
+            except Exception as e:
+                return f"Could not extract spreadsheet text: {str(e)}"
+        
+        else:
+            return f"Unsupported file type: {file_ext}"
+            
+    except Exception as e:
+        return f"Error reading file: {str(e)}"
 
-@router.post("/strategy/market-research")
-def analyze_market(keyword: str):
-    """Analyzes live market for a keyword - what's ranking, what's missing, how ORLA³ can win"""
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    
-    system_prompt = """You are ORLA³'s competitive intelligence analyst.
-Analyze search landscapes for videography keywords and identify content gaps ORLA³ can exploit.
+@router.post("/analyze")
+async def analyze_brand_voice(include_competitors: bool = True):
+    """
+    Analyze brand voice assets and optionally include competitive MARKETING intelligence
+    """
+    try:
+        # Load assets
+        assets = load_brand_voice_assets()
+        
+        if not assets:
+            return {
+                "success": False,
+                "error": "No brand voice assets uploaded yet. Please upload training materials first."
+            }
+        
+        # Extract text from files and organize by category
+        brand_context = {
+            "guidelines": [],
+            "voice_samples": [],
+            "community": []
+        }
+        
+        print(f"Processing {len(assets)} assets...")
+        
+        for asset in assets:
+            # Try to extract text if not already done
+            text = asset.get('full_text', '')
+            if not text or text == "":
+                print(f"Extracting text from {asset['filename']}...")
+                text = extract_text_from_file(asset['path'])
+            
+            # Skip if no text extracted
+            if not text or len(text) < 50:
+                print(f"Skipping {asset['filename']} - insufficient text")
+                continue
+            
+            # Categorize
+            category = asset['category']
+            if category == 'guidelines':
+                brand_context['guidelines'].append({
+                    'filename': asset['filename'],
+                    'text': text[:3000]
+                })
+            elif category == 'voice_samples':
+                brand_context['voice_samples'].append({
+                    'filename': asset['filename'],
+                    'text': text[:2000]
+                })
+            elif category in ['community_videographer', 'community_client']:
+                brand_context['community'].append({
+                    'filename': asset['filename'],
+                    'text': text[:1500]
+                })
+        
+        print(f"Context prepared: {len(brand_context['guidelines'])} guidelines, {len(brand_context['voice_samples'])} samples, {len(brand_context['community'])} community files")
+        
+        # Load competitor MARKETING insights if requested
+        competitor_context = ""
+        competitor_summary = None
+        
+        if include_competitors:
+            competitor_summary = load_competitor_summary()
+            if competitor_summary and competitor_summary['analyzed'] > 0:
+                competitor_context = f"""
 
-ORLA³ UNIQUE SELLING POINTS:
-- Escrow payment protection (funds safe until download)
-- Fast payouts for videographers (2-3 days vs industry 30-90 days)
-- No deposits required (full escrow instead)
-- Watermarked preview protection
-- Clear package scopes (reduces scope creep)
-- No pay-to-rank (fair algorithm)
-- Semantic search matching (better fits)
-- UK-focused marketplace
+COMPETITIVE MARKETING INTELLIGENCE ({competitor_summary['analyzed']} competitors analyzed):
 
-Return ONLY valid JSON."""
+"""
+                for comp in competitor_summary['competitors']:
+                    competitor_context += f"""
+**{comp['name']}** (Marketing Threat: {comp['threat_level']})
+- Marketing/Content they do well: {', '.join(comp['marketing_they_do_well'][:3]) if comp['marketing_they_do_well'] else 'N/A'}
+- Content gaps they miss: {', '.join(comp['content_gaps'][:2]) if comp['content_gaps'] else 'N/A'}
+- Our messaging positioning: {comp['positioning_messaging'][:200] if comp['positioning_messaging'] else 'N/A'}
+"""
+                
+                competitor_context += """
+MARKETING STRATEGY DIRECTIVE:
+- Adapt competitor CONTENT/MESSAGING strategies that work (in our authentic voice)
+- Exploit CONTENT GAPS they're missing
+- Position our MESSAGING clearly against them while staying true to our brand
 
-    user_prompt = f"""Analyze the competitive landscape for: "{keyword}"
+CRITICAL: Use competitive insights ONLY for CONTENT & MARKETING strategy, NOT product development.
+"""
+        
+        # Build analysis prompt
+        brand_files_context = f"""
+**BRAND GUIDELINES ({len(brand_context['guidelines'])} files):**
+{chr(10).join([f"- {item['filename']}: {item['text'][:500]}..." for item in brand_context['guidelines']]) if brand_context['guidelines'] else "None uploaded"}
 
-Based on typical content in this space, identify:
-1. What angles competitors typically cover
-2. What they miss or ignore
-3. How ORLA³'s features solve problems competitors don't address
-4. Unique angles only ORLA³ can claim
+**VOICE SAMPLES ({len(brand_context['voice_samples'])} files):**
+{chr(10).join([f"- {item['filename']}: {item['text'][:500]}..." for item in brand_context['voice_samples']]) if brand_context['voice_samples'] else "None uploaded"}
 
-Return JSON in this exact format:
+**COMMUNITY CONVERSATIONS ({len(brand_context['community'])} files):**
+{chr(10).join([f"- {item['filename']}: {item['text'][:300]}..." for item in brand_context['community']]) if brand_context['community'] else "None uploaded"}
+"""
+
+        prompt = f"""You are a CONTENT MARKETING strategist creating a comprehensive CONTENT & MESSAGING strategy for Orla³.
+
+BRAND VOICE TRAINING MATERIALS:
+{brand_files_context}
+{competitor_context}
+
+Analyze these materials and create a strategic brief that balances authentic brand voice with competitive MARKETING positioning.
+
+CRITICAL: The competitive_positioning section should focus ONLY on CONTENT & MARKETING strategy:
+- Content topics and themes
+- Messaging and positioning
+- Brand voice differentiation
+- Marketing tactics
+
+DO NOT include product features, business models, or operational recommendations.
+
+Return ONLY valid JSON (no markdown) in this exact format:
 {{
-  "keyword": "{keyword}",
-  "top_ranking_urls": ["https://example.com/article1", "https://example.com/article2"],
-  "competitor_angles": ["How to choose a videographer", "Average costs", "Portfolio tips"],
-  "content_gaps": ["Payment protection", "Deposit safety", "Fast videographer payout times", "Scope clarity tools"],
-  "orla3_unique_angles": ["How escrow protects your wedding video deposit", "Why UK videographers prefer ORLA³ for faster payments", "Eliminating scope creep with structured packages"]
+  "brand_voice": {{
+    "tone": "description of tone",
+    "personality": ["trait1", "trait2", "trait3"],
+    "key_characteristics": ["characteristic1", "characteristic2"]
+  }},
+  "messaging_pillars": ["pillar1", "pillar2", "pillar3"],
+  "language_patterns": {{
+    "preferred_phrases": ["phrase1", "phrase2"],
+    "vocabulary": ["word1", "word2"],
+    "writing_style": "description"
+  }},
+  "dos_and_donts": {{
+    "dos": ["do1", "do2"],
+    "donts": ["dont1", "dont2"]
+  }},
+  "target_audience": {{
+    "primary": "description",
+    "characteristics": ["char1", "char2"]
+  }},
+  "content_themes": ["theme1", "theme2", "theme3"],
+  "competitive_positioning": {{
+    "unique_value": "What makes our MESSAGING/POSITIONING different",
+    "copy_and_adapt": ["CONTENT/MESSAGING strategies competitors use that we should adapt"],
+    "gaps_to_exploit": ["CONTENT topics and MESSAGING angles competitors are missing"],
+    "avoid": ["MARKETING/CONTENT tactics competitors do that we should NOT copy"]
+  }}
 }}
 
-Focus on gaps where ORLA³'s platform features directly solve problems competitors don't mention."""
+CRITICAL: Return ONLY the JSON object, nothing else."""
 
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=2000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
-    )
-
-    try:
-        raw_text = completion.content[0].text
-        content = extract_json_from_response(raw_text)
-        return content
+        print("Calling Claude API for strategy analysis...")
+        
+        # Call Claude API
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4500,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
+        )
+        
+        # Parse response
+        strategy_text = message.content[0].text
+        
+        print(f"Claude response length: {len(strategy_text)} chars")
+        
+        # Try to extract JSON if wrapped in markdown
+        if "```json" in strategy_text:
+            strategy_text = strategy_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in strategy_text:
+            strategy_text = strategy_text.split("```")[1].split("```")[0].strip()
+        
+        strategy = json.loads(strategy_text)
+        
+        # Add metadata
+        strategy['generated_at'] = datetime.now().isoformat()
+        strategy['assets_analyzed'] = len(assets)
+        strategy['competitors_included'] = competitor_summary['analyzed'] if competitor_summary else 0
+        strategy['categories'] = {
+            'guidelines': len(brand_context['guidelines']),
+            'voice_samples': len(brand_context['voice_samples']),
+            'community': len(brand_context['community'])
+        }
+        
+        # Save strategy
+        with open(BRAND_STRATEGY_PATH, 'w') as f:
+            json.dump(strategy, f, indent=2)
+        
+        print("✅ Strategy saved successfully")
+        
+        return {
+            "success": True,
+            "strategy": strategy,
+            "message": f"✅ Analyzed {len(assets)} brand assets" + 
+                      (f" and {competitor_summary['analyzed']} competitors" if competitor_summary else "")
+        }
+        
     except json.JSONDecodeError as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": raw_text[:500]}
+        print(f"JSON parsing error: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Could not parse strategy as JSON. Response preview: {strategy_text[:200]}..."
+        }
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": f"Strategy analysis failed: {str(e)}"
+        }
 
-@router.post("/strategy/generate-full-content")
-def generate_full_content():
-    """Auto-generates keyword, does market research, writes blog optimized for gaps"""
-    strategy = get_next_keyword()
-    next_kw = strategy["recommended_next"]
+@router.get("/current")
+async def get_current_strategy():
+    """Get the current brand strategy"""
+    if not os.path.exists(BRAND_STRATEGY_PATH):
+        return {
+            "success": False,
+            "error": "No strategy generated yet. Click 'Analyze Brand Voice' to create one."
+        }
     
-    # Do market research
-    market = analyze_market(next_kw["keyword"])
+    with open(BRAND_STRATEGY_PATH, 'r') as f:
+        strategy = json.load(f)
     
     return {
-        "status": "ready_to_build",
-        "next_keyword": next_kw["keyword"],
-        "next_intent": next_kw["search_intent"],
-        "market_gap": next_kw.get("market_gap"),
-        "unique_angles": market.get("orla3_unique_angles", []),
-        "message": "Strategy + market research complete. Ready for blog generation."
+        "success": True,
+        "strategy": strategy
     }

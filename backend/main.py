@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, strategy, calendar, library, competitor
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, strategy, calendar, library, competitor
 
 app.include_router(carousel.router, prefix="/carousel", tags=["carousel"])
 app.include_router(publisher.router, prefix="/publisher", tags=["publisher"])
@@ -29,6 +29,7 @@ app.include_router(draft.router, prefix="/draft", tags=["draft"])
 app.include_router(social.router, prefix="/social", tags=["social"])
 app.include_router(social_caption.router, prefix="/social-caption", tags=["social"])
 app.include_router(brand_voice.router, prefix="/brand-voice", tags=["brand-voice"])
+app.include_router(brand_voice_upload.router, prefix="/brand-voice", tags=["brand-voice"])
 app.include_router(strategy.router, prefix="/strategy", tags=["strategy"])
 app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 app.include_router(library.router, prefix="/library", tags=["library"])
@@ -50,3 +51,7 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "services": {"openai": bool(Config.OPENAI_API_KEY), "anthropic": bool(Config.ANTHROPIC_API_KEY), "unsplash": bool(Config.UNSPLASH_ACCESS_KEY)}}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
