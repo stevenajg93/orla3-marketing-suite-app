@@ -15,7 +15,14 @@ type Competitor = {
   };
   industry?: string;
   location?: string;
-  analysis?: any;
+  analysis?: {
+    marketing_they_do_well?: string[];
+    content_gaps?: string[];
+    positioning_messaging?: string;
+    content_opportunities?: string[];
+    threat_level?: string;
+    strategic_summary?: string;
+  };
   last_analyzed?: string;
   added_at: string;
 };
@@ -27,6 +34,7 @@ export default function CompetitorAnalysis() {
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [insights, setInsights] = useState<string>('');
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [expandedCompetitor, setExpandedCompetitor] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -108,6 +116,7 @@ export default function CompetitorAnalysis() {
     try {
       await fetch(`http://localhost:8000/competitor/${competitorId}/analyze`, { method: 'POST' });
       loadCompetitors();
+      setExpandedCompetitor(competitorId); // Auto-expand after analysis
     } catch (err) {
       console.error('Failed to analyze');
     } finally {
@@ -182,7 +191,7 @@ export default function CompetitorAnalysis() {
             <button onClick={() => setShowAddForm(true)} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg text-white font-bold transition">+ Add Your First Competitor</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {competitors.map((comp) => (
               <div key={comp.id} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                 <div className="flex items-start justify-between mb-4">
@@ -193,6 +202,7 @@ export default function CompetitorAnalysis() {
                   </div>
                   <button onClick={() => deleteCompetitor(comp.id)} className="text-red-400 hover:text-red-300 text-xl">×</button>
                 </div>
+                
                 <div className="flex flex-wrap gap-2 mb-4">
                   {comp.handles.instagram && <span className="px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-full text-xs text-pink-300">📷 {comp.handles.instagram}</span>}
                   {comp.handles.linkedin && <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs text-blue-300">💼 {comp.handles.linkedin}</span>}
@@ -200,19 +210,116 @@ export default function CompetitorAnalysis() {
                   {comp.handles.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">🎵 {comp.handles.tiktok}</span>}
                   {comp.handles.youtube && <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">📺 {comp.handles.youtube}</span>}
                 </div>
+
                 {comp.analysis ? (
-                  <div className="bg-white/5 rounded-lg p-4 mb-4">
-                    <h4 className="text-sm font-semibold text-purple-300 mb-2">AI Analysis:</h4>
-                    <div className="text-sm text-gray-300 space-y-2">
-                      {comp.analysis.content_themes && <div><span className="font-semibold text-white">Content Themes:</span><p className="text-xs">{comp.analysis.content_themes.join(', ')}</p></div>}
-                      {comp.analysis.insights && <p className="text-xs">{comp.analysis.insights.substring(0, 200)}...</p>}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">Last analyzed: {new Date(comp.last_analyzed || '').toLocaleDateString()}</p>
+                  <div className="space-y-4 mb-4">
+                    {/* Threat Level Badge */}
+                    {comp.analysis.threat_level && (
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          comp.analysis.threat_level === 'direct' ? 'bg-red-500/20 border border-red-500 text-red-300' :
+                          comp.analysis.threat_level === 'indirect' ? 'bg-yellow-500/20 border border-yellow-500 text-yellow-300' :
+                          'bg-green-500/20 border border-green-500 text-green-300'
+                        }`}>
+                          {comp.analysis.threat_level.toUpperCase()} THREAT
+                        </span>
+                        <span className="text-xs text-gray-500">Last analyzed: {new Date(comp.last_analyzed || '').toLocaleDateString()}</span>
+                      </div>
+                    )}
+
+                    {/* Strategic Summary */}
+                    {comp.analysis.strategic_summary && (
+                      <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-purple-300 mb-2">📊 Strategic Summary</h4>
+                        <p className="text-sm text-gray-200">{comp.analysis.strategic_summary}</p>
+                      </div>
+                    )}
+
+                    {/* Toggle Button */}
+                    <button
+                      onClick={() => setExpandedCompetitor(expandedCompetitor === comp.id ? null : comp.id)}
+                      className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-white text-sm font-semibold transition flex items-center justify-center gap-2"
+                    >
+                      {expandedCompetitor === comp.id ? '▼ Hide Details' : '▶ Show Full Analysis'}
+                    </button>
+
+                    {/* Expanded Details */}
+                    {expandedCompetitor === comp.id && (
+                      <div className="space-y-4 pt-4 border-t border-white/10">
+                        {/* Marketing They Do Well */}
+                        {comp.analysis.marketing_they_do_well && comp.analysis.marketing_they_do_well.length > 0 && (
+                          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-green-300 mb-3 flex items-center gap-2">
+                              <span>✅</span> Marketing They Do Well
+                            </h4>
+                            <ul className="space-y-2">
+                              {comp.analysis.marketing_they_do_well.map((item, i) => (
+                                <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
+                                  <span className="text-green-400">•</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Content Gaps */}
+                        {comp.analysis.content_gaps && comp.analysis.content_gaps.length > 0 && (
+                          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-yellow-300 mb-3 flex items-center gap-2">
+                              <span>🎯</span> Content Gaps (Opportunities)
+                            </h4>
+                            <ul className="space-y-2">
+                              {comp.analysis.content_gaps.map((gap, i) => (
+                                <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
+                                  <span className="text-yellow-400">•</span>
+                                  <span>{gap}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Positioning Messaging */}
+                        {comp.analysis.positioning_messaging && (
+                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
+                              <span>💬</span> Our Messaging Position
+                            </h4>
+                            <p className="text-sm text-gray-200">{comp.analysis.positioning_messaging}</p>
+                          </div>
+                        )}
+
+                        {/* Content Opportunities */}
+                        {comp.analysis.content_opportunities && comp.analysis.content_opportunities.length > 0 && (
+                          <div className="bg-pink-900/20 border border-pink-500/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-pink-300 mb-3 flex items-center gap-2">
+                              <span>💡</span> Content Opportunities
+                            </h4>
+                            <ul className="space-y-2">
+                              {comp.analysis.content_opportunities.map((opp, i) => (
+                                <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
+                                  <span className="text-pink-400">•</span>
+                                  <span>{opp}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4"><p className="text-sm text-yellow-300">No analysis yet</p></div>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-yellow-300">No analysis yet - Click analyze to get marketing insights</p>
+                  </div>
                 )}
-                <button onClick={() => analyzeCompetitor(comp.id)} disabled={analyzing === comp.id} className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg text-white font-semibold transition disabled:opacity-50">
+                
+                <button 
+                  onClick={() => analyzeCompetitor(comp.id)} 
+                  disabled={analyzing === comp.id} 
+                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
+                >
                   {analyzing === comp.id ? '🔄 Analyzing...' : comp.analysis ? '🔄 Re-Analyze' : '🔍 Analyze Competitor'}
                 </button>
               </div>
