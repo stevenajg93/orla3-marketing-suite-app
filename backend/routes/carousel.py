@@ -7,6 +7,8 @@ import os, json, re, httpx
 
 router = APIRouter()
 
+BRAND_STRATEGY_FILE = "brand_strategy.json"
+
 class CarouselInput(BaseModel):
     post_summary: str
     brand_tone_rules: str = "Cinematic, confident, fair, buyer-seller balanced"
@@ -25,6 +27,48 @@ class Slide(BaseModel):
 class CarouselOutput(BaseModel):
     platform: str
     slides: List[Slide]
+
+def load_brand_strategy():
+    """Load brand strategy if it exists"""
+    if os.path.exists(BRAND_STRATEGY_FILE):
+        with open(BRAND_STRATEGY_FILE, 'r') as f:
+            return json.load(f)
+    return None
+
+def build_brand_context(strategy: dict) -> str:
+    """Build brand context string from strategy"""
+    if not strategy:
+        return ""
+    
+    context = "\n\n=== ORLA³ BRAND STRATEGY (CRITICAL - FOLLOW EXACTLY) ===\n"
+    
+    # Brand Voice
+    context += f"\nBRAND VOICE & TONE:\n{strategy['brand_voice']['tone']}\n"
+    context += f"PERSONALITY: {', '.join(strategy['brand_voice']['personality'])}\n"
+    
+    # Messaging Pillars
+    context += f"\nMESSAGING PILLARS (weave into slides):\n"
+    for pillar in strategy['messaging_pillars']:
+        context += f"• {pillar}\n"
+    
+    # Language Patterns
+    context += f"\nWRITING STYLE: {strategy['language_patterns']['writing_style']}\n"
+    context += f"PREFERRED PHRASES: {', '.join(strategy['language_patterns']['preferred_phrases'][:3])}\n"
+    
+    # Competitive Positioning (if available)
+    if 'competitive_positioning' in strategy:
+        comp_pos = strategy['competitive_positioning']
+        context += f"\nCOMPETITIVE POSITIONING:\n"
+        context += f"Our Unique Value: {comp_pos['unique_value']}\n"
+        
+        if comp_pos.get('gaps_to_exploit'):
+            context += f"\nExploit These Content Gaps:\n"
+            for gap in comp_pos['gaps_to_exploit'][:2]:
+                context += f"• {gap}\n"
+    
+    context += "\n=== END BRAND STRATEGY ===\n\n"
+    
+    return context
 
 def extract_json_from_response(text: str) -> dict:
     text = re.sub(r'```json\s*', '', text)
@@ -56,13 +100,27 @@ async def get_unsplash_image(query: str) -> str:
 async def generate_carousel(data: CarouselInput):
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     
-    system_prompt = """You create high-performing Instagram/LinkedIn carousels that are UNIQUE to each topic.
+    # Load brand strategy
+    strategy = load_brand_strategy()
+    brand_context = build_brand_context(strategy) if strategy else ""
+    
+    system_prompt = f"""You create high-performing Instagram/LinkedIn carousels that are UNIQUE to each topic.
+
+{brand_context}
 
 CRITICAL RULES:
 1. READ the user's post_summary carefully and create CUSTOM content based on THEIR specific topic
 2. DO NOT use generic "hiring videographer" content unless that's explicitly their topic
-3. Slide 1 (HOOK): Short punchy title (3-4 words) + compelling 2-sentence hook
-4. Slides 2-7: Short title (3-4 words) + detailed body text (2-3 sentences, 120-180 chars)
+3. Apply Orla³'s brand voice, tone, and messaging pillars throughout ALL slides
+4. Use Orla³'s preferred phrases and writing style naturally
+5. Leverage our competitive positioning - exploit content gaps competitors miss
+6. Slide 1 (HOOK): Short punchy title (3-4 words) + compelling 2-sentence hook
+7. Slides 2-7: Short title (3-4 words) + detailed body text (2-3 sentences, 120-180 chars)
+
+BRAND VOICE COMPLIANCE:
+- Every slide must reflect Orla³'s personality and tone
+- Use language patterns that align with our brand strategy
+- Position content according to our competitive advantages
 
 Return JSON ONLY without markdown code blocks."""
     
@@ -74,7 +132,11 @@ Platform: {data.target_platform}
 Brand tone: {data.brand_tone_rules}
 Content angle: {data.angle}
 
-IMPORTANT: Create content that is DIRECTLY relevant to the topic above. Do not use generic examples.
+IMPORTANT: 
+- Create content that is DIRECTLY relevant to the topic above
+- Apply Orla³'s brand strategy throughout all slides
+- This content must sound authentically like Orla³
+- Leverage our competitive positioning and exploit content gaps
 
 SLIDE STRUCTURE:
 1. HOOK (Slide 1):
@@ -112,7 +174,7 @@ Return ONLY valid JSON in this exact format:
   ]
 }}
 
-Remember: Create UNIQUE content based on the specific topic provided, not generic examples."""
+Remember: Create UNIQUE content based on the specific topic provided, applying Orla³'s brand strategy throughout."""
 
     completion = client.messages.create(
         model="claude-sonnet-4-20250514",

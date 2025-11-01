@@ -334,3 +334,133 @@ async def get_current_strategy():
         "success": True,
         "strategy": strategy
     }
+
+@router.get("/next-keyword")
+async def get_next_keyword():
+    """Get the next strategic keyword to write about based on brand strategy"""
+    try:
+        strategy = load_brand_strategy()
+        
+        if not strategy:
+            return {
+                "recommended_next": {
+                    "keyword": "Professional Video Production Services",
+                    "search_intent": "Find quality videographers for business content",
+                    "market_gap": "Businesses struggle to find vetted, professional videographers"
+                }
+            }
+        
+        client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        
+        content_themes = ', '.join(strategy.get('content_themes', []))
+        messaging_pillars = ', '.join(strategy.get('messaging_pillars', []))
+        
+        comp_context = ""
+        if 'competitive_positioning' in strategy:
+            gaps = strategy['competitive_positioning'].get('gaps_to_exploit', [])
+            if gaps:
+                comp_context = f"\nContent gaps to exploit: {', '.join(gaps[:3])}"
+        
+        prompt = f"""Based on Orla³'s brand strategy, recommend the next blog post keyword to target.
+
+Brand Content Themes: {content_themes}
+Messaging Pillars: {messaging_pillars}
+{comp_context}
+
+Recommend a keyword that:
+1. Aligns with our brand themes
+2. Exploits competitive content gaps
+3. Has commercial intent (people looking to hire videographers)
+4. Is specific enough to rank for
+
+Return ONLY valid JSON (no markdown):
+{{
+  "keyword": "specific keyword phrase",
+  "search_intent": "what the user wants to accomplish",
+  "market_gap": "why this is a strategic opportunity"
+}}"""
+
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        response_text = message.content[0].text.strip()
+        
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+        
+        recommended = json.loads(response_text)
+        
+        return {"recommended_next": recommended}
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return {
+            "recommended_next": {
+                "keyword": "Professional Video Production Services",
+                "search_intent": "Find quality videographers for business content",
+                "market_gap": "Businesses struggle to find vetted, professional videographers"
+            }
+        }
+
+@router.post("/market-research")
+async def market_research(data: dict):
+    """Analyze market for a given keyword"""
+    try:
+        keyword = data.get('keyword', '')
+        strategy = load_brand_strategy()
+        client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        
+        brand_context = ""
+        if strategy:
+            brand_context = f"""
+OUR BRAND (Orla³):
+- Messaging: {', '.join(strategy.get('messaging_pillars', []))}
+- Target Audience: {strategy.get('target_audience', {}).get('primary', 'Creative professionals')}
+"""
+            if 'competitive_positioning' in strategy:
+                brand_context += f"- Unique Value: {strategy['competitive_positioning'].get('unique_value', '')}\n"
+        
+        prompt = f"""Analyze the content landscape for: "{keyword}"
+
+{brand_context}
+
+Provide market intelligence:
+1. What angles do competitors typically cover?
+2. What content gaps exist that Orla³ could exploit?
+3. What unique angles could Orla³ take?
+
+Return ONLY valid JSON (no markdown):
+{{
+  "competitor_angles": ["angle1", "angle2", "angle3"],
+  "content_gaps": ["gap1", "gap2", "gap3"],
+  "orla3_unique_angles": ["unique1", "unique2", "unique3"]
+}}"""
+
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        response_text = message.content[0].text.strip()
+        
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+        
+        research = json.loads(response_text)
+        return research
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return {
+            "competitor_angles": ["Generic tips", "Equipment", "Pricing"],
+            "content_gaps": ["Vetting process", "Quality guarantees", "Community selection"],
+            "orla3_unique_angles": ["Curated marketplace", "Transparency", "Quality-first"]
+        }

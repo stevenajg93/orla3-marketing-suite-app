@@ -21,14 +21,14 @@ export default function BlogWriter() {
     setMarketResearch(null);
     
     try {
-      const strategyRes = await fetch('http://localhost:8000/strategy/strategy/next-keyword');
+      const strategyRes = await fetch('http://localhost:8000/strategy/next-keyword');
       const strategy = await strategyRes.json();
       const nextKw = strategy.recommended_next;
       
       setKeyword(nextKw.keyword);
       setSearchIntent(nextKw.search_intent);
       
-      const researchRes = await fetch('http://localhost:8000/strategy/strategy/market-research', {
+      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword: nextKw.keyword })
@@ -73,7 +73,7 @@ export default function BlogWriter() {
     setError('');
     
     try {
-      const researchRes = await fetch('http://localhost:8000/strategy/strategy/market-research', {
+      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword })
