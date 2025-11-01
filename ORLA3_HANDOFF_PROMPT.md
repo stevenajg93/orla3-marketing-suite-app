@@ -2,13 +2,14 @@
 
 ## 🎯 PROJECT OVERVIEW
 
-**Orla³ Marketing Suite** is an AI-powered marketing content generation and automation platform built specifically for videographers and creative professionals. It combines Claude AI with Google Drive integration to streamline content creation workflows.
+**Orla³ Marketing Suite** is an AI-powered marketing content generation and automation platform built specifically for videographers and creative professionals. It combines Claude AI with brand strategy intelligence and Google Drive integration to create authentically branded, strategically positioned content.
 
 ### Core Value Proposition
-- Generate SEO-optimized blogs, social media carousels, and captions with AI
-- Train AI on your brand voice using actual business documents
-- Manage media assets from Google Drive with intelligent browsing
-- Filter and organize all generated content in one place
+- **Brand-Aware Content Generation**: AI learns your brand voice and competitive positioning to create authentic content
+- **Strategic Intelligence**: Competitor analysis feeds into content strategy automatically
+- **Comprehensive Content Suite**: SEO-optimized blogs, social media carousels, and captions
+- **Media Management**: Google Drive integration with intelligent asset browsing
+- **Unified Library**: Filter and organize all generated content in one place
 
 ---
 
@@ -18,352 +19,395 @@
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
 - **Backend**: FastAPI (Python 3.9+)
 - **AI**: Anthropic Claude Sonnet 4.5
-- **Storage**: JSON files (content_library.json, brand_voice_index.json, competitor_data.json)
+- **Storage**: JSON files (content_library.json, brand_voice_index.json, brand_strategy.json, competitor_data.json)
 - **APIs**: Google Drive API, Unsplash API
 
 ### Project Structure
 ```
 orla3-marketing-suite-app/
 ├── app/dashboard/
-│   ├── blog/              # Blog post generator
+│   ├── blog/              # Blog post generator (auto + manual modes)
 │   ├── carousel/          # Social media carousel creator
 │   ├── social/            # Social media manager with Drive import
 │   ├── brand-voice/       # Brand voice training system
+│   ├── strategy/          # Strategy Planner (NEW - synthesizes brand + competitors)
+│   ├── competitor/        # Competitor marketing analysis
 │   ├── media/             # Media library with filters
-│   ├── calendar/          # Content calendar (UI only)
-│   ├── competitor/        # Competitor analysis
+│   ├── calendar/          # Content calendar
 │   └── page.tsx          # Main dashboard
 ├── backend/
 │   ├── routes/
-│   │   ├── blog.py       # Blog generation endpoint
-│   │   ├── carousel.py   # Carousel creation endpoint  
-│   │   ├── social.py     # Social caption + Drive file resolver
+│   │   ├── draft.py           # Blog generation (strategy-aware)
+│   │   ├── carousel.py        # Carousel creation (strategy-aware)
+│   │   ├── social_caption.py  # Caption generation (strategy-aware)
+│   │   ├── strategy.py        # Strategy synthesis + keyword research
+│   │   ├── competitor.py      # Marketing-focused competitor analysis
 │   │   ├── brand_voice_upload.py  # Brand voice training
-│   │   ├── drive.py      # Google Drive integration
-│   │   ├── media.py      # Media library API
-│   │   ├── competitor.py # Competitor tracking
-│   │   └── social_caption.py  # Caption generation
-│   ├── brand_voice_assets/  # Uploaded training files
-│   ├── credentials/         # Google Drive OAuth tokens
-│   ├── main.py             # FastAPI server
-│   └── auth_drive.py       # Drive authorization script
+│   │   ├── drive.py           # Google Drive integration
+│   │   ├── library.py         # Content library management
+│   │   └── social.py          # Social posting + Drive resolver
+│   ├── brand_voice_assets/    # Uploaded training files
+│   ├── brand_strategy.json    # Synthesized strategy (NEW)
+│   ├── competitor_data.json   # Competitor analyses
+│   ├── content_library.json   # Generated content
+│   ├── credentials/           # Google Drive OAuth
+│   ├── main.py               # FastAPI server
+│   └── auth_drive.py         # Drive authorization
 └── README.md
 ```
 
 ---
 
-## ✅ IMPLEMENTED FEATURES
+## 🎪 KEY FEATURES & WORKFLOWS
 
-### 1. Blog Writer (`/dashboard/blog`)
-- AI-generated SEO-optimized blog posts (1500+ words)
-- Custom topic, keywords, and tone inputs
-- Saves to content library with metadata
-- **Status**: WORKING
+### 1️⃣ Brand Strategy System (Core Intelligence Layer)
 
-### 2. Carousel Creator (`/dashboard/carousel`)
-- Generates 7-slide social media carousels
-- Fetches images from Unsplash API
-- Hook → Context → 3 Insights → How-To → CTA structure
-- Saves carousel JSON with image URLs
-- **Status**: WORKING
+**Purpose**: Create a unified brand strategy that combines brand voice analysis with competitive intelligence.
 
-### 3. Social Media Manager (`/dashboard/social`)
-**Key Features:**
-- AI caption generation with Claude
-- Google Drive media browser with:
-  - Folder navigation (click folders to browse)
-  - File preview (opens in Drive in new tab)
-  - Multi-select media files
-  - Google Drive shortcut resolution
-- Selected media preview with type detection
-- Platform selection (Instagram, LinkedIn, Twitter, Facebook, TikTok)
-- **Status**: WORKING - Drive import fully functional
+**Workflow**:
+1. User uploads brand voice assets (guidelines, voice samples, community conversations)
+2. User adds competitors and runs marketing analysis
+3. Strategy Planner synthesizes both into `brand_strategy.json` containing:
+   - Brand voice & tone
+   - Messaging pillars
+   - Language patterns
+   - Target audience
+   - **Competitive positioning** (unique value, gaps to exploit, what to avoid)
 
-### 4. Brand Voice Manager (`/dashboard/brand-voice`)
-**Capabilities:**
-- Import brand assets from Google Drive (docs, PDFs, text files)
-- Three training categories:
-  - **Guidelines**: Brand style guides, tone docs
-  - **Voice Samples**: Blog posts, marketing copy
-  - **Community**: Customer conversations, testimonials
-- Google Drive shortcut resolution
-- File content extraction and indexing
-- Stored in `brand_voice_assets/` and `brand_voice_index.json`
-- **Status**: WORKING - Import functional, AI integration pending
+**Files Involved**:
+- `backend/routes/strategy.py` - Strategy synthesis endpoints
+- `backend/routes/brand_voice_upload.py` - Asset upload
+- `backend/brand_strategy.json` - Generated strategy
+- `app/dashboard/strategy/page.tsx` - Strategy UI
 
-### 5. Media Library (`/dashboard/media`)
-**Three Tabs:**
-- **Google Drive Assets**: Browse and download files
-- **Unsplash**: Search stock photos
-- **Generated Content**: View all created blogs/carousels/captions
-
-**Filters (Generated Content):**
-- Search by title
-- Filter by content type (Blog, Carousel, Caption)
-- Filter by status (Draft, Published, Scheduled)
-- Filter by date range (Today, Week, Month, Year)
-- Clear all filters button
-- **Status**: WORKING
-
-### 6. Competitor Analysis (`/dashboard/competitor`)
-- Track competitor profiles
-- Store competitor data in JSON
-- **Status**: BASIC - UI exists, limited functionality
-
-### 7. Content Calendar (`/dashboard/calendar`)
-- Calendar view for scheduled content
-- **Status**: UI ONLY - Not functional
+**Key Endpoints**:
+- `POST /strategy/analyze` - Analyze brand voice + competitors → generate strategy
+- `GET /strategy/current` - Retrieve current strategy
+- `GET /strategy/next-keyword` - AI picks next strategic blog keyword
+- `POST /strategy/market-research` - Competitive content analysis for keywords
 
 ---
 
-## 🔧 KEY TECHNICAL IMPLEMENTATIONS
+### 2️⃣ Competitor Analysis (Marketing Intelligence)
 
-### Google Drive Integration
-**Critical Feature: Shortcut Resolution**
-```python
-# backend/routes/social.py and brand_voice_upload.py
-def resolve_drive_shortcut(service, file_id):
-    file = service.files().get(fileId=file_id, fields='mimeType,shortcutDetails', supportsAllDrives=True).execute()
-    if file.get('mimeType') == 'application/vnd.google-apps.shortcut':
-        return file['shortcutDetails']['targetId'], file['shortcutDetails']['targetMimeType']
-    return file_id, file.get('mimeType')
-```
+**Purpose**: Analyze competitors' CONTENT & MESSAGING strategy (not product features).
 
-**Why This Matters:**
-- Google Drive shortcuts are references, not actual files
-- Direct download of shortcuts fails
-- Must resolve to target file ID first
-- Used in both Brand Voice uploads and Social Manager
+**Workflow**:
+1. User adds competitor (name, industry, social handles)
+2. Clicks "Analyze Competitor"
+3. AI generates marketing-focused analysis:
+   - What content/messaging works for them
+   - Content gaps they're missing
+   - How to position against them
+   - Content opportunities
 
-### Multi-Select Media (Social Manager)
-**Frontend Pattern:**
-```typescript
-// Stores media as objects with metadata
-const mediaItem = {
-  url: string,
-  type: string,  // MIME type
-  name: string,
-  source: 'drive',
-  folder: string
-};
-setSelectedMedia([...selectedMedia, mediaItem]);  // Append, don't replace
-```
+**Files Involved**:
+- `backend/routes/competitor.py` - Competitor CRUD + analysis
+- `backend/competitor_data.json` - Stored analyses
+- `app/dashboard/competitor/page.tsx` - Competitor UI
 
-### Content Library Storage
-**Files:**
-- `backend/content_library.json` - All generated content
-- `backend/brand_voice_index.json` - Brand voice training data
-- `backend/competitor_data.json` - Competitor tracking
+**Key Features**:
+- Marketing-focused (not product/business model recommendations)
+- Brand-aware (uses Orla³ positioning in analysis)
+- Structured data (threat level, gaps, opportunities)
+- Expandable UI cards showing full breakdown
 
-**Structure:**
+**CRITICAL**: Analysis focuses on content strategy, messaging, and marketing tactics ONLY.
+
+---
+
+### 3️⃣ Content Generation (Strategy-Aware)
+
+**Purpose**: Generate blogs, carousels, and social captions that sound like YOUR brand and leverage competitive positioning.
+
+#### Blog Generator (`draft.py`)
+- **Auto-Generate Mode**: AI picks strategic keyword → market research → generates blog
+- **Manual Mode**: User provides keyword + search intent
+- **Strategy Integration**: Loads `brand_strategy.json` and injects:
+  - Brand voice, tone, personality
+  - Messaging pillars
+  - Language patterns
+  - Competitive positioning
+  - Target audience
+
+**Key Rules**:
+- NO hashtags in blog content
+- NO Markdown headers (##, ###) - plain text sections only
+- UK English
+- Human-like writing (no corporate jargon, varied sentences)
+
+#### Carousel Creator (`carousel.py`)
+- 7-slide format for Instagram/LinkedIn
+- Integrates brand strategy throughout all slides
+- Unsplash image integration
+- Hashtags allowed in captions only
+
+#### Social Caption Generator (`social_caption.py`)
+- Platform-aware (X, Instagram, LinkedIn, Facebook)
+- Character limit compliance
+- Brand voice + competitive positioning
+- Hashtags included (appropriate for social)
+
+---
+
+### 4️⃣ Brand Voice Upload System
+
+**Purpose**: Train AI on your actual brand materials.
+
+**Supported File Types**:
+- Guidelines: PDF, DOCX, TXT
+- Voice Samples: MD, TXT, HTML
+- Community: Discord/Slack exports (XLSX, CSV)
+
+**Categories**:
+- `guidelines` - Brand guidelines, style guides
+- `voice_samples` - Example content
+- `community_videographer` - Community conversations (videographer side)
+- `community_client` - Community conversations (client side)
+
+**Storage**: `/backend/brand_voice_assets/[category]/`
+
+**Index**: `brand_voice_index.json` tracks all uploaded files with metadata
+
+---
+
+### 5️⃣ Google Drive Integration
+
+**Purpose**: Import media assets from Google Drive into content creation.
+
+**Features**:
+- OAuth 2.0 authentication
+- Folder navigation
+- Image preview
+- Direct import to Social Manager
+
+**Auth Flow**:
+1. Run `python backend/auth_drive.py`
+2. Complete OAuth in browser
+3. Tokens stored in `backend/credentials/token.json`
+
+**Key Endpoints**:
+- `GET /drive/auth` - Initiate OAuth
+- `GET /drive/folders` - List folders
+- `GET /drive/files` - List files in folder
+- `POST /drive/resolve-url` - Get direct image URLs
+
+---
+
+### 6️⃣ Media Library
+
+**Purpose**: Centralized content management with filtering.
+
+**Features**:
+- Filter by type (blog, carousel, social)
+- Filter by status (draft, published)
+- Search by tags
+- View/edit/delete content
+
+**Storage**: `backend/content_library.json`
+
+**Structure**:
 ```json
 {
-  "items": [
-    {
-      "id": "uuid",
-      "title": "string",
-      "content_type": "blog|carousel|caption",
-      "content": "string|json",
-      "status": "draft|published|scheduled",
-      "created_at": "ISO date",
-      "tags": ["array"]
-    }
-  ]
+  "id": "timestamp",
+  "title": "Content title",
+  "content_type": "blog|carousel|social",
+  "content": "Full content",
+  "status": "draft|published",
+  "tags": ["tag1", "tag2"],
+  "created_at": "ISO timestamp"
 }
 ```
 
 ---
 
-## 🚧 KNOWN LIMITATIONS & TODO
+## 🔐 ENVIRONMENT VARIABLES
 
-### High Priority
-- [ ] **Brand Voice AI Integration**: Training files are indexed but not used in generation yet
-- [ ] **Social Publishing**: "Post Now" button doesn't actually post to platforms
-- [ ] **Media Player**: Selected media shows icons, not actual image/video preview
-- [ ] **Authentication**: No user login system
-- [ ] **Database**: Using JSON files, should migrate to Supabase/PostgreSQL
-
-### Medium Priority
-- [ ] **Calendar Functionality**: Make calendar interactive with drag-drop scheduling
-- [ ] **Competitor Scraping**: Actually fetch competitor data from social platforms
-- [ ] **Analytics Integration**: Connect Google Analytics/Search Console
-- [ ] **Content Refresh Detection**: Find underperforming content to update
-
-### Low Priority
-- [ ] **Team Collaboration**: User roles, approval workflows
-- [ ] **A/B Testing**: Test different headlines/CTAs
-- [ ] **Email Automation**: Newsletter generation
-- [ ] **CRM Integration**: Link contacts to campaigns
-
----
-
-## 🔑 ENVIRONMENT SETUP
-
-### Required Environment Variables (.env)
+Required in `backend/.env.local`:
 ```bash
+# AI
 ANTHROPIC_API_KEY=sk-ant-...
-UNSPLASH_ACCESS_KEY=your_unsplash_key
-SHARED_DRIVE_ID=your_google_drive_id
-SHARED_DRIVE_NAME=Marketing
-MARKETING_FOLDER_NAME=Marketing
+
+# Google Drive (Optional)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+# Unsplash (Optional - has fallback)
+UNSPLASH_ACCESS_KEY=...
 ```
 
-### Google Drive Setup
-1. Create Google Cloud Project
-2. Enable Google Drive API
-3. Create OAuth 2.0 credentials
-4. Download as `credentials.json`
-5. Place in `backend/credentials/`
-6. Run `python backend/auth_drive.py`
-7. Authorize in browser
-8. Token saved as `backend/credentials/token.pickle`
+---
 
-### Running Locally
-**Terminal 1 - Frontend:**
-```bash
-cd ~/Desktop/orla3-marketing-suite-app
-npm run dev
-# http://localhost:3000
-```
+## 🚀 SETUP & RUN
 
-**Terminal 2 - Backend:**
+### Backend Setup
 ```bash
-cd ~/Desktop/orla3-marketing-suite-app/backend
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 python main.py
-# http://localhost:8000
+```
+
+Backend runs on: `http://localhost:8000`
+
+### Frontend Setup
+```bash
+npm install
+npm run dev
+```
+
+Frontend runs on: `http://localhost:3000`
+
+### Google Drive Setup (Optional)
+```bash
+cd backend
+python auth_drive.py
+# Complete OAuth in browser
 ```
 
 ---
 
-## 👤 USER: Steven
-
-### Working Style
-- **Preference**: Terminal commands on macOS
-- **Location**: Lisbon, Portugal (Europe/London timezone)
-- **Shell**: zsh
-- **Approach**: Step-by-step instructions, one command at a time
-- **Needs**: Clear explanations, expected outcomes
-
-### Communication Style
-- ✅ Use emojis for visual scanning
-- 📝 One command per message
-- 🎯 Show expected output
-- 🔧 Debug collaboratively
-- 🚀 Celebrate wins
-
----
-
-## 🎯 NEXT DEVELOPMENT PRIORITIES
-
-### Sprint 1: Brand Voice Integration (Week 1)
-1. Load brand voice context from index
-2. Inject into blog/carousel/caption prompts
-3. Test voice consistency across generations
-
-### Sprint 2: Social Publishing (Week 2)
-4. Add platform API credentials (Instagram, LinkedIn, Twitter)
-5. Implement actual post publishing
-6. Handle rate limits and errors
-7. Store post IDs for tracking
-
-### Sprint 3: Media Preview (Week 1)
-8. Add image viewer in Social Manager
-9. Add video player for video files
-10. Show actual previews instead of icons
-
-### Sprint 4: Database Migration (Week 2)
-11. Set up Supabase project
-12. Design schema (posts, media, users, analytics)
-13. Migrate from JSON to PostgreSQL
-14. Add proper migrations
-
-### Sprint 5: Authentication (Week 1)
-15. Add Supabase Auth
-16. Implement login/signup
-17. Protect routes
-18. User-specific content
-
----
-
-## 📚 IMPORTANT PATTERNS
-
-### API Response Format
-All backend endpoints return:
-```json
-{
-  "success": true/false,
-  "data": {...},
-  "error": "message" (if failed)
-}
+## 📊 DATA FLOW DIAGRAM
 ```
-
-### Error Handling
-```python
-try:
-    # operation
-    return {"success": True, "data": result}
-except Exception as e:
-    return {"success": False, "error": str(e)}
-```
-
-### Frontend Fetch Pattern
-```typescript
-const res = await fetch('http://localhost:8000/endpoint');
-const data = await res.json();
-if (data.success) {
-  // handle success
-} else {
-  alert(data.error);
-}
+Brand Voice Upload → brand_voice_assets/ → Strategy Planner
+                                                ↓
+Competitor Analysis → competitor_data.json → Strategy Planner
+                                                ↓
+                                        brand_strategy.json
+                                                ↓
+                      ┌─────────────────────────┼─────────────────────────┐
+                      ↓                         ↓                         ↓
+              Blog Generator              Carousel Creator        Caption Generator
+                      ↓                         ↓                         ↓
+                            Content Library (content_library.json)
 ```
 
 ---
 
-## 🎓 DEVELOPER ONBOARDING
+## 🎯 CRITICAL DESIGN DECISIONS
 
-### Day 1: Environment Setup
-1. Clone repo
-2. Install dependencies (npm + pip)
-3. Set up .env
-4. Authorize Google Drive
-5. Run frontend + backend
-6. Test blog generation
+### Why JSON Storage?
+- **MVP Speed**: No database setup required
+- **Portability**: Easy to migrate data
+- **Simplicity**: Direct file access for debugging
+- **Future**: Easy migration path to PostgreSQL/MongoDB
 
-### Day 2: Code Exploration
-7. Read this handoff prompt fully
-8. Explore dashboard UI structure
-9. Review backend routes
-10. Test Drive import in Brand Voice + Social
+### Why Strategy-First Architecture?
+- **Quality**: Content sounds authentically like the brand
+- **Differentiation**: Competitive positioning baked into every piece
+- **Consistency**: Single source of truth for brand voice
+- **Scalability**: Add new generators that automatically use strategy
 
-### Day 3: First Contribution
-11. Pick a TODO item
-12. Create feature branch
-13. Implement + test
-14. Create PR with description
+### Why Marketing-Focused Competitor Analysis?
+- **User Need**: Marketers need content strategy, not product roadmaps
+- **Actionable**: Focus on what they can actually use (content ideas, messaging)
+- **Ethical**: Avoid suggesting copying business models/features
 
 ---
 
-## ✅ PROJECT STATUS SUMMARY
+## 🐛 KNOWN LIMITATIONS & FUTURE WORK
 
-**What's Working:**
-- Core content generation (Blog, Carousel, Social Captions)
-- Google Drive integration with shortcut resolution
-- Media library with advanced filtering
-- Brand voice file imports (indexing only)
-- Multi-select media in Social Manager
+### Current Limitations
+1. **No Database**: JSON files limit concurrency and search
+2. **No Authentication**: Single-user system
+3. **No Publishing**: Content must be manually posted
+4. **Competitor Analysis**: Strategic inference, not live social scraping
+5. **No Analytics**: Can't track content performance
 
-**What's Not Working:**
-- Brand voice not used in AI generation yet
-- Social posts don't actually publish
-- Media preview shows icons not actual media
-- Calendar is UI-only
-- No authentication or user management
-
-**Overall Assessment:**
-Solid MVP foundation with AI generation and Drive integration working. Ready for next phase of development focusing on integration and polish.
+### Planned Enhancements
+1. **Social Publishing APIs**: Direct post to Instagram, LinkedIn, Twitter
+2. **Live Competitor Scraping**: Real-time social media data collection
+3. **User Authentication**: Multi-tenant support
+4. **Database Migration**: PostgreSQL for production scale
+5. **Analytics Dashboard**: Track content performance
+6. **Advanced Research Mode**: 10+ minute deep research sessions
+7. **WordPress Integration**: Direct blog publishing
 
 ---
 
-**Last Updated**: October 30, 2025  
-**Maintained By**: Steven Gillespie  
-**Repository**: https://github.com/stevenajg93/orla3-marketing-suite-app
+## 🔧 DEBUGGING TIPS
+
+### Backend Issues
+```bash
+# Check logs
+cd backend && python main.py
+# Look for: "✅ Anthropic API: Configured"
+
+# Test endpoint directly
+curl http://localhost:8000/strategy/current
+```
+
+### Strategy Not Loading
+```bash
+# Check if file exists
+ls -la backend/brand_strategy.json
+
+# View strategy
+cat backend/brand_strategy.json | python -m json.tool
+```
+
+### Drive Integration Not Working
+```bash
+# Re-authenticate
+cd backend && python auth_drive.py
+
+# Check token
+cat backend/credentials/token.json
+```
+
+### Content Generation Issues
+- Check `brand_strategy.json` exists and has `competitive_positioning` section
+- Verify Anthropic API key is valid
+- Check backend logs for JSON parsing errors
+- Ensure strategy was generated AFTER competitors were analyzed
+
+---
+
+## 📞 HANDOFF NOTES
+
+### What Works Well
+✅ Brand strategy synthesis is solid  
+✅ Content generators produce high-quality, on-brand output  
+✅ Competitor analysis provides actionable insights  
+✅ UI is intuitive and visually appealing  
+✅ Google Drive integration is smooth  
+
+### What Needs Attention
+⚠️ No error handling for expired Drive tokens  
+⚠️ Large files (>50MB) in Git repo (brand PDFs)  
+⚠️ No rate limiting on AI API calls  
+⚠️ Content library could get large (needs pagination)  
+⚠️ Competitor analysis is inference-based, not live data  
+
+### Quick Wins for Next Developer
+1. Add pagination to Media Library (>50 items gets slow)
+2. Implement social publishing APIs (high user value)
+3. Add live competitor scraping (moderate effort, high value)
+4. Database migration (needed for multi-user)
+5. Add error boundaries in React components
+
+---
+
+## 🎓 KEY LEARNINGS
+
+1. **AI Context Matters**: Loading brand strategy into prompts dramatically improves output quality
+2. **Structured Data > Text**: Competitor analysis as structured JSON enables better synthesis
+3. **User Trust**: Transparent about what AI can/can't do (inference vs live data)
+4. **Iterative Prompting**: Multiple rounds of prompt refinement to eliminate hashtags, headers, etc.
+5. **Marketing Focus**: Users want content strategy, not product recommendations
+
+---
+
+## 📚 ADDITIONAL RESOURCES
+
+- **Anthropic Claude Docs**: https://docs.anthropic.com
+- **Next.js 15 Docs**: https://nextjs.org/docs
+- **FastAPI Docs**: https://fastapi.tiangolo.com
+- **Google Drive API**: https://developers.google.com/drive
+
+---
+
+**Last Updated**: October 31, 2025  
+**Version**: 2.0 (Strategy-Aware Content Generation)  
+**Status**: Pre-Launch MVP - Core features complete, ready for user testing
