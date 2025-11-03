@@ -35,6 +35,11 @@ export default function SocialManagerPage() {
   const [postType, setPostType] = useState<PostType>("text");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["instagram"]);
   const [caption, setCaption] = useState("");
+  
+  // Publishing state
+  const [publishing, setPublishing] = useState(false);
+  const [publishResults, setPublishResults] = useState<any[]>([]);
+  const [publishMessage, setPublishMessage] = useState("");
   const [captionPrompt, setCaptionPrompt] = useState("");
   const [generatingCaption, setGeneratingCaption] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
@@ -73,6 +78,7 @@ export default function SocialManagerPage() {
     { id: "youtube" as Platform, name: "YouTube", icon: "▶️", color: "from-red-600 to-red-700", discovery: true, autoReply: true },
     { id: "reddit" as Platform, name: "Reddit", icon: "🤖", color: "from-orange-500 to-red-500", discovery: true, autoReply: false },
     { id: "tumblr" as Platform, name: "Tumblr", icon: "🔷", color: "from-indigo-500 to-blue-600", discovery: true, autoReply: true },
+    { id: "wordpress" as Platform, name: "WordPress", icon: "📝", color: "from-gray-700 to-gray-900", discovery: false, autoReply: false },
   ];
 
   const mockComments: Comment[] = [
@@ -246,6 +252,74 @@ export default function SocialManagerPage() {
     }
   };
 
+
+  const publishToSocial = async () => {
+    if (!caption.trim()) {
+      alert('Please write or generate a caption first');
+      return;
+    }
+    
+    if (selectedPlatforms.length === 0) {
+      alert('Please select at least one platform');
+      return;
+    }
+    
+    setPublishing(true);
+    setPublishResults([]);
+    setPublishMessage('');
+    
+    const results = [];
+    
+    for (const platform of selectedPlatforms) {
+      try {
+        const response = await fetch('http://localhost:8000/publisher/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platform: platform,
+            content_type: postType,
+            caption: caption,
+            image_urls: selectedMedia.map(m => m.url || m.image_url || '')
+          })
+        });
+        
+        const result = await response.json();
+        results.push({
+          platform: platform,
+          success: result.success,
+          message: result.success ? `Posted to ${platform}!` : result.error,
+          url: result.post_url
+        });
+        
+      } catch (err) {
+        results.push({
+          platform: platform,
+          success: false,
+          message: `Failed to post to ${platform}`
+        });
+      }
+    }
+    
+    setPublishResults(results);
+    
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    
+    if (successCount > 0 && failCount === 0) {
+      setPublishMessage(`✅ Successfully posted to ${successCount} platform(s)!`);
+    } else if (successCount > 0 && failCount > 0) {
+      setPublishMessage(`⚠️ Posted to ${successCount} platform(s), ${failCount} failed`);
+    } else {
+      setPublishMessage(`❌ Failed to post to all platforms`);
+    }
+    
+    setTimeout(() => {
+      setPublishMessage('');
+      setPublishResults([]);
+    }, 10000);
+    
+    setPublishing(false);
+  };
   const generateAIReplies = async (comment: Comment) => {
     setSelectedComment(comment);
     setGeneratingReplies(true);
@@ -476,7 +550,29 @@ export default function SocialManagerPage() {
                 <h2 className="text-xl font-bold text-white mb-4">Schedule</h2>
                 <div className="flex gap-4">
                   <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500" />
-                  <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition">Post Now</button>
+                  <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "📤 Publishing..." : "📤 Post Now"}</button>
+                  
+                  {publishMessage && (
+                    <div className={`mt-4 p-4 rounded-lg ${
+                      publishMessage.includes("✅") ? "bg-green-500/20 border border-green-500" : 
+                      publishMessage.includes("⚠️") ? "bg-yellow-500/20 border border-yellow-500" : 
+                      "bg-red-500/20 border border-red-500"
+                    }`}>
+                      <p className="text-white font-semibold">{publishMessage}</p>
+                      {publishResults.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {publishResults.map((result, i) => (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                              <span className="text-gray-300 capitalize">{result.platform}: {result.message}</span>
+                              {result.url && (
+                                <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">View Post</a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
