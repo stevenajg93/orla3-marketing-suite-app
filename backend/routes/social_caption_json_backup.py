@@ -4,8 +4,6 @@ from typing import List, Optional
 import anthropic
 import os
 import json
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
@@ -13,7 +11,7 @@ from logger import setup_logger
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
+BRAND_STRATEGY_FILE = "brand_strategy.json"
 
 class CaptionRequest(BaseModel):
     prompt: str
@@ -22,22 +20,12 @@ class CaptionRequest(BaseModel):
     hasMedia: bool
     mediaCount: int
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
 def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
-        strategy = cur.fetchone()
-        cur.close()
-        conn.close()
-        return dict(strategy) if strategy else None
-    except Exception as e:
-        logger.error(f"Error loading brand strategy: {e}")
-        return None
+    """Load brand strategy if it exists"""
+    if os.path.exists(BRAND_STRATEGY_FILE):
+        with open(BRAND_STRATEGY_FILE, 'r') as f:
+            return json.load(f)
+    return None
 
 def build_brand_context(strategy: dict) -> str:
     """Build brand context string from strategy"""
@@ -46,47 +34,31 @@ def build_brand_context(strategy: dict) -> str:
     
     context = "\n\n=== ORLA³ BRAND STRATEGY (CRITICAL - APPLY TO CAPTION) ===\n"
     
-    # Handle JSONB fields
-    brand_voice = strategy.get('brand_voice', {})
-    if isinstance(brand_voice, str):
-        brand_voice = json.loads(brand_voice)
-    
-    language_patterns = strategy.get('language_patterns', {})
-    if isinstance(language_patterns, str):
-        language_patterns = json.loads(language_patterns)
-    
-    dos_and_donts = strategy.get('dos_and_donts', {})
-    if isinstance(dos_and_donts, str):
-        dos_and_donts = json.loads(dos_and_donts)
-    
-    competitive_positioning = strategy.get('competitive_positioning', {})
-    if isinstance(competitive_positioning, str):
-        competitive_positioning = json.loads(competitive_positioning)
-    
     # Brand Voice
-    context += f"\nBRAND VOICE & TONE: {brand_voice.get('tone', '')}\n"
-    context += f"PERSONALITY: {', '.join(brand_voice.get('personality', []))}\n"
+    context += f"\nBRAND VOICE & TONE: {strategy['brand_voice']['tone']}\n"
+    context += f"PERSONALITY: {', '.join(strategy['brand_voice']['personality'])}\n"
     
     # Messaging Pillars
     context += f"\nMESSAGING PILLARS:\n"
-    for pillar in strategy.get('messaging_pillars', []):
+    for pillar in strategy['messaging_pillars']:
         context += f"• {pillar}\n"
     
     # Language Patterns
-    context += f"\nWRITING STYLE: {language_patterns.get('writing_style', '')}\n"
-    context += f"PREFERRED PHRASES: {', '.join(language_patterns.get('preferred_phrases', [])[:3])}\n"
-    context += f"KEY VOCABULARY: {', '.join(language_patterns.get('vocabulary', [])[:5])}\n"
+    context += f"\nWRITING STYLE: {strategy['language_patterns']['writing_style']}\n"
+    context += f"PREFERRED PHRASES: {', '.join(strategy['language_patterns']['preferred_phrases'][:3])}\n"
+    context += f"KEY VOCABULARY: {', '.join(strategy['language_patterns']['vocabulary'][:5])}\n"
     
     # Do's and Don'ts
-    context += f"\nDO: {', '.join(dos_and_donts.get('dos', [])[:2])}\n"
-    context += f"DON'T: {', '.join(dos_and_donts.get('donts', [])[:2])}\n"
+    context += f"\nDO: {', '.join(strategy['dos_and_donts']['dos'][:2])}\n"
+    context += f"DON'T: {', '.join(strategy['dos_and_donts']['donts'][:2])}\n"
     
-    # Competitive Positioning
-    if competitive_positioning:
-        context += f"\nOUR UNIQUE VALUE: {competitive_positioning.get('unique_value', '')}\n"
+    # Competitive Positioning (if available)
+    if 'competitive_positioning' in strategy:
+        comp_pos = strategy['competitive_positioning']
+        context += f"\nOUR UNIQUE VALUE: {comp_pos['unique_value']}\n"
         
-        if competitive_positioning.get('gaps_to_exploit'):
-            context += f"EXPLOIT THESE ANGLES: {', '.join(competitive_positioning.get('gaps_to_exploit', [])[:2])}\n"
+        if comp_pos.get('gaps_to_exploit'):
+            context += f"EXPLOIT THESE ANGLES: {', '.join(comp_pos['gaps_to_exploit'][:2])}\n"
     
     context += "\n=== END BRAND STRATEGY ===\n\n"
     
@@ -98,7 +70,7 @@ async def generate_caption(request: CaptionRequest):
     try:
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
-        # Load brand strategy from PostgreSQL
+        # Load brand strategy
         strategy = load_brand_strategy()
         brand_context = build_brand_context(strategy) if strategy else ""
         

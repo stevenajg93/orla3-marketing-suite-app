@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
-import json
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime
 import sys
@@ -11,34 +12,32 @@ from logger import setup_logger
 router = APIRouter()
 logger = setup_logger(__name__)
 
-LIBRARY_FILE = "content_library.json"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
 
 class ContentItem(BaseModel):
-    id: str
+    id: Optional[str] = None
     title: str
     content_type: str
     content: str
-    created_at: str
+    created_at: Optional[str] = None
     status: str
     platform: Optional[str] = None
     tags: Optional[List[str]] = []
     media_url: Optional[str] = None
 
-def load_library():
-    if os.path.exists(LIBRARY_FILE):
-        with open(LIBRARY_FILE, 'r') as f:
-            return json.load(f)
-    return []
-
-def save_library(data):
-    with open(LIBRARY_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/content")
 def get_library_content():
     try:
-        items = load_library()
-        logger.info(f"Loaded {len(items)} library items")
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM content_library ORDER BY created_at DESC")
+        items = cur.fetchall()
+        cur.close()
+        conn.close()
+        logger.info(f"Loaded {len(items)} library items from PostgreSQL")
         return {"items": items}
     except Exception as e:
         logger.error(f"Error loading library: {e}")
@@ -47,11 +46,31 @@ def get_library_content():
 @router.post("/content")
 def save_content(item: ContentItem):
     try:
-        items = load_library()
-        items.append(item.dict())
-        save_library(items)
-        logger.info(f"Saved content: {item.title}")
-        return {"success": True, "item": item.dict()}
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO content_library (title, content_type, content, status, platform, tags, media_url, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, title, content_type, content, status, platform, tags, media_url, created_at
+        """, (
+            item.title,
+            item.content_type,
+            item.content,
+            item.status,
+            item.platform,
+            item.tags or [],
+            item.media_url,
+            datetime.now()
+        ))
+        
+        saved_item = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"Saved content to PostgreSQL: {item.title}")
+        return {"success": True, "item": saved_item}
     except Exception as e:
         logger.error(f"Error saving content: {e}")
         return {"success": False, "error": str(e)}
@@ -59,10 +78,13 @@ def save_content(item: ContentItem):
 @router.delete("/content/{item_id}")
 def delete_content(item_id: str):
     try:
-        items = load_library()
-        items = [i for i in items if i['id'] != item_id]
-        save_library(items)
-        logger.info(f"Deleted content: {item_id}")
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM content_library WHERE id = %s", (item_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info(f"Deleted content from PostgreSQL: {item_id}")
         return {"success": True}
     except Exception as e:
         logger.error(f"Error deleting content: {e}")

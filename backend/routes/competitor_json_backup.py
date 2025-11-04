@@ -3,8 +3,6 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict
 import json
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor, Json as PgJson
 from datetime import datetime
 import anthropic
 import sys
@@ -14,7 +12,8 @@ from logger import setup_logger
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
+COMPETITOR_FILE = "competitor_data.json"
+BRAND_STRATEGY_FILE = "brand_strategy.json"
 
 class SocialHandles(BaseModel):
     instagram: Optional[str] = None
@@ -39,36 +38,43 @@ class CompetitorData(BaseModel):
     last_analyzed: Optional[str] = None
     added_at: str
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+def load_competitors():
+    """Load competitors from JSON file"""
+    if os.path.exists(COMPETITOR_FILE):
+        with open(COMPETITOR_FILE, 'r') as f:
+            return json.load(f)
+    return {"competitors": []}
+
+def save_competitors(data):
+    """Save competitors to JSON file"""
+    with open(COMPETITOR_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
 
 def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
-        strategy = cur.fetchone()
-        cur.close()
-        conn.close()
-        return dict(strategy) if strategy else None
-    except Exception as e:
-        logger.error(f"Error loading brand strategy: {e}")
-        return None
+    """Load brand strategy if it exists"""
+    if os.path.exists(BRAND_STRATEGY_FILE):
+        with open(BRAND_STRATEGY_FILE, 'r') as f:
+            return json.load(f)
+    return None
 
 def extract_json_from_text(text: str) -> dict:
     """Extract JSON from text that might be wrapped in markdown or other formatting"""
+    # Remove any leading/trailing whitespace
     text = text.strip()
     
+    # Try to extract from markdown code blocks
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
     elif "```" in text:
+        # Generic code block
         parts = text.split("```")
         if len(parts) >= 3:
             text = parts[1].strip()
+            # Remove language identifier if present
             if text.startswith("json\n"):
                 text = text[5:]
     
+    # Try to parse
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
@@ -80,24 +86,24 @@ def extract_json_from_text(text: str) -> dict:
 async def add_competitor(competitor: Competitor):
     """Add a new competitor to track"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        data = load_competitors()
         
-        cur.execute("""
-            INSERT INTO competitors (name, industry, location, social_handles)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, name, industry, location, social_handles, added_at
-        """, (
-            competitor.name,
-            competitor.industry,
-            competitor.location,
-            PgJson(competitor.handles.dict())
-        ))
+        # Generate unique ID
+        competitor_id = f"comp_{datetime.now().strftime('%Y%m%d%H%M%S')}"
         
-        competitor_data = cur.fetchone()
-        conn.commit()
-        cur.close()
-        conn.close()
+        competitor_data = {
+            "id": competitor_id,
+            "name": competitor.name,
+            "handles": competitor.handles.dict(),
+            "industry": competitor.industry,
+            "location": competitor.location,
+            "analysis": None,
+            "last_analyzed": None,
+            "added_at": datetime.now().isoformat()
+        }
+        
+        data["competitors"].append(competitor_data)
+        save_competitors(data)
         
         logger.info(f"Added competitor: {competitor.name}")
         return {"success": True, "competitor": competitor_data}
@@ -108,57 +114,10 @@ async def add_competitor(competitor: Competitor):
 
 @router.get("/list")
 async def list_competitors():
-    """Get all tracked competitors with their analyses"""
+    """Get all tracked competitors"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("""
-            SELECT 
-                c.*,
-                ca.marketing_they_do_well,
-                ca.gaps_they_miss as content_gaps,
-                ca.positioning_messaging,
-                ca.content_opportunities,
-                ca.threat_level,
-                ca.strategic_summary
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            ORDER BY c.added_at DESC
-        """)
-        
-        competitors = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        # Format response to match original structure
-        formatted = []
-        for comp in competitors:
-            comp_dict = dict(comp)
-            
-            # Build analysis object if data exists
-            if comp_dict.get('marketing_they_do_well'):
-                comp_dict['analysis'] = {
-                    'marketing_they_do_well': comp_dict.pop('marketing_they_do_well'),
-                    'content_gaps': comp_dict.pop('content_gaps'),
-                    'positioning_messaging': comp_dict.pop('positioning_messaging'),
-                    'content_opportunities': comp_dict.pop('content_opportunities'),
-                    'threat_level': comp_dict.pop('threat_level'),
-                    'strategic_summary': comp_dict.pop('strategic_summary')
-                }
-            else:
-                comp_dict['analysis'] = None
-                comp_dict.pop('marketing_they_do_well', None)
-                comp_dict.pop('content_gaps', None)
-                comp_dict.pop('positioning_messaging', None)
-                comp_dict.pop('content_opportunities', None)
-                comp_dict.pop('threat_level', None)
-                comp_dict.pop('strategic_summary', None)
-            
-            formatted.append(comp_dict)
-        
-        return {"competitors": formatted}
-        
+        data = load_competitors()
+        return {"competitors": data["competitors"]}
     except Exception as e:
         logger.error(f"Error listing competitors: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -167,14 +126,9 @@ async def list_competitors():
 async def delete_competitor(competitor_id: str):
     """Remove a competitor"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Delete competitor (cascade will delete analysis)
-        cur.execute("DELETE FROM competitors WHERE id = %s", (competitor_id,))
-        conn.commit()
-        cur.close()
-        conn.close()
+        data = load_competitors()
+        data["competitors"] = [c for c in data["competitors"] if c["id"] != competitor_id]
+        save_competitors(data)
         
         logger.info(f"Deleted competitor: {competitor_id}")
         return {"success": True}
@@ -187,43 +141,61 @@ async def delete_competitor(competitor_id: str):
 async def analyze_competitor(competitor_id: str):
     """Run brand-aware MARKETING analysis on competitor"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Get competitor
-        cur.execute("SELECT * FROM competitors WHERE id = %s", (competitor_id,))
-        competitor = cur.fetchone()
+        data = load_competitors()
+        competitor = next((c for c in data["competitors"] if c["id"] == competitor_id), None)
         
         if not competitor:
-            cur.close()
-            conn.close()
             raise HTTPException(status_code=404, detail="Competitor not found")
-        
-        competitor = dict(competitor)
         
         # Load brand strategy for context
         brand_strategy = load_brand_strategy()
         
+        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        
+        # Build brand context if available
         brand_context = ""
         if brand_strategy:
             brand_context = f"""
 OUR BRAND (Orla³):
-- Voice: {brand_strategy['brand_voice']['tone'] if isinstance(brand_strategy.get('brand_voice'), dict) else 'Professional'}
-- Pillars: {', '.join(brand_strategy.get('messaging_pillars', []))}
-- Target: {brand_strategy['target_audience']['primary'] if isinstance(brand_strategy.get('target_audience'), dict) else 'Creative professionals'}
+- Voice & Tone: {brand_strategy['brand_voice']['tone']}
+- Personality: {', '.join(brand_strategy['brand_voice']['personality'])}
+- Messaging Pillars: {', '.join(brand_strategy['messaging_pillars'])}
+- Target Audience: {brand_strategy['target_audience']['primary']}
+- Key Differentiators: {', '.join(brand_strategy['brand_voice']['key_characteristics'])}
+"""
+        else:
+            brand_context = """
+OUR BRAND (Orla³):
+- Video production marketplace
+- Professional videographers
+- Quality-focused, community-driven
 """
         
-        # Call Claude API
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        
-        prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
+        prompt = f"""You are a MARKETING strategist analyzing a competitor's CONTENT & MESSAGING strategy for Orla³.
 
 {brand_context}
 
 COMPETITOR TO ANALYZE:
 Name: {competitor['name']}
 Industry: {competitor.get('industry', 'Unknown')}
-Social: {json.dumps(competitor.get('social_handles', {}))}
+Social Media Presence:
+- Instagram: {competitor['handles'].get('instagram', 'N/A')}
+- LinkedIn: {competitor['handles'].get('linkedin', 'N/A')}
+- X/Twitter: {competitor['handles'].get('x', 'N/A')}
+- TikTok: {competitor['handles'].get('tiktok', 'N/A')}
+- YouTube: {competitor['handles'].get('youtube', 'N/A')}
+
+CRITICAL: This is a MARKETING ANALYSIS ONLY. Focus ONLY on:
+- Content strategy (topics, themes, formats)
+- Messaging & positioning (how they talk about themselves)
+- Brand voice & tone (writing style, personality)
+- Marketing tactics (social strategy, content types, SEO focus)
+
+DO NOT analyze:
+- Product features or business models
+- Operational processes
+- Pricing strategies
+- Technical implementations
 
 Analyze their MARKETING through the lens of Orla³'s positioning:
 
@@ -254,8 +226,9 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
         analysis_text = message.content[0].text
         
         logger.info(f"Claude response received: {len(analysis_text)} chars")
+        logger.info(f"First 200 chars: {analysis_text[:200]}")
         
-        # Parse JSON
+        # Try to parse as JSON with improved extraction
         try:
             analysis = extract_json_from_text(analysis_text)
             logger.info(f"Successfully parsed JSON with keys: {list(analysis.keys())}")
@@ -267,59 +240,11 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
                 "strategic_summary": "Analysis format error - please re-analyze"
             }
         
-        # Save or update analysis in PostgreSQL
-        # Check if analysis exists
-        cur.execute("SELECT id FROM competitor_analyses WHERE competitor_id = %s", (competitor_id,))
-        existing = cur.fetchone()
+        # Update competitor with analysis
+        competitor["analysis"] = analysis
+        competitor["last_analyzed"] = datetime.now().isoformat()
         
-        if existing:
-            # Update existing
-            cur.execute("""
-                UPDATE competitor_analyses
-                SET marketing_they_do_well = %s,
-                    gaps_they_miss = %s,
-                    positioning_messaging = %s,
-                    content_opportunities = %s,
-                    threat_level = %s,
-                    strategic_summary = %s,
-                    raw_analysis = %s,
-                    updated_at = NOW()
-                WHERE competitor_id = %s
-            """, (
-                analysis.get('marketing_they_do_well', []),
-                analysis.get('content_gaps', []),
-                analysis.get('positioning_messaging'),
-                analysis.get('content_opportunities', []),
-                analysis.get('threat_level', 'unknown'),
-                analysis.get('strategic_summary'),
-                PgJson(analysis),
-                competitor_id
-            ))
-        else:
-            # Insert new
-            cur.execute("""
-                INSERT INTO competitor_analyses (
-                    competitor_id, marketing_they_do_well, gaps_they_miss,
-                    positioning_messaging, content_opportunities,
-                    threat_level, strategic_summary, raw_analysis
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                competitor_id,
-                analysis.get('marketing_they_do_well', []),
-                analysis.get('content_gaps', []),
-                analysis.get('positioning_messaging'),
-                analysis.get('content_opportunities', []),
-                analysis.get('threat_level', 'unknown'),
-                analysis.get('strategic_summary'),
-                PgJson(analysis)
-            ))
-        
-        # Update competitor last_analyzed timestamp
-        cur.execute("UPDATE competitors SET last_analyzed = NOW() WHERE id = %s", (competitor_id,))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
+        save_competitors(data)
         
         logger.info(f"✅ Analyzed competitor: {competitor['name']}")
         return {"success": True, "analysis": analysis}
@@ -334,13 +259,8 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
 async def get_insights():
     """Get overall competitive MARKETING insights across all competitors"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT * FROM competitors ORDER BY added_at DESC")
-        competitors = cur.fetchall()
-        cur.close()
-        conn.close()
+        data = load_competitors()
+        competitors = data["competitors"]
         
         if not competitors:
             return {"insights": "No competitors added yet. Add competitors to get insights."}
@@ -348,19 +268,21 @@ async def get_insights():
         # Load brand strategy
         brand_strategy = load_brand_strategy()
         
+        # Build brand context
         brand_context = ""
         if brand_strategy:
             brand_context = f"""
 OUR BRAND (Orla³):
-- Voice: {brand_strategy['brand_voice']['tone'] if isinstance(brand_strategy.get('brand_voice'), dict) else 'Professional'}
-- Pillars: {', '.join(brand_strategy.get('messaging_pillars', []))}
-- Target: {brand_strategy['target_audience']['primary'] if isinstance(brand_strategy.get('target_audience'), dict) else 'Creative professionals'}
+- Voice: {brand_strategy['brand_voice']['tone']}
+- Pillars: {', '.join(brand_strategy['messaging_pillars'])}
+- Target: {brand_strategy['target_audience']['primary']}
 """
         
+        # Use Claude to generate strategic insights
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
         competitor_summary = "\n".join([
-            f"- {c['name']}: {c.get('industry', 'Unknown industry')}"
+            f"- {c['name']}: {c.get('industry', 'Unknown industry')} (Threat: {c.get('analysis', {}).get('threat_level', 'not analyzed')})"
             for c in competitors
         ])
         
@@ -413,24 +335,14 @@ Be specific and tactical about CONTENT & MARKETING only."""
 async def get_competitor_summary():
     """Get structured summary of all competitor MARKETING analyses for Strategy Planner"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("""
-            SELECT c.*, ca.*
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            ORDER BY c.added_at DESC
-        """)
-        competitors = cur.fetchall()
-        cur.close()
-        conn.close()
+        data = load_competitors()
+        competitors = data["competitors"]
         
         if not competitors:
             return {"success": False, "message": "No competitors added"}
         
         # Filter analyzed competitors
-        analyzed = [c for c in competitors if c.get('marketing_they_do_well')]
+        analyzed = [c for c in competitors if c.get('analysis')]
         
         if not analyzed:
             return {"success": False, "message": "No competitors analyzed yet"}
@@ -451,31 +363,32 @@ async def get_competitor_summary():
         }
         
         for comp in analyzed:
+            analysis = comp.get('analysis', {})
             comp_name = comp['name']
             
             # Aggregate what they do well (marketing)
-            if comp.get('marketing_they_do_well'):
-                for item in comp['marketing_they_do_well']:
+            if 'marketing_they_do_well' in analysis:
+                for item in analysis['marketing_they_do_well']:
                     summary['marketing_they_do_well'].append(f"{comp_name}: {item}")
             
             # Aggregate content gaps
-            if comp.get('gaps_they_miss'):
-                for gap in comp['gaps_they_miss']:
+            if 'content_gaps' in analysis:
+                for gap in analysis['content_gaps']:
                     summary['content_gaps'].append(gap)
             
             # Aggregate content opportunities
-            if comp.get('content_opportunities'):
-                summary['content_opportunities'].extend(comp['content_opportunities'])
+            if 'content_opportunities' in analysis:
+                summary['content_opportunities'].extend(analysis['content_opportunities'])
             
             # Positioning messaging
-            if comp.get('positioning_messaging'):
+            if 'positioning_messaging' in analysis:
                 summary['positioning_opportunities'].append({
                     'competitor': comp_name,
-                    'positioning': comp['positioning_messaging']
+                    'positioning': analysis['positioning_messaging']
                 })
             
             # Threat level
-            threat = comp.get('threat_level', 'unknown')
+            threat = analysis.get('threat_level', 'unknown')
             if threat in summary['threat_assessment']:
                 summary['threat_assessment'][threat].append(comp_name)
         

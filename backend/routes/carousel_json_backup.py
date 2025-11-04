@@ -4,12 +4,10 @@ from pydantic import BaseModel
 from typing import List, Literal
 from anthropic import Anthropic
 import os, json, re, httpx
-import psycopg2
-from psycopg2.extras import RealDictCursor
 
 router = APIRouter()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
+BRAND_STRATEGY_FILE = "brand_strategy.json"
 
 class CarouselInput(BaseModel):
     post_summary: str
@@ -30,22 +28,12 @@ class CarouselOutput(BaseModel):
     platform: str
     slides: List[Slide]
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
 def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
-        strategy = cur.fetchone()
-        cur.close()
-        conn.close()
-        return dict(strategy) if strategy else None
-    except Exception as e:
-        print(f"Error loading brand strategy: {e}")
-        return None
+    """Load brand strategy if it exists"""
+    if os.path.exists(BRAND_STRATEGY_FILE):
+        with open(BRAND_STRATEGY_FILE, 'r') as f:
+            return json.load(f)
+    return None
 
 def build_brand_context(strategy: dict) -> str:
     """Build brand context string from strategy"""
@@ -54,40 +42,28 @@ def build_brand_context(strategy: dict) -> str:
     
     context = "\n\n=== ORLA³ BRAND STRATEGY (CRITICAL - FOLLOW EXACTLY) ===\n"
     
-    # Handle JSONB fields
-    brand_voice = strategy.get('brand_voice', {})
-    if isinstance(brand_voice, str):
-        brand_voice = json.loads(brand_voice)
-    
-    language_patterns = strategy.get('language_patterns', {})
-    if isinstance(language_patterns, str):
-        language_patterns = json.loads(language_patterns)
-    
-    competitive_positioning = strategy.get('competitive_positioning', {})
-    if isinstance(competitive_positioning, str):
-        competitive_positioning = json.loads(competitive_positioning)
-    
     # Brand Voice
-    context += f"\nBRAND VOICE & TONE:\n{brand_voice.get('tone', '')}\n"
-    context += f"PERSONALITY: {', '.join(brand_voice.get('personality', []))}\n"
+    context += f"\nBRAND VOICE & TONE:\n{strategy['brand_voice']['tone']}\n"
+    context += f"PERSONALITY: {', '.join(strategy['brand_voice']['personality'])}\n"
     
     # Messaging Pillars
     context += f"\nMESSAGING PILLARS (weave into slides):\n"
-    for pillar in strategy.get('messaging_pillars', []):
+    for pillar in strategy['messaging_pillars']:
         context += f"• {pillar}\n"
     
     # Language Patterns
-    context += f"\nWRITING STYLE: {language_patterns.get('writing_style', '')}\n"
-    context += f"PREFERRED PHRASES: {', '.join(language_patterns.get('preferred_phrases', [])[:3])}\n"
+    context += f"\nWRITING STYLE: {strategy['language_patterns']['writing_style']}\n"
+    context += f"PREFERRED PHRASES: {', '.join(strategy['language_patterns']['preferred_phrases'][:3])}\n"
     
-    # Competitive Positioning
-    if competitive_positioning:
+    # Competitive Positioning (if available)
+    if 'competitive_positioning' in strategy:
+        comp_pos = strategy['competitive_positioning']
         context += f"\nCOMPETITIVE POSITIONING:\n"
-        context += f"Our Unique Value: {competitive_positioning.get('unique_value', '')}\n"
+        context += f"Our Unique Value: {comp_pos['unique_value']}\n"
         
-        if competitive_positioning.get('gaps_to_exploit'):
+        if comp_pos.get('gaps_to_exploit'):
             context += f"\nExploit These Content Gaps:\n"
-            for gap in competitive_positioning.get('gaps_to_exploit', [])[:2]:
+            for gap in comp_pos['gaps_to_exploit'][:2]:
                 context += f"• {gap}\n"
     
     context += "\n=== END BRAND STRATEGY ===\n\n"
@@ -124,7 +100,7 @@ async def get_unsplash_image(query: str) -> str:
 async def generate_carousel(data: CarouselInput):
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     
-    # Load brand strategy from PostgreSQL
+    # Load brand strategy
     strategy = load_brand_strategy()
     brand_context = build_brand_context(strategy) if strategy else ""
     

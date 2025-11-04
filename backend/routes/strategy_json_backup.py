@@ -2,8 +2,6 @@ from fastapi import APIRouter, HTTPException
 from anthropic import Anthropic
 import json
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor, Json as PgJson
 from datetime import datetime
 from pathlib import Path
 
@@ -12,47 +10,33 @@ router = APIRouter()
 # Initialize Anthropic client
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
-
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+BRAND_VOICE_INDEX_PATH = "brand_voice_index.json"
+BRAND_STRATEGY_PATH = "brand_strategy.json"
+COMPETITOR_FILE = "competitor_data.json"
 
 def load_brand_voice_assets():
-    """Load all uploaded brand voice assets from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_voice_assets ORDER BY uploaded_at DESC")
-        assets = cur.fetchall()
-        cur.close()
-        conn.close()
-        return assets
-    except Exception as e:
-        print(f"Error loading brand voice assets: {e}")
+    """Load all uploaded brand voice assets"""
+    if not os.path.exists(BRAND_VOICE_INDEX_PATH):
         return []
+    
+    with open(BRAND_VOICE_INDEX_PATH, 'r') as f:
+        data = json.load(f)
+        return data.get('assets', [])
 
 def load_competitor_summary():
-    """Load competitor marketing insights summary from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Get all competitors with their analyses
-        cur.execute("""
-            SELECT c.*, ca.* 
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            ORDER BY c.added_at DESC
-        """)
-        competitors = cur.fetchall()
-        cur.close()
-        conn.close()
+    """Load competitor marketing insights summary"""
+    if not os.path.exists(COMPETITOR_FILE):
+        return None
+    
+    with open(COMPETITOR_FILE, 'r') as f:
+        data = json.load(f)
+        competitors = data.get('competitors', [])
         
         if not competitors:
             return None
         
         # Build summary
-        analyzed = [c for c in competitors if c.get('marketing_they_do_well')]
+        analyzed = [c for c in competitors if c.get('analysis')]
         
         if not analyzed:
             return None
@@ -64,34 +48,17 @@ def load_competitor_summary():
         }
         
         for comp in analyzed:
+            analysis = comp.get('analysis', {})
             summary['competitors'].append({
                 'name': comp['name'],
-                'threat_level': comp.get('threat_level', 'unknown'),
-                'marketing_they_do_well': comp.get('marketing_they_do_well', []),
-                'content_gaps': comp.get('gaps_they_miss', []),  # Database uses gaps_they_miss
-                'positioning_messaging': comp.get('positioning_messaging', ''),
-                'content_opportunities': comp.get('content_opportunities', [])
+                'threat_level': analysis.get('threat_level', 'unknown'),
+                'marketing_they_do_well': analysis.get('marketing_they_do_well', []),
+                'content_gaps': analysis.get('content_gaps', []),
+                'positioning_messaging': analysis.get('positioning_messaging', ''),
+                'content_opportunities': analysis.get('content_opportunities', [])
             })
         
         return summary
-        
-    except Exception as e:
-        print(f"Error loading competitor summary: {e}")
-        return None
-
-def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
-        strategy = cur.fetchone()
-        cur.close()
-        conn.close()
-        return dict(strategy) if strategy else None
-    except Exception as e:
-        print(f"Error loading brand strategy: {e}")
-        return None
 
 def extract_text_from_file(file_path: str) -> str:
     """Extract text from various file formats"""
@@ -149,7 +116,7 @@ async def analyze_brand_voice(include_competitors: bool = True):
     Analyze brand voice assets and optionally include competitive MARKETING intelligence
     """
     try:
-        # Load assets from PostgreSQL
+        # Load assets
         assets = load_brand_voice_assets()
         
         if not assets:
@@ -168,17 +135,11 @@ async def analyze_brand_voice(include_competitors: bool = True):
         print(f"Processing {len(assets)} assets...")
         
         for asset in assets:
-            # Get text from metadata or content_preview
-            text = ""
-            if asset.get('metadata') and isinstance(asset['metadata'], dict):
-                text = asset['metadata'].get('full_text', '')
-            if not text:
-                text = asset.get('content_preview', '')
-            
-            # Try to extract if not available
-            if not text or text == "No text extracted":
+            # Try to extract text if not already done
+            text = asset.get('full_text', '')
+            if not text or text == "":
                 print(f"Extracting text from {asset['filename']}...")
-                text = extract_text_from_file(asset['file_path'])
+                text = extract_text_from_file(asset['path'])
             
             # Skip if no text extracted
             if not text or len(text) < 50:
@@ -319,34 +280,21 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
         
         strategy = json.loads(strategy_text)
         
-        # Save strategy to PostgreSQL
-        conn = get_db_connection()
-        cur = conn.cursor()
+        # Add metadata
+        strategy['generated_at'] = datetime.now().isoformat()
+        strategy['assets_analyzed'] = len(assets)
+        strategy['competitors_included'] = competitor_summary['analyzed'] if competitor_summary else 0
+        strategy['categories'] = {
+            'guidelines': len(brand_context['guidelines']),
+            'voice_samples': len(brand_context['voice_samples']),
+            'community': len(brand_context['community'])
+        }
         
-        # Delete old strategy
-        cur.execute("DELETE FROM brand_strategy")
+        # Save strategy
+        with open(BRAND_STRATEGY_PATH, 'w') as f:
+            json.dump(strategy, f, indent=2)
         
-        # Insert new strategy
-        cur.execute("""
-            INSERT INTO brand_strategy (
-                brand_voice, messaging_pillars, language_patterns, 
-                dos_and_donts, target_audience, content_themes, competitive_positioning
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            PgJson(strategy.get('brand_voice', {})),
-            strategy.get('messaging_pillars', []),
-            PgJson(strategy.get('language_patterns', {})),
-            PgJson(strategy.get('dos_and_donts', {})),
-            PgJson(strategy.get('target_audience', {})),
-            strategy.get('content_themes', []),
-            PgJson(strategy.get('competitive_positioning', {}))
-        ))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        print("✅ Strategy saved to PostgreSQL")
+        print("✅ Strategy saved successfully")
         
         return {
             "success": True,
@@ -372,14 +320,15 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
 
 @router.get("/current")
 async def get_current_strategy():
-    """Get the current brand strategy from PostgreSQL"""
-    strategy = load_brand_strategy()
-    
-    if not strategy:
+    """Get the current brand strategy"""
+    if not os.path.exists(BRAND_STRATEGY_PATH):
         return {
             "success": False,
             "error": "No strategy generated yet. Click 'Analyze Brand Voice' to create one."
         }
+    
+    with open(BRAND_STRATEGY_PATH, 'r') as f:
+        strategy = json.load(f)
     
     return {
         "success": True,
@@ -408,11 +357,9 @@ async def get_next_keyword():
         
         comp_context = ""
         if 'competitive_positioning' in strategy:
-            comp_pos = strategy['competitive_positioning']
-            if isinstance(comp_pos, dict):
-                gaps = comp_pos.get('gaps_to_exploit', [])
-                if gaps:
-                    comp_context = f"\nContent gaps to exploit: {', '.join(gaps[:3])}"
+            gaps = strategy['competitive_positioning'].get('gaps_to_exploit', [])
+            if gaps:
+                comp_context = f"\nContent gaps to exploit: {', '.join(gaps[:3])}"
         
         prompt = f"""Based on Orla³'s brand strategy, recommend the next blog post keyword to target.
 
@@ -473,11 +420,10 @@ async def market_research(data: dict):
             brand_context = f"""
 OUR BRAND (Orla³):
 - Messaging: {', '.join(strategy.get('messaging_pillars', []))}
-- Target Audience: {strategy.get('target_audience', {}).get('primary', 'Creative professionals') if isinstance(strategy.get('target_audience'), dict) else 'Creative professionals'}
+- Target Audience: {strategy.get('target_audience', {}).get('primary', 'Creative professionals')}
 """
-            comp_pos = strategy.get('competitive_positioning', {})
-            if isinstance(comp_pos, dict) and comp_pos.get('unique_value'):
-                brand_context += f"- Unique Value: {comp_pos.get('unique_value', '')}\n"
+            if 'competitive_positioning' in strategy:
+                brand_context += f"- Unique Value: {strategy['competitive_positioning'].get('unique_value', '')}\n"
         
         prompt = f"""Analyze the content landscape for: "{keyword}"
 
