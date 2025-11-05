@@ -11,8 +11,8 @@ export default function BlogWriter() {
   const [wordCount, setWordCount] = useState(1500);
   const [loading, setLoading] = useState(false);
   const [researching, setResearching] = useState(false);
-  const [marketResearch, setMarketResearch] = useState<any>(null);
-  const [blog, setBlog] = useState<any>(null);
+  const [marketResearch, setMarketResearch] = useState<{ keyword: string; intent: string; insights: string[] } | null>(null);
+  const [blog, setBlog] = useState<{ title: string; content: string; slug: string } | null>(null);
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
 
@@ -48,7 +48,8 @@ export default function BlogWriter() {
       
       const data = response;
       setBlog(data);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Auto-generate error:', err);
       setError('Failed to auto-generate. Make sure backend is running.');
     } finally {
       setLoading(false);

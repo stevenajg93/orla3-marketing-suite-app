@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     // CONTENT GENERATION
     if (action === 'generate') {
-      const socialPosts: any = {};
+      const socialPosts: Record<string, { content: string; platform: string; generated: string; scheduled: boolean }> = {};
       const requestedPlatforms = platforms[0] === 'all' ? Object.keys(PLATFORMS) : platforms;
 
       for (const platform of requestedPlatforms) {
@@ -43,8 +43,11 @@ export async function POST(request: Request) {
           messages: [{ role: 'user', content: prompt }]
         });
         
+        const firstBlock = message.content[0];
+        const text = firstBlock.type === 'text' ? firstBlock.text : '';
+
         socialPosts[platform] = {
-          content: message.content[0].text,
+          content: text,
           platform,
           generated: new Date().toISOString(),
           scheduled: false
@@ -91,7 +94,7 @@ export async function POST(request: Request) {
 }
 
 function getPlatformPrompt(platform: string, topic: string, content: string) {
-  const prompts: any = {
+  const prompts: Record<string, string> = {
     linkedin: `Create LinkedIn post about "${topic}":
               - Professional, value-focused
               - Include question for engagement
@@ -176,16 +179,19 @@ async function generateEngagements(type: string) {
     }]
   });
   
+  const firstBlock = message.content[0];
+  const text = firstBlock.type === 'text' ? firstBlock.text : '';
+
   return {
     type,
-    responses: message.content[0].text,
+    responses: text,
     generated: new Date().toISOString()
   };
 }
 
 function generateOptimalSchedule(platforms: string[]) {
   // Optimal posting times per platform (UTC)
-  const optimal: any = {
+  const optimal: Record<string, string[]> = {
     linkedin: ['08:00', '12:00', '17:00'],
     twitter: ['09:00', '13:00', '19:00', '22:00'],
     facebook: ['09:00', '15:00', '20:00'],

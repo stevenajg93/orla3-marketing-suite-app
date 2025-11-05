@@ -54,8 +54,8 @@ export default function BrandVoice() {
     try {
       const data = await api.get('/brand-voice/assets');
       setAssets(data.assets || []);
-    } catch (err) {
-      console.error('Failed to load assets');
+    } catch (err: unknown) {
+      console.error('Failed to load assets:', err);
     }
   };
 

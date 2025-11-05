@@ -55,9 +55,10 @@ export async function POST(request: Request) {
     }
 
     if (result.success) {
+      const message = 'updated' in result && result.updated ? 'Post updated' : 'Post created';
       return NextResponse.json({
         success: true,
-        message: result.updated ? 'Post updated' : 'Post created',
+        message,
         post: {
           id: result.id,
           link: result.link,
@@ -65,13 +66,14 @@ export async function POST(request: Request) {
         }
       });
     } else {
+      const errorMessage = 'error' in result ? result.error : 'Unknown error';
       return NextResponse.json(
-        { success: false, error: result.error },
+        { success: false, error: errorMessage },
         { status: 500 }
       );
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Publish API error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to publish to WordPress' },

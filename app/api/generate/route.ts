@@ -30,9 +30,12 @@ export async function POST() {
         }]
       });
       
+      const firstBlock = message.content[0];
+      const text = firstBlock.type === 'text' ? firstBlock.text : '';
+
       articles.push({
         topic,
-        content: message.content[0].text,
+        content: text,
         generated: new Date().toISOString()
       });
     }

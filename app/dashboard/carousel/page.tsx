@@ -10,7 +10,7 @@ export default function CarouselMakerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ slides: Array<{ slide_number: number; hook: string; body: string; image_url?: string }> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [caption, setCaption] = useState("");
@@ -181,7 +181,7 @@ export default function CarouselMakerPage() {
     }
   };
 
-  const renderSlideContent = (slide: any, idx: number, isExport: boolean = false) => {
+  const renderSlideContent = (slide: { slide_number: number; hook: string; body: string; image_url?: string }, idx: number, isExport: boolean = false) => {
     const isFirstSlide = idx === 0;
     const isLastSlide = idx === result.slides.length - 1;
     const totalSlides = result.slides.length;
@@ -319,7 +319,7 @@ export default function CarouselMakerPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Hidden export versions - 1080x1080 */}
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        {result?.slides?.map((slide: any, idx: number) => (
+        {result?.slides?.map((slide, idx: number) => (
           <div
             key={`export-${idx}`}
             ref={(el) => {
@@ -445,7 +445,7 @@ export default function CarouselMakerPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {result.slides?.map((slide: any, idx: number) => {
+              {result.slides?.map((slide, idx: number) => {
                 const isFirstSlide = idx === 0;
                 const isLastSlide = idx === result.slides.length - 1;
                 const totalSlides = result.slides.length;

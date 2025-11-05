@@ -53,8 +53,8 @@ export default function ContentCalendar() {
     try {
       const data = await api.get('/calendar/events');
       setEvents(data.events || []);
-    } catch (err) {
-      console.error('Failed to load events');
+    } catch (err: unknown) {
+      console.error('Failed to load events:', err);
     } finally {
       setLoading(false);
     }

@@ -57,8 +57,8 @@ export default function CompetitorAnalysis() {
     try {
       const data = await api.get('/competitor/list');
       setCompetitors(data.competitors || []);
-    } catch (err) {
-      console.error('Failed to load competitors');
+    } catch (err: unknown) {
+      console.error('Failed to load competitors:', err);
     }
   };
 
