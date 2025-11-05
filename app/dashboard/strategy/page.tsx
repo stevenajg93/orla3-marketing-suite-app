@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type Strategy = {
   brand_voice: {
@@ -53,8 +55,7 @@ export default function StrategyPlanner() {
   const loadStrategy = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/strategy/current');
-      const data = await res.json();
+      const data = await api.get('/strategy/current');
       
       if (data.success) {
         setStrategy(data.strategy);
@@ -73,10 +74,7 @@ export default function StrategyPlanner() {
     setAnalyzing(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/strategy/analyze', {
-        method: 'POST'
-      });
-      const data = await res.json();
+      const data = await api.post('/strategy/analyze');
       
       if (data.success) {
         setStrategy(data.strategy);

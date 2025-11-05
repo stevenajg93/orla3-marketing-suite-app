@@ -3,6 +3,8 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 export default function CarouselMakerPage() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export default function CarouselMakerPage() {
     setEditMode(false);
 
     try {
-      const res = await fetch("http://localhost:8000/carousel/social/carousel", {
+      const res = await fetch(`${config.apiUrl}/carousel/social/carousel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -80,7 +82,7 @@ export default function CarouselMakerPage() {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      await fetch("http://localhost:8000/library/content", {
+      await fetch(`${config.apiUrl}/library/content`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

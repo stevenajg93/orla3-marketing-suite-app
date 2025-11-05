@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type Competitor = {
   id: string;
@@ -53,8 +55,7 @@ export default function CompetitorAnalysis() {
 
   const loadCompetitors = async () => {
     try {
-      const res = await fetch('http://localhost:8000/competitor/list');
-      const data = await res.json();
+      const data = await api.get('/competitor/list');
       setCompetitors(data.competitors || []);
     } catch (err) {
       console.error('Failed to load competitors');
@@ -64,8 +65,7 @@ export default function CompetitorAnalysis() {
   const loadInsights = async () => {
     setLoadingInsights(true);
     try {
-      const res = await fetch('http://localhost:8000/competitor/insights');
-      const data = await res.json();
+      const data = await api.get('/competitor/insights');
       setInsights(data.insights);
     } catch (err) {
       console.error('Failed to load insights');
@@ -82,10 +82,7 @@ export default function CompetitorAnalysis() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/competitor/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post(`/competitor/add`, {
           name: formData.name,
           industry: formData.industry || null,
           location: formData.location || null,
@@ -96,8 +93,7 @@ export default function CompetitorAnalysis() {
             tiktok: formData.tiktok || null,
             youtube: formData.youtube || null
           }
-        })
-      });
+        });
 
       if (res.ok) {
         setFormData({ name: '', industry: '', location: '', instagram: '', linkedin: '', x: '', tiktok: '', youtube: '' });
@@ -114,7 +110,7 @@ export default function CompetitorAnalysis() {
   const analyzeCompetitor = async (competitorId: string) => {
     setAnalyzing(competitorId);
     try {
-      await fetch(`http://localhost:8000/competitor/${competitorId}/analyze`, { method: 'POST' });
+      await fetch(`${config.apiUrl}/competitor/${competitorId}/analyze`, { method: 'POST' });
       loadCompetitors();
       setExpandedCompetitor(competitorId); // Auto-expand after analysis
     } catch (err) {
@@ -127,7 +123,7 @@ export default function CompetitorAnalysis() {
   const deleteCompetitor = async (competitorId: string) => {
     if (!confirm('Remove this competitor?')) return;
     try {
-      await fetch(`http://localhost:8000/competitor/${competitorId}`, { method: 'DELETE' });
+      await api.delete(`/competitor/${competitorId}`);
       loadCompetitors();
     } catch (err) {
       console.error('Failed to delete');

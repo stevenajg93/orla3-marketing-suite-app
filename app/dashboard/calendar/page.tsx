@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type ContentEvent = {
   id: string;
@@ -49,8 +51,7 @@ export default function ContentCalendar() {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/calendar/events');
-      const data = await res.json();
+      const data = await api.get('/calendar/events');
       setEvents(data.events || []);
     } catch (err) {
       console.error('Failed to load events');
@@ -69,11 +70,7 @@ export default function ContentCalendar() {
     };
 
     try {
-      const res = await fetch('http://localhost:8000/calendar/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEvent)
-      });
+      const res = await api.post(`/calendar/events`, newEvent);
       
       if (res.ok) {
         await loadEvents();

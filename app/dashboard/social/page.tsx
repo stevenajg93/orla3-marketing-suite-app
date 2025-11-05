@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type PostType = "text" | "video" | "carousel";
 type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr";
@@ -105,8 +107,7 @@ export default function SocialManagerPage() {
 
   const loadMediaLibrary = async () => {
     try {
-      const res = await fetch('http://localhost:8000/library/content');
-      const data = await res.json();
+      const data = await api.get('/library/content');
       setLibraryContent(data.items || []);
     } catch (err) {
       console.error('Failed to load media library');
@@ -115,8 +116,7 @@ export default function SocialManagerPage() {
 
   const loadDriveFolders = async () => {
     try {
-      const res = await fetch('http://localhost:8000/media/folders');
-      const data = await res.json();
+      const data = await api.get('/media/folders');
       setDriveFolders(data.folders || []);
     } catch (err) {
       console.error('Failed to load Drive folders');
@@ -128,8 +128,7 @@ export default function SocialManagerPage() {
     try {
       const params = new URLSearchParams();
       if (folderId) params.append('folder_id', folderId);
-      const res = await fetch(`http://localhost:8000/media/library?${params}`);
-      const data = await res.json();
+      const data = await api.get(`/media/library?${params}`);
       setDriveAssets(data.assets || []);
     } catch (err) {
       console.error('Failed to load Drive assets');
@@ -142,7 +141,7 @@ export default function SocialManagerPage() {
     if (!unsplashQuery.trim()) return;
     setMediaLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/media/unsplash?query=${encodeURIComponent(unsplashQuery)}&per_page=20`);
+      const res = await api.get(`/media/unsplash?query=${encodeURIComponent(unsplashQuery)}&per_page=20`);
       const data = await res.json();
       setUnsplashImages(data.images || []);
     } catch (err) {
@@ -177,8 +176,7 @@ export default function SocialManagerPage() {
     else if (item.source === 'drive') {
       console.log('📁 Drive file selected, fetching URL...');
       try {
-        const res = await fetch(`http://localhost:8000/social/drive-file/${item.id}`);
-        const data = await res.json();
+        const data = await api.get(`/social/drive-file/${item.id}`);
         
         if (data.success) {
           // Store file with metadata for proper display
@@ -235,13 +233,7 @@ export default function SocialManagerPage() {
         mediaCount: selectedMedia.length
       };
       
-      const response = await fetch('http://localhost:8000/social-caption/generate-caption', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context)
-      });
-      
-      const data = await response.json();
+      const data = await api.post(`/social-caption/generate-caption`, context);
       setCaption(data.caption || 'Generated caption');
       setCaptionPrompt(''); // Clear prompt after generation
     } catch (err) {
@@ -272,15 +264,11 @@ export default function SocialManagerPage() {
     
     for (const platform of selectedPlatforms) {
       try {
-        const response = await fetch('http://localhost:8000/publisher/publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const response = await api.post(`/publisher/publish`, {
             platform: platform,
             content_type: postType,
             caption: caption,
             image_urls: selectedMedia.map(m => m.url || m.image_url || '')
-          })
         });
         
         const result = await response.json();

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type Asset = {
   id: string;
@@ -50,8 +52,7 @@ export default function BrandVoice() {
 
   const loadAssets = async () => {
     try {
-      const res = await fetch('http://localhost:8000/brand-voice/assets');
-      const data = await res.json();
+      const data = await api.get('/brand-voice/assets');
       setAssets(data.assets || []);
     } catch (err) {
       console.error('Failed to load assets');
@@ -60,8 +61,7 @@ export default function BrandVoice() {
 
   const loadDriveFolders = async () => {
     try {
-      const res = await fetch('http://localhost:8000/drive/folders');
-      const data = await res.json();
+      const data = await api.get('/drive/folders');
       setDriveFolders(data.folders || []);
     } catch (err) {
       console.error('Failed to load Drive folders');
@@ -77,7 +77,7 @@ export default function BrandVoice() {
         folderId = driveFolders[0].id;
       }
       
-      const endpoint = `http://localhost:8000/drive/folder/${folderId}/files`;
+      const endpoint = `${config.apiUrl}/drive/folder/${folderId}/files`;
       const res = await fetch(endpoint);
       const data = await res.json();
       setDriveFiles(data.files || []);
@@ -92,7 +92,7 @@ export default function BrandVoice() {
   const importFromDrive = async (fileId: string, fileName: string) => {
     try {
       setUploading(true);
-      const res = await fetch(`http://localhost:8000/brand-voice/import-from-drive?file_id=${fileId}&filename=${fileName}&category=${selectedCategory}`, {
+      const res = await fetch(`${config.apiUrl}/brand-voice/import-from-drive?file_id=${fileId}&filename=${fileName}&category=${selectedCategory}`, {
         method: 'POST'
       });
       
@@ -121,7 +121,7 @@ export default function BrandVoice() {
     });
 
     try {
-      const res = await fetch(`http://localhost:8000/brand-voice/upload?category=${selectedCategory}`, {
+      const res = await fetch(`${config.apiUrl}/brand-voice/upload?category=${selectedCategory}`, {
         method: 'POST',
         body: formData
       });
@@ -141,9 +141,7 @@ export default function BrandVoice() {
     if (!confirm('Delete this asset?')) return;
 
     try {
-      await fetch(`http://localhost:8000/brand-voice/assets/${assetId}`, {
-        method: 'DELETE'
-      });
+      await api.delete(`/brand-voice/assets/${assetId}`);
       loadAssets();
     } catch (err) {
       console.error('Delete failed');

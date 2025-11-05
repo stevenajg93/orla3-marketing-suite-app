@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 export default function BlogWriter() {
   const [keyword, setKeyword] = useState('');
@@ -21,19 +23,15 @@ export default function BlogWriter() {
     setMarketResearch(null);
     
     try {
-      const strategyRes = await fetch('http://localhost:8000/strategy/next-keyword');
-      const strategy = await strategyRes.json();
+      const strategyRes = await api.get('/strategy/next-keyword');
+      const strategy = strategyRes;
       const nextKw = strategy.recommended_next;
       
       setKeyword(nextKw.keyword);
       setSearchIntent(nextKw.search_intent);
       
-      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: nextKw.keyword })
-      });
-      const research = await researchRes.json();
+      const researchRes = await api.post(`/strategy/market-research`, { keyword: nextKw.keyword });
+      const research = researchRes;
       setMarketResearch({
         ...research,
         market_gap: nextKw.market_gap
@@ -41,19 +39,15 @@ export default function BlogWriter() {
       
       setResearching(false);
       
-      const response = await fetch('http://localhost:8000/draft/content/draft', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await api.post(`/draft/content/draft`, {
           keyword: nextKw.keyword,
           search_intent: nextKw.search_intent,
           target_length_words: wordCount
-        })
-      });
+        });
 
       if (!response.ok) throw new Error('Failed to generate blog');
       
-      const data = await response.json();
+      const data = response;
       setBlog(data);
     } catch (err) {
       setError('Failed to auto-generate. Make sure backend is running.');
@@ -73,12 +67,8 @@ export default function BlogWriter() {
     setError('');
     
     try {
-      const researchRes = await fetch('http://localhost:8000/strategy/market-research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword })
-      });
-      const research = await researchRes.json();
+      const researchRes = await api.post(`/strategy/market-research`, { keyword });
+      const research = researchRes;
       setMarketResearch(research);
     } catch (err) {
       setError('Failed to fetch market research.');
@@ -97,19 +87,15 @@ export default function BlogWriter() {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:8000/draft/content/draft', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await api.post(`/draft/content/draft`, {
           keyword,
           search_intent: searchIntent,
           target_length_words: wordCount
-        })
-      });
+        });
 
       if (!response.ok) throw new Error('Failed to generate blog');
       
-      const data = await response.json();
+      const data = response;
       setBlog(data);
     } catch (err) {
       setError('Failed to generate blog. Make sure backend is running.');
@@ -124,7 +110,7 @@ export default function BlogWriter() {
     setSaveMessage('');
     
     try {
-      const response = await fetch('http://localhost:8000/library/content', {
+      const response = await fetch(`${config.apiUrl}/library/content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

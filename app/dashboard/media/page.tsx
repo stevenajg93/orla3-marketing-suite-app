@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api-client';
+import { config } from '@/lib/config';
 
 type MediaAsset = {
   id: string;
@@ -65,8 +67,7 @@ export default function MediaLibrary() {
 
   const loadStatus = async () => {
     try {
-      const res = await fetch('http://localhost:8000/media/status');
-      const data = await res.json();
+      const data = await api.get('/media/status');
       setStatus(data);
     } catch (err) {
       console.error('Failed to load status');
@@ -75,8 +76,7 @@ export default function MediaLibrary() {
 
   const loadFolders = async () => {
     try {
-      const res = await fetch('http://localhost:8000/media/folders');
-      const data = await res.json();
+      const data = await api.get('/media/folders');
       if (data.folders) {
         setFolders(data.folders);
       }
@@ -87,8 +87,7 @@ export default function MediaLibrary() {
 
   const loadGeneratedContent = async () => {
     try {
-      const res = await fetch('http://localhost:8000/library/content');
-      const data = await res.json();
+      const data = await api.get('/library/content');
       setGeneratedContent(data.items || []);
     } catch (err) {
       console.error('Failed to load generated content');
@@ -97,7 +96,7 @@ export default function MediaLibrary() {
 
   const deleteGeneratedContent = async (id: string) => {
     try {
-      await fetch(`http://localhost:8000/library/content/${id}`, { method: 'DELETE' });
+      await api.delete(`/library/content/${id}`);
       loadGeneratedContent();
       setPreviewContent(null);
     } catch (err) {
@@ -112,8 +111,7 @@ export default function MediaLibrary() {
       if (selectedFolder) params.append('folder_id', selectedFolder);
       if (mediaType !== 'all') params.append('media_type', mediaType);
 
-      const res = await fetch(`http://localhost:8000/media/library?${params}`);
-      const data = await res.json();
+      const data = await api.get(`/media/library?${params}`);
       setAssets(data.assets || []);
     } catch (err) {
       console.error('Failed to load assets');
@@ -128,7 +126,7 @@ export default function MediaLibrary() {
     
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/media/unsplash?query=${encodeURIComponent(searchQuery)}&per_page=20`);
+      const res = await api.get(`/media/unsplash?query=${encodeURIComponent(searchQuery)}&per_page=20`);
       const data = await res.json();
       setUnsplashImages(data.images || []);
     } catch (err) {
