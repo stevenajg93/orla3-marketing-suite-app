@@ -45,7 +45,6 @@ export default function BlogWriter() {
           target_length_words: wordCount
         });
 
-      if (!response.ok) throw new Error('Failed to generate blog');
       
       const data = response;
       setBlog(data);
@@ -93,7 +92,6 @@ export default function BlogWriter() {
           target_length_words: wordCount
         });
 
-      if (!response.ok) throw new Error('Failed to generate blog');
       
       const data = response;
       setBlog(data);
@@ -124,7 +122,6 @@ export default function BlogWriter() {
         })
       });
 
-      if (!response.ok) throw new Error('Failed to save');
       
       setSaveMessage('✅ Saved to Media Library!');
       setTimeout(() => setSaveMessage(''), 3000);
