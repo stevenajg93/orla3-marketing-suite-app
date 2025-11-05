@@ -11,9 +11,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS Configuration - Allow both local development and production
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+    "https://orla3-marketing-suite-app.vercel.app",  # Production Vercel
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[Config.FRONTEND_URL],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
