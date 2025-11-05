@@ -127,10 +127,9 @@ export default function MediaLibrary() {
     setLoading(true);
     try {
       const res = await api.get(`/media/unsplash?query=${encodeURIComponent(searchQuery)}&per_page=20`);
-      const data = await res.json();
-      setUnsplashImages(data.images || []);
+      setUnsplashImages(res.images || []);
     } catch (err) {
-      console.error('Failed to search Unsplash');
+      console.error("Failed to search Unsplash:", err);
     } finally {
       setLoading(false);
     }
