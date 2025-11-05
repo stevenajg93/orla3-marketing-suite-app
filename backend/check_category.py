@@ -1,6 +1,9 @@
 import psycopg2
+import os
 
-DATABASE_URL = "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
 
 conn = psycopg2.connect(DATABASE_URL)
 cur = conn.cursor()

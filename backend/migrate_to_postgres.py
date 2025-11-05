@@ -4,7 +4,9 @@ from datetime import datetime
 from psycopg2.extras import Json
 import os
 
-DATABASE_URL = "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
 
 def migrate_brand_strategy():
     try:

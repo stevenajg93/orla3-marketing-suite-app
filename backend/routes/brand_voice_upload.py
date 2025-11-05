@@ -15,7 +15,9 @@ from logger import setup_logger
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:pcrmiSUNKiEyfEAIWKmfgfehGpKZzHmZ@switchyard.proxy.rlwy.net:34978/railway")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
 
 # Storage paths
 BRAND_VOICE_DIR = "brand_voice_assets"
