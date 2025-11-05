@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!backend/.env.local.example
+backend/.env
+backend/.env.local
 
 # vercel
 .vercel
@@ -53,6 +57,11 @@ __pycache__/
 backend/brand_voice_index.json
 backend/competitor_data.json
 backend/content_library.json
+
+# Backend credentials (Google OAuth, etc.)
+backend/credentials/
+backend/credentials/*.json
+backend/credentials/*.pickle
 backend/credentials/token.pickle
 
 # Logs
