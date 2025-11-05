@@ -1,413 +1,423 @@
-# ORLA³ Marketing Suite - Developer Handoff Prompt
+# ORLA³ Marketing Suite - Developer Handoff
 
 ## 🎯 PROJECT OVERVIEW
 
-**Orla³ Marketing Suite** is an AI-powered marketing content generation and automation platform built specifically for videographers and creative professionals. It combines Claude AI with brand strategy intelligence and Google Drive integration to create authentically branded, strategically positioned content.
+**Orla³ Marketing Suite** is a production-ready, AI-powered marketing automation platform for videographers and creative professionals. Built with clean architecture principles, zero technical debt, and immaculate environment management.
 
-### Core Value Proposition
-- **Brand-Aware Content Generation**: AI learns your brand voice and competitive positioning to create authentic content
-- **Strategic Intelligence**: Competitor analysis feeds into content strategy automatically
-- **Comprehensive Content Suite**: SEO-optimized blogs, social media carousels, and captions
-- **Media Management**: Google Drive integration with intelligent asset browsing
-- **Unified Library**: Filter and organize all generated content in one place
+**Live Application:**
+- **Frontend**: https://orla3-marketing-suite-app.vercel.app
+- **Backend**: https://orla3-marketing-suite-app-production.up.railway.app
 
 ---
 
-## 🏗️ CURRENT ARCHITECTURE
+## 🏗️ ARCHITECTURE
+
+### Core Principles
+✅ **Single Source of Truth** - Environment config centralized in `lib/config.ts`
+✅ **Zero Hardcoding** - All URLs/endpoints through config system
+✅ **Type-Safe API Client** - Centralized HTTP client with error handling
+✅ **Environment Aware** - Seamless local/production switching
+✅ **Clean Separation** - Frontend (Vercel) + Backend (Railway) + Database (PostgreSQL)
 
 ### Tech Stack
-- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
-- **Backend**: FastAPI (Python 3.9+)
-- **AI**: Anthropic Claude Sonnet 4.5
-- **Storage**: JSON files (content_library.json, brand_voice_index.json, brand_strategy.json, competitor_data.json)
-- **APIs**: Google Drive API, Unsplash API
+```
+Frontend:  Next.js 15 + React + TypeScript + Tailwind CSS
+Backend:   FastAPI + Python 3.12 + psycopg2
+Database:  PostgreSQL (Railway)
+AI:        Anthropic Claude Sonnet 4.5
+Hosting:   Vercel (frontend) + Railway (backend + database)
+```
 
-### Project Structure
+---
+
+## 📁 PROJECT STRUCTURE
 ```
 orla3-marketing-suite-app/
-├── app/dashboard/
-│   ├── blog/              # Blog post generator (auto + manual modes)
-│   ├── carousel/          # Social media carousel creator
-│   ├── social/            # Social media manager with Drive import
-│   ├── brand-voice/       # Brand voice training system
-│   ├── strategy/          # Strategy Planner (NEW - synthesizes brand + competitors)
-│   ├── competitor/        # Competitor marketing analysis
-│   ├── media/             # Media library with filters
-│   ├── calendar/          # Content calendar
-│   └── page.tsx          # Main dashboard
-├── backend/
-│   ├── routes/
-│   │   ├── draft.py           # Blog generation (strategy-aware)
-│   │   ├── carousel.py        # Carousel creation (strategy-aware)
-│   │   ├── social_caption.py  # Caption generation (strategy-aware)
-│   │   ├── strategy.py        # Strategy synthesis + keyword research
-│   │   ├── competitor.py      # Marketing-focused competitor analysis
-│   │   ├── brand_voice_upload.py  # Brand voice training
-│   │   ├── drive.py           # Google Drive integration
-│   │   ├── library.py         # Content library management
-│   │   └── social.py          # Social posting + Drive resolver
-│   ├── brand_voice_assets/    # Uploaded training files
-│   ├── brand_strategy.json    # Synthesized strategy (NEW)
-│   ├── competitor_data.json   # Competitor analyses
-│   ├── content_library.json   # Generated content
-│   ├── credentials/           # Google Drive OAuth
-│   ├── main.py               # FastAPI server
-│   └── auth_drive.py         # Drive authorization
-└── README.md
+├── app/dashboard/              # Next.js app routes
+│   ├── blog/                   # SEO blog generator
+│   ├── carousel/               # Social media carousel creator
+│   ├── social/                 # Social caption generator
+│   ├── strategy/               # Brand strategy analyzer
+│   ├── competitor/             # Competitor tracking
+│   ├── brand-voice/            # Brand voice asset manager
+│   ├── calendar/               # Content calendar
+│   ├── media/                  # Media library + Drive integration
+│   └── library/                # Content library
+│
+├── lib/                        # Core infrastructure
+│   ├── config.ts               # ⭐ Environment configuration
+│   ├── api-client.ts           # ⭐ HTTP client (uses config)
+│   └── storage.ts              # Local storage utilities
+│
+├── backend/                    # FastAPI backend
+│   ├── routes/                 # API route handlers
+│   │   ├── strategy.py         # Brand strategy (PostgreSQL)
+│   │   ├── library.py          # Content CRUD (PostgreSQL)
+│   │   ├── competitor.py       # Competitor analysis (PostgreSQL)
+│   │   ├── brand_voice_upload.py  # Asset uploads (PostgreSQL)
+│   │   ├── draft.py            # Blog generation (loads strategy)
+│   │   ├── carousel.py         # Carousel generation (loads strategy)
+│   │   └── social_caption.py   # Caption generation (loads strategy)
+│   ├── main.py                 # FastAPI app + CORS config
+│   ├── config.py               # Backend environment config
+│   ├── schema.sql              # PostgreSQL schema
+│   ├── requirements.txt        # Python dependencies
+│   ├── Procfile                # Railway start command
+│   └── railway.json            # Railway deployment config
+│
+├── .env.local                  # Local frontend config (gitignored)
+├── backend/.env                # Local backend config (gitignored)
+└── README.md                   # Documentation
 ```
 
 ---
 
-## 🎪 KEY FEATURES & WORKFLOWS
+## 🗄️ DATABASE SCHEMA
 
-### 1️⃣ Brand Strategy System (Core Intelligence Layer)
+### PostgreSQL Tables
 
-**Purpose**: Create a unified brand strategy that combines brand voice analysis with competitive intelligence.
+**brand_strategy** - Single source of brand truth
+```sql
+- brand_voice (JSONB): tone, personality traits
+- messaging_pillars (TEXT[]): core messages
+- language_patterns (JSONB): writing style, phrases, vocabulary
+- dos_and_donts (JSONB): content guidelines
+- competitive_positioning (JSONB): unique value, gaps to exploit
+```
 
-**Workflow**:
-1. User uploads brand voice assets (guidelines, voice samples, community conversations)
-2. User adds competitors and runs marketing analysis
-3. Strategy Planner synthesizes both into `brand_strategy.json` containing:
-   - Brand voice & tone
-   - Messaging pillars
-   - Language patterns
-   - Target audience
-   - **Competitive positioning** (unique value, gaps to exploit, what to avoid)
+**brand_voice_assets** - Uploaded brand materials
+```sql
+- filename, file_path, category (brand_guideline/example_content/community)
+- extracted_text, metadata (JSONB)
+- created_at
+```
 
-**Files Involved**:
-- `backend/routes/strategy.py` - Strategy synthesis endpoints
-- `backend/routes/brand_voice_upload.py` - Asset upload
-- `backend/brand_strategy.json` - Generated strategy
-- `app/dashboard/strategy/page.tsx` - Strategy UI
+**content_library** - All generated content
+```sql
+- title, content (JSONB), type (blog/carousel/caption)
+- status (draft/published), tags (TEXT[])
+- created_at, updated_at
+```
 
-**Key Endpoints**:
-- `POST /strategy/analyze` - Analyze brand voice + competitors → generate strategy
-- `GET /strategy/current` - Retrieve current strategy
-- `GET /strategy/next-keyword` - AI picks next strategic blog keyword
-- `POST /strategy/market-research` - Competitive content analysis for keywords
+**competitors** - Competitor tracking
+```sql
+- name, website, social_handles (JSONB)
+- analysis (JSONB): marketing insights, gaps, opportunities
+```
 
----
-
-### 2️⃣ Competitor Analysis (Marketing Intelligence)
-
-**Purpose**: Analyze competitors' CONTENT & MESSAGING strategy (not product features).
-
-**Workflow**:
-1. User adds competitor (name, industry, social handles)
-2. Clicks "Analyze Competitor"
-3. AI generates marketing-focused analysis:
-   - What content/messaging works for them
-   - Content gaps they're missing
-   - How to position against them
-   - Content opportunities
-
-**Files Involved**:
-- `backend/routes/competitor.py` - Competitor CRUD + analysis
-- `backend/competitor_data.json` - Stored analyses
-- `app/dashboard/competitor/page.tsx` - Competitor UI
-
-**Key Features**:
-- Marketing-focused (not product/business model recommendations)
-- Brand-aware (uses Orla³ positioning in analysis)
-- Structured data (threat level, gaps, opportunities)
-- Expandable UI cards showing full breakdown
-
-**CRITICAL**: Analysis focuses on content strategy, messaging, and marketing tactics ONLY.
-
----
-
-### 3️⃣ Content Generation (Strategy-Aware)
-
-**Purpose**: Generate blogs, carousels, and social captions that sound like YOUR brand and leverage competitive positioning.
-
-#### Blog Generator (`draft.py`)
-- **Auto-Generate Mode**: AI picks strategic keyword → market research → generates blog
-- **Manual Mode**: User provides keyword + search intent
-- **Strategy Integration**: Loads `brand_strategy.json` and injects:
-  - Brand voice, tone, personality
-  - Messaging pillars
-  - Language patterns
-  - Competitive positioning
-  - Target audience
-
-**Key Rules**:
-- NO hashtags in blog content
-- NO Markdown headers (##, ###) - plain text sections only
-- UK English
-- Human-like writing (no corporate jargon, varied sentences)
-
-#### Carousel Creator (`carousel.py`)
-- 7-slide format for Instagram/LinkedIn
-- Integrates brand strategy throughout all slides
-- Unsplash image integration
-- Hashtags allowed in captions only
-
-#### Social Caption Generator (`social_caption.py`)
-- Platform-aware (X, Instagram, LinkedIn, Facebook)
-- Character limit compliance
-- Brand voice + competitive positioning
-- Hashtags included (appropriate for social)
-
----
-
-### 4️⃣ Brand Voice Upload System
-
-**Purpose**: Train AI on your actual brand materials.
-
-**Supported File Types**:
-- Guidelines: PDF, DOCX, TXT
-- Voice Samples: MD, TXT, HTML
-- Community: Discord/Slack exports (XLSX, CSV)
-
-**Categories**:
-- `guidelines` - Brand guidelines, style guides
-- `voice_samples` - Example content
-- `community_videographer` - Community conversations (videographer side)
-- `community_client` - Community conversations (client side)
-
-**Storage**: `/backend/brand_voice_assets/[category]/`
-
-**Index**: `brand_voice_index.json` tracks all uploaded files with metadata
-
----
-
-### 5️⃣ Google Drive Integration
-
-**Purpose**: Import media assets from Google Drive into content creation.
-
-**Features**:
-- OAuth 2.0 authentication
-- Folder navigation
-- Image preview
-- Direct import to Social Manager
-
-**Auth Flow**:
-1. Run `python backend/auth_drive.py`
-2. Complete OAuth in browser
-3. Tokens stored in `backend/credentials/token.json`
-
-**Key Endpoints**:
-- `GET /drive/auth` - Initiate OAuth
-- `GET /drive/folders` - List folders
-- `GET /drive/files` - List files in folder
-- `POST /drive/resolve-url` - Get direct image URLs
-
----
-
-### 6️⃣ Media Library
-
-**Purpose**: Centralized content management with filtering.
-
-**Features**:
-- Filter by type (blog, carousel, social)
-- Filter by status (draft, published)
-- Search by tags
-- View/edit/delete content
-
-**Storage**: `backend/content_library.json`
-
-**Structure**:
-```json
-{
-  "id": "timestamp",
-  "title": "Content title",
-  "content_type": "blog|carousel|social",
-  "content": "Full content",
-  "status": "draft|published",
-  "tags": ["tag1", "tag2"],
-  "created_at": "ISO timestamp"
-}
+**calendar_events** - Content calendar
+```sql
+- title, content_id, platform, scheduled_for
+- status, notes
 ```
 
 ---
 
-## 🔐 ENVIRONMENT VARIABLES
+## 🔧 ENVIRONMENT CONFIGURATION
 
-Required in `backend/.env.local`:
+### Frontend Environment (`.env.local`)
 ```bash
+# Local development
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Production (Vercel env vars)
+NEXT_PUBLIC_API_URL=https://orla3-marketing-suite-app-production.up.railway.app
+```
+
+### Backend Environment (`backend/.env`)
+```bash
+# Database (Railway auto-injects DATABASE_URL)
+DATABASE_URL=postgresql://postgres:***@switchyard.proxy.rlwy.net:34978/railway
+
 # AI
-ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_API_KEY=sk-ant-***
 
-# Google Drive (Optional)
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
+# Media
+UNSPLASH_ACCESS_KEY=***
 
-# Unsplash (Optional - has fallback)
-UNSPLASH_ACCESS_KEY=...
+# Google Drive OAuth
+GOOGLE_CLIENT_ID=***.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=***
+GOOGLE_REDIRECT_URI=https://orla3-marketing-suite-app-production.up.railway.app/drive/callback
+
+# Social Media APIs (optional)
+TIKTOK_CLIENT_KEY=***
+WORDPRESS_SITE_URL=***
+TUMBLR_CONSUMER_KEY=***
+REDDIT_CLIENT_ID=***
+FACEBOOK_CLIENT_ID=***
+TWITTER_API_KEY=***
 ```
 
 ---
 
-## 🚀 SETUP & RUN
+## 🚀 DEPLOYMENT
 
-### Backend Setup
+### Current Setup
+- ✅ **Frontend**: Auto-deploys from `main` branch to Vercel
+- ✅ **Backend**: Auto-deploys from `main` branch to Railway
+- ✅ **Database**: PostgreSQL managed by Railway
+- ✅ **CORS**: Configured to allow both localhost + Vercel
+
+### Deployment Flow
+```
+1. Push to GitHub main branch
+2. Railway builds backend (detects Procfile + requirements.txt)
+3. Vercel builds frontend (detects Next.js)
+4. Both use respective environment variables
+5. CORS allows cross-origin requests
+```
+
+---
+
+## 💻 LOCAL DEVELOPMENT
+
+### First-Time Setup
+
+**1. Clone Repository**
+```bash
+git clone https://github.com/stevenajg93/orla3-marketing-suite-app.git
+cd orla3-marketing-suite-app
+```
+
+**2. Frontend Setup**
+```bash
+npm install
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+npm run dev  # Runs on http://localhost:3000
+```
+
+**3. Backend Setup**
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+
+# Create .env file with your keys
+cp .env.example .env
+# Edit .env and add: ANTHROPIC_API_KEY, DATABASE_URL, etc.
+
+python main.py  # Runs on http://localhost:8000
 ```
 
-Backend runs on: `http://localhost:8000`
-
-### Frontend Setup
+### Daily Development Workflow
 ```bash
-npm install
+# Terminal 1: Backend
+cd backend && source venv/bin/activate && python main.py
+
+# Terminal 2: Frontend  
 npm run dev
+
+# Open: http://localhost:3000
 ```
 
-Frontend runs on: `http://localhost:3000`
+---
 
-### Google Drive Setup (Optional)
+## 🎨 KEY FEATURES EXPLAINED
+
+### 1. Brand Strategy Intelligence
+**File**: `backend/routes/strategy.py`
+
+Upload brand materials → AI analyzes → Generates comprehensive strategy:
+- Brand voice (tone, personality)
+- Messaging pillars
+- Language patterns (phrases, vocabulary)
+- Competitive positioning (unique value, gaps)
+
+This strategy is **automatically applied** to all content generation.
+
+### 2. Content Generation Suite
+
+**Blog Writer** (`backend/routes/draft.py`)
+- Auto-selects keywords from strategy
+- Researches market with web search
+- Generates SEO-optimized, brand-aligned articles
+
+**Carousel Creator** (`backend/routes/carousel.py`)
+- 7-slide Instagram/LinkedIn carousels
+- Applies brand voice throughout
+- Fetches Unsplash images automatically
+
+**Social Captions** (`backend/routes/social_caption.py`)
+- Platform-aware (Twitter, Instagram, LinkedIn, Facebook)
+- Includes brand-aligned hashtags
+- Respects character limits
+
+### 3. Competitive Intelligence
+**File**: `backend/routes/competitor.py`
+
+- Track competitors by name/social handles
+- AI analyzes their marketing strategies
+- Identifies content gaps to exploit
+- Feeds into brand strategy automatically
+
+### 4. Media Management
+**File**: `backend/routes/media.py`
+
+- Google Drive OAuth integration
+- Browse folders and import assets
+- Unified content library with filtering
+- Tag-based organization
+
+---
+
+## 📊 API ENDPOINTS
+
+### Strategy
+```
+POST   /strategy/analyze          # Generate brand strategy
+GET    /strategy/current           # Get current strategy
+POST   /strategy/market-research   # Keyword research
+GET    /strategy/next-keyword      # Auto-select next keyword
+```
+
+### Content Generation
+```
+POST   /draft/content/draft        # Generate blog post
+POST   /carousel/social/carousel   # Generate carousel
+POST   /social-caption/generate-caption  # Generate caption
+```
+
+### Library
+```
+GET    /library/content            # List all content
+POST   /library/content            # Save content
+PUT    /library/content/{id}       # Update content
+DELETE /library/content/{id}       # Delete content
+```
+
+### Competitors
+```
+GET    /competitor/list            # List competitors
+POST   /competitor/add             # Add competitor
+POST   /competitor/{id}/analyze    # Analyze competitor
+DELETE /competitor/{id}            # Delete competitor
+GET    /competitor/insights        # Get insights
+```
+
+### Brand Voice
+```
+GET    /brand-voice/assets         # List uploaded assets
+POST   /brand-voice/upload         # Upload new asset
+POST   /brand-voice/import-from-drive  # Import from Drive
+DELETE /brand-voice/assets/{id}   # Delete asset
+```
+
+---
+
+## 🔒 SECURITY & BEST PRACTICES
+
+### Environment Variables
+- ✅ Never commit `.env` or `.env.local` files
+- ✅ All secrets in environment variables
+- ✅ Railway auto-manages DATABASE_URL
+- ✅ Vercel securely stores NEXT_PUBLIC_API_URL
+
+### CORS Configuration
+**File**: `backend/main.py`
+```python
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+    "https://orla3-marketing-suite-app.vercel.app",  # Production
+]
+```
+
+### Database Migrations
+- Schema defined in `backend/schema.sql`
+- Use PostgreSQL client to apply updates
+- Always backup before schema changes
+
+---
+
+## 🐛 COMMON ISSUES & SOLUTIONS
+
+### Issue: "Failed to auto-generate. Make sure backend is running."
+**Solution**: Check if backend is running on correct URL
 ```bash
-cd backend
-python auth_drive.py
-# Complete OAuth in browser
+# Check local backend
+curl http://localhost:8000/
+
+# Check production backend  
+curl https://orla3-marketing-suite-app-production.up.railway.app/
 ```
 
----
+### Issue: CORS errors in browser console
+**Solution**: Verify `allowed_origins` in `backend/main.py` includes your frontend URL
 
-## 📊 DATA FLOW DIAGRAM
-```
-Brand Voice Upload → brand_voice_assets/ → Strategy Planner
-                                                ↓
-Competitor Analysis → competitor_data.json → Strategy Planner
-                                                ↓
-                                        brand_strategy.json
-                                                ↓
-                      ┌─────────────────────────┼─────────────────────────┐
-                      ↓                         ↓                         ↓
-              Blog Generator              Carousel Creator        Caption Generator
-                      ↓                         ↓                         ↓
-                            Content Library (content_library.json)
-```
-
----
-
-## 🎯 CRITICAL DESIGN DECISIONS
-
-### Why JSON Storage?
-- **MVP Speed**: No database setup required
-- **Portability**: Easy to migrate data
-- **Simplicity**: Direct file access for debugging
-- **Future**: Easy migration path to PostgreSQL/MongoDB
-
-### Why Strategy-First Architecture?
-- **Quality**: Content sounds authentically like the brand
-- **Differentiation**: Competitive positioning baked into every piece
-- **Consistency**: Single source of truth for brand voice
-- **Scalability**: Add new generators that automatically use strategy
-
-### Why Marketing-Focused Competitor Analysis?
-- **User Need**: Marketers need content strategy, not product roadmaps
-- **Actionable**: Focus on what they can actually use (content ideas, messaging)
-- **Ethical**: Avoid suggesting copying business models/features
-
----
-
-## 🐛 KNOWN LIMITATIONS & FUTURE WORK
-
-### Current Limitations
-1. **No Database**: JSON files limit concurrency and search
-2. **No Authentication**: Single-user system
-3. **No Publishing**: Content must be manually posted
-4. **Competitor Analysis**: Strategic inference, not live social scraping
-5. **No Analytics**: Can't track content performance
-
-### Planned Enhancements
-1. **Social Publishing APIs**: Direct post to Instagram, LinkedIn, Twitter
-2. **Live Competitor Scraping**: Real-time social media data collection
-3. **User Authentication**: Multi-tenant support
-4. **Database Migration**: PostgreSQL for production scale
-5. **Analytics Dashboard**: Track content performance
-6. **Advanced Research Mode**: 10+ minute deep research sessions
-7. **WordPress Integration**: Direct blog publishing
-
----
-
-## 🔧 DEBUGGING TIPS
-
-### Backend Issues
+### Issue: Environment variables not loading
+**Solution**: Restart dev servers after changing `.env` files
 ```bash
-# Check logs
-cd backend && python main.py
-# Look for: "✅ Anthropic API: Configured"
-
-# Test endpoint directly
-curl http://localhost:8000/strategy/current
+# Kill both terminals (Ctrl+C)
+# Restart backend: python main.py
+# Restart frontend: npm run dev
 ```
 
-### Strategy Not Loading
-```bash
-# Check if file exists
-ls -la backend/brand_strategy.json
-
-# View strategy
-cat backend/brand_strategy.json | python -m json.tool
-```
-
-### Drive Integration Not Working
-```bash
-# Re-authenticate
-cd backend && python auth_drive.py
-
-# Check token
-cat backend/credentials/token.json
-```
-
-### Content Generation Issues
-- Check `brand_strategy.json` exists and has `competitive_positioning` section
-- Verify Anthropic API key is valid
-- Check backend logs for JSON parsing errors
-- Ensure strategy was generated AFTER competitors were analyzed
+### Issue: Database connection errors
+**Solution**: Verify DATABASE_URL in Railway environment variables
 
 ---
 
-## 📞 HANDOFF NOTES
+## 📈 FUTURE ENHANCEMENTS
 
-### What Works Well
-✅ Brand strategy synthesis is solid  
-✅ Content generators produce high-quality, on-brand output  
-✅ Competitor analysis provides actionable insights  
-✅ UI is intuitive and visually appealing  
-✅ Google Drive integration is smooth  
+### Recommended Improvements
+1. **Authentication**: Add user accounts with Auth0/Clerk
+2. **Multi-user**: Separate brand strategies per user
+3. **Publishing**: Direct publish to social platforms
+4. **Analytics**: Track content performance
+5. **Webhooks**: Auto-publish on schedule
+6. **Image Generation**: AI-generated visuals
+7. **Video Scripts**: Script generator for videographers
 
-### What Needs Attention
-⚠️ No error handling for expired Drive tokens  
-⚠️ Large files (>50MB) in Git repo (brand PDFs)  
-⚠️ No rate limiting on AI API calls  
-⚠️ Content library could get large (needs pagination)  
-⚠️ Competitor analysis is inference-based, not live data  
-
-### Quick Wins for Next Developer
-1. Add pagination to Media Library (>50 items gets slow)
-2. Implement social publishing APIs (high user value)
-3. Add live competitor scraping (moderate effort, high value)
-4. Database migration (needed for multi-user)
-5. Add error boundaries in React components
+### Technical Debt: NONE ✅
+- Clean architecture with centralized config
+- Zero hardcoded URLs
+- No double JSON parsing
+- Proper error handling
+- Type-safe API client
 
 ---
 
-## 🎓 KEY LEARNINGS
+## 🤝 HANDOFF CHECKLIST
 
-1. **AI Context Matters**: Loading brand strategy into prompts dramatically improves output quality
-2. **Structured Data > Text**: Competitor analysis as structured JSON enables better synthesis
-3. **User Trust**: Transparent about what AI can/can't do (inference vs live data)
-4. **Iterative Prompting**: Multiple rounds of prompt refinement to eliminate hashtags, headers, etc.
-5. **Marketing Focus**: Users want content strategy, not product recommendations
+### Access & Credentials
+- [ ] GitHub repository access
+- [ ] Vercel project access
+- [ ] Railway project access
+- [ ] Anthropic API key
+- [ ] Google Cloud Console (Drive API)
+- [ ] Unsplash API key
+- [ ] Social media API credentials
+
+### Documentation
+- [x] Architecture explained
+- [x] Database schema documented
+- [x] API endpoints listed
+- [x] Environment variables documented
+- [x] Deployment process explained
+- [x] Local development setup
+
+### Code Quality
+- [x] Zero hardcoded URLs
+- [x] Centralized configuration
+- [x] Type-safe API client
+- [x] Proper error handling
+- [x] CORS configured correctly
+- [x] PostgreSQL migration complete
 
 ---
 
-## 📚 ADDITIONAL RESOURCES
+## 📞 SUPPORT
 
-- **Anthropic Claude Docs**: https://docs.anthropic.com
-- **Next.js 15 Docs**: https://nextjs.org/docs
-- **FastAPI Docs**: https://fastapi.tiangolo.com
-- **Google Drive API**: https://developers.google.com/drive
+For questions about this codebase:
+1. Check this handoff document
+2. Review `README.md`
+3. Check API docs at `/docs` endpoint
+4. Review commit history for context
+
+**Built with ❤️ by the ORLA³ team**
 
 ---
 
-**Last Updated**: October 31, 2025  
-**Version**: 2.0 (Strategy-Aware Content Generation)  
-**Status**: Pre-Launch MVP - Core features complete, ready for user testing
+**Last Updated**: November 5, 2025
+**Architecture Version**: 2.0 (PostgreSQL + Clean Config)

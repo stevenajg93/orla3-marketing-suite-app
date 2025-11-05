@@ -2,6 +2,8 @@
 
 AI-powered marketing automation platform for videographers and creative professionals. Generate brand-aligned, strategically positioned content in seconds.
 
+**🚀 Live:** https://orla3-marketing-suite-app.vercel.app
+
 ---
 
 ## ✨ Key Features
@@ -31,235 +33,131 @@ AI-powered marketing automation platform for videographers and creative professi
 
 ---
 
-## 🚀 Quick Start
+## 🏗️ Architecture
+
+### Tech Stack
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS (Vercel)
+- **Backend**: FastAPI, Python 3.12 (Railway)
+- **Database**: PostgreSQL (Railway)
+- **AI**: Anthropic Claude Sonnet 4.5
+- **APIs**: Google Drive API, Unsplash API
+
+### Clean Architecture
+```
+lib/
+├── config.ts          # Single source of truth for env vars
+├── api-client.ts      # Centralized HTTP client
+└── storage.ts         # Local storage utilities
+
+backend/
+├── routes/            # FastAPI route handlers
+│   ├── strategy.py   # Brand strategy (PostgreSQL)
+│   ├── library.py    # Content CRUD (PostgreSQL)
+│   ├── competitor.py # Competitor analysis (PostgreSQL)
+│   └── draft.py      # Blog generation
+├── schema.sql        # PostgreSQL schema
+└── main.py           # FastAPI app with CORS
+```
+
+### Database Schema
+- `brand_strategy` - Brand voice, messaging pillars, competitive positioning
+- `brand_voice_assets` - Uploaded files with extracted text
+- `content_library` - Generated content with metadata
+- `competitors` - Competitor profiles and analysis
+- `calendar_events` - Content calendar
+
+---
+
+## 🚀 Deployment
+
+### Production URLs
+- **Frontend**: https://orla3-marketing-suite-app.vercel.app
+- **Backend**: https://orla3-marketing-suite-app-production.up.railway.app
+
+### Environment Variables
+
+**Frontend (Vercel):**
+```bash
+NEXT_PUBLIC_API_URL=https://orla3-marketing-suite-app-production.up.railway.app
+```
+
+**Backend (Railway):**
+```bash
+DATABASE_URL=postgresql://... (auto-injected by Railway)
+ANTHROPIC_API_KEY=sk-...
+UNSPLASH_ACCESS_KEY=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+# Social media API keys...
+```
+
+---
+
+## 💻 Local Development
 
 ### Prerequisites
 - Node.js 18+
-- Python 3.9+
-- Anthropic API key
+- Python 3.12+
+- PostgreSQL (or use Railway DB)
 
-### 1. Backend Setup
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Create .env.local
-echo "ANTHROPIC_API_KEY=your-key-here" > .env.local
-
-# Run server
-python main.py
-```
-
-Backend runs on `http://localhost:8000`
-
-### 2. Frontend Setup
+### Frontend Setup
 ```bash
 npm install
-npm run dev
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+npm run dev  # http://localhost:3000
 ```
 
-Frontend runs on `http://localhost:3000`
-
-### 3. Initial Setup
-1. Navigate to **Brand Voice** → Upload brand guidelines and samples
-2. Navigate to **Competitor Analysis** → Add competitors
-3. Navigate to **Strategy Planner** → Click "Analyze Brand Voice"
-4. Start generating content! 🎉
-
----
-
-## 🏗️ Architecture
-```
-Brand Voice Upload → Strategy Planner ← Competitor Analysis
-                            ↓
-                    brand_strategy.json
-                            ↓
-        ┌───────────────────┼───────────────────┐
-        ↓                   ↓                   ↓
-   Blog Generator    Carousel Creator    Caption Generator
-        └───────────────────┼───────────────────┘
-                            ↓
-                    Content Library
-```
-
-### Tech Stack
-- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
-- **Backend**: FastAPI (Python)
-- **AI**: Anthropic Claude Sonnet 4.5
-- **Storage**: JSON files (MVP - easy migration to PostgreSQL)
-- **Integrations**: Google Drive API, Unsplash API
-
----
-
-## 📊 How It Works
-
-### The Strategy Loop
-1. **Upload Brand Materials**: Guidelines, voice samples, community conversations
-2. **Add Competitors**: Name, industry, social handles
-3. **AI Analysis**: 
-   - Analyzes your brand voice, tone, messaging
-   - Analyzes competitor content strategies
-   - Synthesizes both into unified strategy
-4. **Generate Content**: All generators automatically use the strategy
-5. **Result**: Content that sounds like YOU and positions against competitors
-
-### What Makes This Different?
-- ❌ Generic AI content
-- ❌ Copy-paste competitor features
-- ✅ **Your authentic brand voice**
-- ✅ **Strategic market positioning**
-- ✅ **Actionable content gaps**
-
----
-
-## 🎯 Use Cases
-
-### For Solo Videographers
-- Generate SEO blogs to rank for target keywords
-- Create Instagram carousels showcasing expertise
-- Position against larger competitors (Fiverr, Upwork)
-
-### For Video Production Agencies
-- Maintain consistent brand voice across team
-- Identify content gaps competitors are missing
-- Generate client-facing content at scale
-
-### For Marketers
-- Understand competitive landscape
-- Exploit market gaps with targeted content
-- Train AI on client's actual brand materials
-
----
-
-## 📁 Project Structure
-```
-orla3-marketing-suite-app/
-├── app/dashboard/           # Frontend pages
-│   ├── blog/               # Blog generator
-│   ├── carousel/           # Carousel creator
-│   ├── social/             # Social manager
-│   ├── brand-voice/        # Upload training materials
-│   ├── strategy/           # Strategy synthesis
-│   └── competitor/         # Competitor analysis
-├── backend/
-│   ├── routes/             # API endpoints
-│   │   ├── draft.py       # Blog generation
-│   │   ├── carousel.py    # Carousel creation
-│   │   ├── social_caption.py  # Caption generation
-│   │   ├── strategy.py    # Strategy synthesis
-│   │   └── competitor.py  # Competitor analysis
-│   ├── brand_strategy.json      # Generated strategy
-│   ├── competitor_data.json     # Competitor analyses
-│   └── content_library.json     # Generated content
-└── README.md
-```
-
----
-
-## 🔐 Environment Variables
-
-Create `backend/.env.local`:
+### Backend Setup
 ```bash
-# Required
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Optional
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-UNSPLASH_ACCESS_KEY=...
+cd backend
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r requirements.txt
+cp .env.example .env  # Add your API keys
+python main.py  # http://localhost:8000
 ```
 
 ---
 
-## 🎓 Key Concepts
+## 📖 API Documentation
 
-### Brand Strategy File
-Central intelligence layer containing:
-- Brand voice & tone
-- Messaging pillars
-- Language patterns (preferred phrases, vocabulary)
-- Do's and don'ts
-- Target audience
-- **Competitive positioning** (unique value, gaps, what to avoid)
+Backend API docs (when running locally): http://localhost:8000/docs
 
-### Marketing-Focused Competitor Analysis
-Analyzes competitors' **CONTENT & MESSAGING** only:
-- ✅ Content themes and topics
-- ✅ Messaging strategies
-- ✅ Brand voice and tone
-- ❌ NOT product features
-- ❌ NOT business models
-
-### Strategy-Aware Content Generation
-Every piece of content:
-1. Loads `brand_strategy.json`
-2. Injects brand context into AI prompt
-3. Generates content matching your voice
-4. Leverages competitive positioning
-5. Exploits market gaps
+### Key Endpoints
+- `POST /strategy/analyze` - Generate brand strategy from uploaded assets
+- `POST /draft/content/draft` - Generate blog post with brand voice
+- `POST /carousel/social/carousel` - Create 7-slide carousel
+- `POST /social-caption/generate-caption` - Generate social media caption
+- `GET /library/content` - Fetch all generated content
+- `POST /competitor/add` - Add competitor for tracking
 
 ---
 
-## 🐛 Known Limitations
+## 🎨 Brand Voice System
 
-- **JSON Storage**: Not suitable for production scale (migrate to PostgreSQL)
-- **Single User**: No authentication system yet
-- **No Publishing**: Manual posting required (APIs planned)
-- **Competitor Analysis**: Strategic inference, not live scraping
-- **No Analytics**: Can't track performance yet
+1. **Upload brand materials** (PDFs, DOCX, TXT, images with text)
+2. **AI extracts** key phrases, tone, personality
+3. **Competitor analysis** identifies positioning gaps
+4. **Strategy synthesis** creates comprehensive brand guide
+5. **All content generation** uses this strategy automatically
 
 ---
 
-## 🚀 Roadmap
+## 🔐 Security Notes
 
-### Phase 1: Core Features ✅ (Current)
-- [x] Brand voice upload
-- [x] Competitor analysis
-- [x] Strategy synthesis
-- [x] Blog generation
-- [x] Carousel creation
-- [x] Social captions
+- All API keys stored in environment variables
+- CORS configured for Vercel frontend only
+- PostgreSQL credentials managed by Railway
+- No sensitive data in Git repository
 
-### Phase 2: Publishing (Next)
-- [ ] Instagram API integration
-- [ ] LinkedIn API integration
-- [ ] Twitter/X API integration
-- [ ] WordPress direct publishing
+---
 
-### Phase 3: Intelligence (Future)
-- [ ] Live competitor social scraping
-- [ ] Content performance analytics
-- [ ] A/B testing framework
-- [ ] Advanced research mode (10+ min deep dives)
+## 📝 License
 
-### Phase 4: Scale (Production)
-- [ ] PostgreSQL migration
-- [ ] User authentication
-- [ ] Multi-tenant support
-- [ ] Team collaboration features
+MIT License - See LICENSE file for details
 
 ---
 
 ## 🤝 Contributing
 
-This is a pre-launch MVP. Contributions welcome once public beta launches!
-
----
-
-## 📄 License
-
-Proprietary - All rights reserved
-
----
-
-## 📞 Support
-
-For setup issues or questions, see `ORLA3_HANDOFF_PROMPT.md` for detailed documentation.
-
----
-
-**Built with ❤️ for videographers and creative professionals**
-
-**Status**: Pre-Launch MVP | Version 2.0 | Last Updated: October 31, 2025
+Built with love by the ORLA³ team. For questions or contributions, open an issue!
