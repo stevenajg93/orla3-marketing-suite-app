@@ -8,7 +8,7 @@ import { config } from '@/lib/config';
 type Competitor = {
   id: string;
   name: string;
-  handles: {
+  handles?: {
     instagram?: string;
     linkedin?: string;
     x?: string;
@@ -200,11 +200,11 @@ export default function CompetitorAnalysis() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {comp.handles.instagram && <span className="px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-full text-xs text-pink-300">📷 {comp.handles.instagram}</span>}
-                  {comp.handles.linkedin && <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs text-blue-300">💼 {comp.handles.linkedin}</span>}
-                  {comp.handles.x && <span className="px-3 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-xs text-gray-300">𝕏 {comp.handles.x}</span>}
-                  {comp.handles.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">🎵 {comp.handles.tiktok}</span>}
-                  {comp.handles.youtube && <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">📺 {comp.handles.youtube}</span>}
+                  {comp.handles?.instagram && <span className="px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-full text-xs text-pink-300">📷 {comp.handles.instagram}</span>}
+                  {comp.handles?.linkedin && <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs text-blue-300">💼 {comp.handles.linkedin}</span>}
+                  {comp.handles?.x && <span className="px-3 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-xs text-gray-300">𝕏 {comp.handles.x}</span>}
+                  {comp.handles?.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">🎵 {comp.handles.tiktok}</span>}
+                  {comp.handles?.youtube && <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">📺 {comp.handles.youtube}</span>}
                 </div>
 
                 {comp.analysis ? (
