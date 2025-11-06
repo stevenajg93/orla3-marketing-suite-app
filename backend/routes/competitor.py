@@ -7,6 +7,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor, Json as PgJson
 from datetime import datetime
 import anthropic
+import httpx
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
@@ -62,7 +63,7 @@ def load_brand_strategy():
 def extract_json_from_text(text: str) -> dict:
     """Extract JSON from text that might be wrapped in markdown or other formatting"""
     text = text.strip()
-    
+
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
     elif "```" in text:
@@ -71,13 +72,71 @@ def extract_json_from_text(text: str) -> dict:
             text = parts[1].strip()
             if text.startswith("json\n"):
                 text = text[5:]
-    
+
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse JSON: {e}")
         logger.error(f"Text was: {text[:500]}")
         raise
+
+async def research_competitor_with_perplexity(competitor_name: str, social_handles: dict) -> str:
+    """Use Perplexity to research competitor's actual marketing content"""
+    perplexity_key = os.getenv("PERPLEXITY_API_KEY")
+    if not perplexity_key:
+        logger.warning("No Perplexity API key - skipping automated research")
+        return ""
+
+    # Build search query focusing on marketing content
+    social_mentions = []
+    if social_handles.get('instagram'):
+        social_mentions.append(f"Instagram @{social_handles['instagram']}")
+    if social_handles.get('x'):
+        social_mentions.append(f"Twitter/X @{social_handles['x']}")
+    if social_handles.get('linkedin'):
+        social_mentions.append(f"LinkedIn {social_handles['linkedin']}")
+
+    social_context = " ".join(social_mentions) if social_mentions else ""
+
+    query = f"""Research {competitor_name} {social_context} and provide:
+1. Their main value proposition and positioning
+2. Their marketing messaging and tone
+3. Key content themes they focus on
+4. Their target audience
+5. Examples of their actual social media posts or website copy
+Focus on their MARKETING and CONTENT, not their product features."""
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {perplexity_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "llama-3.1-sonar-large-128k-online",
+                    "messages": [
+                        {"role": "user", "content": query}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 2000
+                },
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                research = data["choices"][0]["message"]["content"]
+                logger.info(f"✅ Perplexity research complete for {competitor_name}: {len(research)} chars")
+                return research
+            else:
+                logger.error(f"Perplexity API error: {response.status_code} - {response.text}")
+                return ""
+
+    except Exception as e:
+        logger.error(f"Error calling Perplexity: {str(e)}")
+        return ""
 
 @router.post("/add")
 async def add_competitor(competitor: Competitor):
@@ -220,15 +279,33 @@ OUR BRAND (Orla³):
         # Call Claude API
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
-        # Get sample content if available
+        # Get sample content or use Perplexity to research
         sample_content = competitor.get('sample_content', '')
         content_context = ""
+
         if sample_content:
+            # Use manually provided content
             content_context = f"""
 
-ACTUAL COMPETITOR CONTENT (Website, Social Posts, Marketing Materials):
-{sample_content[:3000]}  # Limit to 3000 chars for token efficiency
+ACTUAL COMPETITOR CONTENT (Manually Provided):
+{sample_content[:3000]}
 """
+        else:
+            # Automatically research with Perplexity
+            logger.info(f"No manual content provided - researching {competitor['name']} with Perplexity...")
+            perplexity_research = await research_competitor_with_perplexity(
+                competitor['name'],
+                competitor.get('social_handles', {})
+            )
+            if perplexity_research:
+                content_context = f"""
+
+COMPETITOR RESEARCH (From Perplexity AI Web Search):
+{perplexity_research}
+"""
+                logger.info(f"✅ Using Perplexity research for analysis")
+            else:
+                logger.warning(f"⚠️ No content available - analysis will be limited")
 
         prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
 
