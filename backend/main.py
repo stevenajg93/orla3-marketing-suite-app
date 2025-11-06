@@ -15,6 +15,7 @@ app = FastAPI(
 allowed_origins = [
     "http://localhost:3000",  # Local development
     "https://orla3-marketing-suite-app.vercel.app",  # Production Vercel
+    "https://marketing.orla3.com",  # Production custom domain
 ]
 
 app.add_middleware(
