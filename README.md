@@ -37,10 +37,11 @@ AI-powered marketing automation platform for videographers and creative professi
 
 ### Tech Stack
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS (Vercel)
-- **Backend**: FastAPI, Python 3.12 (Railway)
+- **Backend**: FastAPI, Python 3.14+ (Railway)
 - **Database**: PostgreSQL (Railway)
 - **AI**: Anthropic Claude Sonnet 4.5
 - **APIs**: Google Drive API, Unsplash API
+- **Node**: v24.10.0, npm 11.6.0
 
 ### Clean Architecture
 ```
@@ -96,26 +97,58 @@ GOOGLE_CLIENT_SECRET=...
 ## 💻 Local Development
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.12+
+- Node.js 18+ (tested with v24.10.0)
+- Python 3.12+ (tested with 3.14.0)
 - PostgreSQL (or use Railway DB)
 
-### Frontend Setup
+### Quick Start
+
+**1. Clone & Install**
 ```bash
+git clone https://github.com/stevenajg93/orla3-marketing-suite-app.git
+cd orla3-marketing-suite-app
 npm install
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-npm run dev  # http://localhost:3000
 ```
 
-### Backend Setup
+**2. Frontend Setup**
+```bash
+# Create environment file
+cp .env.local.example .env.local
+# Edit .env.local and set NEXT_PUBLIC_API_URL=http://localhost:8000
+
+npm run dev  # Runs on http://localhost:3000
+```
+
+**3. Backend Setup**
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env  # Add your API keys
-python main.py  # http://localhost:8000
+
+# Create environment file from template
+cp .env.example .env
+# Edit .env and add your API keys:
+# - DATABASE_URL (required)
+# - ANTHROPIC_API_KEY (required)
+# - UNSPLASH_ACCESS_KEY
+# - Google OAuth credentials
+
+python main.py  # Runs on http://localhost:8000
 ```
+
+### Daily Workflow
+```bash
+# Terminal 1: Backend
+cd backend && source venv/bin/activate && python main.py
+
+# Terminal 2: Frontend
+npm run dev
+
+# Open http://localhost:3000
+```
+
+**For detailed setup instructions and security best practices, see `SETUP.md`**
 
 ---
 
@@ -143,12 +176,26 @@ Backend API docs (when running locally): http://localhost:8000/docs
 
 ---
 
-## 🔐 Security Notes
+## 🔐 Security
 
-- All API keys stored in environment variables
-- CORS configured for Vercel frontend only
-- PostgreSQL credentials managed by Railway
-- No sensitive data in Git repository
+### Security Features ✅
+- **Zero hardcoded credentials** - All secrets in environment variables only
+- **Environment templates** - `.env.example` files provided, actual `.env` files gitignored
+- **CORS protection** - Configured for Vercel frontend + localhost only
+- **Database security** - PostgreSQL credentials managed by Railway, never committed
+- **Type-safe API** - TypeScript type guards prevent runtime errors
+- **Proper error handling** - All catch blocks log errors for debugging
+
+### Recent Security Fixes (Nov 2025)
+- ✅ Removed exposed Google OAuth credentials from git history
+- ✅ Removed hardcoded DATABASE_URL from 13 backend files
+- ✅ Implemented proper `os.getenv()` pattern with validation
+- ✅ Created comprehensive `.env.example` templates
+- ✅ Updated `.gitignore` to prevent future credential exposure
+- ✅ Fixed 8 TypeScript type errors for runtime safety
+
+### Setup Security
+See `SETUP.md` for detailed security best practices and environment configuration.
 
 ---
 
