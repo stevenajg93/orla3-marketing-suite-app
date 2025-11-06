@@ -30,6 +30,7 @@ class Competitor(BaseModel):
     handles: SocialHandles
     industry: Optional[str] = None
     location: Optional[str] = None
+    sample_content: Optional[str] = None
 
 class CompetitorData(BaseModel):
     id: str
@@ -86,14 +87,15 @@ async def add_competitor(competitor: Competitor):
         cur = conn.cursor()
         
         cur.execute("""
-            INSERT INTO competitors (name, industry, location, social_handles)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, name, industry, location, social_handles, added_at
+            INSERT INTO competitors (name, industry, location, social_handles, sample_content)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, name, industry, location, social_handles, sample_content, added_at
         """, (
             competitor.name,
             competitor.industry,
             competitor.location,
-            PgJson(competitor.handles.dict())
+            PgJson(competitor.handles.dict()),
+            competitor.sample_content
         ))
         
         competitor_data = cur.fetchone()
@@ -218,6 +220,16 @@ OUR BRAND (Orla³):
         # Call Claude API
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
+        # Get sample content if available
+        sample_content = competitor.get('sample_content', '')
+        content_context = ""
+        if sample_content:
+            content_context = f"""
+
+ACTUAL COMPETITOR CONTENT (Website, Social Posts, Marketing Materials):
+{sample_content[:3000]}  # Limit to 3000 chars for token efficiency
+"""
+
         prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
 
 {brand_context}
@@ -226,6 +238,7 @@ COMPETITOR TO ANALYZE:
 Name: {competitor['name']}
 Industry: {competitor.get('industry', 'Unknown')}
 Social: {json.dumps(competitor.get('social_handles', {}))}
+{content_context}
 
 Analyze their MARKETING through the lens of Orla³'s positioning:
 
