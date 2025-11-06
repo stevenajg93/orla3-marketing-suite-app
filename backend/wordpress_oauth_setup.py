@@ -8,10 +8,25 @@ import os
 import webbrowser
 from urllib.parse import urlencode, parse_qs
 
+# Load .env file manually
+def load_env():
+    env_vars = {}
+    env_file = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(env_file):
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    env_vars[key] = value
+    return env_vars
+
+env_vars = load_env()
+
 # WordPress.com OAuth Application
 # You need to create an app at: https://developer.wordpress.com/apps/
-CLIENT_ID = os.getenv("WORDPRESS_CLIENT_ID", "YOUR_CLIENT_ID")
-CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
+CLIENT_ID = env_vars.get("WORDPRESS_CLIENT_ID", "YOUR_CLIENT_ID")
+CLIENT_SECRET = env_vars.get("WORDPRESS_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
 REDIRECT_URI = "http://localhost:8000/wordpress/callback"
 
 def get_authorization_url():

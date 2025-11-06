@@ -264,22 +264,22 @@ export default function SocialManagerPage() {
     
     for (const platform of selectedPlatforms) {
       try {
-        const response = await api.post(`/publisher/publish`, {
+        const result = await api.post(`/publisher/publish`, {
             platform: platform,
             content_type: postType,
             caption: caption,
             image_urls: selectedMedia.map(m => m.url || m.image_url || '')
         });
-        
-        const result = await response.json();
+
         results.push({
           platform: platform,
           success: result.success,
           message: result.success ? `Posted to ${platform}!` : result.error,
           url: result.post_url
         });
-        
+
       } catch (err) {
+        console.error(`Failed to post to ${platform}:`, err);
         results.push({
           platform: platform,
           success: false,
