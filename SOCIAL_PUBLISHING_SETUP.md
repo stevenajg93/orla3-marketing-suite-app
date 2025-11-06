@@ -135,8 +135,33 @@ TUMBLR_BLOG_NAME=yourblogname.tumblr.com
 ---
 
 ### WordPress
-**Requirements:** WordPress site + Application Password (5.6+)
+**Requirements:** WordPress.com OAuth Token OR Self-hosted WordPress with Application Password
 
+#### Option 1: WordPress.com (Recommended)
+**Environment Variables:**
+```bash
+WORDPRESS_ACCESS_TOKEN=your_oauth_token
+WORDPRESS_SITE_ID=your-site.wordpress.com
+```
+
+**Setup:**
+1. Go to https://developer.wordpress.com/apps/
+2. Click "Create New Application"
+3. Fill in:
+   - Name: ORLA3 Marketing Suite
+   - Website URL: https://marketing.orla3.com
+   - Redirect URL: http://localhost:8000/wordpress/callback
+   - Type: Web
+4. Copy Client ID and Client Secret
+5. Run OAuth setup script:
+   ```bash
+   cd backend
+   python wordpress_oauth_setup.py
+   ```
+6. Follow prompts to authorize and get access token
+7. Add token to `.env`
+
+#### Option 2: Self-Hosted WordPress
 **Environment Variables:**
 ```bash
 WORDPRESS_SITE_URL=https://your-site.com
@@ -151,7 +176,7 @@ WORDPRESS_APP_PASSWORD=your_app_password
 4. Copy generated password
 
 **Supports:** Blog posts
-**Status:** ✅ Configured for https://blog.orla3.com
+**Status:** ⚠️ Needs WordPress.com OAuth token (run `backend/wordpress_oauth_setup.py`)
 
 ---
 

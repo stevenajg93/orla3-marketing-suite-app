@@ -695,31 +695,82 @@ class TumblrPublisher:
 
 class WordPressPublisher:
     """
-    WordPress REST API publisher
-    Requires: WordPress site URL, Application Password
+    WordPress.com API publisher (supports both WordPress.com and self-hosted with Jetpack)
+    Requires: WordPress.com OAuth Access Token OR WordPress site with Application Password
     """
-    
+
     def __init__(self):
-        self.site_url = os.getenv("WORDPRESS_SITE_URL")  # e.g., https://yoursite.com
+        self.site_url = os.getenv("WORDPRESS_SITE_URL")  # WordPress.com site or custom domain
+        self.access_token = os.getenv("WORDPRESS_ACCESS_TOKEN")  # WordPress.com OAuth token
         self.username = os.getenv("WORDPRESS_USERNAME")
         self.app_password = os.getenv("WORDPRESS_APP_PASSWORD")
-    
+        self.site_id = os.getenv("WORDPRESS_SITE_ID")  # For WordPress.com API (e.g., sgillespiea7d7336966-wgdcj.wordpress.com)
+
     async def publish_post(self, title: str, content: str, status: str = "publish") -> dict:
         """Publish blog post to WordPress"""
-        if not all([self.site_url, self.username, self.app_password]):
+
+        # Try WordPress.com OAuth API first (preferred for WordPress.com sites)
+        if self.access_token and self.site_id:
+            return await self._publish_via_wpcom_api(title, content, status)
+
+        # Fallback to WordPress REST API with app password (self-hosted or Jetpack)
+        if self.site_url and self.username and self.app_password:
+            return await self._publish_via_rest_api(title, content, status)
+
+        return {
+            "success": False,
+            "error": "WordPress not configured. Need either: (1) WORDPRESS_ACCESS_TOKEN + WORDPRESS_SITE_ID for WordPress.com, OR (2) WORDPRESS_SITE_URL + WORDPRESS_USERNAME + WORDPRESS_APP_PASSWORD for self-hosted"
+        }
+
+    async def _publish_via_wpcom_api(self, title: str, content: str, status: str) -> dict:
+        """Publish via WordPress.com REST API (OAuth)"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"https://public-api.wordpress.com/rest/v1.1/sites/{self.site_id}/posts/new",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    data={
+                        "title": title,
+                        "content": content,
+                        "status": status  # publish, draft, pending, private
+                    }
+                )
+
+                if response.status_code not in [200, 201]:
+                    return {
+                        "success": False,
+                        "error": f"WordPress.com API error ({response.status_code}): {response.text[:200]}"
+                    }
+
+                post_data = response.json()
+                post_id = post_data.get("ID")
+                post_url = post_data.get("URL")
+
+                return {
+                    "success": True,
+                    "post_id": str(post_id),
+                    "post_url": post_url
+                }
+
+        except Exception as e:
             return {
                 "success": False,
-                "error": "WordPress credentials not configured. Add WORDPRESS_SITE_URL, WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD to .env.local"
+                "error": f"WordPress.com API exception: {str(e)}"
             }
-        
+
+    async def _publish_via_rest_api(self, title: str, content: str, status: str) -> dict:
+        """Publish via WordPress REST API (Application Password for self-hosted)"""
         try:
             import base64
-            
+
             # Create basic auth header
             credentials = f"{self.username}:{self.app_password}"
             token = base64.b64encode(credentials.encode()).decode()
-            
-            async with httpx.AsyncClient() as client:
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.site_url}/wp-json/wp/v2/posts",
                     headers={
@@ -729,30 +780,30 @@ class WordPressPublisher:
                     json={
                         "title": title,
                         "content": content,
-                        "status": status  # draft, publish, pending
+                        "status": status
                     }
                 )
-                
+
                 if response.status_code not in [200, 201]:
                     return {
                         "success": False,
-                        "error": f"WordPress API error: {response.text}"
+                        "error": f"WordPress REST API error ({response.status_code}): {response.text[:200]}"
                     }
-                
+
                 post_data = response.json()
-                post_id = post_data["id"]
-                post_url = post_data["link"]
-                
+                post_id = post_data.get("id")
+                post_url = post_data.get("link")
+
                 return {
                     "success": True,
                     "post_id": str(post_id),
                     "post_url": post_url
                 }
-                
+
         except Exception as e:
             return {
                 "success": False,
-                "error": str(e)
+                "error": f"WordPress REST API exception: {str(e)}"
             }
 
 
