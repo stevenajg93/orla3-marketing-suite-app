@@ -13,8 +13,8 @@ router = APIRouter()
 # ============================================================================
 
 class PublishRequest(BaseModel):
-    platform: Literal["instagram", "linkedin", "twitter"]
-    content_type: Literal["text", "image", "carousel"]
+    platform: Literal["instagram", "linkedin", "twitter", "x", "facebook", "tiktok", "youtube", "reddit", "tumblr", "wordpress"]
+    content_type: Literal["text", "image", "video", "carousel"]
     caption: str
     image_urls: Optional[List[str]] = []
     account_id: Optional[str] = None  # For multi-account support later
@@ -327,20 +327,23 @@ class TwitterPublisher:
 @router.post("/publish", response_model=PublishResponse)
 async def publish_content(request: PublishRequest):
     """
-    Universal publishing endpoint
+    Universal publishing endpoint supporting all platforms
     Routes to appropriate platform publisher based on request
     """
-    
+
     result = {
         "success": False,
         "platform": request.platform,
         "published_at": datetime.utcnow().isoformat()
     }
-    
+
     try:
-        if request.platform == "instagram":
+        # Handle X/Twitter alias
+        platform = "twitter" if request.platform == "x" else request.platform
+
+        if platform == "instagram":
             publisher = InstagramPublisher()
-            
+
             if request.content_type == "carousel" and len(request.image_urls) > 1:
                 publish_result = await publisher.publish_carousel(
                     caption=request.caption,
@@ -358,24 +361,64 @@ async def publish_content(request: PublishRequest):
                     error="Instagram posts require at least one image",
                     published_at=result["published_at"]
                 )
-            
+
             result.update(publish_result)
-            
-        elif request.platform == "linkedin":
+
+        elif platform == "linkedin":
             publisher = LinkedInPublisher()
             publish_result = await publisher.publish_text(caption=request.caption)
             result.update(publish_result)
-            
-        elif request.platform == "twitter":
+
+        elif platform == "twitter":
             publisher = TwitterPublisher()
             publish_result = await publisher.publish_tweet(caption=request.caption)
             result.update(publish_result)
-            
+
+        elif platform == "facebook":
+            publisher = FacebookPublisher()
+            image_url = request.image_urls[0] if request.image_urls else None
+            publish_result = await publisher.publish_post(
+                caption=request.caption,
+                image_url=image_url
+            )
+            result.update(publish_result)
+
+        elif platform == "tiktok":
+            result["error"] = "TikTok requires video upload - not supported for text/image posts"
+
+        elif platform == "youtube":
+            result["error"] = "YouTube requires video upload - coming soon"
+
+        elif platform == "reddit":
+            result["error"] = "Reddit publishing requires subreddit selection - coming soon"
+
+        elif platform == "tumblr":
+            publisher = TumblrPublisher()
+            image_url = request.image_urls[0] if request.image_urls else None
+            publish_result = await publisher.publish_post(
+                caption=request.caption,
+                image_url=image_url
+            )
+            result.update(publish_result)
+
+        elif platform == "wordpress":
+            # WordPress needs title - extract from caption first line or use default
+            lines = request.caption.split('\n')
+            title = lines[0][:100] if lines else "Untitled Post"
+            content = request.caption
+
+            publisher = WordPressPublisher()
+            publish_result = await publisher.publish_post(
+                title=title,
+                content=content
+            )
+            result.update(publish_result)
+
         else:
             result["error"] = f"Platform {request.platform} not supported"
-        
+
         return PublishResponse(**result)
-        
+
     except Exception as e:
         return PublishResponse(
             success=False,
