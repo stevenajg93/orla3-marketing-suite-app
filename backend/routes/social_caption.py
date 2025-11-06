@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import anthropic
+import httpx
 import os
 import json
 import psycopg2
@@ -151,7 +152,60 @@ Return ONLY the caption text, no explanations or meta-commentary."""
         
         logger.info(f"Generated brand-aligned caption for: {request.prompt}")
         return {"caption": caption, "success": True}
-        
+
     except Exception as e:
         logger.error(f"Caption generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/trending-topics")
+async def get_trending_topics():
+    """Use Perplexity to research what's trending on social media in videography"""
+    try:
+        perplexity_key = os.getenv("PERPLEXITY_API_KEY")
+        if not perplexity_key:
+            raise HTTPException(status_code=503, detail="Perplexity API not configured")
+
+        query = """What are the top trending topics, hashtags, and content themes on Instagram, TikTok, and LinkedIn right now in the videography and video production industry?
+
+Focus on:
+1. Viral trends and challenges
+2. Popular hashtags
+3. Content formats getting high engagement
+4. Topics videographers are discussing
+5. Client pain points being addressed
+
+Provide 5-8 specific, actionable content ideas with suggested hashtags."""
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {perplexity_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "llama-3.1-sonar-large-128k-online",
+                    "messages": [
+                        {"role": "user", "content": query}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 2000
+                },
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                trends = data["choices"][0]["message"]["content"]
+                logger.info(f"✅ Retrieved social trends: {len(trends)} chars")
+                return {"success": True, "trends": trends}
+            else:
+                logger.error(f"Perplexity API error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=response.status_code, detail="Failed to fetch trends")
+
+    except httpx.TimeoutException:
+        logger.error("Perplexity API timeout")
+        raise HTTPException(status_code=504, detail="Trend research timed out")
+    except Exception as e:
+        logger.error(f"Error fetching trends: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -45,6 +45,9 @@ export default function SocialManagerPage() {
   const [captionPrompt, setCaptionPrompt] = useState("");
   const [generatingCaption, setGeneratingCaption] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
+  const [showTrends, setShowTrends] = useState(false);
+  const [trends, setTrends] = useState("");
+  const [loadingTrends, setLoadingTrends] = useState(false);
   
   // Engagement state
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
@@ -222,7 +225,7 @@ export default function SocialManagerPage() {
       alert('Please enter a prompt describing what you want the caption to be about');
       return;
     }
-    
+
     setGeneratingCaption(true);
     try {
       const context = {
@@ -232,7 +235,7 @@ export default function SocialManagerPage() {
         hasMedia: selectedMedia.length > 0,
         mediaCount: selectedMedia.length
       };
-      
+
       const data = await api.post(`/social-caption/generate-caption`, context);
       setCaption(data.caption || 'Generated caption');
       setCaptionPrompt(''); // Clear prompt after generation
@@ -244,6 +247,19 @@ export default function SocialManagerPage() {
     }
   };
 
+  const fetchTrendingTopics = async () => {
+    setLoadingTrends(true);
+    try {
+      const data = await api.get('/social-caption/trending-topics');
+      setTrends(data.trends || '');
+      setShowTrends(true);
+    } catch (err) {
+      console.error('Failed to fetch trends:', err);
+      alert('Failed to fetch trending topics. Make sure Perplexity API is configured.');
+    } finally {
+      setLoadingTrends(false);
+    }
+  };
 
   const publishToSocial = async () => {
     if (!caption.trim()) {
@@ -411,14 +427,42 @@ export default function SocialManagerPage() {
                     placeholder="Describe what you want the caption about... (e.g. 'Promote videography for weddings')"
                     className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
                   />
-                  <button 
-                    onClick={generateCaption} 
+                  <button
+                    onClick={generateCaption}
                     disabled={generatingCaption || !captionPrompt.trim()}
                     className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {generatingCaption ? "✨ Generating..." : "✨ Generate"}
                   </button>
+                  <button
+                    onClick={fetchTrendingTopics}
+                    disabled={loadingTrends}
+                    className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {loadingTrends ? "🔍 Searching..." : "🔥 Trends"}
+                  </button>
                 </div>
+
+                {/* Trending Topics Display */}
+                {showTrends && trends && (
+                  <div className="mb-4 p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-orange-500/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span>🔥</span> Trending Topics in Videography
+                      </h3>
+                      <button
+                        onClick={() => setShowTrends(false)}
+                        className="text-gray-400 hover:text-white transition text-xl"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto">
+                      {trends}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">💡 Use these trending topics to inspire your captions!</p>
+                  </div>
+                )}
                 
                 <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Your AI-generated caption will appear here... Or write your own!" rows={8} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none" />
                 <div className="flex items-center justify-between mt-3">
