@@ -97,7 +97,8 @@ export default function CompetitorAnalysis() {
           }
         });
 
-      if (res.ok) {
+      // api.post returns parsed JSON directly, not response object
+      if (res && res.success) {
         setFormData({ name: '', industry: '', location: '', instagram: '', linkedin: '', x: '', tiktok: '', youtube: '', sampleContent: '' });
         setShowAddForm(false);
         loadCompetitors();
