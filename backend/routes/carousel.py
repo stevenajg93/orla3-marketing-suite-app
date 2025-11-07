@@ -147,7 +147,7 @@ CRITICAL RULES:
 3. Apply Orla³'s brand voice, tone, and messaging pillars throughout ALL slides
 4. Use Orla³'s preferred phrases and writing style naturally
 5. Leverage our competitive positioning - exploit content gaps competitors miss
-6. Slide 1 (HOOK): Short punchy title (3-4 words) + compelling 2-sentence hook
+6. Slide 1 (HOOK): Short punchy title (3-4 words) + MAXIMUM 70 character hook (1-2 short sentences). CRITICAL: Slide 1 renders as static image - text MUST fit on 2 lines.
 7. Slides 2-7: Short title (3-4 words) + detailed body text (2-3 sentences, 120-180 chars)
 
 BRAND VOICE COMPLIANCE:
@@ -174,9 +174,10 @@ IMPORTANT:
 - Leverage our competitive positioning and exploit content gaps
 
 SLIDE STRUCTURE:
-1. HOOK (Slide 1):
+1. HOOK (Slide 1) - CRITICAL: This renders as a STATIC IMAGE:
    - title: 3-4 words max, ultra punchy and relevant to THIS specific topic
-   - body: 2 compelling sentences about THIS topic that make them want to swipe (100-120 chars)
+   - body: MAXIMUM 70 characters (about 1-2 SHORT sentences). This MUST fit on 2 visible lines when rendered as an image. NO overflow allowed.
+   - Test: Count characters. If body exceeds 70 chars, it WILL be cut off on the image.
 
 2. CONTENT SLIDES (Slides 2-7):
    - title: 3-4 words max, each about a different aspect of THIS topic
@@ -191,15 +192,17 @@ Create 7 slides with these exact roles:
 6. HOW_TO - Actionable advice specifically for THIS topic
 7. CTA - Strong call to action with ORLA³ as the solution
 
-TITLE LENGTH LIMITS:
+CHARACTER LIMITS (STRICTLY ENFORCED):
 - Slide 1 title: Maximum 20 characters
-- All other titles: Maximum 25 characters
+- Slide 1 body: MAXIMUM 70 characters (renders as static image - MUST fit on 2 lines)
+- Slides 2-7 titles: Maximum 25 characters
+- Slides 2-7 body: 120-180 characters
 
 Return ONLY valid JSON in this exact format:
 {{
   "platform": "{data.target_platform}",
   "slides": [
-    {{"id": 1, "role": "HOOK", "title": "short punchy title", "body": "Two compelling sentences about the topic.", "alt_hint": "relevant image"}},
+    {{"id": 1, "role": "HOOK", "title": "short punchy title", "body": "One to two short sentences. Max 70 chars total.", "alt_hint": "relevant image"}},
     {{"id": 2, "role": "CONTEXT", "title": "3-4 word title", "body": "Two to three sentences with details about this aspect.", "alt_hint": "relevant image"}},
     {{"id": 3, "role": "INSIGHT_1", "title": "3-4 word title", "body": "Two to three sentences with details about this aspect.", "alt_hint": "relevant image"}},
     {{"id": 4, "role": "INSIGHT_2", "title": "3-4 word title", "body": "Two to three sentences with details about this aspect.", "alt_hint": "relevant image"}},
