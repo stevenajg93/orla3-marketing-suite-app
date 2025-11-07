@@ -46,8 +46,7 @@ export default function CompetitorAnalysis() {
     linkedin: '',
     x: '',
     tiktok: '',
-    youtube: '',
-    sampleContent: ''
+    youtube: ''
   });
 
   useEffect(() => {
@@ -87,7 +86,6 @@ export default function CompetitorAnalysis() {
           name: formData.name,
           industry: formData.industry || null,
           location: formData.location || null,
-          sample_content: formData.sampleContent || null,
           handles: {
             instagram: formData.instagram || null,
             linkedin: formData.linkedin || null,
@@ -99,7 +97,7 @@ export default function CompetitorAnalysis() {
 
       // api.post returns parsed JSON directly, not response object
       if (res && res.success) {
-        setFormData({ name: '', industry: '', location: '', instagram: '', linkedin: '', x: '', tiktok: '', youtube: '', sampleContent: '' });
+        setFormData({ name: '', industry: '', location: '', instagram: '', linkedin: '', x: '', tiktok: '', youtube: '' });
         setShowAddForm(false);
         loadCompetitors();
       }
@@ -162,16 +160,13 @@ export default function CompetitorAnalysis() {
             </div>
             <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 mb-4" />
 
-            <h3 className="text-lg font-semibold text-white mb-3">📝 Sample Content (Recommended)</h3>
-            <textarea
-              placeholder="Paste their website copy, social posts, marketing emails, or blog content here for accurate analysis..."
-              value={formData.sampleContent}
-              onChange={(e) => setFormData({...formData, sampleContent: e.target.value})}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 mb-4 min-h-[150px]"
-            />
-            <p className="text-sm text-gray-400 mb-4">💡 Tip: The more content you provide, the more accurate the analysis will be!</p>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-300">
+                <span className="font-semibold">🤖 AI-Powered Research:</span> When you click "Analyze", Perplexity AI will automatically research this competitor's website and social media to provide accurate, real-time insights!
+              </p>
+            </div>
 
-            <h3 className="text-lg font-semibold text-white mb-3">Social Media Handles</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">Social Media Handles (Optional but Recommended)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               <input type="text" placeholder="📷 Instagram: @handle" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
               <input type="text" placeholder="💼 LinkedIn: company-name" value={formData.linkedin} onChange={(e) => setFormData({...formData, linkedin: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />

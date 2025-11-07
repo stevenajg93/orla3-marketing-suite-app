@@ -31,7 +31,6 @@ class Competitor(BaseModel):
     handles: SocialHandles
     industry: Optional[str] = None
     location: Optional[str] = None
-    sample_content: Optional[str] = None
 
 class CompetitorData(BaseModel):
     id: str
@@ -146,15 +145,14 @@ async def add_competitor(competitor: Competitor):
         cur = conn.cursor()
         
         cur.execute("""
-            INSERT INTO competitors (name, industry, location, social_handles, sample_content)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id, name, industry, location, social_handles, sample_content, added_at
+            INSERT INTO competitors (name, industry, location, social_handles)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, name, industry, location, social_handles, added_at
         """, (
             competitor.name,
             competitor.industry,
             competitor.location,
-            PgJson(competitor.handles.dict()),
-            competitor.sample_content
+            PgJson(competitor.handles.dict())
         ))
         
         competitor_data = cur.fetchone()
@@ -279,33 +277,23 @@ OUR BRAND (Orla³):
         # Call Claude API
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
-        # Get sample content or use Perplexity to research
-        sample_content = competitor.get('sample_content', '')
-        content_context = ""
+        # Automatically research with Perplexity
+        logger.info(f"🔍 Researching {competitor['name']} with Perplexity AI...")
+        perplexity_research = await research_competitor_with_perplexity(
+            competitor['name'],
+            competitor.get('social_handles', {})
+        )
 
-        if sample_content:
-            # Use manually provided content
+        content_context = ""
+        if perplexity_research:
             content_context = f"""
 
-ACTUAL COMPETITOR CONTENT (Manually Provided):
-{sample_content[:3000]}
-"""
-        else:
-            # Automatically research with Perplexity
-            logger.info(f"No manual content provided - researching {competitor['name']} with Perplexity...")
-            perplexity_research = await research_competitor_with_perplexity(
-                competitor['name'],
-                competitor.get('social_handles', {})
-            )
-            if perplexity_research:
-                content_context = f"""
-
-COMPETITOR RESEARCH (From Perplexity AI Web Search):
+COMPETITOR RESEARCH (Real-time from Perplexity AI):
 {perplexity_research}
 """
-                logger.info(f"✅ Using Perplexity research for analysis")
-            else:
-                logger.warning(f"⚠️ No content available - analysis will be limited")
+            logger.info(f"✅ Perplexity research complete - {len(perplexity_research)} chars")
+        else:
+            logger.warning(f"⚠️ Perplexity research failed - analysis will be limited")
 
         prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
 
