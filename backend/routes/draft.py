@@ -28,6 +28,14 @@ class CTA(BaseModel):
     button_label: str
     url: str
 
+class FAQItem(BaseModel):
+    question: str
+    answer: str
+
+class SchemaMarkup(BaseModel):
+    article_schema: dict
+    faq_schema: Optional[dict] = None
+
 class DraftOutput(BaseModel):
     title: str
     slug: str
@@ -40,6 +48,10 @@ class DraftOutput(BaseModel):
     estimated_read_time_min: int
     body_md: str
     cta: CTA
+    faq: Optional[List[FAQItem]] = None
+    schema_markup: Optional[SchemaMarkup] = None
+    people_also_ask: Optional[List[str]] = None
+    key_takeaways: Optional[List[str]] = None
     internal_links_used: Optional[list] = None
     sources: Optional[List[str]] = None
 
@@ -154,8 +166,8 @@ def generate_draft(data: DraftInput):
     strategy = load_brand_strategy()
     brand_context = build_brand_context(strategy) if strategy else ""
     
-    system_prompt = f"""You are Orla3's senior content writer and SEO strategist.
-Write authoritative, cinematic, practical longform content for videography buyers and sellers.
+    system_prompt = f"""You are Orla3's senior content writer and AI search optimization expert.
+Write authoritative, cinematic, practical longform content optimized for BOTH traditional SEO AND AI search engines (ChatGPT, Perplexity, Google AI Overview).
 Respect UK English. Return ONLY valid JSON matching the exact schema provided - no markdown, no code blocks, just pure JSON.
 
 {brand_context}
@@ -164,17 +176,28 @@ CRITICAL WRITING RULES TO SOUND HUMAN:
 - Write naturally like a seasoned expert, not an AI
 - NO asterisks for emphasis - use strong word choice instead
 - ABSOLUTE RULE: NO hashtags (#) anywhere in the content
-- ABSOLUTE RULE: NO Markdown headers (##, ###, ####) - use PLAIN TEXT ONLY with blank lines between sections
-- NO bullet points with hyphens at the start of paragraphs
-- Use section breaks with blank lines, NOT header symbols
+- NO elongated hyphens or bullet points with hyphens at the start of paragraphs
+- Use H2 headers (##) ONLY for main section titles - keep them natural and conversational
 - Use varied sentence structures and lengths
-- Include specific examples and real scenarios
+- Include specific examples with real numbers and dates (especially 2025 data)
 - Write with confidence and authority
 - Avoid corporate jargon and buzzwords
 - Use contractions naturally (don't, can't, won't)
 - Write like you're having an informed conversation with a colleague
 - Use active voice predominantly
 - Vary paragraph lengths for natural rhythm
+
+AI SEARCH OPTIMIZATION (CRITICAL):
+1. ANSWER-FIRST FORMAT: Start each main section with a direct, citation-worthy answer (40-60 words) that AI can extract
+2. NATURAL QUESTION INTEGRATION: Embed questions conversationally in text, not as formal headers
+3. SPECIFIC NUMBERS & DATA: Include prices, percentages, timeframes (e.g., "UK videographers charge £800-£3000 in 2025")
+4. AUTHORITY SIGNALS: Use phrases like "Based on industry data", "In our experience", "According to UK market trends"
+5. SEMANTIC RICHNESS: Use related terms naturally (videographer → video producer, filmmaker, content creator)
+6. COMPARISON TABLES: When comparing options, use markdown tables (AI engines extract these easily)
+7. STEP-BY-STEP GUIDANCE: Number steps naturally in paragraphs, not as lists
+8. CURRENT YEAR: Mention "2025" or "current" to signal recency
+9. QUOTABLE SNIPPETS: Craft 2-3 sentence answers that AI can quote directly
+10. COMPREHENSIVE COVERAGE: Address related questions users might ask
 
 BRAND VOICE COMPLIANCE:
 - Every sentence must reflect Orla³'s tone, personality, and messaging pillars
@@ -183,36 +206,97 @@ BRAND VOICE COMPLIANCE:
 - Exploit content gaps our competitors are missing
 - Write for our specific target audience with their characteristics in mind"""
     
-    user_prompt = f"""Generate a blog article with these inputs:
+    user_prompt = f"""Generate an AI-search-optimized blog article with these inputs:
 - Keyword: {data.keyword}
 - Search Intent: {data.search_intent}
 - Outline: {data.outline}
 - Target Length: {data.target_length_words} words
 
-CRITICAL: Apply Orla³'s brand strategy throughout the entire article. This content must sound authentically like Orla³ and leverage our competitive positioning.
+CRITICAL: Apply Orla³'s brand strategy throughout. This content must sound authentically like Orla³ and leverage our competitive positioning.
+
+STRUCTURE FOR MAXIMUM AI VISIBILITY:
+
+1. OPENING PARAGRAPH (Answer-First):
+   - Lead with a direct 40-60 word answer to the main question
+   - Include the keyword naturally
+   - Mention 2025 or current year for recency
+   - Make it quotable for AI extraction
+
+2. BODY SECTIONS (Use H2 headers):
+   - Each section starts with a clear, quotable answer
+   - Embed related questions naturally in the text
+   - Include specific data: prices, percentages, timeframes
+   - Use comparison tables where relevant (markdown tables)
+   - Add authority signals: "Based on...", "Industry data shows..."
+   - Cover semantic variations of the keyword
+
+3. FAQ SECTION (Critical for AI Search):
+   - 5-7 natural, conversational questions people actually ask
+   - Each answer 40-60 words (perfect for AI extraction)
+   - Questions should be long-tail searches (e.g., "How much does a wedding videographer cost in London in 2025?")
+
+4. KEY TAKEAWAYS:
+   - 3-5 bullet points summarizing main insights
+   - Written as complete sentences, not fragments
+   - Quotable and shareable
 
 Return ONLY a JSON object with these exact fields:
 {{
-  "title": "SEO-optimized title",
+  "title": "SEO-optimized title with year if relevant",
   "slug": "kebab-case-slug",
-  "meta_title": "60 chars max",
-  "meta_description": "155 chars max",
+  "meta_title": "60 chars max, include keyword",
+  "meta_description": "155 chars max, answer-first format",
   "og_title": "Same as meta_title",
   "og_description": "Same as meta_description",
-  "tags": ["tag1", "tag2", "tag3"],
+  "tags": ["primary-keyword", "semantic-variation-1", "semantic-variation-2"],
   "category": "Videography",
   "estimated_read_time_min": 5,
-  "body_md": "Full markdown content here",
+  "body_md": "Full markdown with H2 headers, tables, natural questions, quotable answers",
+  "faq": [
+    {{
+      "question": "Natural long-tail question?",
+      "answer": "Direct 40-60 word answer with specifics"
+    }}
+  ],
+  "schema_markup": {{
+    "article_schema": {{
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Article title",
+      "author": {{
+        "@type": "Organization",
+        "name": "Orla³"
+      }},
+      "datePublished": "2025-11-07",
+      "description": "Meta description"
+    }},
+    "faq_schema": {{
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {{
+          "@type": "Question",
+          "name": "Question text",
+          "acceptedAnswer": {{
+            "@type": "Answer",
+            "text": "Answer text"
+          }}
+        }}
+      ]
+    }}
+  }},
+  "people_also_ask": ["Related question 1?", "Related question 2?", "Related question 3?"],
+  "key_takeaways": ["Takeaway 1 as complete sentence", "Takeaway 2 as complete sentence"],
   "cta": {{
     "headline": "Ready to find your perfect videographer?",
     "button_label": "Browse Orla3",
     "url": "https://orla3.com"
   }},
   "internal_links_used": [],
-  "sources": []
+  "sources": ["https://source1.com", "https://source2.com"]
 }}
 
-Write the article now. Return ONLY the JSON, nothing else."""
+Write the article now. Make every paragraph quotable for AI. Return ONLY the JSON, nothing else."""
 
     completion = client.messages.create(
         model="claude-sonnet-4-20250514",
