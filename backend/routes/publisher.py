@@ -5,6 +5,7 @@ import os
 import httpx
 import json
 from datetime import datetime
+from requests_oauthlib import OAuth1Session
 
 router = APIRouter()
 
@@ -274,50 +275,48 @@ class TwitterPublisher:
         self.base_url = "https://api.twitter.com/2"
     
     async def publish_tweet(self, caption: str) -> dict:
-        """Publish tweet to Twitter/X"""
+        """Publish tweet to Twitter/X using OAuth 1.0a"""
         if not all([self.api_key, self.api_secret, self.access_token, self.access_token_secret]):
             return {
                 "success": False,
-                "error": "Twitter credentials not configured. Add TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET to .env.local"
+                "error": "Twitter credentials not configured. Add TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET to .env"
             }
-        
+
         try:
-            # Twitter API v2 requires OAuth 1.0a for posting
-            # For MVP, we'll use httpx with manual OAuth
-            # Production should use tweepy or similar library
-            
-            async with httpx.AsyncClient() as client:
-                # This is simplified - real OAuth 1.0a signing required
-                response = await client.post(
-                    f"{self.base_url}/tweets",
-                    headers={
-                        "Authorization": f"Bearer {self.access_token}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "text": caption
-                    }
-                )
-                
-                if response.status_code not in [200, 201]:
-                    return {
-                        "success": False,
-                        "error": f"Twitter API error: {response.text}"
-                    }
-                
-                tweet_data = response.json()["data"]
-                tweet_id = tweet_data["id"]
-                
+            # Create OAuth 1.0a session (required for Twitter API v2 posting)
+            oauth = OAuth1Session(
+                self.api_key,
+                client_secret=self.api_secret,
+                resource_owner_key=self.access_token,
+                resource_owner_secret=self.access_token_secret
+            )
+
+            # Post tweet using OAuth 1.0a
+            payload = {"text": caption}
+            response = oauth.post(
+                f"{self.base_url}/tweets",
+                json=payload
+            )
+
+            if response.status_code not in [200, 201]:
                 return {
-                    "success": True,
-                    "post_id": tweet_id,
-                    "post_url": f"https://twitter.com/i/web/status/{tweet_id}"
+                    "success": False,
+                    "error": f"Twitter API error ({response.status_code}): {response.text}"
                 }
-                
+
+            tweet_data = response.json()["data"]
+            tweet_id = tweet_data["id"]
+
+            return {
+                "success": True,
+                "post_id": tweet_id,
+                "post_url": f"https://twitter.com/i/web/status/{tweet_id}"
+            }
+
         except Exception as e:
             return {
                 "success": False,
-                "error": str(e)
+                "error": f"Twitter publish exception: {str(e)}"
             }
 
 # ============================================================================
