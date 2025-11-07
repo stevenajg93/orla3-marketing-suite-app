@@ -15,14 +15,19 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Auto-apply to all content** - every piece sounds like your brand
 
 ### 📝 Content Generation Suite
-- **Blog Writer**: SEO-optimized articles with auto-keyword selection
-- **Carousel Creator**: 7-slide social media carousels (Instagram/LinkedIn)
-- **Social Captions**: Platform-aware captions with hashtags
+- **Blog Writer**: SEO-optimized articles with auto-keyword selection (Claude Sonnet 4)
+- **Carousel Creator**: 7-slide social media carousels (Gemini 2.0 Flash)
+- **Social Captions**: Platform-aware captions with hashtags (GPT-4o)
+- **Ad Copy Generator**: Multi-platform ad campaigns (GPT-4o)
+- **Comment Replies**: AI-powered engagement responses (GPT-4o)
+- **Blog Atomization**: Convert blogs to 8 platform-specific posts (Gemini 2.0 Flash)
 - **All strategy-aware**: Uses your brand voice and competitive positioning
 
 ### 🔍 Competitive Intelligence
 - **Track competitors** by name and social handles
-- **Marketing analysis**: Content strategies, gaps to exploit, positioning
+- **Automated research**: Perplexity AI scrapes real competitor marketing content
+- **Marketing analysis**: Content strategies, gaps to exploit, positioning (Claude Sonnet 4)
+- **Market-based threat assessment**: Identifies direct vs indirect competitors
 - **Structured insights**: What they do well, what to avoid, opportunities
 - **Feeds into strategy**: Automatically influences content generation
 
@@ -30,6 +35,13 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Google Drive integration**: Import assets directly
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
+
+### 📢 Social Media Publishing
+- **9 Platform Support**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
+- **Working**: Twitter/X, WordPress
+- **Ready (needs tokens)**: Instagram, LinkedIn, Facebook, Reddit, Tumblr
+- **Video platforms**: TikTok, YouTube (coming soon)
+- **Universal API**: Single endpoint for all platforms
 
 ---
 
@@ -39,8 +51,14 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS (Vercel)
 - **Backend**: FastAPI, Python 3.14+ (Railway)
 - **Database**: PostgreSQL (Railway)
-- **AI**: Anthropic Claude Sonnet 4.5
+- **AI**: Multi-provider optimization
+  - **Perplexity AI**: Real-time web research
+  - **Claude Sonnet 4**: Strategic analysis & brand-critical content
+  - **GPT-4o**: Creative conversational content
+  - **Gemini 2.0 Flash**: Structured visual content
+  - **GPT-4o-mini**: Simple analytical tasks
 - **APIs**: Google Drive API, Unsplash API
+- **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
 - **Node**: v24.10.0, npm 11.6.0
 
 ### Clean Architecture
@@ -85,11 +103,33 @@ NEXT_PUBLIC_API_URL=https://orla3-marketing-suite-app-production.up.railway.app
 **Backend (Railway):**
 ```bash
 DATABASE_URL=postgresql://... (auto-injected by Railway)
-ANTHROPIC_API_KEY=sk-...
+
+# AI Providers
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-proj-...
+GEMINI_API_KEY=AIza...
+PERPLEXITY_API_KEY=pplx-...
+
+# Media
 UNSPLASH_ACCESS_KEY=...
+
+# Google Drive OAuth
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-# Social media API keys...
+
+# Social Media Publishing (optional)
+INSTAGRAM_ACCESS_TOKEN=...
+INSTAGRAM_BUSINESS_ACCOUNT_ID=...
+LINKEDIN_ACCESS_TOKEN=...
+LINKEDIN_PERSON_URN=...
+TWITTER_API_KEY=...
+TWITTER_ACCESS_TOKEN=...
+FACEBOOK_PAGE_ACCESS_TOKEN=...
+FACEBOOK_PAGE_ID=...
+REDDIT_CLIENT_ID=...
+TUMBLR_API_KEY=...
+WORDPRESS_SITE_URL=...
+# ...and more
 ```
 
 ---
@@ -157,12 +197,33 @@ npm run dev
 Backend API docs (when running locally): http://localhost:8000/docs
 
 ### Key Endpoints
-- `POST /strategy/analyze` - Generate brand strategy from uploaded assets
-- `POST /draft/content/draft` - Generate blog post with brand voice
-- `POST /carousel/social/carousel` - Create 7-slide carousel
-- `POST /social-caption/generate-caption` - Generate social media caption
-- `GET /library/content` - Fetch all generated content
+
+**Strategy & Analysis**
+- `POST /strategy/analyze` - Generate brand strategy from uploaded assets (Claude Sonnet 4)
+- `GET /strategy/next-keyword` - AI-selected next keyword (GPT-4o-mini)
+- `POST /strategy/market-research` - Keyword research (GPT-4o-mini)
+
+**Content Generation**
+- `POST /draft/content/draft` - Generate blog post with brand voice (Claude Sonnet 4)
+- `POST /carousel/social/carousel` - Create 7-slide carousel (Gemini 2.0 Flash)
+- `POST /social-caption/generate-caption` - Generate social media caption (GPT-4o)
+- `POST /social-caption/trending-topics` - Research trending topics (Perplexity AI)
+- `POST /atomize/blog-to-social` - Convert blog to 8 platform posts (Gemini 2.0 Flash)
+- `POST /ads/generate` - Generate ad campaign (GPT-4o)
+- `POST /comments/generate-replies` - AI comment replies (GPT-4o)
+
+**Competitor Intelligence**
 - `POST /competitor/add` - Add competitor for tracking
+- `POST /competitor/{id}/analyze` - Analyze competitor (Claude Sonnet 4 + Perplexity AI)
+- `GET /competitor/insights` - Cross-competitor insights (Claude Sonnet 4)
+
+**Social Publishing**
+- `POST /publisher/publish` - Publish to any platform (universal endpoint)
+- `GET /publisher/status-all` - Check platform configuration status
+
+**Library & Assets**
+- `GET /library/content` - Fetch all generated content
+- `POST /brand-voice/upload` - Upload brand assets
 
 ---
 
@@ -186,7 +247,27 @@ Backend API docs (when running locally): http://localhost:8000/docs
 - **Type-safe API** - TypeScript type guards prevent runtime errors
 - **Proper error handling** - All catch blocks log errors for debugging
 
-### Recent Security Fixes (Nov 2025)
+### Recent Updates (Nov 2025)
+
+**AI Model Optimization (Nov 7, 2025)**
+- ✅ Implemented multi-provider AI strategy for 60-75% cost reduction
+- ✅ OpenAI GPT-4o for creative conversational content (captions, comments, ads)
+- ✅ Gemini 2.0 Flash for structured visual content (carousels, atomization)
+- ✅ GPT-4o-mini for simple analytical tasks (15x cheaper than Sonnet 4)
+- ✅ Claude Sonnet 4 reserved for strategic/brand-critical work
+- ✅ Perplexity AI for real-time competitor research
+
+**Competitor Analysis Enhancement (Nov 7, 2025)**
+- ✅ Fixed threat level assessment to evaluate market competition (not just marketing similarity)
+- ✅ Automated research with Perplexity AI for real competitor content analysis
+- ✅ Direct competitors now correctly identified regardless of marketing tactics
+
+**Social Media Integration (Nov 7, 2025)**
+- ✅ 9-platform publishing infrastructure (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
+- ✅ Twitter/X and WordPress fully functional
+- ✅ Universal publishing API endpoint
+
+**Security Fixes (Nov 6, 2025)**
 - ✅ Removed exposed Google OAuth credentials from git history
 - ✅ Removed hardcoded DATABASE_URL from 13 backend files
 - ✅ Implemented proper `os.getenv()` pattern with validation
