@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
 
@@ -285,10 +286,25 @@ export default function BlogWriter() {
               <span className="text-gray-400">{blog.estimated_read_time_min} min read</span>
             </div>
 
-            <div className="prose prose-invert max-w-none mb-6">
-              <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+            <div className="prose prose-invert prose-lg max-w-none mb-6">
+              <ReactMarkdown
+                className="text-gray-300 leading-relaxed"
+                components={{
+                  h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-white mt-8 mb-4" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-xl font-bold text-white mt-6 mb-3" {...props} />,
+                  p: ({node, ...props}) => <p className="mb-4 text-gray-300" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                  li: ({node, ...props}) => <li className="text-gray-300" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
+                  table: ({node, ...props}) => <table className="w-full border-collapse border border-gray-700 my-6" {...props} />,
+                  thead: ({node, ...props}) => <thead className="bg-gray-800" {...props} />,
+                  th: ({node, ...props}) => <th className="border border-gray-700 px-4 py-2 text-white font-bold" {...props} />,
+                  td: ({node, ...props}) => <td className="border border-gray-700 px-4 py-2 text-gray-300" {...props} />,
+                }}
+              >
                 {blog.body_md}
-              </div>
+              </ReactMarkdown>
             </div>
 
             {saveMessage && (
