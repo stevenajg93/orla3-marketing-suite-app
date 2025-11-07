@@ -104,12 +104,26 @@ export default function BlogWriter() {
     }
   };
 
+  const stripMarkdown = (markdown: string): string => {
+    // Remove markdown syntax for clean text storage
+    return markdown
+      .replace(/^#{1,6}\s+/gm, '')  // Remove headers
+      .replace(/\*\*(.+?)\*\*/g, '$1')  // Remove bold
+      .replace(/\*(.+?)\*/g, '$1')  // Remove italic
+      .replace(/\[(.+?)\]\(.+?\)/g, '$1')  // Remove links, keep text
+      .replace(/`(.+?)`/g, '$1')  // Remove code blocks
+      .replace(/^\s*[-*+]\s+/gm, '')  // Remove list markers
+      .replace(/^\s*\d+\.\s+/gm, '')  // Remove numbered list markers
+      .trim();
+  };
+
   const saveToLibrary = async () => {
     if (!blog) return;
-    
+
     setSaveMessage('');
-    
+
     try {
+      // Store both markdown and metadata for flexible use
       const response = await fetch(`${config.apiUrl}/library/content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,14 +131,21 @@ export default function BlogWriter() {
           id: Date.now().toString(),
           title: blog.title,
           content_type: 'blog',
-          content: blog.body_md,
+          content: blog.body_md,  // Keep markdown for editing
+          metadata: JSON.stringify({
+            title: blog.title,
+            slug: blog.slug,
+            meta_description: blog.meta_description,
+            excerpt: stripMarkdown(blog.body_md.substring(0, 500)),  // Clean excerpt
+            full_markdown: blog.body_md
+          }),
           created_at: new Date().toISOString(),
           status: 'draft',
           tags: [keyword, searchIntent]
         })
       });
 
-      
+
       setSaveMessage('✅ Saved to Media Library!');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (err) {

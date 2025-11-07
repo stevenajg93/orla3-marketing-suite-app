@@ -19,6 +19,8 @@ class PublishRequest(BaseModel):
     caption: str
     image_urls: Optional[List[str]] = []
     account_id: Optional[str] = None  # For multi-account support later
+    title: Optional[str] = None  # For WordPress blog posts
+    content: Optional[str] = None  # For WordPress full content (if different from caption)
 
 class PublishResponse(BaseModel):
     success: bool
@@ -401,10 +403,14 @@ async def publish_content(request: PublishRequest):
             result.update(publish_result)
 
         elif platform == "wordpress":
-            # WordPress needs title - extract from caption first line or use default
-            lines = request.caption.split('\n')
-            title = lines[0][:100] if lines else "Untitled Post"
-            content = request.caption
+            # Use provided title/content if available, otherwise extract from caption
+            title = request.title
+            if not title:
+                # Extract from caption first line if no title provided
+                lines = request.caption.split('\n')
+                title = lines[0][:100] if lines else "Untitled Post"
+
+            content = request.content or request.caption
 
             publisher = WordPressPublisher()
             publish_result = await publisher.publish_post(
@@ -724,7 +730,7 @@ class WordPressPublisher:
     async def _publish_via_wpcom_api(self, title: str, content: str, status: str) -> dict:
         """Publish via WordPress.com REST API (OAuth)"""
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"https://public-api.wordpress.com/rest/v1.1/sites/{self.site_id}/posts/new",
                     headers={
@@ -738,26 +744,54 @@ class WordPressPublisher:
                     }
                 )
 
+                # Check response status
                 if response.status_code not in [200, 201]:
+                    error_text = response.text[:300] if response.text else "No error message"
+                    print(f"WordPress API error {response.status_code}: {error_text}")
                     return {
                         "success": False,
-                        "error": f"WordPress.com API error ({response.status_code}): {response.text[:200]}"
+                        "error": f"WordPress.com API error ({response.status_code}): {error_text}"
                     }
 
-                post_data = response.json()
+                # Parse response
+                try:
+                    post_data = response.json()
+                except Exception as json_error:
+                    print(f"WordPress JSON parse error: {str(json_error)}, Response: {response.text[:300]}")
+                    return {
+                        "success": False,
+                        "error": f"WordPress.com response parsing failed: {str(json_error)}"
+                    }
+
                 post_id = post_data.get("ID")
                 post_url = post_data.get("URL")
+
+                if not post_id:
+                    print(f"WordPress response missing ID: {post_data}")
+                    return {
+                        "success": False,
+                        "error": "WordPress.com response missing post ID"
+                    }
+
+                print(f"✅ WordPress post created: ID={post_id}, URL={post_url}")
 
                 return {
                     "success": True,
                     "post_id": str(post_id),
-                    "post_url": post_url
+                    "post_url": post_url or ""
                 }
 
-        except Exception as e:
+        except httpx.TimeoutException as e:
+            print(f"WordPress timeout: {str(e)}")
             return {
                 "success": False,
-                "error": f"WordPress.com API exception: {str(e)}"
+                "error": f"WordPress.com API timeout: {str(e)}"
+            }
+        except Exception as e:
+            print(f"WordPress exception: {str(e)}, Type: {type(e).__name__}")
+            return {
+                "success": False,
+                "error": f"WordPress.com API exception ({type(e).__name__}): {str(e)}"
             }
 
     async def _publish_via_rest_api(self, title: str, content: str, status: str) -> dict:

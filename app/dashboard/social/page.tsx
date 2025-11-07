@@ -72,6 +72,7 @@ export default function SocialManagerPage() {
   const [unsplashQuery, setUnsplashQuery] = useState('');
   const [mediaLoading, setMediaLoading] = useState(false);
   const [libraryContent, setLibraryContent] = useState<any[]>([]);
+  const [blogMetadata, setBlogMetadata] = useState<{ title?: string; content?: string } | null>(null);
 
 
   const platforms = [
@@ -171,8 +172,32 @@ export default function SocialManagerPage() {
     // Handle blog content
     else if (item.content_type === 'blog') {
       console.log('📝 Blog selected - adding to caption');
-      const excerpt = item.content;
-      setCaption(excerpt);
+
+      // Try to parse metadata first (new format with clean text)
+      try {
+        const metadata = JSON.parse(item.metadata || '{}');
+        const excerpt = metadata.excerpt || metadata.meta_description || item.content.substring(0, 500);
+        setCaption(excerpt);
+
+        // Store blog metadata for WordPress publishing
+        setBlogMetadata({
+          title: metadata.title || item.title,
+          content: metadata.full_markdown || item.content
+        });
+      } catch (e) {
+        // Fallback to content if metadata parsing fails (old format)
+        // Strip markdown headers from old content
+        const cleanContent = item.content
+          .replace(/^#{1,6}\s+/gm, '')  // Remove markdown headers
+          .substring(0, 500);
+        setCaption(cleanContent);
+
+        // Store basic metadata for WordPress
+        setBlogMetadata({
+          title: item.title || "Blog Post",
+          content: item.content
+        });
+      }
       setSelectedMedia([]);
     } 
     // Handle Google Drive files - fetch actual file URL
@@ -280,12 +305,22 @@ export default function SocialManagerPage() {
     
     for (const platform of selectedPlatforms) {
       try {
-        const result = await api.post(`/publisher/publish`, {
-            platform: platform,
-            content_type: postType,
-            caption: caption,
-            image_urls: selectedMedia.map(m => m.url || m.image_url || '')
-        });
+        // Build request payload
+        const payload: any = {
+          platform: platform,
+          content_type: postType,
+          caption: caption,
+          image_urls: selectedMedia.map(m => m.url || m.image_url || '')
+        };
+
+        // Add blog metadata for WordPress
+        if (platform === 'wordpress' && blogMetadata) {
+          payload.title = blogMetadata.title;
+          payload.content = blogMetadata.content;
+          console.log('📝 Publishing to WordPress with title:', blogMetadata.title);
+        }
+
+        const result = await api.post(`/publisher/publish`, payload);
 
         results.push({
           platform: platform,
