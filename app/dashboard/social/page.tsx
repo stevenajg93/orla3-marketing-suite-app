@@ -64,7 +64,7 @@ export default function SocialManagerPage() {
   // Media library state
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
-  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'unsplash'>('generated');
+  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'unsplash' | 'ai-images' | 'ai-videos'>('generated');
   const [driveAssets, setDriveAssets] = useState<any[]>([]);
   const [driveFolders, setDriveFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -73,6 +73,16 @@ export default function SocialManagerPage() {
   const [mediaLoading, setMediaLoading] = useState(false);
   const [libraryContent, setLibraryContent] = useState<any[]>([]);
   const [blogMetadata, setBlogMetadata] = useState<{ title?: string; content?: string } | null>(null);
+
+  // AI Generation state
+  const [aiImagePrompt, setAiImagePrompt] = useState('');
+  const [aiVideoPrompt, setAiVideoPrompt] = useState('');
+  const [aiAspectRatio, setAiAspectRatio] = useState<'1:1' | '16:9' | '9:16' | '4:3' | '3:4'>('1:1');
+  const [aiVideoResolution, setAiVideoResolution] = useState<'720p' | '1080p'>('720p');
+  const [generatingAiImage, setGeneratingAiImage] = useState(false);
+  const [generatingAiVideo, setGeneratingAiVideo] = useState(false);
+  const [aiGeneratedImages, setAiGeneratedImages] = useState<any[]>([]);
+  const [aiGeneratedVideos, setAiGeneratedVideos] = useState<any[]>([]);
 
 
   const platforms = [
@@ -177,6 +187,76 @@ export default function SocialManagerPage() {
       console.error('Failed to search Unsplash');
     } finally {
       setMediaLoading(false);
+    }
+  };
+
+  const generateAiImage = async () => {
+    if (!aiImagePrompt.trim()) {
+      alert('Please enter a prompt for image generation');
+      return;
+    }
+    setGeneratingAiImage(true);
+    try {
+      const response = await api.post('/ai/generate-image', {
+        prompt: aiImagePrompt,
+        aspect_ratio: aiAspectRatio,
+        num_images: 1
+      });
+
+      if (response.success && response.image_data) {
+        const newImage = {
+          url: response.image_data,
+          prompt: aiImagePrompt,
+          aspect_ratio: aiAspectRatio,
+          source: 'ai-generated',
+          timestamp: new Date().toISOString()
+        };
+        setAiGeneratedImages([newImage, ...aiGeneratedImages]);
+        console.log('✨ AI Image generated successfully');
+      } else {
+        alert(`Failed to generate image: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('AI image generation error:', err);
+      alert('Failed to generate image. Please try again.');
+    } finally {
+      setGeneratingAiImage(false);
+    }
+  };
+
+  const generateAiVideo = async () => {
+    if (!aiVideoPrompt.trim()) {
+      alert('Please enter a prompt for video generation');
+      return;
+    }
+    setGeneratingAiVideo(true);
+    try {
+      const response = await api.post('/ai/generate-video', {
+        prompt: aiVideoPrompt,
+        duration_seconds: 8,
+        resolution: aiVideoResolution
+      });
+
+      if (response.success) {
+        const newVideo = {
+          url: response.video_url,
+          prompt: aiVideoPrompt,
+          resolution: aiVideoResolution,
+          source: 'ai-generated',
+          status: response.status || 'generating',
+          timestamp: new Date().toISOString()
+        };
+        setAiGeneratedVideos([newVideo, ...aiGeneratedVideos]);
+        console.log('✨ AI Video generation started');
+        alert('Video generation started! This may take 2-5 minutes.');
+      } else {
+        alert(`Failed to generate video: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('AI video generation error:', err);
+      alert('Failed to generate video. Please try again.');
+    } finally {
+      setGeneratingAiVideo(false);
     }
   };
 
@@ -865,24 +945,36 @@ export default function SocialManagerPage() {
               </div>
               
               {/* Tabs */}
-              <div className="px-6 pt-4 flex gap-3 border-b border-white/10">
-                <button 
+              <div className="px-6 pt-4 flex gap-3 border-b border-white/10 overflow-x-auto">
+                <button
                   onClick={() => setMediaLibraryTab('generated')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'generated' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'generated' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                   🎨 Generated Content
                 </button>
-                <button 
+                <button
                   onClick={() => setMediaLibraryTab('drive')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'drive' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'drive' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                   📁 Google Drive
                 </button>
-                <button 
+                <button
                   onClick={() => setMediaLibraryTab('unsplash')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${mediaLibraryTab === 'unsplash' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'unsplash' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                   ✨ Unsplash
+                </button>
+                <button
+                  onClick={() => setMediaLibraryTab('ai-images')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'ai-images' ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  🍌 AI Images
+                </button>
+                <button
+                  onClick={() => setMediaLibraryTab('ai-videos')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'ai-videos' ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  🎬 AI Videos
                 </button>
               </div>
 
@@ -1055,7 +1147,7 @@ export default function SocialManagerPage() {
                     ) : (
                       <div className="grid grid-cols-3 gap-4">
                         {unsplashImages.map((image: any) => (
-                          <div 
+                          <div
                             key={image.id}
                             onClick={() => handleMediaSelect(image)}
                             className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-pink-500"
@@ -1065,6 +1157,155 @@ export default function SocialManagerPage() {
                             </div>
                             <div className="p-3">
                               <p className="text-xs text-gray-400 truncate">{image.name}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* AI Images Tab (Imagen 3 - Nano Banana 🍌) */}
+                {mediaLibraryTab === 'ai-images' && (
+                  <div>
+                    <div className="mb-6 space-y-4">
+                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-lg p-4">
+                        <h4 className="text-lg font-bold text-yellow-400 mb-2">🍌 Google Imagen 3 (Nano Banana)</h4>
+                        <p className="text-sm text-gray-300 mb-2">Generate high-quality AI images from text prompts. Cost: $0.03 per image.</p>
+                      </div>
+
+                      <textarea
+                        value={aiImagePrompt}
+                        onChange={(e) => setAiImagePrompt(e.target.value)}
+                        placeholder="Describe the image you want to generate... (e.g., 'Professional videographer filming a corporate interview in modern office')"
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500 resize-none"
+                      />
+
+                      <div className="flex gap-4 items-center">
+                        <div className="flex-1">
+                          <label className="block text-sm text-gray-400 mb-2">Aspect Ratio</label>
+                          <select
+                            value={aiAspectRatio}
+                            onChange={(e) => setAiAspectRatio(e.target.value as any)}
+                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                          >
+                            <option value="1:1">1:1 Square</option>
+                            <option value="16:9">16:9 Landscape</option>
+                            <option value="9:16">9:16 Portrait</option>
+                            <option value="4:3">4:3 Standard</option>
+                            <option value="3:4">3:4 Portrait</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={generateAiImage}
+                          disabled={generatingAiImage || !aiImagePrompt.trim()}
+                          className="px-8 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
+                        >
+                          {generatingAiImage ? '🍌 Generating...' : '🍌 Generate Image'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {aiGeneratedImages.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🍌</div>
+                        <h3 className="text-xl font-bold text-white mb-2">No AI Images Generated Yet</h3>
+                        <p className="text-gray-400">Enter a prompt above and click Generate to create AI images</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {aiGeneratedImages.map((image: any, idx: number) => (
+                          <div
+                            key={idx}
+                            onClick={() => handleMediaSelect(image)}
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-yellow-500"
+                          >
+                            <div className="aspect-square">
+                              <img src={image.url} alt={image.prompt} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="p-3">
+                              <p className="text-xs text-gray-400 truncate">{image.prompt}</p>
+                              <p className="text-xs text-gray-500 mt-1">{image.aspect_ratio}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* AI Videos Tab (Veo 3.1 🎬) */}
+                {mediaLibraryTab === 'ai-videos' && (
+                  <div>
+                    <div className="mb-6 space-y-4">
+                      <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 border border-red-500/30 rounded-lg p-4">
+                        <h4 className="text-lg font-bold text-red-400 mb-2">🎬 Google Veo 3.1</h4>
+                        <p className="text-sm text-gray-300 mb-2">Generate 8-second AI videos with audio from text prompts. Cost: $0.75/second ($6 per video).</p>
+                        <p className="text-xs text-yellow-400">⚠️ Video generation takes 2-5 minutes</p>
+                      </div>
+
+                      <textarea
+                        value={aiVideoPrompt}
+                        onChange={(e) => setAiVideoPrompt(e.target.value)}
+                        placeholder="Describe the video you want to generate... (e.g., 'Professional videographer filming behind-the-scenes of a wedding ceremony')"
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500 resize-none"
+                      />
+
+                      <div className="flex gap-4 items-center">
+                        <div className="flex-1">
+                          <label className="block text-sm text-gray-400 mb-2">Resolution</label>
+                          <select
+                            value={aiVideoResolution}
+                            onChange={(e) => setAiVideoResolution(e.target.value as any)}
+                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-500"
+                          >
+                            <option value="720p">720p (HD)</option>
+                            <option value="1080p">1080p (Full HD) - Higher cost</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={generateAiVideo}
+                          disabled={generatingAiVideo || !aiVideoPrompt.trim()}
+                          className="px-8 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
+                        >
+                          {generatingAiVideo ? '🎬 Generating...' : '🎬 Generate Video'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {aiGeneratedVideos.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🎬</div>
+                        <h3 className="text-xl font-bold text-white mb-2">No AI Videos Generated Yet</h3>
+                        <p className="text-gray-400">Enter a prompt above and click Generate to create AI videos</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {aiGeneratedVideos.map((video: any, idx: number) => (
+                          <div
+                            key={idx}
+                            onClick={() => video.status === 'complete' && handleMediaSelect(video)}
+                            className={`bg-white/5 rounded-lg overflow-hidden ${video.status === 'complete' ? 'cursor-pointer hover:bg-white/10 hover:border-red-500' : 'opacity-50'} transition border border-white/10`}
+                          >
+                            <div className="aspect-video bg-gradient-to-br from-red-900 to-pink-900 flex items-center justify-center">
+                              {video.status === 'generating' ? (
+                                <div className="text-center">
+                                  <div className="text-4xl mb-2">⏳</div>
+                                  <p className="text-sm text-gray-300">Generating...</p>
+                                </div>
+                              ) : video.url ? (
+                                <video src={video.url} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="text-4xl">🎬</div>
+                              )}
+                            </div>
+                            <div className="p-3">
+                              <p className="text-xs text-gray-400 truncate">{video.prompt}</p>
+                              <p className="text-xs text-gray-500 mt-1">{video.resolution} • {video.status}</p>
                             </div>
                           </div>
                         ))}
