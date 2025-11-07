@@ -24,11 +24,13 @@
 Frontend:  Next.js 15 + React + TypeScript + Tailwind CSS
 Backend:   FastAPI + Python 3.14+ + psycopg2
 Database:  PostgreSQL (Railway)
-AI:        Multi-provider optimization (4 providers)
+AI:        Multi-provider optimization (6 models)
            - Perplexity AI (real-time web research)
            - Claude Sonnet 4 (strategic/brand-critical)
            - GPT-4o (creative conversational content)
            - Gemini 2.0 Flash (structured visual content)
+           - Gemini Imagen 3 (AI image generation)
+           - Gemini Veo 3.1 (AI video generation)
            - GPT-4o-mini (simple analytical tasks)
 Publishing: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook,
            TikTok, YouTube, Reddit, Tumblr, WordPress)
@@ -313,10 +315,19 @@ This strategy is **automatically applied** to all content generation.
 - Feeds into brand strategy automatically
 
 ### 4. Media Management
-**File**: `backend/routes/media.py`
+**Files**: `backend/routes/media.py`, `backend/routes/ai_generation.py`
 
 - Google Drive OAuth integration
 - Browse folders and import assets
+- **AI Image Generation** (Google Imagen 3)
+  - Text-to-image with aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
+  - $0.03 per image
+  - Gallery view with download/preview
+- **AI Video Generation** (Google Veo 3.1)
+  - Text-to-video with resolution options (720p, 1080p)
+  - $6 per 8-second video with audio
+  - Async generation (2-5 minutes)
+  - Status tracking
 - Unified content library with filtering
 - Tag-based organization
 
@@ -385,6 +396,13 @@ POST   /brand-voice/import-from-drive  # Import from Drive
 DELETE /brand-voice/assets/{id}   # Delete asset
 ```
 
+### AI Generation
+```
+POST   /ai/generate-image          # Generate image (Imagen 3)
+POST   /ai/generate-video          # Generate video (Veo 3.1)
+GET    /ai/video-status/{job_id}   # Check video generation status
+```
+
 ---
 
 ## 🔒 SECURITY & BEST PRACTICES
@@ -399,7 +417,32 @@ DELETE /brand-voice/assets/{id}   # Delete asset
 
 ### Recent Updates (Nov 2025)
 
-**1. AI Model Optimization (Nov 7, 2025)**
+**1. AI Image & Video Generation (Nov 7, 2025)**
+- ✅ **Google Imagen 3 integration**
+  - Text-to-image generation ($0.03/image)
+  - 5 aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
+  - Integrated into Media Library and Social Manager
+  - Gallery view with download/preview buttons
+
+- ✅ **Google Veo 3.1 integration**
+  - Text-to-video generation ($6 per 8-second video)
+  - 720p HD and 1080p Full HD options
+  - Async generation with status tracking
+  - Native audio generation included
+  - 2-5 minute generation time
+
+- ✅ **New backend route**: `backend/routes/ai_generation.py`
+  - POST /ai/generate-image
+  - POST /ai/generate-video
+  - GET /ai/video-status/{job_id}
+
+- ✅ **Frontend updates**
+  - Added AI tabs to Media Library page
+  - Added AI tabs to Social Manager media modal
+  - State management for prompts and generated content
+  - Download and preview functionality
+
+**2. AI Model Optimization (Nov 7, 2025)**
 - ✅ **Multi-provider strategy** for 60-75% cost reduction
   - OpenAI GPT-4o: Creative conversational content (captions, comments, ads)
   - Gemini 2.0 Flash: Structured visual content (carousels, atomization)
@@ -593,5 +636,5 @@ For questions about this codebase:
 ---
 
 **Last Updated**: November 7, 2025
-**Architecture Version**: 2.2 (Multi-Provider AI + Social Publishing + Market Intelligence)
+**Architecture Version**: 2.3 (Multi-Provider AI + AI Image/Video Generation + Social Publishing + Market Intelligence)
 **Status**: ✅ Production-ready, zero technical debt, fully secure, optimized AI costs

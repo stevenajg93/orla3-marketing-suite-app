@@ -33,6 +33,8 @@ AI-powered marketing automation platform for videographers and creative professi
 
 ### 📁 Media Management
 - **Google Drive integration**: Import assets directly
+- **AI Image Generation**: Google Imagen 3 text-to-image ($0.03/image)
+- **AI Video Generation**: Google Veo 3.1 text-to-video ($6 per 8s video)
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
@@ -56,6 +58,8 @@ AI-powered marketing automation platform for videographers and creative professi
   - **Claude Sonnet 4**: Strategic analysis & brand-critical content
   - **GPT-4o**: Creative conversational content
   - **Gemini 2.0 Flash**: Structured visual content
+  - **Gemini (Imagen 3)**: AI image generation
+  - **Gemini (Veo 3.1)**: AI video generation
   - **GPT-4o-mini**: Simple analytical tasks
 - **APIs**: Google Drive API, Unsplash API
 - **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
@@ -225,6 +229,11 @@ Backend API docs (when running locally): http://localhost:8000/docs
 - `GET /library/content` - Fetch all generated content
 - `POST /brand-voice/upload` - Upload brand assets
 
+**AI Generation**
+- `POST /ai/generate-image` - Generate image with Google Imagen 3
+- `POST /ai/generate-video` - Generate video with Google Veo 3.1
+- `GET /ai/video-status/{job_id}` - Check video generation status
+
 ---
 
 ## 🎨 Brand Voice System
@@ -248,6 +257,14 @@ Backend API docs (when running locally): http://localhost:8000/docs
 - **Proper error handling** - All catch blocks log errors for debugging
 
 ### Recent Updates (Nov 2025)
+
+**AI Image & Video Generation (Nov 7, 2025)**
+- ✅ Google Imagen 3 integration for text-to-image generation ($0.03/image)
+- ✅ Google Veo 3.1 integration for text-to-video generation ($6 per 8s video)
+- ✅ Added to both Media Library and Social Manager
+- ✅ Aspect ratio options: 1:1, 16:9, 9:16, 4:3, 3:4
+- ✅ Video resolution options: 720p HD, 1080p Full HD
+- ✅ Gallery views with download and preview functionality
 
 **AI Model Optimization (Nov 7, 2025)**
 - ✅ Implemented multi-provider AI strategy for 60-75% cost reduction
