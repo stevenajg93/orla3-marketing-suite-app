@@ -1,11 +1,12 @@
 from dotenv import load_dotenv; load_dotenv('.env.local', override=True)
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Literal
 from anthropic import Anthropic
 import os, json, re, httpx
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import google.generativeai as genai
 
 router = APIRouter()
 
@@ -124,13 +125,19 @@ async def get_unsplash_image(query: str) -> str:
 
 @router.post("/social/carousel", response_model=CarouselOutput)
 async def generate_carousel(data: CarouselInput):
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    
+    # Configure Gemini API
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        raise HTTPException(status_code=503, detail="Gemini API not configured")
+
+    genai.configure(api_key=gemini_key)
+    model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
     # Load brand strategy from PostgreSQL
     strategy = load_brand_strategy()
     brand_context = build_brand_context(strategy) if strategy else ""
-    
-    system_prompt = f"""You create high-performing Instagram/LinkedIn carousels that are UNIQUE to each topic.
+
+    combined_prompt = f"""You create high-performing Instagram/LinkedIn carousels that are UNIQUE to each topic.
 
 {brand_context}
 
@@ -148,9 +155,11 @@ BRAND VOICE COMPLIANCE:
 - Use language patterns that align with our brand strategy
 - Position content according to our competitive advantages
 
-Return JSON ONLY without markdown code blocks."""
-    
-    user_prompt = f"""Create a CUSTOM 7-slide carousel specifically about this topic:
+Return JSON ONLY without markdown code blocks.
+
+---
+
+Create a CUSTOM 7-slide carousel specifically about this topic:
 
 TOPIC: {data.post_summary}
 
@@ -158,7 +167,7 @@ Platform: {data.target_platform}
 Brand tone: {data.brand_tone_rules}
 Content angle: {data.angle}
 
-IMPORTANT: 
+IMPORTANT:
 - Create content that is DIRECTLY relevant to the topic above
 - Apply Orla³'s brand strategy throughout all slides
 - This content must sound authentically like Orla³
@@ -168,7 +177,7 @@ SLIDE STRUCTURE:
 1. HOOK (Slide 1):
    - title: 3-4 words max, ultra punchy and relevant to THIS specific topic
    - body: 2 compelling sentences about THIS topic that make them want to swipe (100-120 chars)
-   
+
 2. CONTENT SLIDES (Slides 2-7):
    - title: 3-4 words max, each about a different aspect of THIS topic
    - body: 2-3 detailed sentences explaining that specific point (120-180 chars)
@@ -177,7 +186,7 @@ Create 7 slides with these exact roles:
 1. HOOK - Attention-grabbing problem/opportunity statement about THIS topic
 2. CONTEXT - Why this specific topic matters right now
 3. INSIGHT_1 - First key insight about THIS topic with details
-4. INSIGHT_2 - Second key insight about THIS topic with details  
+4. INSIGHT_2 - Second key insight about THIS topic with details
 5. INSIGHT_3 - Third key insight about THIS topic with details
 6. HOW_TO - Actionable advice specifically for THIS topic
 7. CTA - Strong call to action with ORLA³ as the solution
@@ -202,22 +211,16 @@ Return ONLY valid JSON in this exact format:
 
 Remember: Create UNIQUE content based on the specific topic provided, applying Orla³'s brand strategy throughout."""
 
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=2500,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
-    )
-
     try:
-        raw_text = completion.content[0].text
+        response = model.generate_content(combined_prompt)
+        raw_text = response.text
         content = extract_json_from_response(raw_text)
-        
+
         # Fetch images for each slide
         for slide in content["slides"]:
             query = slide.get("alt_hint", "business professional")
             slide["image_url"] = await get_unsplash_image(query)
-        
+
         return content
     except json.JSONDecodeError as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": completion.content[0].text[:500]}
+        return {"error": f"Invalid JSON: {str(e)}", "raw": raw_text[:500]}

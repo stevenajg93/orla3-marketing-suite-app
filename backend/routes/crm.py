@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from anthropic import Anthropic
 import os, json, re
+from openai import OpenAI
 
 router = APIRouter()
 
@@ -97,16 +98,25 @@ Return ONLY this JSON:
   ]
 }}"""
 
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=2500,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
+    # Use GPT-4o-mini for analytical CRM intelligence
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key:
+        raise HTTPException(status_code=503, detail="OpenAI API not configured")
+
+    openai_client = OpenAI(api_key=openai_key)
+
+    completion = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=2500
     )
 
     try:
-        raw_text = completion.content[0].text
+        raw_text = completion.choices[0].message.content
         content = extract_json_from_response(raw_text)
         return content
     except json.JSONDecodeError as e:
-        return {"error": f"Invalid JSON: {str(e)}", "raw": completion.content[0].text[:500]}
+        return {"error": f"Invalid JSON: {str(e)}", "raw": raw_text[:500]}

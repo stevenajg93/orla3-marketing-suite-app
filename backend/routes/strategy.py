@@ -6,6 +6,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor, Json as PgJson
 from datetime import datetime
 from pathlib import Path
+from openai import OpenAI
 
 router = APIRouter()
 
@@ -435,13 +436,20 @@ Return ONLY valid JSON (no markdown):
   "market_gap": "why this is a strategic opportunity"
 }}"""
 
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=500,
-            messages=[{"role": "user", "content": prompt}]
+        # Use GPT-4o-mini for simple keyword recommendation
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise HTTPException(status_code=503, detail="OpenAI API not configured")
+
+        openai_client = OpenAI(api_key=openai_key)
+
+        message = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
         )
-        
-        response_text = message.content[0].text.strip()
+
+        response_text = message.choices[0].message.content.strip()
         
         if "```json" in response_text:
             response_text = response_text.split("```json")[1].split("```")[0].strip()
@@ -497,13 +505,20 @@ Return ONLY valid JSON (no markdown):
   "orla3_unique_angles": ["unique1", "unique2", "unique3"]
 }}"""
 
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}]
+        # Use GPT-4o-mini for simple market research
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise HTTPException(status_code=503, detail="OpenAI API not configured")
+
+        openai_client = OpenAI(api_key=openai_key)
+
+        message = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=800
         )
-        
-        response_text = message.content[0].text.strip()
+
+        response_text = message.choices[0].message.content.strip()
         
         if "```json" in response_text:
             response_text = response_text.split("```json")[1].split("```")[0].strip()

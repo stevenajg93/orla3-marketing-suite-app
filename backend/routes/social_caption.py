@@ -10,6 +10,8 @@ from psycopg2.extras import RealDictCursor
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+import google.generativeai as genai
+from openai import OpenAI
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -99,13 +101,18 @@ def build_brand_context(strategy: dict) -> str:
 async def generate_caption(request: CaptionRequest):
     """Generate contextual caption based on user prompt and post details"""
     try:
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        
+        # Configure OpenAI API
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise HTTPException(status_code=503, detail="OpenAI API not configured")
+
+        client = OpenAI(api_key=openai_key)
+
         # Load brand strategy from PostgreSQL
         strategy = load_brand_strategy()
         brand_context = build_brand_context(strategy) if strategy else ""
-        
-        # Build context for Claude
+
+        # Build context for GPT-4o
         platform_limits = []
         if "x" in request.platforms:
             platform_limits.append("X/Twitter (280 chars max)")
@@ -115,10 +122,10 @@ async def generate_caption(request: CaptionRequest):
             platform_limits.append("LinkedIn (3000 chars max)")
         if "facebook" in request.platforms:
             platform_limits.append("Facebook (63,206 chars max)")
-            
+
         platform_text = ", ".join(platform_limits) if platform_limits else "general social media"
         media_text = f"{request.mediaCount} image(s)" if request.hasMedia else "no media"
-        
+
         prompt = f"""{brand_context}Create an engaging social media caption for {platform_text}.
 
 User's request: {request.prompt}
@@ -142,15 +149,15 @@ Requirements:
 
 Return ONLY the caption text, no explanations or meta-commentary."""
 
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}]
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1024
         )
-        
-        caption = message.content[0].text.strip()
-        
-        logger.info(f"Generated brand-aligned caption for: {request.prompt}")
+
+        caption = response.choices[0].message.content.strip()
+
+        logger.info(f"Generated brand-aligned caption (GPT-4o) for: {request.prompt}")
         return {"caption": caption, "success": True}
 
     except Exception as e:

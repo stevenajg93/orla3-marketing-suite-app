@@ -311,7 +311,7 @@ Analyze their MARKETING through the lens of Orla³'s positioning:
 2. **content_gaps**: What TOPICS or CONTENT TYPES are they not covering that Orla³ could own
 3. **positioning_messaging**: How should Orla³ MESSAGE differently compared to their positioning
 4. **content_opportunities**: Specific CONTENT IDEAS and MESSAGING ANGLES that exploit their weaknesses
-5. **threat_level**: How directly do they compete with us in MARKETING/MESSAGING (direct/indirect/minimal)
+5. **threat_level**: How directly do they compete for the same CUSTOMERS and MARKET as Orla³ (direct=same service/customers, indirect=related service/adjacent market, minimal=different market)
 
 Return ONLY valid JSON with these exact keys. Do not wrap in markdown code blocks:
 {{

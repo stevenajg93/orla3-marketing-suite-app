@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from anthropic import Anthropic
 import os, json, re, httpx
+import google.generativeai as genai
 
 router = APIRouter()
 
@@ -52,12 +53,18 @@ async def get_unsplash_image(keyword: str) -> str:
 @router.post("/atomize/blog-to-social", response_model=AtomizeResponse)
 async def atomize_blog_to_social(data: AtomizeRequest):
     """Takes a blog post and creates optimized posts for 8 social platforms"""
-    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    
+    # Configure Gemini API
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        raise HTTPException(status_code=503, detail="Gemini API not configured")
+
+    genai.configure(api_key=gemini_key)
+    model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
     # Get hero image
     hero_image = await get_unsplash_image(data.keyword)
-    
-    system_prompt = """You are ORLA³'s social media atomization specialist.
+
+    combined_prompt = f"""You are ORLA³'s social media atomization specialist.
 Your job: transform long-form blog content into engaging, platform-optimized social posts.
 
 PLATFORM RULES:
@@ -76,9 +83,11 @@ ORLA³ CONTEXT:
 - No subscriptions or pay-to-rank
 - Fast videographer payouts (2-3 days)
 
-Return ONLY valid JSON."""
+Return ONLY valid JSON.
 
-    user_prompt = f"""Transform this blog into 8 platform-optimized posts:
+---
+
+Transform this blog into 8 platform-optimized posts:
 
 Blog Title: {data.blog_title}
 Blog Content: {data.blog_content[:2000]}...
@@ -107,21 +116,15 @@ Create engaging posts that drive clicks to the blog while respecting each platfo
 Include ORLA³ context naturally where relevant.
 NO asterisks, NO hyphens, write like a human."""
 
-    completion = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=3000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}]
-    )
-
     try:
-        raw_text = completion.content[0].text
+        response = model.generate_content(combined_prompt)
+        raw_text = response.text
         content = extract_json_from_response(raw_text)
-        
+
         # Add hero image URL to each post
         for post in content["posts"]:
             post["media_url"] = hero_image
-        
+
         return {
             "posts": content["posts"],
             "hero_image_url": hero_image
