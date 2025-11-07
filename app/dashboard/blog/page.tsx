@@ -123,6 +123,9 @@ export default function BlogWriter() {
     setSaveMessage('');
 
     try {
+      // Clean the full content - remove markdown syntax
+      const cleanFullContent = stripMarkdown(blog.body_md);
+
       // Store both markdown and metadata for flexible use
       const response = await fetch(`${config.apiUrl}/library/content`, {
         method: 'POST',
@@ -131,13 +134,13 @@ export default function BlogWriter() {
           id: Date.now().toString(),
           title: blog.title,
           content_type: 'blog',
-          content: blog.body_md,  // Keep markdown for editing
+          content: cleanFullContent,  // Clean content without markdown
           metadata: JSON.stringify({
             title: blog.title,
             slug: blog.slug,
             meta_description: blog.meta_description,
-            excerpt: stripMarkdown(blog.body_md.substring(0, 500)),  // Clean excerpt
-            full_markdown: blog.body_md
+            full_markdown: blog.body_md,  // Store markdown for WordPress publishing
+            full_clean: cleanFullContent   // Full clean text for social posting
           }),
           created_at: new Date().toISOString(),
           status: 'draft',

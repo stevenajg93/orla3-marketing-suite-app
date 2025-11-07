@@ -176,20 +176,20 @@ export default function SocialManagerPage() {
       // Try to parse metadata first (new format with clean text)
       try {
         const metadata = JSON.parse(item.metadata || '{}');
-        const excerpt = metadata.excerpt || metadata.meta_description || item.content.substring(0, 500);
-        setCaption(excerpt);
 
-        // Store blog metadata for WordPress publishing
+        // Use full clean content (no character limit) for social posting
+        const fullContent = metadata.full_clean || item.content;
+        setCaption(fullContent);
+
+        // Store blog metadata for WordPress publishing (needs markdown)
         setBlogMetadata({
           title: metadata.title || item.title,
           content: metadata.full_markdown || item.content
         });
       } catch (e) {
         // Fallback to content if metadata parsing fails (old format)
-        // Strip markdown headers from old content
-        const cleanContent = item.content
-          .replace(/^#{1,6}\s+/gm, '')  // Remove markdown headers
-          .substring(0, 500);
+        // Content field is now clean (no markdown), use it directly
+        const cleanContent = item.content.replace(/^#{1,6}\s+/gm, '');  // Strip ## just in case
         setCaption(cleanContent);
 
         // Store basic metadata for WordPress
