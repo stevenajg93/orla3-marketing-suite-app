@@ -394,7 +394,7 @@ async def get_next_keyword():
     """Get the next strategic keyword to write about based on brand strategy"""
     try:
         strategy = load_brand_strategy()
-        
+
         if not strategy:
             return {
                 "recommended_next": {
@@ -403,12 +403,35 @@ async def get_next_keyword():
                     "market_gap": "Businesses struggle to find vetted, professional videographers"
                 }
             }
-        
+
+        # Query existing blog posts to avoid duplicates
+        existing_topics = []
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT title, tags
+                FROM content_library
+                WHERE content_type = 'blog'
+                ORDER BY created_at DESC
+                LIMIT 20
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+
+            for row in rows:
+                existing_topics.append(row['title'])
+                if row['tags']:
+                    existing_topics.extend(row['tags'])
+        except Exception as e:
+            print(f"Error loading existing topics: {e}")
+
         client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        
+
         content_themes = ', '.join(strategy.get('content_themes', []))
         messaging_pillars = ', '.join(strategy.get('messaging_pillars', []))
-        
+
         comp_context = ""
         if 'competitive_positioning' in strategy:
             comp_pos = strategy['competitive_positioning']
@@ -416,18 +439,25 @@ async def get_next_keyword():
                 gaps = comp_pos.get('gaps_to_exploit', [])
                 if gaps:
                     comp_context = f"\nContent gaps to exploit: {', '.join(gaps[:3])}"
-        
+
+        # Build existing topics context
+        existing_context = ""
+        if existing_topics:
+            unique_topics = list(set(existing_topics))[:15]  # Dedupe and limit
+            existing_context = f"\n\n🚫 ALREADY COVERED (DO NOT recommend similar topics):\n{chr(10).join(f'- {topic}' for topic in unique_topics)}\n\nIMPORTANT: Recommend a DIFFERENT topic that we have NOT covered yet."
+
         prompt = f"""Based on Orla³'s brand strategy, recommend the next blog post keyword to target.
 
 Brand Content Themes: {content_themes}
 Messaging Pillars: {messaging_pillars}
-{comp_context}
+{comp_context}{existing_context}
 
 Recommend a keyword that:
 1. Aligns with our brand themes
 2. Exploits competitive content gaps
 3. Has commercial intent (people looking to hire videographers)
 4. Is specific enough to rank for
+5. Is DIFFERENT from topics we've already covered
 
 Return ONLY valid JSON (no markdown):
 {{
