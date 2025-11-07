@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
@@ -108,6 +108,31 @@ export default function SocialManagerPage() {
     }
   };
 
+  // Check for pending blog post from Blog Writer on mount
+  useEffect(() => {
+    const pendingBlog = localStorage.getItem('pendingBlogPost');
+    if (pendingBlog) {
+      try {
+        const blogData = JSON.parse(pendingBlog);
+
+        // Load content into caption
+        setCaption(blogData.content);
+
+        // Store metadata for WordPress publishing
+        setBlogMetadata({
+          title: blogData.metadata.title,
+          content: blogData.metadata.full_markdown
+        });
+
+        // Clear localStorage
+        localStorage.removeItem('pendingBlogPost');
+
+        console.log('✅ Loaded blog from Blog Writer:', blogData.title);
+      } catch (e) {
+        console.error('Failed to load pending blog post:', e);
+      }
+    }
+  }, []);
 
   const loadMediaLibrary = async () => {
     try {

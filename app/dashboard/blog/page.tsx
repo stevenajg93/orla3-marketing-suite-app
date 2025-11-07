@@ -151,8 +151,36 @@ export default function BlogWriter() {
 
       setSaveMessage('✅ Saved to Media Library!');
       setTimeout(() => setSaveMessage(''), 3000);
+      return true;
     } catch (err) {
       setSaveMessage('❌ Failed to save');
+      return false;
+    }
+  };
+
+  const saveAndOpenSocialManager = async () => {
+    if (!blog) return;
+
+    setSaveMessage('Saving to library...');
+
+    const saved = await saveToLibrary();
+
+    if (saved) {
+      // Store blog data in localStorage for social manager to pick up
+      localStorage.setItem('pendingBlogPost', JSON.stringify({
+        title: blog.title,
+        content: stripMarkdown(blog.body_md),
+        metadata: {
+          title: blog.title,
+          slug: blog.slug,
+          meta_description: blog.meta_description,
+          full_markdown: blog.body_md,
+          full_clean: stripMarkdown(blog.body_md)
+        }
+      }));
+
+      // Navigate to social manager
+      router.push('/dashboard/social');
     }
   };
 
@@ -338,7 +366,7 @@ export default function BlogWriter() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
-              <button 
+              <button
                 onClick={saveToLibrary}
                 className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
               >
@@ -347,9 +375,12 @@ export default function BlogWriter() {
               <Link href="/dashboard/carousel" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
                 🎠 Atomize to Carousel
               </Link>
-              <Link href="/dashboard/social" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
-                📱 Open Social Manager
-              </Link>
+              <button
+                onClick={saveAndOpenSocialManager}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center"
+              >
+                📱 Open in Social Manager
+              </button>
             </div>
           </div>
         )}
