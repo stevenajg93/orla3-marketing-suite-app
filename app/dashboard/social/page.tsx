@@ -985,18 +985,37 @@ export default function SocialManagerPage() {
                   <div className="grid grid-cols-3 gap-4">
                     {libraryContent.map((item) => (
                       <div key={item.id} onClick={() => handleMediaSelect(item)} className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-purple-500">
-                        <div className="aspect-square bg-gradient-to-br from-purple-900 to-slate-900 flex items-center justify-center">
-                          {item.content_type === 'carousel' ? (
-                            <span className="text-6xl">🎨</span>
-                          ) : item.content_type === 'blog' ? (
-                            <span className="text-6xl">📝</span>
-                          ) : (
-                            <span className="text-6xl">📄</span>
-                          )}
-                        </div>
+                        {/* Show actual media if available */}
+                        {item.media_url && item.content_type === 'image' ? (
+                          <div className="aspect-square overflow-hidden">
+                            <img src={item.media_url} alt={item.title} className="w-full h-full object-cover" />
+                          </div>
+                        ) : item.media_url && item.content_type === 'video' ? (
+                          <div className="aspect-square overflow-hidden bg-black relative group">
+                            <video
+                              src={item.media_url}
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                              onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                              onMouseLeave={(e) => (e.target as HTMLVideoElement).pause()}
+                            />
+                            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">🎬 VIDEO</div>
+                          </div>
+                        ) : (
+                          <div className="aspect-square bg-gradient-to-br from-purple-900 to-slate-900 flex items-center justify-center">
+                            {item.content_type === 'carousel' ? (
+                              <span className="text-6xl">🎨</span>
+                            ) : item.content_type === 'blog' ? (
+                              <span className="text-6xl">📝</span>
+                            ) : (
+                              <span className="text-6xl">📄</span>
+                            )}
+                          </div>
+                        )}
                         <div className="p-3">
-                      <h4 className="text-white font-bold text-sm truncate">{item.title}</h4>
-                      <p className="text-xs text-gray-400 capitalize">{item.content_type}</p>
+                          <h4 className="text-white font-bold text-sm truncate">{item.title}</h4>
+                          <p className="text-xs text-gray-400 capitalize">{item.content_type}</p>
                     </div>
                   </div>
                 ))}
