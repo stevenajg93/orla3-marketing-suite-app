@@ -5,18 +5,56 @@ import os
 import httpx
 import base64
 from logger import setup_logger
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request as GoogleAuthRequest
 
 logger = setup_logger(__name__)
 router = APIRouter()
 
-# Configure AI APIs
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-gcp_project_id = os.getenv("GCP_PROJECT_ID", "gen-lang-client-0902837589")
+# Load OAuth2 credentials from environment
+GCP_CLIENT_ID = os.getenv("GCP_CLIENT_ID")
+GCP_CLIENT_SECRET = os.getenv("GCP_CLIENT_SECRET")
+GCP_REFRESH_TOKEN = os.getenv("GCP_REFRESH_TOKEN")
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "gen-lang-client-0902837589")
 
-if not gemini_api_key:
-    logger.warning("⚠️  GEMINI_API_KEY not configured - AI generation features will not work")
+if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+    logger.warning("⚠️  OAuth2 credentials not fully configured - AI generation will not work")
+    logger.warning(f"   GCP_CLIENT_ID: {'✓' if GCP_CLIENT_ID else '✗'}")
+    logger.warning(f"   GCP_CLIENT_SECRET: {'✓' if GCP_CLIENT_SECRET else '✗'}")
+    logger.warning(f"   GCP_REFRESH_TOKEN: {'✓' if GCP_REFRESH_TOKEN else '✗'}")
+else:
+    logger.info(f"🔧 OAuth2 configured for Vertex AI (Project: {GCP_PROJECT_ID})")
 
-logger.info(f"🔧 Vertex AI configured: Project ID = {gcp_project_id}")
+def get_access_token() -> str:
+    """
+    Get a fresh access token using the refresh token.
+
+    Access tokens expire after 1 hour, but refresh tokens never expire.
+    This function exchanges the refresh token for a new access token.
+    """
+    try:
+        # Create credentials from refresh token
+        credentials = Credentials(
+            token=None,
+            refresh_token=GCP_REFRESH_TOKEN,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=GCP_CLIENT_ID,
+            client_secret=GCP_CLIENT_SECRET,
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+
+        # Refresh to get a new access token
+        credentials.refresh(GoogleAuthRequest())
+
+        logger.info("✅ Got fresh access token from OAuth2")
+        return credentials.token
+
+    except Exception as e:
+        logger.error(f"❌ Failed to get access token: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to authenticate with Google Cloud: {str(e)}"
+        )
 
 class ImageGenerateRequest(BaseModel):
     prompt: str
@@ -41,26 +79,18 @@ class VideoGenerateResponse(BaseModel):
     job_id: Optional[str] = None
     error: Optional[str] = None
 
-def aspect_ratio_to_imagen_format(aspect_ratio: str) -> str:
-    """
-    Convert aspect ratio to Imagen 3 format.
-
-    Imagen 3 supports: 1:1, 3:4, 4:3, 9:16, 16:9
-    """
-    return aspect_ratio  # Imagen 3 uses the same format!
-
 @router.post("/generate-image", response_model=ImageGenerateResponse)
 async def generate_image(request: ImageGenerateRequest):
     """
-    Generate an image using Google Imagen 3 via Vertex AI.
+    Generate an image using Google Imagen 3 (Nano Banana) via Vertex AI.
 
-    Imagen 3 is Google's state-of-the-art text-to-image model with:
+    Imagen 3 is Google's state-of-the-art text-to-image model:
     - Superior photorealism compared to DALL-E 3
-    - Better prompt adherence
+    - Better prompt adherence and understanding
     - More natural lighting and composition
-    - Lower cost ($0.02-0.04 per image depending on resolution)
+    - Cost: $0.02-0.04 per image
 
-    This uses Vertex AI REST API with API key authentication.
+    This uses OAuth2 authentication via Vertex AI REST API.
 
     Args:
         request: ImageGenerateRequest with prompt and aspect ratio
@@ -69,50 +99,47 @@ async def generate_image(request: ImageGenerateRequest):
         ImageGenerateResponse with base64 encoded image data
     """
 
-    if not gemini_api_key:
-        logger.error("❌ Imagen generation failed: GEMINI_API_KEY not configured")
+    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+        logger.error("❌ OAuth2 credentials not configured")
         raise HTTPException(
             status_code=503,
-            detail="GEMINI_API_KEY not configured. Please add to environment variables."
+            detail="OAuth2 credentials not configured. Please add GCP_CLIENT_ID, GCP_CLIENT_SECRET, and GCP_REFRESH_TOKEN to environment variables."
         )
 
     try:
-        aspect_ratio_formatted = aspect_ratio_to_imagen_format(request.aspect_ratio)
+        # Get fresh access token
+        access_token = get_access_token()
 
-        logger.info(f"🎨 Generating image with Imagen 3: '{request.prompt[:60]}...' (aspect: {aspect_ratio_formatted})")
+        logger.info(f"🎨 Generating image with Imagen 3: '{request.prompt[:60]}...' (aspect: {request.aspect_ratio})")
 
         # Vertex AI Imagen 3 endpoint
         endpoint = (
             f"https://us-central1-aiplatform.googleapis.com/v1/"
-            f"projects/{gcp_project_id}/locations/us-central1/"
+            f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
             f"publishers/google/models/imagegeneration@006:predict"
         )
 
         # Request payload for Imagen 3
         payload = {
-            "instances": [
-                {
-                    "prompt": request.prompt
-                }
-            ],
+            "instances": [{
+                "prompt": request.prompt
+            }],
             "parameters": {
                 "sampleCount": request.num_images,
-                "aspectRatio": aspect_ratio_formatted,
+                "aspectRatio": request.aspect_ratio,
                 "safetyFilterLevel": "block_some",
                 "personGeneration": "allow_adult"
             }
         }
 
-        # Make the request
+        # Make the request with OAuth2 bearer token
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 endpoint,
                 json=payload,
                 headers={
+                    "Authorization": f"Bearer {access_token}",
                     "Content-Type": "application/json",
-                },
-                params={
-                    "key": gemini_api_key  # API key authentication
                 }
             )
 
@@ -122,14 +149,12 @@ async def generate_image(request: ImageGenerateRequest):
                 data = response.json()
 
                 # Extract image from response
-                # Imagen returns base64 encoded images in predictions array
                 if "predictions" in data and len(data["predictions"]) > 0:
                     prediction = data["predictions"][0]
 
                     # Image is in bytesBase64Encoded field
                     if "bytesBase64Encoded" in prediction:
                         image_base64 = prediction["bytesBase64Encoded"]
-
                         logger.info(f"✅ Image generated successfully ({len(image_base64)} chars)")
 
                         return ImageGenerateResponse(
@@ -155,7 +180,7 @@ async def generate_image(request: ImageGenerateRequest):
                 logger.error(f"❌ Imagen API access denied (403): {error_text}")
                 return ImageGenerateResponse(
                     success=False,
-                    error=f"Access denied to Imagen API. Please ensure:\n1. Vertex AI API is enabled in your GCP project\n2. API key has 'Vertex AI User' permissions\n3. Billing is enabled on project {gcp_project_id}\n\nError: {error_text[:200]}"
+                    error=f"Access denied to Imagen API. Please ensure:\n1. Vertex AI API is enabled in project {GCP_PROJECT_ID}\n2. Your Google account has 'Vertex AI User' role\n3. Billing is enabled\n\nError: {error_text[:200]}"
                 )
 
             elif response.status_code == 400:
@@ -163,26 +188,29 @@ async def generate_image(request: ImageGenerateRequest):
                 logger.error(f"❌ Invalid request (400): {error_text}")
                 return ImageGenerateResponse(
                     success=False,
-                    error=f"Invalid request to Imagen API. This might be due to:\n1. Invalid prompt (check for restricted content)\n2. Unsupported aspect ratio\n3. API format changed\n\nError: {error_text[:200]}"
+                    error=f"Invalid request. Check:\n1. Prompt doesn't violate content policy\n2. Aspect ratio is supported\n\nError: {error_text[:200]}"
                 )
 
             else:
                 error_text = response.text
-                logger.error(f"❌ Imagen request failed: {response.status_code} - {error_text}")
+                logger.error(f"❌ Request failed: {response.status_code} - {error_text}")
                 return ImageGenerateResponse(
                     success=False,
-                    error=f"Image generation failed with status {response.status_code}: {error_text[:200]}"
+                    error=f"Image generation failed (HTTP {response.status_code}): {error_text[:200]}"
                 )
 
     except httpx.TimeoutException:
-        logger.error("❌ Imagen request timeout after 60 seconds")
+        logger.error("❌ Request timeout after 60 seconds")
         return ImageGenerateResponse(
             success=False,
-            error="Image generation timed out. Imagen 3 is processing your request but it's taking longer than expected. Please try again."
+            error="Image generation timed out. Please try again."
         )
 
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+
     except Exception as e:
-        logger.error(f"❌ Imagen generation error: {str(e)}", exc_info=True)
+        logger.error(f"❌ Image generation error: {str(e)}", exc_info=True)
         return ImageGenerateResponse(
             success=False,
             error=f"Image generation failed: {str(e)}"
@@ -194,7 +222,7 @@ async def generate_video(request: VideoGenerateRequest):
     Generate a video using Google Veo via Vertex AI.
 
     Google Veo is Google's experimental video generation model.
-    Note: Veo may require special access or allowlisting in your GCP project.
+    Note: Veo may require special preview access in your GCP project.
 
     Cost: ~$6 per 8-second video with audio (when available)
     Generation time: 2-5 minutes (async operation)
@@ -206,31 +234,31 @@ async def generate_video(request: VideoGenerateRequest):
         VideoGenerateResponse with operation ID for status tracking
     """
 
-    if not gemini_api_key:
-        logger.error("❌ Video generation failed: GEMINI_API_KEY not configured")
+    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+        logger.error("❌ OAuth2 credentials not configured")
         raise HTTPException(
             status_code=503,
-            detail="GEMINI_API_KEY not configured. Please add to environment variables."
+            detail="OAuth2 credentials not configured."
         )
 
     try:
+        # Get fresh access token
+        access_token = get_access_token()
+
         logger.info(f"🎬 Generating video with Veo: '{request.prompt[:60]}...' ({request.resolution})")
 
         # Vertex AI Veo endpoint (experimental)
-        # Note: This endpoint may not be available without special access
         endpoint = (
             f"https://us-central1-aiplatform.googleapis.com/v1/"
-            f"projects/{gcp_project_id}/locations/us-central1/"
+            f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
             f"publishers/google/models/veo-001:predict"
         )
 
         # Request payload for Veo
         payload = {
-            "instances": [
-                {
-                    "prompt": request.prompt
-                }
-            ],
+            "instances": [{
+                "prompt": request.prompt
+            }],
             "parameters": {
                 "durationSeconds": request.duration_seconds,
                 "resolution": request.resolution
@@ -242,10 +270,8 @@ async def generate_video(request: VideoGenerateRequest):
                 endpoint,
                 json=payload,
                 headers={
+                    "Authorization": f"Bearer {access_token}",
                     "Content-Type": "application/json",
-                },
-                params={
-                    "key": gemini_api_key
                 }
             )
 
@@ -268,8 +294,8 @@ async def generate_video(request: VideoGenerateRequest):
                 logger.error(f"❌ Veo API not found (404)")
                 return VideoGenerateResponse(
                     success=False,
-                    error="Google Veo is not available yet. It requires:\n1. Special allowlist access from Google\n2. Enrollment in Vertex AI preview programs\n3. May not be GA (generally available)\n\nAlternatives: Consider Runway ML (runwayml.com) or Pika (pika.art) for production video generation.",
-                    status="failed"
+                    error="Google Veo is not available yet. It requires special allowlist access from Google.\n\nAlternatives: Consider Runway ML (runwayml.com) or Pika (pika.art) for production video generation.",
+                    status="unavailable"
                 )
 
             elif response.status_code == 403:
@@ -278,7 +304,7 @@ async def generate_video(request: VideoGenerateRequest):
                 return VideoGenerateResponse(
                     success=False,
                     error=f"Access denied to Veo API. This model requires special preview access. Please:\n1. Request access at https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/video-generation\n2. Ensure billing is enabled\n3. Contact Google Cloud support for allowlist\n\nError: {error_text[:200]}",
-                    status="failed"
+                    status="unavailable"
                 )
 
             else:
@@ -286,17 +312,20 @@ async def generate_video(request: VideoGenerateRequest):
                 logger.error(f"❌ Veo request failed: {response.status_code} - {error_text}")
                 return VideoGenerateResponse(
                     success=False,
-                    error=f"Video generation failed with status {response.status_code}. Veo may not be available in your region or account. Error: {error_text[:200]}",
+                    error=f"Video generation failed (HTTP {response.status_code}). Veo may not be available in your region. Error: {error_text[:200]}",
                     status="failed"
                 )
 
     except httpx.TimeoutException:
-        logger.error("❌ Veo request timeout after 120 seconds")
+        logger.error("❌ Veo request timeout")
         return VideoGenerateResponse(
             success=False,
-            error="Video generation request timed out. The API may be unavailable or overloaded.",
+            error="Video generation request timed out.",
             status="failed"
         )
+
+    except HTTPException:
+        raise
 
     except Exception as e:
         logger.error(f"❌ Video generation error: {str(e)}", exc_info=True)
@@ -306,7 +335,7 @@ async def generate_video(request: VideoGenerateRequest):
             status="failed"
         )
 
-@router.get("/video-status/{job_id}")
+@router.get("/video-status/{job_id:path}")
 async def get_video_status(job_id: str):
     """
     Check status of video generation operation.
@@ -318,23 +347,26 @@ async def get_video_status(job_id: str):
         Dict with status and video_url (when complete)
     """
 
-    if not gemini_api_key:
-        raise HTTPException(status_code=503, detail="GEMINI_API_KEY not configured")
+    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+        raise HTTPException(status_code=503, detail="OAuth2 credentials not configured")
 
     try:
+        # Get fresh access token
+        access_token = get_access_token()
+
         logger.info(f"🔍 Checking video status for operation: {job_id}")
 
-        # Construct the operations endpoint
-        # Format: projects/{project}/locations/{location}/operations/{operation_id}
+        # Construct the full operation URL
+        operation_url = f"https://us-central1-aiplatform.googleapis.com/v1/{job_id}"
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"https://us-central1-aiplatform.googleapis.com/v1/{job_id}",
-                params={"key": gemini_api_key}
+                operation_url,
+                headers={"Authorization": f"Bearer {access_token}"}
             )
 
             if response.status_code == 200:
                 data = response.json()
-
                 is_done = data.get("done", False)
 
                 if is_done:
@@ -351,7 +383,7 @@ async def get_video_status(job_id: str):
                         "done": True
                     }
                 else:
-                    logger.info(f"⏳ Video still generating: {job_id}")
+                    logger.info(f"⏳ Video still generating")
                     return {
                         "success": True,
                         "status": "generating",
