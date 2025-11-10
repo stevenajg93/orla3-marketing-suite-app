@@ -17,13 +17,21 @@ GCP_CLIENT_SECRET = os.getenv("GCP_CLIENT_SECRET")
 GCP_REFRESH_TOKEN = os.getenv("GCP_REFRESH_TOKEN")
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "gen-lang-client-0902837589")
 
+# Load Runway ML API key
+RUNWAY_API_KEY = os.getenv("RUNWAY_API_KEY")
+
 if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
-    logger.warning("⚠️  OAuth2 credentials not fully configured - AI generation will not work")
+    logger.warning("⚠️  OAuth2 credentials not fully configured - AI image generation will not work")
     logger.warning(f"   GCP_CLIENT_ID: {'✓' if GCP_CLIENT_ID else '✗'}")
     logger.warning(f"   GCP_CLIENT_SECRET: {'✓' if GCP_CLIENT_SECRET else '✗'}")
     logger.warning(f"   GCP_REFRESH_TOKEN: {'✓' if GCP_REFRESH_TOKEN else '✗'}")
 else:
     logger.info(f"🔧 OAuth2 configured for Vertex AI (Project: {GCP_PROJECT_ID})")
+
+if not RUNWAY_API_KEY:
+    logger.warning("⚠️  RUNWAY_API_KEY not configured - AI video generation will not work")
+else:
+    logger.info(f"🎬 Runway ML API key configured")
 
 def get_access_token() -> str:
     """
@@ -219,108 +227,112 @@ async def generate_image(request: ImageGenerateRequest):
 @router.post("/generate-video", response_model=VideoGenerateResponse)
 async def generate_video(request: VideoGenerateRequest):
     """
-    Generate a video using Google Veo via Vertex AI.
+    Generate a video using Runway ML Gen-3 Alpha Turbo.
 
-    Google Veo is Google's experimental video generation model.
-    Note: Veo may require special preview access in your GCP project.
+    Runway ML is the industry-leading AI video generation platform:
+    - Used by Hollywood studios and top creators
+    - Best-in-class quality and consistency
+    - Reliable production-ready API
+    - 5 or 10 second video clips
 
-    Cost: ~$6 per 8-second video with audio (when available)
-    Generation time: 2-5 minutes (async operation)
+    Cost: ~$0.10 per 5-second video (~$12 per 100 videos)
+    Generation time: 1-3 minutes (async operation)
 
     Args:
-        request: VideoGenerateRequest with prompt, duration, and resolution
+        request: VideoGenerateRequest with prompt and duration
 
     Returns:
-        VideoGenerateResponse with operation ID for status tracking
+        VideoGenerateResponse with task ID for status tracking
     """
 
-    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
-        logger.error("❌ OAuth2 credentials not configured")
+    if not RUNWAY_API_KEY:
+        logger.error("❌ Runway ML API key not configured")
         raise HTTPException(
             status_code=503,
-            detail="OAuth2 credentials not configured."
+            detail="RUNWAY_API_KEY not configured. Please add to environment variables."
         )
 
     try:
-        # Get fresh access token
-        access_token = get_access_token()
+        # Map duration to Runway's supported values (5 or 10 seconds)
+        runway_duration = 5 if request.duration_seconds <= 5 else 10
 
-        logger.info(f"🎬 Generating video with Veo: '{request.prompt[:60]}...' ({request.resolution})")
+        logger.info(f"🎬 Generating video with Runway ML Gen-3: '{request.prompt[:60]}...' ({runway_duration}s)")
 
-        # Vertex AI Veo endpoint (experimental)
-        endpoint = (
-            f"https://us-central1-aiplatform.googleapis.com/v1/"
-            f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
-            f"publishers/google/models/veo-001:predict"
-        )
+        # Runway ML API endpoint
+        endpoint = "https://api.runwayml.com/v1/video_generations"
 
-        # Request payload for Veo
+        # Request payload for Runway Gen-3 Alpha Turbo
         payload = {
-            "instances": [{
-                "prompt": request.prompt
-            }],
-            "parameters": {
-                "durationSeconds": request.duration_seconds,
-                "resolution": request.resolution
-            }
+            "model": "gen3a_turbo",
+            "prompt_text": request.prompt,
+            "duration": runway_duration,
+            "ratio": "16:9"  # Standard video ratio
         }
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 endpoint,
                 json=payload,
                 headers={
-                    "Authorization": f"Bearer {access_token}",
+                    "Authorization": f"Bearer {RUNWAY_API_KEY}",
                     "Content-Type": "application/json",
+                    "X-Runway-Version": "2024-11-06"
                 }
             )
 
-            logger.info(f"📡 Veo API response status: {response.status_code}")
+            logger.info(f"📡 Runway API response status: {response.status_code}")
 
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
-                logger.info(f"✅ Video generation started: {data}")
+                task_id = data.get("id")
 
-                # Veo returns an operation for async processing
-                operation_name = data.get("name") or data.get("operationId")
+                logger.info(f"✅ Video generation task created: {task_id}")
 
                 return VideoGenerateResponse(
                     success=True,
                     status="generating",
-                    job_id=operation_name
+                    job_id=task_id
                 )
 
-            elif response.status_code == 404:
-                logger.error(f"❌ Veo API not found (404)")
+            elif response.status_code == 401:
+                logger.error(f"❌ Runway API authentication failed")
                 return VideoGenerateResponse(
                     success=False,
-                    error="Google Veo is not available yet. It requires special allowlist access from Google.\n\nAlternatives: Consider Runway ML (runwayml.com) or Pika (pika.art) for production video generation.",
-                    status="unavailable"
+                    error="Runway ML API key is invalid. Please check your RUNWAY_API_KEY environment variable.",
+                    status="failed"
                 )
 
-            elif response.status_code == 403:
+            elif response.status_code == 402:
+                logger.error(f"❌ Runway API insufficient credits")
+                return VideoGenerateResponse(
+                    success=False,
+                    error="Insufficient Runway ML credits. Please add credits at https://app.runwayml.com/",
+                    status="failed"
+                )
+
+            elif response.status_code == 400:
                 error_text = response.text
-                logger.error(f"❌ Veo API access denied (403): {error_text}")
+                logger.error(f"❌ Invalid request (400): {error_text}")
                 return VideoGenerateResponse(
                     success=False,
-                    error=f"Access denied to Veo API. This model requires special preview access. Please:\n1. Request access at https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/video-generation\n2. Ensure billing is enabled\n3. Contact Google Cloud support for allowlist\n\nError: {error_text[:200]}",
-                    status="unavailable"
+                    error=f"Invalid request. Check:\n1. Prompt doesn't violate content policy\n2. Video duration is supported\n\nError: {error_text[:200]}",
+                    status="failed"
                 )
 
             else:
                 error_text = response.text
-                logger.error(f"❌ Veo request failed: {response.status_code} - {error_text}")
+                logger.error(f"❌ Runway request failed: {response.status_code} - {error_text}")
                 return VideoGenerateResponse(
                     success=False,
-                    error=f"Video generation failed (HTTP {response.status_code}). Veo may not be available in your region. Error: {error_text[:200]}",
+                    error=f"Video generation failed (HTTP {response.status_code}): {error_text[:200]}",
                     status="failed"
                 )
 
     except httpx.TimeoutException:
-        logger.error("❌ Veo request timeout")
+        logger.error("❌ Runway request timeout")
         return VideoGenerateResponse(
             success=False,
-            error="Video generation request timed out.",
+            error="Video generation request timed out. Please try again.",
             status="failed"
         )
 
@@ -338,62 +350,97 @@ async def generate_video(request: VideoGenerateRequest):
 @router.get("/video-status/{job_id:path}")
 async def get_video_status(job_id: str):
     """
-    Check status of video generation operation.
+    Check status of Runway ML video generation task.
 
     Args:
-        job_id: The operation ID returned from generate_video
+        job_id: The task ID returned from generate_video
 
     Returns:
         Dict with status and video_url (when complete)
     """
 
-    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
-        raise HTTPException(status_code=503, detail="OAuth2 credentials not configured")
+    if not RUNWAY_API_KEY:
+        raise HTTPException(status_code=503, detail="RUNWAY_API_KEY not configured")
 
     try:
-        # Get fresh access token
-        access_token = get_access_token()
+        logger.info(f"🔍 Checking Runway video status for task: {job_id}")
 
-        logger.info(f"🔍 Checking video status for operation: {job_id}")
-
-        # Construct the full operation URL
-        operation_url = f"https://us-central1-aiplatform.googleapis.com/v1/{job_id}"
+        # Runway ML task status endpoint
+        endpoint = f"https://api.runwayml.com/v1/video_generations/{job_id}"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                operation_url,
-                headers={"Authorization": f"Bearer {access_token}"}
+                endpoint,
+                headers={
+                    "Authorization": f"Bearer {RUNWAY_API_KEY}",
+                    "X-Runway-Version": "2024-11-06"
+                }
             )
 
             if response.status_code == 200:
                 data = response.json()
-                is_done = data.get("done", False)
+                task_status = data.get("status")  # "PENDING", "RUNNING", "SUCCEEDED", "FAILED"
 
-                if is_done:
-                    # Extract video from response
-                    response_data = data.get("response", {})
-                    video_url = response_data.get("videoUri") or response_data.get("videoUrl")
+                logger.info(f"📊 Runway task status: {task_status}")
 
-                    logger.info(f"✅ Video generation complete: {video_url}")
+                if task_status == "SUCCEEDED":
+                    # Extract video URL from response
+                    video_url = data.get("output", [None])[0] if data.get("output") else None
 
+                    if video_url:
+                        logger.info(f"✅ Video generation complete: {video_url}")
+                        return {
+                            "success": True,
+                            "status": "complete",
+                            "video_url": video_url,
+                            "done": True
+                        }
+                    else:
+                        logger.error(f"❌ Video succeeded but no URL: {data}")
+                        return {
+                            "success": False,
+                            "error": "Video generation succeeded but no video URL returned"
+                        }
+
+                elif task_status == "FAILED":
+                    error_msg = data.get("failure") or "Unknown error"
+                    logger.error(f"❌ Video generation failed: {error_msg}")
+                    return {
+                        "success": False,
+                        "status": "failed",
+                        "error": f"Video generation failed: {error_msg}"
+                    }
+
+                elif task_status in ["PENDING", "RUNNING"]:
+                    logger.info(f"⏳ Video still generating ({task_status})")
+                    progress = data.get("progress", 0)
                     return {
                         "success": True,
-                        "status": "complete",
-                        "video_url": video_url,
-                        "done": True
+                        "status": "generating",
+                        "done": False,
+                        "progress": progress
                     }
+
                 else:
-                    logger.info(f"⏳ Video still generating")
+                    logger.warning(f"⚠️  Unknown status: {task_status}")
                     return {
                         "success": True,
                         "status": "generating",
                         "done": False
                     }
-            else:
-                logger.error(f"❌ Operation status check failed: {response.status_code}")
+
+            elif response.status_code == 404:
+                logger.error(f"❌ Task not found: {job_id}")
                 return {
                     "success": False,
-                    "error": f"Status check failed: {response.text}"
+                    "error": "Video generation task not found"
+                }
+
+            else:
+                logger.error(f"❌ Status check failed: {response.status_code} - {response.text}")
+                return {
+                    "success": False,
+                    "error": f"Status check failed: {response.text[:200]}"
                 }
 
     except Exception as e:

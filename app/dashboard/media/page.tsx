@@ -203,7 +203,7 @@ export default function MediaLibrary() {
         };
         setAiGeneratedVideos([newVideo, ...aiGeneratedVideos]);
         console.log('✨ AI Video generation started');
-        alert('Video generation started! This may take 2-5 minutes.');
+        alert('Video generation started! This may take 1-3 minutes.');
       } else {
         alert(`Failed to generate video: ${response.error || 'Unknown error'}`);
       }
@@ -472,7 +472,7 @@ export default function MediaLibrary() {
               <>
                 <h2 className="text-xl font-bold text-white mb-4">🎬 AI Video Generation</h2>
                 <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-300">Google Veo 3.1 • $6 per 8s video</p>
+                  <p className="text-xs text-gray-300">Runway ML Gen-3 • $0.10 per 5s video</p>
                 </div>
                 <div className="mb-4">
                   <label className="block text-white font-bold mb-2 text-sm">Resolution</label>
@@ -659,7 +659,7 @@ export default function MediaLibrary() {
               aiGeneratedVideos.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-400 text-lg mb-4">No AI videos generated yet.</p>
-                  <p className="text-gray-500 text-sm">Use the sidebar to generate your first AI video with Google Veo 3.1!</p>
+                  <p className="text-gray-500 text-sm">Use the sidebar to generate your first AI video with Runway ML Gen-3!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
