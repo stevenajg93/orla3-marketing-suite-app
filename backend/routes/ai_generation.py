@@ -266,10 +266,10 @@ async def generate_video(request: VideoGenerateRequest):
 
         # Request payload for Runway Veo 3.1
         # Model: veo3.1, Ratio: pixel dimensions (not aspect ratio)
+        # Note: duration might not be supported for veo3.1, trying without it
         payload = {
             "model": "veo3.1",
             "promptText": request.prompt,
-            "duration": runway_duration,
             "ratio": runway_ratio
         }
 
