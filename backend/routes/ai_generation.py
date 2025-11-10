@@ -264,7 +264,7 @@ async def generate_video(request: VideoGenerateRequest):
         # Request payload for Runway Gen-3 Alpha Turbo
         payload = {
             "model": "gen3a_turbo",
-            "text_prompt": request.prompt,
+            "promptText": request.prompt,  # camelCase, not snake_case!
             "duration": runway_duration,
             "ratio": "16:9"  # Standard video ratio
         }
