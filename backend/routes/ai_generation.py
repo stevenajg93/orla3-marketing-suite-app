@@ -258,13 +258,13 @@ async def generate_video(request: VideoGenerateRequest):
 
         logger.info(f"🎬 Generating video with Runway ML Gen-3: '{request.prompt[:60]}...' ({runway_duration}s)")
 
-        # Runway ML API endpoint
-        endpoint = "https://api.runwayml.com/v1/video_generations"
+        # Runway ML API endpoint (correct base URL)
+        endpoint = "https://api.dev.runwayml.com/v1/text_to_video"
 
         # Request payload for Runway Gen-3 Alpha Turbo
         payload = {
             "model": "gen3a_turbo",
-            "prompt_text": request.prompt,
+            "text_prompt": request.prompt,
             "duration": runway_duration,
             "ratio": "16:9"  # Standard video ratio
         }
@@ -365,8 +365,8 @@ async def get_video_status(job_id: str):
     try:
         logger.info(f"🔍 Checking Runway video status for task: {job_id}")
 
-        # Runway ML task status endpoint
-        endpoint = f"https://api.runwayml.com/v1/video_generations/{job_id}"
+        # Runway ML task status endpoint (correct base URL)
+        endpoint = f"https://api.dev.runwayml.com/v1/tasks/{job_id}"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
