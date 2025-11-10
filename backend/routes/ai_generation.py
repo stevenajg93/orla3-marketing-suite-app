@@ -256,18 +256,21 @@ async def generate_video(request: VideoGenerateRequest):
         # Map duration to Runway's supported values (5 or 10 seconds)
         runway_duration = 5 if request.duration_seconds <= 5 else 10
 
-        logger.info(f"🎬 Generating video with Runway ML Gen-3: '{request.prompt[:60]}...' ({runway_duration}s)")
+        # Map resolution to pixel dimensions
+        runway_ratio = "1920:1080" if request.resolution == "1080p" else "1280:720"
+
+        logger.info(f"🎬 Generating video with Runway Veo 3.1: '{request.prompt[:60]}...' ({runway_duration}s, {request.resolution})")
 
         # Runway ML API endpoint (correct base URL)
         endpoint = "https://api.dev.runwayml.com/v1/text_to_video"
 
-        # Request payload for Runway Gen-3 Alpha Turbo
-        # Trying just "gen3" as model name
+        # Request payload for Runway Veo 3.1
+        # Model: veo3.1, Ratio: pixel dimensions (not aspect ratio)
         payload = {
-            "model": "gen3",
+            "model": "veo3.1",
             "promptText": request.prompt,
             "duration": runway_duration,
-            "ratio": "16:9"
+            "ratio": runway_ratio
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
