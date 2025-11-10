@@ -100,6 +100,19 @@ export default function MediaLibrary() {
     try {
       const data = await api.get('/library/content');
       setGeneratedContent(data.items || []);
+
+      // Resume polling for any videos still generating
+      const generatingVideos = (data.items || []).filter(
+        (item: GeneratedContent) =>
+          item.status === 'generating' &&
+          item.content_type === 'video' &&
+          item.media_url // media_url contains job_id while generating
+      );
+
+      generatingVideos.forEach((video: GeneratedContent) => {
+        console.log('🔄 Resuming polling for video:', video.id);
+        pollVideoStatus(video.media_url!, video.id);
+      });
     } catch (err) {
       console.error('Failed to load generated content');
     }
@@ -211,18 +224,39 @@ export default function MediaLibrary() {
         resolution: aiVideoResolution
       });
 
-      if (response.success) {
+      if (response.success && response.job_id) {
+        // Save to database immediately with job_id
+        const saveResponse = await api.post('/library/content', {
+          title: `AI Video: ${aiVideoPrompt.substring(0, 50)}${aiVideoPrompt.length > 50 ? '...' : ''}`,
+          content_type: 'video',
+          content: aiVideoPrompt,
+          status: 'generating',
+          platform: 'AI Generated',
+          tags: ['ai-generated', 'runway-veo', 'generating'],
+          media_url: response.job_id  // Store job_id temporarily
+        });
+
+        console.log('✨ Video job saved to database:', response.job_id);
+
+        // Add to local state
         const newVideo = {
-          url: response.video_url,
+          url: null,
+          job_id: response.job_id,
           prompt: aiVideoPrompt,
           resolution: aiVideoResolution,
           source: 'ai-generated',
-          status: response.status || 'generating',
+          status: 'generating',
           timestamp: new Date().toISOString()
         };
         setAiGeneratedVideos([newVideo, ...aiGeneratedVideos]);
-        console.log('✨ AI Video generation started');
-        alert('Video generation started! This may take 1-3 minutes.');
+
+        // Reload content library to show the generating video
+        loadGeneratedContent();
+
+        // Start polling for completion
+        pollVideoStatus(response.job_id, saveResponse.item?.id);
+
+        alert('Video generation started! This may take 1-3 minutes. You can navigate away - it will save automatically.');
       } else {
         alert(`Failed to generate video: ${response.error || 'Unknown error'}`);
       }
@@ -232,6 +266,61 @@ export default function MediaLibrary() {
     } finally {
       setGeneratingAiVideo(false);
     }
+  };
+
+  const pollVideoStatus = async (jobId: string, contentId?: string) => {
+    const maxAttempts = 60; // 5 minutes max (every 5 seconds)
+    let attempts = 0;
+
+    const checkStatus = async () => {
+      try {
+        const status = await api.get(`/ai/video-status/${jobId}`);
+
+        if (status.success && status.status === 'complete' && status.video_url) {
+          console.log('✅ Video generation complete:', status.video_url);
+
+          // Update database with final video URL
+          if (contentId) {
+            const contentItem = generatedContent.find(c => c.id === contentId);
+            await api.patch(`/library/content/${contentId}`, {
+              title: contentItem?.title || 'AI Video',
+              content_type: 'video',
+              content: contentItem?.content || '',
+              status: 'draft',
+              platform: 'AI Generated',
+              tags: ['ai-generated', 'runway-veo'],
+              media_url: status.video_url
+            });
+            console.log('✅ Video saved to database:', contentId);
+          }
+
+          // Reload content to show completed video
+          loadGeneratedContent();
+
+          return; // Stop polling
+        } else if (status.success && status.status === 'generating') {
+          // Still generating, poll again
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkStatus, 5000); // Check every 5 seconds
+          } else {
+            console.error('❌ Video generation timeout');
+          }
+        } else if (status.error) {
+          console.error('❌ Video generation failed:', status.error);
+        }
+      } catch (err) {
+        console.error('Error checking video status:', err);
+        // Retry on error
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 5000);
+        }
+      }
+    };
+
+    // Start polling after 10 seconds (give it time to start processing)
+    setTimeout(checkStatus, 10000);
   };
 
   const handleFolderClick = (folderId: string, folderName: string) => {

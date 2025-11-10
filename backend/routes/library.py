@@ -77,6 +77,40 @@ def save_content(item: ContentItem):
         logger.error(f"Error saving content: {e}")
         return {"success": False, "error": str(e)}
 
+@router.patch("/content/{item_id}")
+def update_content(item_id: str, item: ContentItem):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            UPDATE content_library
+            SET title = %s, content_type = %s, content = %s, status = %s,
+                platform = %s, tags = %s, media_url = %s
+            WHERE id = %s
+            RETURNING id, title, content_type, content, status, platform, tags, media_url, created_at
+        """, (
+            item.title,
+            item.content_type,
+            item.content,
+            item.status,
+            item.platform,
+            item.tags or [],
+            item.media_url,
+            item_id
+        ))
+
+        updated_item = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        logger.info(f"Updated content in PostgreSQL: {item_id}")
+        return {"success": True, "item": updated_item}
+    except Exception as e:
+        logger.error(f"Error updating content: {e}")
+        return {"success": False, "error": str(e)}
+
 @router.delete("/content/{item_id}")
 def delete_content(item_id: str):
     try:
