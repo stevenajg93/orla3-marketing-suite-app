@@ -292,9 +292,25 @@ export default function MediaLibrary() {
               media_url: status.video_url
             });
             console.log('✅ Video saved to database:', contentId);
+
+            // Add to AI Videos tab (component state)
+            const completedVideo = {
+              url: status.video_url,
+              job_id: jobId,
+              prompt: contentItem?.content || '',
+              resolution: '720p', // Default from request
+              source: 'ai-generated',
+              status: 'complete',
+              timestamp: new Date().toISOString()
+            };
+            setAiGeneratedVideos(prev => {
+              // Remove the generating placeholder if exists
+              const filtered = prev.filter(v => v.job_id !== jobId);
+              return [completedVideo, ...filtered];
+            });
           }
 
-          // Reload content to show completed video
+          // Reload content to show completed video in Generated Content tab
           loadGeneratedContent();
 
           return; // Stop polling
@@ -392,39 +408,6 @@ export default function MediaLibrary() {
               📁 Media Library
             </h1>
             <p className="text-gray-400 mt-2">Manage Google Drive assets & generated AI content</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className={`rounded-2xl p-6 border ${
-            status?.drive?.connected 
-              ? 'bg-green-900/40 border-green-400/30' 
-              : 'bg-yellow-900/40 border-yellow-400/30'
-          }`}>
-            <h3 className="text-xl font-bold text-white mb-2">🔗 Google Drive</h3>
-            <p className="text-gray-300">{status?.drive?.status}</p>
-            {status?.drive?.connected && (
-              <p className="text-sm text-gray-400 mt-2">{folders.length} folders found</p>
-            )}
-          </div>
-
-          <div className={`rounded-2xl p-6 border ${
-            status?.unsplash?.connected 
-              ? 'bg-green-900/40 border-green-400/30' 
-              : 'bg-yellow-900/40 border-yellow-400/30'
-          }`}>
-            <h3 className="text-xl font-bold text-white mb-2">✨ Unsplash API</h3>
-            <p className="text-gray-300">{status?.unsplash?.status}</p>
-          </div>
-
-          <div className="rounded-2xl p-6 border bg-purple-900/40 border-purple-400/30">
-            <h3 className="text-xl font-bold text-white mb-2">💾 Generated Content</h3>
-            <p className="text-gray-300">{generatedContent.length} items saved</p>
-            <div className="flex gap-4 mt-2 text-sm text-gray-400">
-              <span>📝 {generatedContent.filter(i => ['blog', 'carousel', 'caption'].includes(i.content_type)).length} text</span>
-              <span>🖼️ {generatedContent.filter(i => i.content_type === 'image').length} images</span>
-              <span>🎬 {generatedContent.filter(i => i.content_type === 'video').length} videos</span>
-            </div>
           </div>
         </div>
 

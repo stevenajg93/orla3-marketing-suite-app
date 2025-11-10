@@ -94,33 +94,20 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Progress Tracker */}
-        <div className="mt-12 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
-          <h2 className="text-3xl font-bold text-white mb-4">✅ Progress Tracker</h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 h-full" style={{ width: '44%' }}></div>
-              </div>
-              <span className="text-white font-bold">4/9 Tools Complete</span>
+        {/* Quick Stats Banner */}
+        <div className="mt-12 bg-gradient-to-r from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur-lg rounded-2xl border border-purple-400/30 p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">🚀 Ready to Create?</h2>
+              <p className="text-gray-300">Your AI-powered marketing suite is fully equipped</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-4">
-                <div className="text-3xl mb-2">✅</div>
-                <div className="text-green-400 font-bold">4 Complete</div>
-              </div>
-              <div className="bg-yellow-900/40 border border-yellow-400/30 rounded-xl p-4">
-                <div className="text-3xl mb-2">🚧</div>
-                <div className="text-yellow-400 font-bold">1 In Progress</div>
-              </div>
-              <div className="bg-blue-900/40 border border-blue-400/30 rounded-xl p-4">
-                <div className="text-3xl mb-2">📋</div>
-                <div className="text-blue-400 font-bold">4 Planned</div>
-              </div>
-              <div className="bg-purple-900/40 border border-purple-400/30 rounded-xl p-4">
-                <div className="text-3xl mb-2">🎯</div>
-                <div className="text-purple-400 font-bold">44% Done</div>
-              </div>
+            <div className="flex gap-4">
+              <Link href="/dashboard/blog" className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-bold transition">
+                Start Writing →
+              </Link>
+              <Link href="/dashboard/social" className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
+                Publish Now →
+              </Link>
             </div>
           </div>
         </div>
