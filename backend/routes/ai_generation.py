@@ -2,21 +2,25 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Literal
 import os
-import google.generativeai as genai
-import base64
 import httpx
-import io
+import base64
 from logger import setup_logger
+from openai import AsyncOpenAI
 
 logger = setup_logger(__name__)
 router = APIRouter()
 
-# Configure Gemini API
+# Configure AI APIs
+openai_key = os.getenv("OPENAI_API_KEY")
 gemini_key = os.getenv("GEMINI_API_KEY")
-if gemini_key:
-    genai.configure(api_key=gemini_key)
+
+if openai_key:
+    openai_client = AsyncOpenAI(api_key=openai_key)
 else:
-    logger.warning("⚠️  GEMINI_API_KEY not configured - AI generation features will not work")
+    logger.warning("⚠️  OPENAI_API_KEY not configured - AI image generation will not work")
+
+if not gemini_key:
+    logger.warning("⚠️  GEMINI_API_KEY not configured - AI video generation will not work")
 
 class ImageGenerateRequest(BaseModel):
     prompt: str
@@ -41,80 +45,94 @@ class VideoGenerateResponse(BaseModel):
     job_id: Optional[str] = None
     error: Optional[str] = None
 
+def aspect_ratio_to_size(aspect_ratio: str) -> str:
+    """
+    Convert aspect ratio to DALL-E 3 size format.
+
+    DALL-E 3 supports: 1024x1024, 1792x1024, 1024x1792
+    """
+    mapping = {
+        "1:1": "1024x1024",    # Square
+        "16:9": "1792x1024",   # Landscape
+        "9:16": "1024x1792",   # Portrait
+        "4:3": "1792x1024",    # Landscape (closest match)
+        "3:4": "1024x1792"     # Portrait (closest match)
+    }
+    return mapping.get(aspect_ratio, "1024x1024")
+
 @router.post("/generate-image", response_model=ImageGenerateResponse)
 async def generate_image(request: ImageGenerateRequest):
     """
-    Generate an image using Google Imagen 3 (Nano Banana model).
+    Generate an image using OpenAI's DALL-E 3.
 
-    This endpoint uses the Gemini API's image generation capabilities.
-    Cost: ~$0.03 per image
+    DALL-E 3 is currently more reliable and produces higher quality images
+    than Google Imagen through the Gemini API. Imagen 3 requires Vertex AI
+    which needs separate GCP service account credentials.
+
+    Cost: ~$0.04 per image (1024x1024), ~$0.08 per image (1792x1024/1024x1792)
+    Generation time: 10-20 seconds
 
     Args:
         request: ImageGenerateRequest with prompt and aspect ratio
 
     Returns:
-        ImageGenerateResponse with base64 encoded image data
+        ImageGenerateResponse with image URL
     """
 
-    if not gemini_key:
-        logger.error("❌ Imagen generation failed: GEMINI_API_KEY not configured")
+    if not openai_key:
+        logger.error("❌ Image generation failed: OPENAI_API_KEY not configured")
         raise HTTPException(
             status_code=503,
-            detail="Gemini API key not configured. Please add GEMINI_API_KEY to environment variables."
+            detail="OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables."
         )
 
     try:
-        logger.info(f"🎨 Generating image with Imagen 3: '{request.prompt[:50]}...' (aspect: {request.aspect_ratio})")
+        # Convert aspect ratio to DALL-E size
+        size = aspect_ratio_to_size(request.aspect_ratio)
 
-        # Use Imagen 3 model through Gemini API
-        # Model name: imagen-3.0-generate-001 (not 002)
-        model = genai.ImageGenerationModel("imagen-3.0-generate-001")
+        logger.info(f"🎨 Generating image with DALL-E 3: '{request.prompt[:50]}...' (size: {size})")
 
-        # Generate image with proper parameters
-        response = model.generate_images(
+        # Generate image with DALL-E 3
+        response = await openai_client.images.generate(
+            model="dall-e-3",
             prompt=request.prompt,
-            number_of_images=request.num_images,
-            aspect_ratio=request.aspect_ratio,
-            safety_filter_level="block_some",
-            person_generation="allow_adult"
+            size=size,
+            quality="standard",  # "standard" or "hd" (hd costs 2x)
+            n=1  # DALL-E 3 only supports 1 image at a time
         )
 
-        # Get first image from response
-        if response.images and len(response.images) > 0:
-            image = response.images[0]
+        # Get the image URL
+        if response.data and len(response.data) > 0:
+            image_url = response.data[0].url
 
-            # Convert PIL image to base64 for frontend
-            # Use proper buffer to save image bytes
-            image_bytes_buffer = io.BytesIO()
-            image._pil_image.save(image_bytes_buffer, format='PNG')
-            image_bytes_buffer.seek(0)
+            logger.info(f"✅ Image generated successfully: {image_url[:50]}...")
 
-            # Encode to base64
-            image_base64 = base64.b64encode(image_bytes_buffer.getvalue()).decode('utf-8')
+            # Download the image and convert to base64 for storage
+            async with httpx.AsyncClient() as client:
+                img_response = await client.get(image_url)
+                if img_response.status_code == 200:
+                    image_base64 = base64.b64encode(img_response.content).decode('utf-8')
 
-            logger.info(f"✅ Image generated successfully ({len(image_base64)} bytes)")
-
-            return ImageGenerateResponse(
-                success=True,
-                image_data=f"data:image/png;base64,{image_base64}",
-                image_url=None  # Imagen returns data, not URL
-            )
+                    return ImageGenerateResponse(
+                        success=True,
+                        image_url=image_url,  # Temporary OpenAI URL (expires after 1 hour)
+                        image_data=f"data:image/png;base64,{image_base64}"
+                    )
+                else:
+                    logger.error(f"❌ Failed to download image from URL: {img_response.status_code}")
+                    return ImageGenerateResponse(
+                        success=True,
+                        image_url=image_url  # Return URL even if download fails
+                    )
         else:
-            logger.error("❌ Imagen returned no images")
+            logger.error("❌ DALL-E returned no images")
             return ImageGenerateResponse(
                 success=False,
                 error="No images generated. Please try again or adjust your prompt."
             )
 
-    except AttributeError as e:
-        # This happens if the API structure is different than expected
-        logger.error(f"❌ Imagen API structure error: {str(e)}", exc_info=True)
-        return ImageGenerateResponse(
-            success=False,
-            error=f"Image generation API error. The Imagen 3 API may have changed. Please contact support. Error: {str(e)}"
-        )
     except Exception as e:
-        logger.error(f"❌ Imagen generation error: {str(e)}", exc_info=True)
+        logger.error(f"❌ Image generation error: {str(e)}", exc_info=True)
         return ImageGenerateResponse(
             success=False,
             error=f"Image generation failed: {str(e)}"
@@ -123,12 +141,15 @@ async def generate_image(request: ImageGenerateRequest):
 @router.post("/generate-video", response_model=VideoGenerateResponse)
 async def generate_video(request: VideoGenerateRequest):
     """
-    Generate a video using Google Veo 2 (updated from Veo 3.1).
+    Generate a video using Google Veo 2 (experimental).
 
-    Note: Google Veo is still in limited preview. This endpoint uses the
-    experimental Gemini API video generation endpoint.
+    Note: Google Veo is in limited preview and requires special access.
+    This endpoint will likely return an error until you enable Vertex AI
+    and request access to the Veo preview program.
 
-    Cost: ~$6 per 8-second video with audio
+    Alternative: Consider using Runway ML or Pika for production video generation.
+
+    Cost: ~$6 per 8-second video (when available)
     Generation time: 2-5 minutes (async)
 
     Args:
@@ -149,11 +170,8 @@ async def generate_video(request: VideoGenerateRequest):
         logger.info(f"🎬 Generating video with Veo: '{request.prompt[:50]}...' ({request.resolution})")
 
         # Google Veo video generation via Gemini API
-        # Endpoint: https://generativelanguage.googleapis.com/v1beta/models/veo-001:generateVideo
-        # Note: This may require Vertex AI access instead of Gemini API
-
+        # Note: This endpoint is experimental and may not be publicly available
         async with httpx.AsyncClient(timeout=60.0) as client:
-            # Try Gemini API endpoint first
             response = await client.post(
                 "https://generativelanguage.googleapis.com/v1beta/models/veo-001:generateVideo",
                 headers={
@@ -180,30 +198,30 @@ async def generate_video(request: VideoGenerateRequest):
 
                 return VideoGenerateResponse(
                     success=True,
-                    video_url=data.get("video_url"),  # May not be available immediately
+                    video_url=data.get("video_url"),
                     status="generating",
                     job_id=operation_name
                 )
             elif response.status_code == 404:
-                # API endpoint doesn't exist - Veo may not be available yet
-                logger.error(f"❌ Veo API not available: 404 - {response.text}")
+                # API endpoint doesn't exist - Veo is not available yet
+                logger.error(f"❌ Veo API not available: 404")
                 return VideoGenerateResponse(
                     success=False,
-                    error="Google Veo video generation is not yet available via this API. It may require Vertex AI access or be in limited preview. Please check Google Cloud Console for Veo access.",
+                    error="Google Veo video generation is not yet publicly available. It requires Vertex AI access and enrollment in the preview program. Consider using Runway ML (runwayml.com) or Pika (pika.art) as alternatives.",
                     status="failed"
                 )
             elif response.status_code == 403:
-                logger.error(f"❌ Veo API access denied: {response.text}")
+                logger.error(f"❌ Veo API access denied")
                 return VideoGenerateResponse(
                     success=False,
-                    error="Access denied to Veo API. You may need to enable Vertex AI API or request access to Veo preview program.",
+                    error="Access denied to Veo API. Please enable Vertex AI API in Google Cloud Console and request access to the Veo preview program at https://labs.google/veo",
                     status="failed"
                 )
             else:
                 logger.error(f"❌ Video generation failed: {response.status_code} - {response.text}")
                 return VideoGenerateResponse(
                     success=False,
-                    error=f"Video generation failed with status {response.status_code}: {response.text}",
+                    error=f"Video generation failed with status {response.status_code}. Veo may not be available in your region or account.",
                     status="failed"
                 )
 
@@ -274,7 +292,7 @@ async def get_video_status(job_id: str):
                         "done": False
                     }
             else:
-                logger.error(f"❌ Video status check failed: {response.status_code} - {response.text}")
+                logger.error(f"❌ Video status check failed: {response.status_code}")
                 return {
                     "success": False,
                     "error": f"Status check failed: {response.text}"

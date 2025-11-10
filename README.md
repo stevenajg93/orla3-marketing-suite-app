@@ -33,8 +33,8 @@ AI-powered marketing automation platform for videographers and creative professi
 
 ### 📁 Media Management
 - **Google Drive integration**: Import assets directly
-- **AI Image Generation**: Google Imagen 3 text-to-image ($0.03/image)
-- **AI Video Generation**: Google Veo 3.1 text-to-video ($6 per 8s video)
+- **AI Image Generation**: OpenAI DALL-E 3 text-to-image ($0.04/image)
+- **AI Video Generation**: Google Veo (experimental, requires Vertex AI)
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
@@ -58,8 +58,8 @@ AI-powered marketing automation platform for videographers and creative professi
   - **Claude Sonnet 4**: Strategic analysis & brand-critical content
   - **GPT-4o**: Creative conversational content
   - **Gemini 2.0 Flash**: Structured visual content
-  - **Gemini (Imagen 3)**: AI image generation
-  - **Gemini (Veo 3.1)**: AI video generation
+  - **DALL-E 3**: AI image generation
+  - **Google Veo**: AI video generation (experimental)
   - **GPT-4o-mini**: Simple analytical tasks
 - **APIs**: Google Drive API, Unsplash API
 - **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
