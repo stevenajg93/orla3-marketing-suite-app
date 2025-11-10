@@ -262,9 +262,9 @@ async def generate_video(request: VideoGenerateRequest):
         endpoint = "https://api.dev.runwayml.com/v1/text_to_video"
 
         # Request payload for Runway Gen-3 Alpha Turbo
-        # Valid models: gen3a_turbo, gen4.5, veo3, veo3.1, veo3.1_fast
+        # Trying just "gen3" as model name
         payload = {
-            "model": "gen3a_turbo",
+            "model": "gen3",
             "promptText": request.prompt,
             "duration": runway_duration,
             "ratio": "16:9"
