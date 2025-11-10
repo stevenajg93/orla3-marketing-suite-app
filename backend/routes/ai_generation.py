@@ -363,6 +363,62 @@ async def generate_video(request: VideoGenerateRequest):
             status="failed"
         )
 
+@router.post("/recover-video/{job_id}")
+async def recover_video(job_id: str):
+    """
+    Manually recover a completed video by job ID and save to database.
+    Use this for videos that completed but weren't saved due to polling issues.
+    """
+    if not RUNWAY_API_KEY:
+        raise HTTPException(status_code=503, detail="RUNWAY_API_KEY not configured")
+
+    try:
+        logger.info(f"🔄 Attempting to recover video: {job_id}")
+
+        endpoint = f"https://api.dev.runwayml.com/v1/tasks/{job_id}"
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                endpoint,
+                headers={
+                    "Authorization": f"Bearer {RUNWAY_API_KEY}",
+                    "X-Runway-Version": "2024-11-06"
+                }
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                task_status = data.get("status")
+
+                if task_status == "SUCCEEDED":
+                    video_url = data.get("output", [None])[0] if data.get("output") else None
+
+                    if video_url:
+                        logger.info(f"✅ Video recovered: {video_url}")
+                        return {
+                            "success": True,
+                            "status": "complete",
+                            "video_url": video_url,
+                            "job_id": job_id
+                        }
+
+                return {
+                    "success": False,
+                    "error": f"Video status: {task_status}. Data: {data}"
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch video: {response.status_code} - {response.text}"
+                }
+
+    except Exception as e:
+        logger.error(f"❌ Video recovery error: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @router.get("/video-status/{job_id:path}")
 async def get_video_status(job_id: str):
     """
