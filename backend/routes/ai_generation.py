@@ -262,11 +262,12 @@ async def generate_video(request: VideoGenerateRequest):
         endpoint = "https://api.dev.runwayml.com/v1/text_to_video"
 
         # Request payload for Runway Gen-3 Alpha Turbo
+        # Note: Model name is just "gen3a_turbo" or might be "gen3_turbo"
+        # Try without model parameter first (uses default)
         payload = {
-            "model": "gen3a_turbo",
-            "promptText": request.prompt,  # camelCase, not snake_case!
+            "promptText": request.prompt,
             "duration": runway_duration,
-            "ratio": "16:9"  # Standard video ratio
+            "ratio": "16:9"
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
