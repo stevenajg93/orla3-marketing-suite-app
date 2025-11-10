@@ -31,6 +31,7 @@ type GeneratedContent = {
   created_at: string;
   status: string;
   tags?: string[];
+  media_url?: string;
 };
 
 export default function MediaLibrary() {
@@ -330,6 +331,11 @@ export default function MediaLibrary() {
           <div className="rounded-2xl p-6 border bg-purple-900/40 border-purple-400/30">
             <h3 className="text-xl font-bold text-white mb-2">💾 Generated Content</h3>
             <p className="text-gray-300">{generatedContent.length} items saved</p>
+            <div className="flex gap-4 mt-2 text-sm text-gray-400">
+              <span>📝 {generatedContent.filter(i => ['blog', 'carousel', 'caption'].includes(i.content_type)).length} text</span>
+              <span>🖼️ {generatedContent.filter(i => i.content_type === 'image').length} images</span>
+              <span>🎬 {generatedContent.filter(i => i.content_type === 'video').length} videos</span>
+            </div>
           </div>
         </div>
 
@@ -548,6 +554,8 @@ export default function MediaLibrary() {
                     <option value="blog">📝 Blogs</option>
                     <option value="carousel">🎨 Carousels</option>
                     <option value="caption">💬 Captions</option>
+                    <option value="image">🖼️ Images</option>
+                    <option value="video">🎬 Videos</option>
                   </select>
                 </div>
 
@@ -811,10 +819,32 @@ export default function MediaLibrary() {
                       className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all cursor-pointer"
                       onClick={() => setPreviewContent(item)}
                     >
-                      <div className="w-full h-40 bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center">
-                        <span className="text-6xl">{getFileIcon(item.content_type)}</span>
-                      </div>
-                      
+                      {/* Show media preview if available, otherwise show icon */}
+                      {item.media_url && item.content_type === 'image' ? (
+                        <div className="w-full h-40 overflow-hidden">
+                          <img
+                            src={item.media_url}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : item.media_url && item.content_type === 'video' ? (
+                        <div className="w-full h-40 overflow-hidden bg-black">
+                          <video
+                            src={item.media_url}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                            onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                            onMouseLeave={(e) => (e.target as HTMLVideoElement).pause()}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-40 bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center">
+                          <span className="text-6xl">{getFileIcon(item.content_type)}</span>
+                        </div>
+                      )}
+
                       <div className="p-4 bg-slate-800/50">
                         <h3 className="text-white font-bold text-sm mb-2 truncate">{item.title}</h3>
                         <div className="flex items-center justify-between">
@@ -825,6 +855,16 @@ export default function MediaLibrary() {
                             {new Date(item.created_at).toLocaleDateString()}
                           </span>
                         </div>
+                        {/* Show tags if available */}
+                        {item.tags && item.tags.length > 0 && (
+                          <div className="flex gap-1 mt-2 flex-wrap">
+                            {item.tags.slice(0, 3).map((tag: string, idx: number) => (
+                              <span key={idx} className="text-xs px-2 py-0.5 rounded bg-white/10 text-gray-300">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -993,7 +1033,47 @@ export default function MediaLibrary() {
               </button>
             </div>
             <div className="p-6">
-              {previewContent.content_type === "carousel" ? (
+              {previewContent.content_type === "image" && previewContent.media_url ? (
+                <div className="space-y-4">
+                  <img
+                    src={previewContent.media_url}
+                    alt={previewContent.title}
+                    className="w-full rounded-lg"
+                  />
+                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-4">
+                    <strong className="text-white">Prompt:</strong> {previewContent.content}
+                  </div>
+                  {previewContent.tags && previewContent.tags.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {previewContent.tags.map((tag: string, idx: number) => (
+                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : previewContent.content_type === "video" && previewContent.media_url ? (
+                <div className="space-y-4">
+                  <video
+                    src={previewContent.media_url}
+                    controls
+                    className="w-full rounded-lg"
+                  />
+                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-4">
+                    <strong className="text-white">Prompt:</strong> {previewContent.content}
+                  </div>
+                  {previewContent.tags && previewContent.tags.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {previewContent.tags.map((tag: string, idx: number) => (
+                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-red-600 to-pink-600 text-white">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : previewContent.content_type === "carousel" ? (
                 <div className="space-y-4">
                   {(() => {
                     try {
@@ -1023,6 +1103,19 @@ export default function MediaLibrary() {
               )}
 
               <div className="mt-6 flex gap-4 justify-center pt-6 border-t border-white/10">
+                {previewContent.media_url && (
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = previewContent.media_url!;
+                      link.download = `${previewContent.title.replace(/[^a-z0-9]/gi, '-')}.${previewContent.content_type === 'video' ? 'mp4' : 'png'}`;
+                      link.click();
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
+                  >
+                    ⬇️ Download
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(previewContent.content);
@@ -1030,7 +1123,7 @@ export default function MediaLibrary() {
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
                 >
-                  📋 Copy Content
+                  📋 Copy {previewContent.content_type === 'image' || previewContent.content_type === 'video' ? 'Prompt' : 'Content'}
                 </button>
                 <button
                   onClick={() => deleteGeneratedContent(previewContent.id)}
