@@ -285,10 +285,22 @@ async def generate_video(request: VideoGenerateRequest):
             )
 
             logger.info(f"📡 Runway API response status: {response.status_code}")
+            logger.info(f"📡 Runway API response body: {response.text[:500]}")
 
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
+                logger.info(f"📊 Full Runway response data: {data}")
+
                 task_id = data.get("id")
+                logger.info(f"🔑 Extracted task_id: {task_id}")
+
+                if not task_id:
+                    logger.error(f"❌ No task_id in response! Keys: {list(data.keys())}")
+                    return VideoGenerateResponse(
+                        success=False,
+                        error=f"No task ID returned from Runway. Response keys: {list(data.keys())}",
+                        status="failed"
+                    )
 
                 logger.info(f"✅ Video generation task created: {task_id}")
 
