@@ -167,6 +167,24 @@ export default function MediaLibrary() {
           timestamp: new Date().toISOString()
         };
         setAiGeneratedImages([newImage, ...aiGeneratedImages]);
+
+        // Save to content library database
+        try {
+          await api.post('/library/content', {
+            title: `AI Image: ${aiImagePrompt.substring(0, 50)}${aiImagePrompt.length > 50 ? '...' : ''}`,
+            content_type: 'image',
+            content: aiImagePrompt,
+            status: 'draft',
+            platform: 'AI Generated',
+            tags: ['ai-generated', 'imagen-3'],
+            media_url: response.image_data
+          });
+          console.log('✨ AI Image saved to content library');
+        } catch (saveErr) {
+          console.error('Failed to save to library:', saveErr);
+          // Don't block the UI - image is still in local state
+        }
+
         console.log('✨ AI Image generated successfully');
       } else {
         alert(`Failed to generate image: ${response.error || 'Unknown error'}`);
