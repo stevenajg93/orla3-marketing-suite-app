@@ -64,12 +64,13 @@ export default function SocialManagerPage() {
   // Media library state
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
-  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'unsplash' | 'ai-images' | 'ai-videos'>('generated');
+  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'pexels-photos' | 'pexels-videos' | 'ai-images' | 'ai-videos'>('generated');
   const [driveAssets, setDriveAssets] = useState<any[]>([]);
   const [driveFolders, setDriveFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
-  const [unsplashImages, setUnsplashImages] = useState<any[]>([]);
-  const [unsplashQuery, setUnsplashQuery] = useState('');
+  const [pexelsPhotos, setPexelsPhotos] = useState<any[]>([]);
+  const [pexelsVideos, setPexelsVideos] = useState<any[]>([]);
+  const [pexelsQuery, setPexelsQuery] = useState('');
   const [mediaLoading, setMediaLoading] = useState(false);
   const [libraryContent, setLibraryContent] = useState<any[]>([]);
   const [blogMetadata, setBlogMetadata] = useState<{ title?: string; content?: string } | null>(null);
@@ -176,15 +177,27 @@ export default function SocialManagerPage() {
     }
   };
 
-  const searchUnsplash = async () => {
-    if (!unsplashQuery.trim()) return;
+  const searchPexelsPhotos = async () => {
+    if (!pexelsQuery.trim()) return;
     setMediaLoading(true);
     try {
-      const res = await api.get(`/media/unsplash?query=${encodeURIComponent(unsplashQuery)}&per_page=20`);
-      const data = await res.json();
-      setUnsplashImages(data.images || []);
+      const data = await api.get(`/media/pexels/photos?query=${encodeURIComponent(pexelsQuery)}&per_page=20`);
+      setPexelsPhotos(data.images || []);
     } catch (err) {
-      console.error('Failed to search Unsplash');
+      console.error('Failed to search Pexels photos');
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const searchPexelsVideos = async () => {
+    if (!pexelsQuery.trim()) return;
+    setMediaLoading(true);
+    try {
+      const data = await api.get(`/media/pexels/videos?query=${encodeURIComponent(pexelsQuery)}&per_page=20`);
+      setPexelsVideos(data.videos || []);
+    } catch (err) {
+      console.error('Failed to search Pexels videos');
     } finally {
       setMediaLoading(false);
     }
@@ -440,10 +453,15 @@ export default function SocialManagerPage() {
         alert('Failed to load Drive file');
       }
     }
-    // Handle Unsplash images
-    else if (item.source === 'unsplash' && item.url) {
-      console.log('✨ Unsplash image selected');
-      setSelectedMedia([...selectedMedia, { url: item.url, type: 'image', name: item.name || 'Unsplash Image', source: 'unsplash' }]);
+    // Handle Pexels photos and videos
+    else if (item.source === 'pexels' && item.url) {
+      console.log(`✨ Pexels ${item.type} selected`);
+      setSelectedMedia([...selectedMedia, {
+        url: item.url,
+        type: item.type,
+        name: item.name || `Pexels ${item.type}`,
+        source: 'pexels'
+      }]);
     }
     // Handle AI-generated images and videos
     else if (item.source === 'ai-generated' && item.url) {
@@ -1089,10 +1107,16 @@ export default function SocialManagerPage() {
                   📁 Google Drive
                 </button>
                 <button
-                  onClick={() => setMediaLibraryTab('unsplash')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'unsplash' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  onClick={() => setMediaLibraryTab('pexels-photos')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'pexels-photos' ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
-                  ✨ Unsplash
+                  📸 Pexels Photos
+                </button>
+                <button
+                  onClick={() => setMediaLibraryTab('pexels-videos')}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'pexels-videos' ? 'bg-green-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                  🎬 Pexels Videos
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('ai-images')}
@@ -1264,20 +1288,20 @@ export default function SocialManagerPage() {
                   </div>
                 )}
                 
-                {/* Unsplash Tab */}
-                {mediaLibraryTab === 'unsplash' && (
+                {/* Pexels Photos Tab */}
+                {mediaLibraryTab === 'pexels-photos' && (
                   <div>
                     <div className="mb-6 flex gap-3">
                       <input
                         type="text"
-                        value={unsplashQuery}
-                        onChange={(e) => setUnsplashQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && searchUnsplash()}
+                        value={pexelsQuery}
+                        onChange={(e) => setPexelsQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchPexelsPhotos()}
                         placeholder="Search free stock photos..."
                         className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
                       />
                       <button
-                        onClick={searchUnsplash}
+                        onClick={searchPexelsPhotos}
                         className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-semibold transition"
                       >
                         Search
@@ -1287,25 +1311,83 @@ export default function SocialManagerPage() {
                       <div className="text-center py-12">
                         <p className="text-gray-400">Searching...</p>
                       </div>
-                    ) : unsplashImages.length === 0 ? (
+                    ) : pexelsPhotos.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4">✨</div>
-                        <h3 className="text-xl font-bold text-white mb-2">Search Unsplash</h3>
-                        <p className="text-gray-400">Search millions of free stock photos</p>
+                        <div className="text-6xl mb-4">📸</div>
+                        <h3 className="text-xl font-bold text-white mb-2">Search Pexels Photos</h3>
+                        <p className="text-gray-400">Search millions of free, high-quality stock photos</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-3 gap-4">
-                        {unsplashImages.map((image: any) => (
+                        {pexelsPhotos.map((photo: any) => (
                           <div
-                            key={image.id}
-                            onClick={() => handleMediaSelect(image)}
-                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-pink-500"
+                            key={photo.id}
+                            onClick={() => handleMediaSelect(photo)}
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-purple-500"
                           >
                             <div className="aspect-square">
-                              <img src={image.thumbnail} alt={image.name} className="w-full h-full object-cover" />
+                              <img src={photo.thumbnail} alt={photo.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="p-3">
-                              <p className="text-xs text-gray-400 truncate">{image.name}</p>
+                              <p className="text-xs text-gray-400 truncate">{photo.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">By {photo.photographer}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Pexels Videos Tab */}
+                {mediaLibraryTab === 'pexels-videos' && (
+                  <div>
+                    <div className="mb-6 flex gap-3">
+                      <input
+                        type="text"
+                        value={pexelsQuery}
+                        onChange={(e) => setPexelsQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
+                        placeholder="Search free stock videos..."
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
+                      />
+                      <button
+                        onClick={searchPexelsVideos}
+                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition"
+                      >
+                        Search
+                      </button>
+                    </div>
+                    {mediaLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400">Searching...</p>
+                      </div>
+                    ) : pexelsVideos.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🎬</div>
+                        <h3 className="text-xl font-bold text-white mb-2">Search Pexels Videos</h3>
+                        <p className="text-gray-400">Search thousands of free, high-quality stock videos</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {pexelsVideos.map((video: any) => (
+                          <div
+                            key={video.id}
+                            onClick={() => handleMediaSelect(video)}
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-green-500"
+                          >
+                            <div className="aspect-video relative group">
+                              <img src={video.thumbnail} alt={video.name} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <div className="text-white text-4xl">▶️</div>
+                              </div>
+                              <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                                {Math.floor(video.duration)}s
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <p className="text-xs text-gray-400 truncate">{video.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">By {video.user}</p>
                             </div>
                           </div>
                         ))}

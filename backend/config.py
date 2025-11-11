@@ -6,7 +6,8 @@ load_dotenv()
 class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-    UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+    PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+    UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")  # Deprecated, keeping for backwards compatibility
     SHARED_DRIVE_ID = os.getenv("SHARED_DRIVE_ID", "0AM2nUL9uMdpsUk9PVA")
     SHARED_DRIVE_NAME = os.getenv("SHARED_DRIVE_NAME", "GECS Labs")
     MARKETING_FOLDER_NAME = os.getenv("MARKETING_FOLDER_NAME", "Marketing")

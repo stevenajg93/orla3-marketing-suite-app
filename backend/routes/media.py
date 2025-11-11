@@ -34,7 +34,7 @@ def find_marketing_folder_id(service):
 
 @router.get("/media/status")
 def get_status():
-    return {"drive": {"connected": DRIVE_AVAILABLE, "shared_drive": Config.SHARED_DRIVE_NAME, "status": f"Connected to {Config.SHARED_DRIVE_NAME} ✅" if DRIVE_AVAILABLE else "Not connected"}, "unsplash": {"connected": bool(Config.UNSPLASH_ACCESS_KEY), "status": "API key configured ✅" if Config.UNSPLASH_ACCESS_KEY else "Missing"}}
+    return {"drive": {"connected": DRIVE_AVAILABLE, "shared_drive": Config.SHARED_DRIVE_NAME, "status": f"Connected to {Config.SHARED_DRIVE_NAME} ✅" if DRIVE_AVAILABLE else "Not connected"}, "pexels": {"connected": bool(Config.PEXELS_API_KEY), "status": "API key configured ✅" if Config.PEXELS_API_KEY else "Missing"}}
 
 @router.get("/media/folders")
 def get_folders():
@@ -86,24 +86,89 @@ def get_library(folder_id: Optional[str] = Query(None)):
         logger.error(f"Error loading library: {e}")
         return {"assets": []}
 
-@router.get("/media/unsplash")
-def search_unsplash(query: str = Query(...), per_page: int = Query(20)):
-    if not Config.UNSPLASH_ACCESS_KEY:
-        logger.warning("Unsplash API key not configured")
+@router.get("/media/pexels/photos")
+def search_pexels_photos(query: str = Query(...), per_page: int = Query(20)):
+    """
+    Search for free stock photos on Pexels.
+
+    Pexels offers millions of free, high-quality stock photos.
+    All photos are free to use for personal and commercial projects.
+    """
+    if not Config.PEXELS_API_KEY:
+        logger.warning("Pexels API key not configured")
         return {"images": []}
     try:
-        url = "https://api.unsplash.com/search/photos"
-        headers = {"Authorization": f"Client-ID {Config.UNSPLASH_ACCESS_KEY}"}
+        url = "https://api.pexels.com/v1/search"
+        headers = {"Authorization": Config.PEXELS_API_KEY}
         params = {"query": query, "per_page": per_page}
         with httpx.Client() as client:
             response = client.get(url, headers=headers, params=params)
             response.raise_for_status()
             data = response.json()
         images = []
-        for photo in data.get('results', []):
-            images.append({"id": photo['id'], "name": photo.get('alt_description', 'Untitled'), "type": "image", "source": "unsplash", "url": photo['urls']['regular'], "thumbnail": photo['urls']['small']})
-        logger.info(f"Found {len(images)} Unsplash images for: {query}")
+        for photo in data.get('photos', []):
+            images.append({
+                "id": photo['id'],
+                "name": photo.get('alt', 'Pexels Photo'),
+                "type": "image",
+                "source": "pexels",
+                "url": photo['src']['large'],
+                "thumbnail": photo['src']['medium'],
+                "photographer": photo['photographer'],
+                "photographer_url": photo['photographer_url']
+            })
+        logger.info(f"Found {len(images)} Pexels photos for: {query}")
         return {"images": images}
     except Exception as e:
-        logger.error(f"Error searching Unsplash: {e}")
+        logger.error(f"Error searching Pexels photos: {e}")
         return {"images": []}
+
+@router.get("/media/pexels/videos")
+def search_pexels_videos(query: str = Query(...), per_page: int = Query(20)):
+    """
+    Search for free stock videos on Pexels.
+
+    Pexels offers thousands of free, high-quality stock videos.
+    All videos are free to use for personal and commercial projects.
+    """
+    if not Config.PEXELS_API_KEY:
+        logger.warning("Pexels API key not configured")
+        return {"videos": []}
+    try:
+        url = "https://api.pexels.com/videos/search"
+        headers = {"Authorization": Config.PEXELS_API_KEY}
+        params = {"query": query, "per_page": per_page}
+        with httpx.Client() as client:
+            response = client.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+        videos = []
+        for video in data.get('videos', []):
+            # Get the best quality video file (HD preferred)
+            video_file = None
+            for file in video.get('video_files', []):
+                if file.get('quality') == 'hd':
+                    video_file = file
+                    break
+            if not video_file and video.get('video_files'):
+                video_file = video['video_files'][0]
+
+            if video_file:
+                videos.append({
+                    "id": video['id'],
+                    "name": f"Video by {video['user']['name']}",
+                    "type": "video",
+                    "source": "pexels",
+                    "url": video_file['link'],
+                    "thumbnail": video.get('image'),
+                    "duration": video.get('duration'),
+                    "width": video.get('width'),
+                    "height": video.get('height'),
+                    "user": video['user']['name'],
+                    "user_url": video['user']['url']
+                })
+        logger.info(f"Found {len(videos)} Pexels videos for: {query}")
+        return {"videos": videos}
+    except Exception as e:
+        logger.error(f"Error searching Pexels videos: {e}")
+        return {"videos": []}
