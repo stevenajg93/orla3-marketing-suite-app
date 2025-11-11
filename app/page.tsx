@@ -122,17 +122,17 @@ export default function LandingPage() {
           </span>
         </div>
         <h1 className="text-6xl md:text-7xl font-black text-white mb-6">
-          Save 40+ Hours Per Week
+          Automate Your Marketing
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-            Creating Viral Content
+            Keep Creating Brilliance
           </span>
         </h1>
         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Access <span className="text-white font-bold">8 world-class AI models</span>,{' '}
-          <span className="text-white font-bold">millions of stock assets</span>, and{' '}
-          <span className="text-white font-bold">automated publishing</span> — all in one
-          platform. Get the results of a £100k/year marketing team for less than a gym
-          membership.
+          Let AI handle the routine marketing — daily posts, captions, blog updates — so you can
+          focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
+          <span className="text-white font-bold">8 world-class AI models</span> and{' '}
+          <span className="text-white font-bold">millions of stock assets</span> to keep your
+          business visible while you do what you do best.
         </p>
         <div className="flex gap-4 justify-center mb-8">
           <Link
@@ -188,29 +188,29 @@ export default function LandingPage() {
       {/* ROI Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Replace Your Entire Marketing Department
+          More Time for What You Love, Less Time on Admin
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          Save time, money, and sanity. Get professional results without the professional price tag.
+          Automate the busywork. Keep your business visible without sacrificing your creative time.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
               metric: '40+ Hours',
               label: 'Saved Per Week',
-              description: 'Stop spending all day creating content. Let AI do the heavy lifting.',
+              description: 'Free up time for client work, creative projects, and what you love.',
             },
             {
               metric: '£95k/year',
-              label: 'Cost Savings',
+              label: 'Marketing Cost Savings',
               description:
-                'Get a senior copywriter, designer, and strategist for £29/month.',
+                'Automate daily marketing for £29/month. Invest savings in premium content.',
             },
             {
               metric: '10x Faster',
-              label: 'Content Production',
+              label: 'Marketing Output',
               description:
-                'Create a month of content in an afternoon. Ship faster than your competitors.',
+                'Maintain consistent presence across channels without the daily grind.',
             },
           ].map((stat, idx) => (
             <div
@@ -419,10 +419,10 @@ export default function LandingPage() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Stop Wasting Time on Content Creation
+            Focus on Your Craft, Automate the Rest
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Get 40+ hours back every week. Your competitors are already using AI — don't get left behind.
+            Let AI handle your daily marketing while you create amazing work. Stay visible, stay booked.
           </p>
           <Link
             href="/signup"
@@ -431,7 +431,7 @@ export default function LandingPage() {
             Start Free Trial — No Credit Card Required
           </Link>
           <p className="text-blue-200 text-sm">
-            14-day free trial • Cancel anytime • 8 AI models • Millions of assets
+            14-day free trial • Cancel anytime • 8 AI models • Perfect for creators
           </p>
         </div>
       </section>
