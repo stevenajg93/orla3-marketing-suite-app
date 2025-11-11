@@ -213,6 +213,26 @@ export default function SocialManagerPage() {
         };
         setAiGeneratedImages([newImage, ...aiGeneratedImages]);
         console.log('✨ AI Image generated successfully');
+
+        // Save to database so it appears in Generated Content tab
+        try {
+          await api.post('/library/content', {
+            title: `AI Image: ${aiImagePrompt.substring(0, 50)}`,
+            content_type: 'image',
+            content: aiImagePrompt,
+            status: 'draft',
+            platform: 'AI Generated',
+            tags: ['ai-generated', 'imagen-4-ultra', aiAspectRatio],
+            media_url: response.image_data
+          });
+          console.log('✅ AI Image saved to content library');
+
+          // Reload media library to show new image
+          loadMediaLibrary();
+        } catch (saveErr) {
+          console.error('Failed to save image to library:', saveErr);
+          // Don't fail the whole operation if save fails
+        }
       } else {
         alert(`Failed to generate image: ${response.error || 'Unknown error'}`);
       }
@@ -231,24 +251,50 @@ export default function SocialManagerPage() {
     }
     setGeneratingAiVideo(true);
     try {
-      const response = await api.post('/ai/generate-video', {
+      const response = await api.post('/ai/generate-video-veo', {
         prompt: aiVideoPrompt,
         duration_seconds: 8,
         resolution: aiVideoResolution
       });
 
-      if (response.success) {
+      if (response.success && response.job_id) {
         const newVideo = {
-          url: response.video_url,
+          url: response.job_id, // Store job_id as URL temporarily
           prompt: aiVideoPrompt,
           resolution: aiVideoResolution,
           source: 'ai-generated',
           status: response.status || 'generating',
+          job_id: response.job_id,
           timestamp: new Date().toISOString()
         };
         setAiGeneratedVideos([newVideo, ...aiGeneratedVideos]);
-        console.log('✨ AI Video generation started');
-        alert('Video generation started! This may take 2-5 minutes.');
+        console.log('✨ AI Video generation started:', response.job_id);
+
+        // Save to database immediately with "generating" status
+        try {
+          const saveResponse = await api.post('/library/content', {
+            title: `AI Video: ${aiVideoPrompt.substring(0, 50)}`,
+            content_type: 'video',
+            content: aiVideoPrompt,
+            status: 'draft',
+            platform: 'AI Generated (Veo 3.1)',
+            tags: ['ai-generated', 'veo-3.1', 'generating'],
+            media_url: response.job_id // Store job_id temporarily, will update when complete
+          });
+          console.log('✅ AI Video placeholder saved to content library');
+
+          // Start polling for completion (will update database when done)
+          pollVideoStatus(response.job_id, saveResponse.item?.id);
+
+          // Reload media library
+          loadMediaLibrary();
+        } catch (saveErr) {
+          console.error('Failed to save video to library:', saveErr);
+          // Still poll even if save fails
+          pollVideoStatus(response.job_id);
+        }
+
+        alert('Video generation started! This may take 2-5 minutes. It will appear in Generated Content when ready.');
       } else {
         alert(`Failed to generate video: ${response.error || 'Unknown error'}`);
       }
@@ -258,6 +304,69 @@ export default function SocialManagerPage() {
     } finally {
       setGeneratingAiVideo(false);
     }
+  };
+
+  // Poll video status and update database when complete
+  const pollVideoStatus = async (jobId: string, contentId?: string) => {
+    const maxAttempts = 60; // 5 minutes max
+    let attempts = 0;
+
+    const checkStatus = async () => {
+      try {
+        const endpoint = jobId.startsWith('projects/')
+          ? `/ai/veo-status/${encodeURIComponent(jobId)}`
+          : `/ai/video-status/${jobId}`;
+
+        const status = await api.get(endpoint);
+
+        if (status.success && status.status === 'complete' && status.video_url) {
+          console.log('✅ Video generation complete:', status.video_url);
+
+          // Update database with final video URL
+          if (contentId) {
+            await api.patch(`/library/content/${contentId}`, {
+              title: `AI Video: ${aiVideoPrompt.substring(0, 50)}`,
+              content_type: 'video',
+              content: aiVideoPrompt,
+              status: 'draft',
+              platform: 'AI Generated (Veo 3.1)',
+              tags: ['ai-generated', 'veo-3.1', 'complete'],
+              media_url: status.video_url
+            });
+            console.log('✅ Video updated in database');
+          }
+
+          // Update UI state
+          setAiGeneratedVideos(prev =>
+            prev.map(v =>
+              v.job_id === jobId
+                ? { ...v, url: status.video_url, status: 'complete' }
+                : v
+            )
+          );
+
+          // Reload media library
+          loadMediaLibrary();
+        } else if (status.success && status.status === 'generating') {
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkStatus, 5000); // Check every 5 seconds
+          } else {
+            console.error('❌ Video generation timeout');
+          }
+        } else if (status.error) {
+          console.error('❌ Video generation failed:', status.error);
+        }
+      } catch (err) {
+        console.error('Error checking video status:', err);
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 5000);
+        }
+      }
+    };
+
+    checkStatus();
   };
 
   const handleMediaSelect = async (item: any) => {
@@ -336,16 +445,37 @@ export default function SocialManagerPage() {
       console.log('✨ Unsplash image selected');
       setSelectedMedia([...selectedMedia, { url: item.url, type: 'image', name: item.name || 'Unsplash Image', source: 'unsplash' }]);
     }
+    // Handle AI-generated images and videos
+    else if (item.source === 'ai-generated' && item.url) {
+      console.log('🤖 AI-generated media selected');
+      const mediaType = item.prompt?.toLowerCase().includes('video') || item.resolution ? 'video' : 'image';
+      setSelectedMedia([...selectedMedia, {
+        url: item.url,
+        type: mediaType,
+        name: `AI ${mediaType}: ${item.prompt?.substring(0, 30) || 'Generated'}`,
+        source: 'ai-generated'
+      }]);
+    }
+    // Handle content from Generated Content tab (images/videos in database)
+    else if ((item.content_type === 'image' || item.content_type === 'video') && item.media_url) {
+      console.log(`🎨 ${item.content_type} from library selected`);
+      setSelectedMedia([...selectedMedia, {
+        url: item.media_url,
+        type: item.content_type,
+        name: item.title || `${item.content_type} from library`,
+        source: 'library'
+      }]);
+    }
     // Fallback for direct URLs
     else if (item.thumbnail || item.url) {
       console.log('📷 Generic media selected');
       const url = item.thumbnail || item.url;
-      setSelectedMedia([...selectedMedia, typeof url === 'string' ? url : url]);
-    } 
-    else {
-      console.log('📄 Unknown media type');
+      setSelectedMedia([...selectedMedia, typeof url === 'object' ? url : { url, type: 'image', name: 'Media', source: 'unknown' }]);
     }
-    
+    else {
+      console.log('📄 Unknown media type:', item);
+    }
+
     setShowMediaLibrary(false);
   };
 
