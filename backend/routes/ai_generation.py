@@ -118,16 +118,16 @@ async def generate_image(request: ImageGenerateRequest):
         # Get fresh access token
         access_token = get_access_token()
 
-        logger.info(f"🎨 Generating image with Imagen 3: '{request.prompt[:60]}...' (aspect: {request.aspect_ratio})")
+        logger.info(f"🎨 Generating image with Imagen 4 Ultra: '{request.prompt[:60]}...' (aspect: {request.aspect_ratio})")
 
-        # Vertex AI Imagen 3 endpoint
+        # Vertex AI Imagen 4 Ultra endpoint (highest quality)
         endpoint = (
             f"https://us-central1-aiplatform.googleapis.com/v1/"
             f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
-            f"publishers/google/models/imagegeneration@006:predict"
+            f"publishers/google/models/imagen-4.0-ultra-generate-001:predict"
         )
 
-        # Request payload for Imagen 3
+        # Request payload for Imagen 4 Ultra with quality enhancements
         payload = {
             "instances": [{
                 "prompt": request.prompt
@@ -135,8 +135,14 @@ async def generate_image(request: ImageGenerateRequest):
             "parameters": {
                 "sampleCount": request.num_images,
                 "aspectRatio": request.aspect_ratio,
-                "safetyFilterLevel": "block_some",
-                "personGeneration": "allow_adult"
+                "sampleImageSize": "2K",  # Maximum resolution
+                "enhancePrompt": True,  # AI-enhanced prompts for better quality
+                "safetySetting": "block_some",
+                "personGeneration": "allow_adult",
+                "addWatermark": False,  # No watermark for cleaner images
+                "outputOptions": {
+                    "mimeType": "image/png"  # PNG for best quality
+                }
             }
         }
 
