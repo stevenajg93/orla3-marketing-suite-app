@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
@@ -64,6 +64,9 @@ export default function MediaLibrary() {
   const [aiGeneratedImages, setAiGeneratedImages] = useState<any[]>([]);
   const [aiGeneratedVideos, setAiGeneratedVideos] = useState<any[]>([]);
 
+  // Track active polling to prevent duplicates
+  const activePollers = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     loadStatus();
     loadFolders();
@@ -110,8 +113,13 @@ export default function MediaLibrary() {
       );
 
       generatingVideos.forEach((video: GeneratedContent) => {
-        console.log('🔄 Resuming polling for video:', video.id);
-        pollVideoStatus(video.media_url!, video.id);
+        // Only start polling if not already polling this video
+        if (!activePollers.current.has(video.media_url!)) {
+          console.log('🔄 Resuming polling for video:', video.id);
+          pollVideoStatus(video.media_url!, video.id);
+        } else {
+          console.log('⏭️ Already polling video:', video.id);
+        }
       });
     } catch (err) {
       console.error('Failed to load generated content');
@@ -269,6 +277,10 @@ export default function MediaLibrary() {
   };
 
   const pollVideoStatus = async (jobId: string, contentId?: string) => {
+    // Mark this video as being polled (prevent duplicate pollers)
+    activePollers.current.add(jobId);
+    console.log('🎬 Started polling:', jobId);
+
     const maxAttempts = 60; // 5 minutes max (every 5 seconds)
     let attempts = 0;
 
@@ -313,7 +325,10 @@ export default function MediaLibrary() {
           // Reload content to show completed video in Generated Content tab
           loadGeneratedContent();
 
-          return; // Stop polling
+          // Stop polling - remove from active pollers
+          activePollers.current.delete(jobId);
+          console.log('🛑 Stopped polling (complete):', jobId);
+          return;
         } else if (status.success && status.status === 'generating') {
           // Still generating, poll again
           attempts++;
@@ -321,9 +336,13 @@ export default function MediaLibrary() {
             setTimeout(checkStatus, 5000); // Check every 5 seconds
           } else {
             console.error('❌ Video generation timeout');
+            activePollers.current.delete(jobId);
+            console.log('🛑 Stopped polling (timeout):', jobId);
           }
         } else if (status.error) {
           console.error('❌ Video generation failed:', status.error);
+          activePollers.current.delete(jobId);
+          console.log('🛑 Stopped polling (error):', jobId);
         }
       } catch (err) {
         console.error('Error checking video status:', err);
@@ -331,6 +350,9 @@ export default function MediaLibrary() {
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(checkStatus, 5000);
+        } else {
+          activePollers.current.delete(jobId);
+          console.log('🛑 Stopped polling (max retries):', jobId);
         }
       }
     };
