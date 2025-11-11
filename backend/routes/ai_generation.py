@@ -224,6 +224,149 @@ async def generate_image(request: ImageGenerateRequest):
             error=f"Image generation failed: {str(e)}"
         )
 
+@router.post("/generate-video-veo", response_model=VideoGenerateResponse)
+async def generate_video_veo(request: VideoGenerateRequest):
+    """
+    Generate a video using Google Veo 3.1 via Vertex AI.
+
+    Google Veo 3.1 is Google's state-of-the-art video generation model:
+    - FREE with Gemini subscription (2 free credits)
+    - 4, 6, or 8 second videos
+    - 720p or 1080p resolution
+    - Audio generation included
+    - Production-ready quality
+
+    Cost: FREE (with subscription) vs $2.50/video with Runway
+    Generation time: 1-3 minutes (async long-running operation)
+
+    Args:
+        request: VideoGenerateRequest with prompt, duration, and resolution
+
+    Returns:
+        VideoGenerateResponse with operation ID for status tracking
+    """
+
+    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+        logger.error("❌ OAuth2 credentials not configured")
+        raise HTTPException(
+            status_code=503,
+            detail="OAuth2 credentials not configured. Please add GCP_CLIENT_ID, GCP_CLIENT_SECRET, and GCP_REFRESH_TOKEN to environment variables."
+        )
+
+    try:
+        # Get fresh access token (same as Imagen 3)
+        access_token = get_access_token()
+
+        # Ensure duration is 4, 6, or 8 seconds (Veo requirement)
+        duration = 8 if request.duration_seconds > 6 else (6 if request.duration_seconds > 4 else 4)
+
+        logger.info(f"🎬 Generating video with Veo 3.1: '{request.prompt[:60]}...' ({duration}s, {request.resolution})")
+
+        # Vertex AI Veo 3.1 endpoint
+        endpoint = (
+            f"https://us-central1-aiplatform.googleapis.com/v1/"
+            f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
+            f"publishers/google/models/veo-3.1-generate-preview:predictLongRunning"
+        )
+
+        # Request payload for Veo 3.1
+        payload = {
+            "instances": [{
+                "prompt": request.prompt
+            }],
+            "parameters": {
+                "durationSeconds": duration,
+                "resolution": request.resolution,
+                "generateAudio": True,  # Required for Veo 3
+                "sampleCount": 1,
+                "aspectRatio": "16:9",
+                "enhancePrompt": True,
+                "personGeneration": "allow_adult"
+            }
+        }
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                endpoint,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json",
+                }
+            )
+
+            logger.info(f"📡 Veo API response status: {response.status_code}")
+            logger.info(f"📡 Veo API response body: {response.text[:500]}")
+
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"📊 Full Veo response data: {data}")
+
+                # Extract operation name (long-running operation ID)
+                operation_name = data.get("name")
+
+                if not operation_name:
+                    logger.error(f"❌ No operation name in response! Keys: {list(data.keys())}")
+                    return VideoGenerateResponse(
+                        success=False,
+                        error=f"No operation ID returned from Veo. Response keys: {list(data.keys())}",
+                        status="failed"
+                    )
+
+                logger.info(f"✅ Video generation task created: {operation_name}")
+
+                return VideoGenerateResponse(
+                    success=True,
+                    status="generating",
+                    job_id=operation_name  # Store operation name as job_id
+                )
+
+            elif response.status_code == 403:
+                error_text = response.text
+                logger.error(f"❌ Veo API access denied (403): {error_text}")
+                return VideoGenerateResponse(
+                    success=False,
+                    error=f"Access denied to Veo API. This likely means:\n1. Your GCP account needs Veo 3.1 allowlist approval\n2. Apply at: https://cloud.google.com/vertex-ai/generative-ai/docs/models/veo/3-1-generate-preview\n3. Vertex AI API may not be enabled\n\nError: {error_text[:200]}",
+                    status="failed"
+                )
+
+            elif response.status_code == 400:
+                error_text = response.text
+                logger.error(f"❌ Invalid request (400): {error_text}")
+                return VideoGenerateResponse(
+                    success=False,
+                    error=f"Invalid request. Check:\n1. Prompt doesn't violate content policy\n2. Duration is 4, 6, or 8 seconds\n\nError: {error_text[:200]}",
+                    status="failed"
+                )
+
+            else:
+                error_text = response.text
+                logger.error(f"❌ Veo request failed: {response.status_code} - {error_text}")
+                return VideoGenerateResponse(
+                    success=False,
+                    error=f"Video generation failed (HTTP {response.status_code}): {error_text[:200]}",
+                    status="failed"
+                )
+
+    except httpx.TimeoutException:
+        logger.error("❌ Veo request timeout")
+        return VideoGenerateResponse(
+            success=False,
+            error="Video generation request timed out. Please try again.",
+            status="failed"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error(f"❌ Veo video generation error: {str(e)}", exc_info=True)
+        return VideoGenerateResponse(
+            success=False,
+            error=f"Video generation failed: {str(e)}",
+            status="failed"
+        )
+
 @router.post("/generate-video", response_model=VideoGenerateResponse)
 async def generate_video(request: VideoGenerateRequest):
     """
