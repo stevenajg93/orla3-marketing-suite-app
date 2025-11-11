@@ -73,9 +73,10 @@ export default function LandingPage() {
       credits: 20000,
       description: 'Custom solutions for large organizations',
       features: [
-        '20,000+ credits/month',
-        'Unlimited AI content generation',
-        'Unlimited AI images & videos',
+        '20,000 credits/month',
+        '~4,000 social posts or 2,000 blog posts',
+        '1,000 AI-generated ultra images',
+        '200 AI-generated videos (8-sec)',
         'Unlimited brand voices',
         'Unlimited social accounts',
         'Unlimited team members',
