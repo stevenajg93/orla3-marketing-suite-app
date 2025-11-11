@@ -198,10 +198,13 @@ export default function MediaLibrary() {
             content: aiImagePrompt,
             status: 'draft',
             platform: 'AI Generated',
-            tags: ['ai-generated', 'imagen-3'],
+            tags: ['ai-generated', 'imagen-4-ultra', '2K'],
             media_url: response.image_data
           });
           console.log('✨ AI Image saved to content library');
+
+          // Reload content to show in Generated Content tab
+          loadGeneratedContent();
         } catch (saveErr) {
           console.error('Failed to save to library:', saveErr);
           // Don't block the UI - image is still in local state
