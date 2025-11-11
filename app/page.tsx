@@ -193,29 +193,30 @@ export default function LandingPage() {
       {/* ROI Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
-          More Time for What You Love, Less Time on Admin
+          Your Complete Marketing Department at a Fraction of the Cost
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          Automate the busywork. Keep your business visible without sacrificing your creative time.
+          Get CMO-level strategy, professional content creation, and full-service marketing execution —
+          all powered by 8 world-class AI models working together.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
-              metric: '40+ Hours',
-              label: 'Saved Per Week',
-              description: 'Free up time for client work, creative projects, and what you love.',
+              metric: '£200k+/year',
+              label: 'vs Hiring a Marketing Team',
+              description: 'CMO, content writer, social media manager, and designer cost £165-290k/year. Get it all for £99/month.',
             },
             {
-              metric: '£95k/year',
-              label: 'Marketing Cost Savings',
+              metric: 'Enterprise-Grade',
+              label: 'Marketing Capabilities',
               description:
-                'Automate daily marketing for £99/month. Invest savings in premium content.',
+                'Professional content strategy, multi-channel publishing, competitor analysis, and brand management.',
             },
             {
-              metric: '10x Faster',
-              label: 'Marketing Output',
+              metric: '10x ROI',
+              label: 'On Your Investment',
               description:
-                'Maintain consistent presence across channels without the daily grind.',
+                'Professional marketing execution for 95% less than traditional hiring costs.',
             },
           ].map((stat, idx) => (
             <div
@@ -488,10 +489,11 @@ export default function LandingPage() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Focus on Your Craft, Automate the Rest
+            Get Your Full Marketing Department Today
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Let AI handle your daily marketing while you create amazing work. Stay visible, stay booked.
+            CMO-level strategy, professional content, and enterprise-grade execution —
+            powered by 8 world-class AI models for 95% less than hiring costs.
           </p>
           <Link
             href="/signup"
@@ -500,7 +502,7 @@ export default function LandingPage() {
             Start Free Trial — No Credit Card Required
           </Link>
           <p className="text-blue-200 text-sm">
-            14-day free trial • Cancel anytime • 8 AI models • Perfect for creators
+            14-day free trial • Cancel anytime • Full marketing team capabilities
           </p>
         </div>
       </section>
