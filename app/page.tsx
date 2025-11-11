@@ -116,17 +116,25 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full border border-blue-400/30">
+          <span className="text-blue-300 font-semibold">
+            🚀 Your Entire Marketing Team, Powered by AI
+          </span>
+        </div>
         <h1 className="text-6xl md:text-7xl font-black text-white mb-6">
-          AI-Powered Marketing
+          Save 40+ Hours Per Week
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-            Made Simple
+            Creating Viral Content
           </span>
         </h1>
         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Create stunning content, manage social media, and dominate your market with
-          industry-leading AI technology. All in one powerful suite.
+          Access <span className="text-white font-bold">8 world-class AI models</span>,{' '}
+          <span className="text-white font-bold">millions of stock assets</span>, and{' '}
+          <span className="text-white font-bold">automated publishing</span> — all in one
+          platform. Get the results of a £100k/year marketing team for less than a gym
+          membership.
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center mb-8">
           <Link
             href="/signup"
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
@@ -137,59 +145,151 @@ export default function LandingPage() {
             Watch Demo
           </button>
         </div>
+
+        {/* Social Proof */}
+        <div className="flex flex-wrap justify-center gap-8 text-gray-400 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> No credit card required
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> Cancel anytime
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> 14-day free trial
+          </div>
+        </div>
+      </section>
+
+      {/* Powered By Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-y border-white/10">
+        <h3 className="text-center text-gray-400 mb-8 uppercase tracking-wider text-sm font-bold">
+          Powered by Industry-Leading AI
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
+          {[
+            { name: 'Claude Sonnet 4', desc: 'Elite content writing', icon: '🧠' },
+            { name: 'GPT-4 Turbo', desc: 'Lightning-fast generation', icon: '⚡' },
+            { name: 'Google Gemini', desc: 'Multi-modal intelligence', icon: '💎' },
+            { name: 'Imagen 4 Ultra', desc: 'Photorealistic images', icon: '🎨' },
+            { name: 'Veo 3.1', desc: 'Cinematic video generation', icon: '🎬' },
+            { name: 'Unsplash Pro', desc: 'Millions of stock photos', icon: '📸' },
+            { name: 'DALL-E 3', desc: 'Creative visuals', icon: '🖼️' },
+            { name: 'Competitor AI', desc: 'Market intelligence', icon: '🔍' },
+          ].map((tech, idx) => (
+            <div key={idx} className="text-center">
+              <div className="text-4xl mb-2">{tech.icon}</div>
+              <div className="text-white font-bold text-sm">{tech.name}</div>
+              <div className="text-gray-500 text-xs">{tech.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ROI Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <h2 className="text-4xl font-bold text-white text-center mb-4">
+          Replace Your Entire Marketing Department
+        </h2>
+        <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
+          Save time, money, and sanity. Get professional results without the professional price tag.
+        </p>
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {[
+            {
+              metric: '40+ Hours',
+              label: 'Saved Per Week',
+              description: 'Stop spending all day creating content. Let AI do the heavy lifting.',
+            },
+            {
+              metric: '£95k/year',
+              label: 'Cost Savings',
+              description:
+                'Get a senior copywriter, designer, and strategist for £29/month.',
+            },
+            {
+              metric: '10x Faster',
+              label: 'Content Production',
+              description:
+                'Create a month of content in an afternoon. Ship faster than your competitors.',
+            },
+          ].map((stat, idx) => (
+            <div
+              key={idx}
+              className="bg-gradient-to-br from-blue-600/10 to-purple-600/10 backdrop-blur-lg rounded-2xl p-8 border border-blue-400/30 text-center"
+            >
+              <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
+                {stat.metric}
+              </div>
+              <div className="text-white font-bold text-xl mb-3">{stat.label}</div>
+              <p className="text-gray-400">{stat.description}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Features Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-4xl font-bold text-white text-center mb-12">
-          Everything You Need to Dominate Your Market
+        <h2 className="text-4xl font-bold text-white text-center mb-4">
+          Your AI Marketing Team at Your Fingertips
         </h2>
+        <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
+          8 industry-leading AI models working together to create content that converts
+        </p>
         <div className="grid md:grid-cols-3 gap-8">
           {[
             {
               icon: '✨',
-              title: 'AI Content Creation',
+              title: 'Elite AI Content Writers',
               description:
-                'Generate blog posts, social captions, and marketing copy with Claude, GPT-4, and Gemini',
+                'Claude Sonnet 4, GPT-4, and Gemini automatically selected for each task. Blog posts, social captions, ad copy — all written by the best AI for the job.',
+              time: 'Save 30 hours/week',
             },
             {
               icon: '🎨',
-              title: 'Premium Image Generation',
+              title: 'Photorealistic Image & Video',
               description:
-                'Create stunning visuals with Google Imagen 4 Ultra - the best AI image generator',
+                'Imagen 4 Ultra for stunning images, Veo 3.1 for cinematic videos, plus millions of Unsplash stock photos. Never run out of visual content.',
+              time: 'Save 10 hours/week',
             },
             {
               icon: '📅',
-              title: 'Social Media Calendar',
+              title: 'Auto-Pilot Social Media',
               description:
-                'Plan, schedule, and auto-publish across all your social channels from one place',
+                'AI writes, designs, and publishes across all platforms. Schedule months of content in minutes. Never miss a post again.',
+              time: 'Save 15 hours/week',
             },
             {
               icon: '🎯',
-              title: 'Brand Voice Training',
+              title: 'Your Brand Voice, Perfected',
               description:
-                'Train AI on your unique voice and style for consistent, on-brand content',
+                'Train AI on your writing style, tone, and brand guidelines. Every piece of content sounds exactly like you wrote it.',
+              time: 'Instant consistency',
             },
             {
               icon: '🔍',
-              title: 'Competitor Analysis',
+              title: 'Spy on Your Competitors',
               description:
-                'Track competitors, analyze their strategies, and stay ahead of the game',
+                'AI-powered competitor analysis tracks their strategies, content, and trends. Know what works before you spend a penny.',
+              time: 'Real-time insights',
             },
             {
               icon: '📊',
-              title: 'Content Library',
+              title: 'Searchable Content Vault',
               description:
-                'Organize all your marketing assets in one searchable, AI-powered library',
+                'Every asset, every post, every campaign organized and searchable. Find what you need in seconds, not hours.',
+              time: 'Instant access',
             },
           ].map((feature, index) => (
             <div
               key={index}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-blue-400/50 transition"
+              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-blue-400/50 transition group"
             >
               <div className="text-5xl mb-4">{feature.icon}</div>
               <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
-              <p className="text-gray-300">{feature.description}</p>
+              <p className="text-gray-300 mb-4">{feature.description}</p>
+              <div className="inline-block px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full">
+                <span className="text-green-300 text-sm font-semibold">{feature.time}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -319,17 +419,20 @@ export default function LandingPage() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Marketing?
+            Stop Wasting Time on Content Creation
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of marketers creating better content, faster.
+            Get 40+ hours back every week. Your competitors are already using AI — don't get left behind.
           </p>
           <Link
             href="/signup"
-            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block"
+            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
           >
-            Start Your Free Trial
+            Start Free Trial — No Credit Card Required
           </Link>
+          <p className="text-blue-200 text-sm">
+            14-day free trial • Cancel anytime • 8 AI models • Millions of assets
+          </p>
         </div>
       </section>
 
