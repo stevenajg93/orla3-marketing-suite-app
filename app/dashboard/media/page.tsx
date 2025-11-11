@@ -35,7 +35,7 @@ type GeneratedContent = {
 };
 
 export default function MediaLibrary() {
-  const [activeTab, setActiveTab] = useState<'drive' | 'unsplash' | 'generated' | 'ai-images' | 'ai-videos'>('drive');
+  const [activeTab, setActiveTab] = useState<'drive' | 'pexels-photos' | 'pexels-videos' | 'generated' | 'ai-images' | 'ai-videos'>('drive');
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -43,7 +43,8 @@ export default function MediaLibrary() {
   const [breadcrumbs, setBreadcrumbs] = useState<{id: string, name: string}[]>([]);
   const [mediaType, setMediaType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [unsplashImages, setUnsplashImages] = useState<MediaAsset[]>([]);
+  const [pexelsPhotos, setPexelsPhotos] = useState<MediaAsset[]>([]);
+  const [pexelsVideos, setPexelsVideos] = useState<MediaAsset[]>([]);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
@@ -153,15 +154,29 @@ export default function MediaLibrary() {
     }
   };
 
-  const searchUnsplash = async () => {
+  const searchPexelsPhotos = async () => {
     if (!searchQuery.trim()) return;
 
     setLoading(true);
     try {
-      const res = await api.get(`/media/unsplash?query=${encodeURIComponent(searchQuery)}&per_page=20`);
-      setUnsplashImages(res.images || []);
+      const res = await api.get(`/media/pexels/photos?query=${encodeURIComponent(searchQuery)}&per_page=20`);
+      setPexelsPhotos(res.images || []);
     } catch (err) {
-      console.error("Failed to search Unsplash:", err);
+      console.error("Failed to search Pexels photos:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchPexelsVideos = async () => {
+    if (!searchQuery.trim()) return;
+
+    setLoading(true);
+    try {
+      const res = await api.get(`/media/pexels/videos?query=${encodeURIComponent(searchQuery)}&per_page=20`);
+      setPexelsVideos(res.videos || []);
+    } catch (err) {
+      console.error("Failed to search Pexels videos:", err);
     } finally {
       setLoading(false);
     }
@@ -445,7 +460,7 @@ export default function MediaLibrary() {
     }
   };
 
-  const currentAssets = activeTab === 'drive' ? assets : activeTab === 'unsplash' ? unsplashImages : [];
+  const currentAssets = activeTab === 'drive' ? assets : activeTab === 'pexels-photos' ? pexelsPhotos : activeTab === 'pexels-videos' ? pexelsVideos : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
@@ -474,14 +489,24 @@ export default function MediaLibrary() {
             🔗 Google Drive Assets
           </button>
           <button
-            onClick={() => setActiveTab('unsplash')}
+            onClick={() => setActiveTab('pexels-photos')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
-              activeTab === 'unsplash'
+              activeTab === 'pexels-photos'
                 ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            ✨ Generate from Unsplash
+            📸 Pexels Photos
+          </button>
+          <button
+            onClick={() => setActiveTab('pexels-videos')}
+            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+              activeTab === 'pexels-videos'
+                ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            }`}
+          >
+            🎬 Pexels Videos
           </button>
           <button
             onClick={() => setActiveTab('generated')}
@@ -561,23 +586,48 @@ export default function MediaLibrary() {
                   </button>
                 ))}
               </>
-            ) : activeTab === 'unsplash' ? (
+            ) : activeTab === 'pexels-photos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Search Unsplash</h2>
+                <h2 className="text-xl font-bold text-white mb-4">📸 Search Pexels Photos</h2>
+                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-300">Free stock photos • Millions available</p>
+                </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchUnsplash()}
+                  onKeyPress={(e) => e.key === 'Enter' && searchPexelsPhotos()}
                   placeholder="e.g., videography, camera"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
                 />
                 <button
-                  onClick={searchUnsplash}
+                  onClick={searchPexelsPhotos}
                   disabled={loading}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
-                  {loading ? '🔍 Searching...' : '🔍 Search'}
+                  {loading ? '🔍 Searching...' : '🔍 Search Photos'}
+                </button>
+              </>
+            ) : activeTab === 'pexels-videos' ? (
+              <>
+                <h2 className="text-xl font-bold text-white mb-4">🎬 Search Pexels Videos</h2>
+                <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-300">Free stock videos • Thousands available</p>
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
+                  placeholder="e.g., office, business meeting"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+                />
+                <button
+                  onClick={searchPexelsVideos}
+                  disabled={loading}
+                  className="w-full bg-green-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                >
+                  {loading ? '🔍 Searching...' : '🔍 Search Videos'}
                 </button>
               </>
             ) : activeTab === 'ai-images' ? (
