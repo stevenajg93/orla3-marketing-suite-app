@@ -295,6 +295,65 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Premium Content CTA */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-3xl p-12 border border-purple-400/30">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-block mb-4 px-4 py-2 bg-purple-600/30 rounded-full border border-purple-400/50">
+                <span className="text-purple-300 font-semibold">🎬 Premium Content</span>
+              </div>
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Need Professional Video or Photography?
+              </h2>
+              <p className="text-xl text-gray-300 mb-6">
+                AI handles your daily marketing. When you need cinematic videos, professional
+                photography, or high-end creative work, connect with verified UK creators near you.
+              </p>
+              <ul className="space-y-3 mb-8 text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">✓</span>
+                  <span>Browse portfolios of verified UK videographers & photographers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">✓</span>
+                  <span>Find local talent by location, style, and budget</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">✓</span>
+                  <span>Commission custom content for your biggest campaigns</span>
+                </li>
+              </ul>
+              <a
+                href="https://orla3.com/browse"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+              >
+                Find Content Creators Near Me →
+              </a>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { icon: '🎥', label: 'Videographers', count: '500+' },
+                { icon: '📸', label: 'Photographers', count: '300+' },
+                { icon: '🎨', label: 'Designers', count: '200+' },
+                { icon: '✍️', label: 'Content Creators', count: '400+' },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 text-center"
+                >
+                  <div className="text-4xl mb-2">{item.icon}</div>
+                  <div className="text-2xl font-bold text-white mb-1">{item.count}</div>
+                  <div className="text-gray-400 text-sm">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" id="pricing">
         <h2 className="text-4xl font-bold text-white text-center mb-4">

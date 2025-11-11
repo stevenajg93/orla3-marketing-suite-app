@@ -34,6 +34,19 @@ export default function DashboardLayout({
 
             {/* Right Side - User Account */}
             <div className="flex items-center gap-4">
+              {/* Find Creators Link */}
+              <a
+                href="https://orla3.com/browse"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 rounded-lg border border-purple-400/30 transition group"
+              >
+                <span className="text-2xl">🎬</span>
+                <span className="text-purple-300 font-semibold group-hover:text-purple-200">
+                  Find Creators
+                </span>
+              </a>
+
               {/* Credits Badge (placeholder) */}
               <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-400/30">
                 <span className="text-blue-300 font-bold">500</span>

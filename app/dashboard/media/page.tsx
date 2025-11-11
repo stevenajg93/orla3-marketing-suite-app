@@ -477,6 +477,31 @@ export default function MediaLibrary() {
           </div>
         </div>
 
+        {/* Premium Content CTA Banner */}
+        <div className="mb-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-xl p-6 border border-purple-400/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">🎬</div>
+              <div>
+                <h3 className="text-white font-bold text-lg">
+                  Need Professional Video or Photography?
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Connect with verified UK videographers and photographers for your premium projects
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://orla3.com/browse"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-bold transition whitespace-nowrap"
+            >
+              Find Creators Near Me →
+            </a>
+          </div>
+        </div>
+
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('drive')}
