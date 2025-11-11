@@ -17,6 +17,12 @@ class Config:
     # OAuth Credentials
     LINKEDIN_CLIENT_ID = os.getenv("LINKEDIN_CLIENT_ID")
     LINKEDIN_CLIENT_SECRET = os.getenv("LINKEDIN_CLIENT_SECRET")
+
+    # JWT Authentication
+    JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production-PLEASE")
+    JWT_ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
+    REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 days
     
     @classmethod
     def validate(cls):
