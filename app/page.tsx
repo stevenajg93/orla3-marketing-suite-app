@@ -16,7 +16,7 @@ export default function LandingPage() {
         '500 credits/month',
         '~100 social captions or 50 blog posts',
         '25 AI-generated ultra images',
-        '5 AI-generated videos (8-sec)',
+        '2 AI-generated videos (8-sec)',
         '1 brand voice profile',
         '3 social accounts',
         'Content calendar',
@@ -35,7 +35,7 @@ export default function LandingPage() {
         '2,000 credits/month',
         '~400 social posts or 200 blog posts',
         '100 AI-generated ultra images',
-        '20 AI-generated videos (8-sec)',
+        '10 AI-generated videos (8-sec)',
         '3 brand voice profiles',
         '10 social accounts',
         'Auto-publishing & scheduling',
@@ -55,7 +55,7 @@ export default function LandingPage() {
         '6,000 credits/month',
         '~1,200 social posts or 600 blog posts',
         '300 AI-generated ultra images',
-        '60 AI-generated videos (8-sec)',
+        '30 AI-generated videos (8-sec)',
         '10 brand voice profiles',
         '25 social accounts',
         'Multi-user collaboration (5 seats)',
@@ -76,7 +76,7 @@ export default function LandingPage() {
         '20,000 credits/month',
         '~4,000 social posts or 2,000 blog posts',
         '1,000 AI-generated ultra images',
-        '200 AI-generated videos (8-sec)',
+        '100 AI-generated videos (8-sec)',
         'Unlimited brand voices',
         'Unlimited social accounts',
         'Unlimited team members',
@@ -467,7 +467,7 @@ export default function LandingPage() {
               { action: 'Full Blog Post', credits: 5, icon: '📝' },
               { action: 'AI Image (Standard)', credits: 10, icon: '🖼️' },
               { action: 'AI Image (Ultra)', credits: 20, icon: '🎨' },
-              { action: 'AI Video (8-sec)', credits: 100, icon: '🎬' },
+              { action: 'AI Video (8-sec)', credits: 200, icon: '🎬' },
             ].map((item, idx) => (
               <div key={idx} className="text-center">
                 <div className="text-4xl mb-2">{item.icon}</div>
@@ -479,7 +479,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Video generation with Veo 3.1 is premium content — worth every credit for cinematic results
+            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video — exceptional value
           </p>
         </div>
       </section>
