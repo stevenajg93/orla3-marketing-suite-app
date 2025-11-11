@@ -373,6 +373,116 @@ async def generate_video_veo(request: VideoGenerateRequest):
             status="failed"
         )
 
+@router.get("/veo-status/{operation_name:path}")
+async def get_veo_status(operation_name: str):
+    """
+    Check status of Google Veo 3.1 video generation operation.
+
+    Args:
+        operation_name: The operation name returned from generate_video_veo
+
+    Returns:
+        Dict with status and video_url (when complete)
+    """
+
+    if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+        raise HTTPException(status_code=503, detail="OAuth2 credentials not configured")
+
+    try:
+        # Get fresh access token
+        access_token = get_access_token()
+
+        logger.info(f"🔍 Checking Veo operation status: {operation_name[:80]}...")
+
+        # Vertex AI Veo status endpoint
+        endpoint = (
+            f"https://us-central1-aiplatform.googleapis.com/v1/{operation_name}"
+        )
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                endpoint,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json",
+                }
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"📊 Veo operation data: {str(data)[:200]}")
+
+                # Check if operation is done
+                done = data.get("done", False)
+
+                if done:
+                    # Check for error
+                    if "error" in data:
+                        error_msg = data["error"].get("message", "Unknown error")
+                        logger.error(f"❌ Veo operation failed: {error_msg}")
+                        return {
+                            "success": False,
+                            "status": "failed",
+                            "error": f"Video generation failed: {error_msg}"
+                        }
+
+                    # Extract video URL from response
+                    response_data = data.get("response", {})
+                    predictions = response_data.get("predictions", [])
+
+                    if predictions and len(predictions) > 0:
+                        prediction = predictions[0]
+                        # Video is in bytesBase64Encoded or gcsUri
+                        video_base64 = prediction.get("bytesBase64Encoded")
+
+                        if video_base64:
+                            logger.info(f"✅ Veo video generation complete (base64, {len(video_base64)} chars)")
+                            return {
+                                "success": True,
+                                "status": "complete",
+                                "video_url": f"data:video/mp4;base64,{video_base64}",
+                                "done": True
+                            }
+                        else:
+                            gcs_uri = prediction.get("gcsUri")
+                            if gcs_uri:
+                                logger.info(f"✅ Veo video generation complete: {gcs_uri}")
+                                return {
+                                    "success": True,
+                                    "status": "complete",
+                                    "video_url": gcs_uri,
+                                    "done": True
+                                }
+
+                    logger.error(f"❌ Veo succeeded but no video: {data}")
+                    return {
+                        "success": False,
+                        "error": "Video generation succeeded but no video returned"
+                    }
+
+                else:
+                    # Still generating
+                    logger.info(f"⏳ Veo video still generating")
+                    return {
+                        "success": True,
+                        "status": "generating",
+                        "done": False
+                    }
+
+            else:
+                logger.error(f"❌ Veo status check failed: {response.status_code} - {response.text}")
+                return {
+                    "success": False,
+                    "error": f"Status check failed: {response.text[:200]}"
+                }
+
+    except Exception as e:
+        logger.error(f"❌ Veo status check error: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @router.post("/generate-video", response_model=VideoGenerateResponse)
 async def generate_video(request: VideoGenerateRequest):
     """

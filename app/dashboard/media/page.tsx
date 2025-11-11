@@ -229,7 +229,7 @@ export default function MediaLibrary() {
     }
     setGeneratingAiVideo(true);
     try {
-      const response = await api.post('/ai/generate-video', {
+      const response = await api.post('/ai/generate-video-veo', {
         prompt: aiVideoPrompt,
         duration_seconds: 8,
         resolution: aiVideoResolution
@@ -243,7 +243,7 @@ export default function MediaLibrary() {
           content: aiVideoPrompt,
           status: 'generating',
           platform: 'AI Generated',
-          tags: ['ai-generated', 'runway-veo', 'generating'],
+          tags: ['ai-generated', 'google-veo-3.1', 'generating'],
           media_url: response.job_id  // Store job_id temporarily
         });
 
@@ -294,7 +294,12 @@ export default function MediaLibrary() {
 
     const checkStatus = async () => {
       try {
-        const status = await api.get(`/ai/video-status/${jobId}`);
+        // Use Veo status endpoint (operation names start with "projects/")
+        const endpoint = jobId.startsWith('projects/')
+          ? `/ai/veo-status/${encodeURIComponent(jobId)}`
+          : `/ai/video-status/${jobId}`;
+
+        const status = await api.get(endpoint);
 
         if (status.success && status.status === 'complete' && status.video_url) {
           console.log('✅ Video generation complete:', status.video_url);
