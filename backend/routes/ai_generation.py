@@ -438,16 +438,16 @@ async def get_veo_status(operation_name: str):
                     response_data = data.get("response", {})
                     logger.info(f"🔍 Response data keys: {response_data.keys()}")
 
-                    predictions = response_data.get("predictions", [])
-                    logger.info(f"🔍 Predictions count: {len(predictions)}")
+                    videos = response_data.get("videos", [])
+                    logger.info(f"🔍 Videos count: {len(videos)}")
 
-                    if predictions and len(predictions) > 0:
-                        prediction = predictions[0]
-                        logger.info(f"🔍 Prediction keys: {prediction.keys()}")
-                        logger.info(f"🔍 Full prediction: {prediction}")
+                    if videos and len(videos) > 0:
+                        video = videos[0]
+                        logger.info(f"🔍 Video keys: {video.keys()}")
+                        logger.info(f"🔍 Full video: {video}")
 
                         # Video is in bytesBase64Encoded or gcsUri
-                        video_base64 = prediction.get("bytesBase64Encoded")
+                        video_base64 = video.get("bytesBase64Encoded")
 
                         if video_base64:
                             logger.info(f"✅ Veo video generation complete (base64, {len(video_base64)} chars)")
@@ -458,7 +458,7 @@ async def get_veo_status(operation_name: str):
                                 "done": True
                             }
                         else:
-                            gcs_uri = prediction.get("gcsUri")
+                            gcs_uri = video.get("gcsUri")
                             if gcs_uri:
                                 logger.info(f"✅ Veo video generation complete: {gcs_uri}")
                                 return {
@@ -468,7 +468,7 @@ async def get_veo_status(operation_name: str):
                                     "done": True
                                 }
 
-                    logger.error(f"❌ Veo succeeded but no video in predictions. Full response: {data}")
+                    logger.error(f"❌ Veo succeeded but no video in videos array. Full response: {data}")
                     return {
                         "success": False,
                         "error": "Video generation succeeded but no video returned"
