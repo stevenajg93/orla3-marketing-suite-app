@@ -17,6 +17,14 @@ export class ApiError extends Error {
 }
 
 /**
+ * Get JWT access token from localStorage
+ */
+function getAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('access_token');
+}
+
+/**
  * Make an API request to the backend
  * @param endpoint - API endpoint (e.g., '/strategy/next-keyword')
  * @param options - Fetch options
@@ -26,21 +34,40 @@ export async function apiRequest<T = any>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${config.apiUrl}${endpoint}`;
-  
+
   if (config.enableDebugLogs) {
     console.log(`[API] ${options?.method || 'GET'} ${url}`);
+  }
+
+  // Get access token and add to headers
+  const token = getAccessToken();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  };
+
+  // Add Authorization header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {
+      // If 401 Unauthorized, token might be expired
+      if (response.status === 401) {
+        // TODO: Attempt token refresh
+        // For now, just clear invalid tokens
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
+      }
+
       throw new ApiError(
         `API request failed: ${response.statusText}`,
         response.status,
@@ -51,7 +78,7 @@ export async function apiRequest<T = any>(
     return await response.json();
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    
+
     // Network error or other fetch failure
     throw new ApiError(
       `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
