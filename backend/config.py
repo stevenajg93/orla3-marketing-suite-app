@@ -13,6 +13,10 @@ class Config:
     MARKETING_FOLDER_NAME = os.getenv("MARKETING_FOLDER_NAME", "Marketing")
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+    # OAuth Credentials
+    LINKEDIN_CLIENT_ID = os.getenv("LINKEDIN_CLIENT_ID")
+    LINKEDIN_CLIENT_SECRET = os.getenv("LINKEDIN_CLIENT_SECRET")
     
     @classmethod
     def validate(cls):

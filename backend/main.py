@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import Config
 from logger import setup_logger
+from middleware import UserContextMiddleware
 
 logger = setup_logger(__name__)
 
@@ -26,7 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, strategy, calendar, library, competitor, ai_generation
+# User Context Middleware - Adds user_id to all requests for multi-tenant architecture
+app.add_middleware(UserContextMiddleware)
+
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, strategy, calendar, library, competitor, ai_generation, oauth
 
 app.include_router(carousel.router, prefix="/carousel", tags=["carousel"])
 app.include_router(publisher.router, prefix="/publisher", tags=["publisher"])
@@ -42,6 +46,7 @@ app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 app.include_router(library.router, prefix="/library", tags=["library"])
 app.include_router(competitor.router, prefix="/competitor", tags=["competitor"])
 app.include_router(ai_generation.router, prefix="/ai", tags=["ai-generation"])
+app.include_router(oauth.router, tags=["oauth"])
 
 @app.on_event("startup")
 async def startup_event():
