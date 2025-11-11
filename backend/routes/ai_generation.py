@@ -417,10 +417,11 @@ async def get_veo_status(operation_name: str):
 
             if response.status_code == 200:
                 data = response.json()
-                logger.info(f"📊 Veo operation data: {str(data)[:200]}")
+                logger.info(f"📊 Full Veo operation response: {data}")
 
                 # Check if operation is done
                 done = data.get("done", False)
+                logger.info(f"🔍 Operation done: {done}")
 
                 if done:
                     # Check for error
@@ -435,10 +436,16 @@ async def get_veo_status(operation_name: str):
 
                     # Extract video URL from response
                     response_data = data.get("response", {})
+                    logger.info(f"🔍 Response data keys: {response_data.keys()}")
+
                     predictions = response_data.get("predictions", [])
+                    logger.info(f"🔍 Predictions count: {len(predictions)}")
 
                     if predictions and len(predictions) > 0:
                         prediction = predictions[0]
+                        logger.info(f"🔍 Prediction keys: {prediction.keys()}")
+                        logger.info(f"🔍 Full prediction: {prediction}")
+
                         # Video is in bytesBase64Encoded or gcsUri
                         video_base64 = prediction.get("bytesBase64Encoded")
 
@@ -461,7 +468,7 @@ async def get_veo_status(operation_name: str):
                                     "done": True
                                 }
 
-                    logger.error(f"❌ Veo succeeded but no video: {data}")
+                    logger.error(f"❌ Veo succeeded but no video in predictions. Full response: {data}")
                     return {
                         "success": False,
                         "error": "Video generation succeeded but no video returned"
