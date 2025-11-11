@@ -394,14 +394,21 @@ async def get_veo_status(operation_name: str):
 
         logger.info(f"🔍 Checking Veo operation status: {operation_name[:80]}...")
 
-        # Vertex AI Veo status endpoint
+        # Vertex AI Veo status endpoint - uses fetchPredictOperation
         endpoint = (
-            f"https://us-central1-aiplatform.googleapis.com/v1/{operation_name}"
+            f"https://us-central1-aiplatform.googleapis.com/v1/"
+            f"projects/{GCP_PROJECT_ID}/locations/us-central1/"
+            f"publishers/google/models/veo-3.1-generate-preview:fetchPredictOperation"
         )
 
+        payload = {
+            "operationName": operation_name
+        }
+
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
+            response = await client.post(
                 endpoint,
+                json=payload,
                 headers={
                     "Authorization": f"Bearer {access_token}",
                     "Content-Type": "application/json",
