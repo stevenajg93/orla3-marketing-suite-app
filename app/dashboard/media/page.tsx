@@ -244,7 +244,12 @@ export default function MediaLibrary() {
           media_url: response.job_id  // Store job_id temporarily
         });
 
-        console.log('✨ Video job saved to database:', response.job_id);
+        if (!saveResponse.success || !saveResponse.item?.id) {
+          console.error('❌ Failed to save video to database:', saveResponse.error);
+          alert(`Video generation started but failed to save to database: ${saveResponse.error || 'Unknown error'}\n\nThe video will generate but you\'ll need to recover it manually.`);
+        } else {
+          console.log('✨ Video job saved to database:', saveResponse.item.id);
+        }
 
         // Add to local state
         const newVideo = {
@@ -261,7 +266,7 @@ export default function MediaLibrary() {
         // Reload content library to show the generating video
         loadGeneratedContent();
 
-        // Start polling for completion
+        // Start polling for completion (pass contentId even if undefined - will be handled in polling)
         pollVideoStatus(response.job_id, saveResponse.item?.id);
 
         alert('Video generation started! This may take 1-3 minutes. You can navigate away - it will save automatically.');
@@ -291,8 +296,9 @@ export default function MediaLibrary() {
         if (status.success && status.status === 'complete' && status.video_url) {
           console.log('✅ Video generation complete:', status.video_url);
 
-          // Update database with final video URL
+          // Update or create database entry with final video URL
           if (contentId) {
+            // Update existing entry
             const contentItem = generatedContent.find(c => c.id === contentId);
             await api.patch(`/library/content/${contentId}`, {
               title: contentItem?.title || 'AI Video',
@@ -303,24 +309,39 @@ export default function MediaLibrary() {
               tags: ['ai-generated', 'runway-veo'],
               media_url: status.video_url
             });
-            console.log('✅ Video saved to database:', contentId);
-
-            // Add to AI Videos tab (component state)
-            const completedVideo = {
-              url: status.video_url,
-              job_id: jobId,
-              prompt: contentItem?.content || '',
-              resolution: '720p', // Default from request
-              source: 'ai-generated',
-              status: 'complete',
-              timestamp: new Date().toISOString()
-            };
-            setAiGeneratedVideos(prev => {
-              // Remove the generating placeholder if exists
-              const filtered = prev.filter(v => v.job_id !== jobId);
-              return [completedVideo, ...filtered];
+            console.log('✅ Video updated in database:', contentId);
+          } else {
+            // Fallback: Create new entry if initial save failed
+            console.warn('⚠️ No contentId - creating new database entry');
+            const videoState = aiGeneratedVideos.find(v => v.job_id === jobId);
+            await api.post('/library/content', {
+              title: `AI Video: ${videoState?.prompt.substring(0, 50) || 'Recovered'}`,
+              content_type: 'video',
+              content: videoState?.prompt || 'AI generated video',
+              status: 'draft',
+              platform: 'AI Generated',
+              tags: ['ai-generated', 'runway-veo', 'recovered'],
+              media_url: status.video_url
             });
+            console.log('✅ Video created in database (fallback)');
           }
+
+          // Add to AI Videos tab (component state)
+          const videoState = aiGeneratedVideos.find(v => v.job_id === jobId);
+          const completedVideo = {
+            url: status.video_url,
+            job_id: jobId,
+            prompt: videoState?.prompt || '',
+            resolution: videoState?.resolution || '720p',
+            source: 'ai-generated',
+            status: 'complete',
+            timestamp: new Date().toISOString()
+          };
+          setAiGeneratedVideos(prev => {
+            // Remove the generating placeholder if exists
+            const filtered = prev.filter(v => v.job_id !== jobId);
+            return [completedVideo, ...filtered];
+          });
 
           // Reload content to show completed video in Generated Content tab
           loadGeneratedContent();
