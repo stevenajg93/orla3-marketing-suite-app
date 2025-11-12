@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse
 from typing import List
 import os
@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from lib.brand_asset_extractor import extract_brand_assets, find_logo_file, find_logo_from_database
 from lib.gcs_storage import upload_bytes_to_gcs, is_image_file, is_video_file
+from utils.auth import decode_token
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -32,7 +33,21 @@ for category in UPLOAD_CATEGORIES:
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-def auto_extract_brand_assets():
+def get_user_from_token(request: Request):
+    """Extract user_id from JWT token"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
+
+def auto_extract_brand_assets(user_id: str):
     """
     Automatically extract brand assets from uploaded guidelines.
     Called after guideline uploads to update brand_strategy table.
@@ -41,13 +56,13 @@ def auto_extract_brand_assets():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Get all guideline assets
+        # Get all guideline assets for this user
         cur.execute("""
             SELECT filename, file_path, metadata
             FROM brand_voice_assets
-            WHERE category = 'guidelines'
+            WHERE category = 'guidelines' AND user_id = %s
             ORDER BY uploaded_at DESC
-        """)
+        """, (user_id,))
 
         guidelines = cur.fetchall()
 
@@ -91,8 +106,8 @@ def auto_extract_brand_assets():
 
         logger.info(f"Extracted: {len(assets['brand_colors'])} colors, {len(assets['brand_fonts'])} fonts")
 
-        # Check if brand_strategy exists
-        cur.execute("SELECT id FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
+        # Check if brand_strategy exists for this user
+        cur.execute("SELECT id FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         strategy_exists = cur.fetchone()
 
         if strategy_exists:
@@ -104,23 +119,25 @@ def auto_extract_brand_assets():
                     logo_url = %s,
                     primary_color = %s,
                     secondary_color = %s
-                WHERE id = %s
+                WHERE id = %s AND user_id = %s
             """, (
                 assets['brand_colors'],
                 assets['brand_fonts'],
                 assets['logo_url'],
                 assets['primary_color'],
                 assets['secondary_color'],
-                strategy_exists['id']
+                strategy_exists['id'],
+                user_id
             ))
         else:
             # Create new brand_strategy entry with just visual assets
             cur.execute("""
                 INSERT INTO brand_strategy (
-                    brand_colors, brand_fonts, logo_url,
+                    user_id, brand_colors, brand_fonts, logo_url,
                     primary_color, secondary_color
-                ) VALUES (%s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s)
             """, (
+                user_id,
                 assets['brand_colors'],
                 assets['brand_fonts'],
                 assets['logo_url'],
@@ -226,14 +243,17 @@ def resolve_drive_shortcut(service, file_id):
 
 @router.post("/upload")
 async def upload_brand_assets(
+    request: Request,
     files: List[UploadFile] = File(...),
     category: str = "guidelines"
 ):
     """Upload brand voice training files"""
     try:
+        user_id = get_user_from_token(request)
+
         if category not in UPLOAD_CATEGORIES:
             raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of: {UPLOAD_CATEGORIES}")
-        
+
         conn = get_db_connection()
         cur = conn.cursor()
         uploaded_files = []
@@ -283,11 +303,12 @@ async def upload_brand_assets(
             # Insert into PostgreSQL
             cur.execute("""
                 INSERT INTO brand_voice_assets (
-                    filename, category, file_type, file_path, 
+                    user_id, filename, category, file_type, file_path,
                     file_size_bytes, content_preview, metadata
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, filename, category, file_size_bytes, content_preview
             """, (
+                user_id,
                 file.filename,
                 category,
                 file_ext,
@@ -309,7 +330,7 @@ async def upload_brand_assets(
         # Auto-extract brand assets if uploading guidelines
         if category == "guidelines":
             logger.info("Triggering auto-extraction of brand assets...")
-            auto_extract_brand_assets()
+            auto_extract_brand_assets(user_id)
 
         return {"success": True, "uploaded": uploaded_files}
         
@@ -318,27 +339,30 @@ async def upload_brand_assets(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/assets")
-async def list_brand_assets(category: str = None):
+async def list_brand_assets(request: Request, category: str = None):
     """List all brand voice assets, optionally filtered by category"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         if category:
             cur.execute("""
-                SELECT id, filename, category, file_type, file_path, 
+                SELECT id, filename, category, file_type, file_path,
                        file_size_bytes, content_preview, uploaded_at
-                FROM brand_voice_assets 
-                WHERE category = %s
+                FROM brand_voice_assets
+                WHERE user_id = %s AND category = %s
                 ORDER BY uploaded_at DESC
-            """, (category,))
+            """, (user_id, category))
         else:
             cur.execute("""
-                SELECT id, filename, category, file_type, file_path, 
+                SELECT id, filename, category, file_type, file_path,
                        file_size_bytes, content_preview, uploaded_at
-                FROM brand_voice_assets 
+                FROM brand_voice_assets
+                WHERE user_id = %s
                 ORDER BY uploaded_at DESC
-            """)
+            """, (user_id,))
         
         assets = cur.fetchall()
         cur.close()
@@ -355,27 +379,29 @@ async def list_brand_assets(category: str = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/assets/{asset_id}")
-async def delete_brand_asset(asset_id: str):
+async def delete_brand_asset(asset_id: str, request: Request):
     """Delete a brand voice asset"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Get asset to delete file
-        cur.execute("SELECT file_path FROM brand_voice_assets WHERE id = %s", (asset_id,))
+
+        # Get asset to delete file (security: ensure user owns this asset)
+        cur.execute("SELECT file_path FROM brand_voice_assets WHERE id = %s AND user_id = %s", (asset_id, user_id))
         asset = cur.fetchone()
-        
+
         if not asset:
             cur.close()
             conn.close()
             raise HTTPException(status_code=404, detail="Asset not found")
-        
-        # Delete file from disk
-        if os.path.exists(asset['file_path']):
+
+        # Delete file from disk (only if it's a local file, not GCS URL)
+        if asset['file_path'] and not asset['file_path'].startswith('http') and os.path.exists(asset['file_path']):
             os.remove(asset['file_path'])
-        
+
         # Delete from database
-        cur.execute("DELETE FROM brand_voice_assets WHERE id = %s", (asset_id,))
+        cur.execute("DELETE FROM brand_voice_assets WHERE id = %s AND user_id = %s", (asset_id, user_id))
         conn.commit()
         cur.close()
         conn.close()
@@ -388,18 +414,21 @@ async def delete_brand_asset(asset_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/context/full")
-async def get_full_brand_context():
+async def get_full_brand_context(request: Request):
     """Get complete brand context from all assets for AI training"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Get all assets with their text
+
+        # Get all assets with their text for this user
         cur.execute("""
             SELECT filename, category, content_preview, metadata
             FROM brand_voice_assets
+            WHERE user_id = %s
             ORDER BY category, uploaded_at
-        """)
+        """, (user_id,))
         assets = cur.fetchall()
         cur.close()
         conn.close()
@@ -456,9 +485,11 @@ and authentic communication style. Write content that matches this voice natural
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/import-from-drive")
-async def import_from_drive(file_id: str, filename: str, category: str):
+async def import_from_drive(request: Request, file_id: str, filename: str, category: str):
     """Import a file from Google Drive into brand voice assets"""
     try:
+        user_id = get_user_from_token(request)
+
         if category not in UPLOAD_CATEGORIES:
             raise HTTPException(status_code=400, detail=f"Invalid category")
         
@@ -522,11 +553,12 @@ async def import_from_drive(file_id: str, filename: str, category: str):
         
         cur.execute("""
             INSERT INTO brand_voice_assets (
-                filename, category, file_type, file_path,
+                user_id, filename, category, file_type, file_path,
                 file_size_bytes, content_preview, metadata
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id, filename, category, file_size_bytes, uploaded_at
         """, (
+            user_id,
             filename,
             category,
             file_ext,
@@ -551,7 +583,7 @@ async def import_from_drive(file_id: str, filename: str, category: str):
         # Auto-extract brand assets if importing guidelines
         if category == "guidelines":
             logger.info("Triggering auto-extraction of brand assets...")
-            auto_extract_brand_assets()
+            auto_extract_brand_assets(user_id)
 
         return {"success": True, "asset": asset}
         

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from anthropic import Anthropic
 import json
 import os
@@ -7,6 +7,9 @@ from psycopg2.extras import RealDictCursor, Json as PgJson
 from datetime import datetime
 from pathlib import Path
 from openai import OpenAI
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.auth import decode_token
 
 router = APIRouter()
 
@@ -20,12 +23,26 @@ if not DATABASE_URL:
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-def load_brand_voice_assets():
-    """Load all uploaded brand voice assets from PostgreSQL"""
+def get_user_from_token(request: Request):
+    """Extract user_id from JWT token"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
+
+def load_brand_voice_assets(user_id: str):
+    """Load all uploaded brand voice assets from PostgreSQL for a specific user"""
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_voice_assets ORDER BY uploaded_at DESC")
+        cur.execute("SELECT * FROM brand_voice_assets WHERE user_id = %s ORDER BY uploaded_at DESC", (user_id,))
         assets = cur.fetchall()
         cur.close()
         conn.close()
@@ -34,19 +51,20 @@ def load_brand_voice_assets():
         print(f"Error loading brand voice assets: {e}")
         return []
 
-def load_competitor_summary():
-    """Load competitor marketing insights summary from PostgreSQL"""
+def load_competitor_summary(user_id: str):
+    """Load competitor marketing insights summary from PostgreSQL for a specific user"""
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Get all competitors with their analyses
+
+        # Get all competitors with their analyses for this user
         cur.execute("""
-            SELECT c.*, ca.* 
+            SELECT c.*, ca.*
             FROM competitors c
             LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+            WHERE c.user_id = %s
             ORDER BY c.added_at DESC
-        """)
+        """, (user_id,))
         competitors = cur.fetchall()
         cur.close()
         conn.close()
@@ -82,12 +100,12 @@ def load_competitor_summary():
         print(f"Error loading competitor summary: {e}")
         return None
 
-def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
+def load_brand_strategy(user_id: str):
+    """Load brand strategy from PostgreSQL for a specific user"""
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
+        cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         strategy = cur.fetchone()
         cur.close()
         conn.close()
@@ -147,13 +165,15 @@ def extract_text_from_file(file_path: str) -> str:
         return f"Error reading file: {str(e)}"
 
 @router.post("/analyze")
-async def analyze_brand_voice(include_competitors: bool = True):
+async def analyze_brand_voice(request: Request, include_competitors: bool = True):
     """
     Analyze brand voice assets and optionally include competitive MARKETING intelligence
     """
     try:
-        # Load assets from PostgreSQL
-        assets = load_brand_voice_assets()
+        user_id = get_user_from_token(request)
+
+        # Load assets from PostgreSQL for this user
+        assets = load_brand_voice_assets(user_id)
         
         if not assets:
             return {
@@ -217,9 +237,9 @@ async def analyze_brand_voice(include_competitors: bool = True):
         # Load competitor MARKETING insights if requested
         competitor_context = ""
         competitor_summary = None
-        
+
         if include_competitors:
-            competitor_summary = load_competitor_summary()
+            competitor_summary = load_competitor_summary(user_id)
             if competitor_summary and competitor_summary['analyzed'] > 0:
                 competitor_context = f"""
 
@@ -331,17 +351,18 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
         # Save strategy to PostgreSQL
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Delete old strategy
-        cur.execute("DELETE FROM brand_strategy")
-        
+
+        # Delete old strategy for this user
+        cur.execute("DELETE FROM brand_strategy WHERE user_id = %s", (user_id,))
+
         # Insert new strategy
         cur.execute("""
             INSERT INTO brand_strategy (
-                brand_voice, messaging_pillars, language_patterns, 
+                user_id, brand_voice, messaging_pillars, language_patterns,
                 dos_and_donts, target_audience, content_themes, competitive_positioning
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
+            user_id,
             PgJson(strategy.get('brand_voice', {})),
             strategy.get('messaging_pillars', []),
             PgJson(strategy.get('language_patterns', {})),
@@ -380,9 +401,10 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
         }
 
 @router.get("/current")
-async def get_current_strategy():
+async def get_current_strategy(request: Request):
     """Get the current brand strategy from PostgreSQL"""
-    strategy = load_brand_strategy()
+    user_id = get_user_from_token(request)
+    strategy = load_brand_strategy(user_id)
     
     if not strategy:
         return {
@@ -396,10 +418,11 @@ async def get_current_strategy():
     }
 
 @router.get("/next-keyword")
-async def get_next_keyword():
+async def get_next_keyword(request: Request):
     """Get the next strategic keyword to write about based on brand strategy"""
     try:
-        strategy = load_brand_strategy()
+        user_id = get_user_from_token(request)
+        strategy = load_brand_strategy(user_id)
 
         if not strategy:
             return {
@@ -418,10 +441,10 @@ async def get_next_keyword():
             cur.execute("""
                 SELECT title, tags
                 FROM content_library
-                WHERE content_type = 'blog'
+                WHERE user_id = %s AND content_type = 'blog'
                 ORDER BY created_at DESC
                 LIMIT 20
-            """)
+            """, (user_id,))
             rows = cur.fetchall()
             cur.close()
             conn.close()
@@ -507,11 +530,12 @@ Return ONLY valid JSON (no markdown):
         }
 
 @router.post("/market-research")
-async def market_research(data: dict):
+async def market_research(request: Request, data: dict):
     """Analyze market for a given keyword"""
     try:
+        user_id = get_user_from_token(request)
         keyword = data.get('keyword', '')
-        strategy = load_brand_strategy()
+        strategy = load_brand_strategy(user_id)
         client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         
         brand_context = ""
