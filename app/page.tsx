@@ -208,8 +208,8 @@ export default function LandingPage() {
             {
               name: 'Videographer Smart Search',
               icon: '🎥',
-              use: 'Intelligent Content Discovery',
-              why: 'AI-powered search engine trained specifically for videographer marketing. Finds relevant trends, examples, and insights from across the web.',
+              use: 'Creator Discovery',
+              why: 'Find the right creator in seconds, not weeks. AI-powered search trained on videographer portfolios, styles, and niches to match you with perfect collaborators.',
             },
             {
               name: 'Google Imagen 4 Ultra',
