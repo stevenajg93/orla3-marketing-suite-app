@@ -135,7 +135,7 @@ export default function LandingPage() {
         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
           Let AI handle the routine marketing - daily posts, captions, blog updates - so you can
           focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
-          <span className="text-white font-bold">7 specialized AI models</span> and{' '}
+          <span className="text-white font-bold">8 specialized AI models</span> and{' '}
           <span className="text-white font-bold">millions of stock assets</span> to keep your
           business visible while you do what you do best.
         </p>
@@ -171,7 +171,7 @@ export default function LandingPage() {
           Built on World-Class AI Infrastructure
         </h3>
         <p className="text-center text-gray-300 mb-12 max-w-3xl mx-auto">
-          We use 7 specialized AI models plus millions of stock assets, each chosen for specific tasks to deliver the best quality at optimal cost
+          We use 8 specialized AI models plus millions of stock assets, each chosen for specific tasks to deliver the best quality at optimal cost
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
@@ -204,6 +204,12 @@ export default function LandingPage() {
               icon: '🔍',
               use: 'Real-Time Web Research',
               why: 'Live web scraping for competitor analysis and trending topics. Always current, never outdated.',
+            },
+            {
+              name: 'Videographer Smart Search',
+              icon: '🎥',
+              use: 'Intelligent Content Discovery',
+              why: 'AI-powered search engine trained specifically for videographer marketing. Finds relevant trends, examples, and insights from across the web.',
             },
             {
               name: 'Google Imagen 4 Ultra',
@@ -253,7 +259,7 @@ export default function LandingPage() {
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
           Get CMO-level strategy, professional content creation, and full-service marketing execution,
-          all powered by 7 specialized AI models working together.
+          all powered by 8 specialized AI models working together.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
@@ -295,7 +301,7 @@ export default function LandingPage() {
           Professional Marketing Tools at Your Fingertips
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          7 specialized AI models working together to create content that converts
+          8 specialized AI models working together to create content that converts
         </p>
         <div className="grid md:grid-cols-3 gap-8">
           {[
@@ -549,7 +555,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-xl text-blue-100 mb-8">
             CMO-level strategy, professional content, and enterprise-grade execution,
-            powered by 7 specialized AI models at a fraction of traditional costs.
+            powered by 8 specialized AI models at a fraction of traditional costs.
           </p>
           <Link
             href="/signup"
