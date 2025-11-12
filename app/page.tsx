@@ -204,7 +204,7 @@ export default function LandingPage() {
             {
               metric: '£200k+/year',
               label: 'vs Hiring a Marketing Team',
-              description: 'CMO, content writer, social media manager, and designer cost £165-290k/year. Get it all for £99/month.',
+              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get it all for £99/month.',
             },
             {
               metric: 'Enterprise-Grade',
@@ -310,24 +310,24 @@ export default function LandingPage() {
                 <span className="text-purple-300 font-semibold">🎬 Premium Content</span>
               </div>
               <h2 className="text-4xl font-bold text-white mb-4">
-                Need Professional Video or Photography?
+                Need Professional Videography?
               </h2>
               <p className="text-xl text-gray-300 mb-6">
-                AI handles your daily marketing. When you need cinematic videos, professional
-                photography, or high-end creative work, connect with verified UK creators near you.
+                AI handles your daily marketing. When you need cinematic videos, event coverage,
+                or premium videography work, connect with verified UK videographers near you.
               </p>
               <ul className="space-y-3 mb-8 text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-1">✓</span>
-                  <span>Browse portfolios of verified UK videographers & photographers</span>
+                  <span>Browse portfolios of verified UK videographers</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-1">✓</span>
-                  <span>Find local talent by location, style, and budget</span>
+                  <span>Find local videography talent by location, style, and budget</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-1">✓</span>
-                  <span>Commission custom content for your biggest campaigns</span>
+                  <span>Commission custom video content for your biggest campaigns</span>
                 </li>
               </ul>
               <a
@@ -336,15 +336,15 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
                 className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
               >
-                Find Content Creators Near Me →
+                Find Videographers Near Me →
               </a>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { icon: '🎥', label: 'Videographers', count: '500+' },
-                { icon: '📸', label: 'Photographers', count: '300+' },
-                { icon: '🎨', label: 'Designers', count: '200+' },
-                { icon: '✍️', label: 'Content Creators', count: '400+' },
+                { icon: '🎬', label: 'Wedding Films', count: '200+' },
+                { icon: '🏢', label: 'Corporate Video', count: '150+' },
+                { icon: '🎪', label: 'Event Coverage', count: '250+' },
               ].map((item, idx) => (
                 <div
                   key={idx}
