@@ -54,6 +54,7 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Backend**: FastAPI, Python 3.14+ (Railway)
 - **Database**: PostgreSQL (Railway)
 - **Authentication**: JWT tokens, bcrypt password hashing
+- **Payments**: Stripe (subscriptions, credit purchases)
 - **AI**: Multi-provider optimization
   - **Perplexity AI**: Real-time web research
   - **Claude Sonnet 4**: Strategic analysis & brand-critical content

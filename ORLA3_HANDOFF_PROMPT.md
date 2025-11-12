@@ -25,6 +25,7 @@ Frontend:  Next.js 15 + React + TypeScript + Tailwind CSS
 Backend:   FastAPI + Python 3.14+ + psycopg2
 Database:  PostgreSQL (Railway)
 Auth:      JWT tokens + bcrypt password hashing
+Payments:  Stripe (subscriptions + credit purchases)
 AI:        Multi-provider optimization (7 models)
            - Perplexity AI (real-time web research)
            - Claude Sonnet 4 (strategic/brand-critical)
