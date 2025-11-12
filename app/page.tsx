@@ -166,7 +166,7 @@ export default function LandingPage() {
       </section>
 
       {/* Powered By Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-y border-white/10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-y border-white/10">
         <h3 className="text-center text-gray-400 mb-8 uppercase tracking-wider text-sm font-bold">
           Built on World-Class AI Infrastructure
         </h3>
