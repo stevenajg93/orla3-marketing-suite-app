@@ -315,6 +315,13 @@ async def login(request: LoginRequest, req: Request):
             detail="Account is deactivated"
         )
 
+    # Check if email is verified
+    if not user['email_verified']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before logging in. Check your inbox for the verification link."
+        )
+
     # Verify password
     if not verify_password(request.password, user['password_hash']):
         # Record failed login
