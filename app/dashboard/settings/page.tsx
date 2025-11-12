@@ -39,11 +39,49 @@ const PLATFORMS: Platform[] = [
   { id: 'wordpress', name: 'WordPress', icon: '✍️', color: 'gray', description: 'Blog posts & articles', available: false },
 ];
 
+type CloudStorageProvider = {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  color: string;
+  connected: boolean;
+  email?: string;
+  connectedAt?: string;
+};
+
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<'social' | 'cloud'>('social');
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [cloudProviders, setCloudProviders] = useState<CloudStorageProvider[]>([
+    {
+      id: 'google_drive',
+      name: 'Google Drive',
+      icon: '📁',
+      description: 'Access files from Google Drive',
+      color: 'from-blue-500 to-blue-600',
+      connected: false,
+    },
+    {
+      id: 'onedrive',
+      name: 'Microsoft OneDrive',
+      icon: '☁️',
+      description: 'Access files from OneDrive',
+      color: 'from-blue-600 to-cyan-600',
+      connected: false,
+    },
+    {
+      id: 'dropbox',
+      name: 'Dropbox',
+      icon: '📦',
+      description: 'Access files from Dropbox',
+      color: 'from-indigo-500 to-blue-500',
+      connected: false,
+    },
+  ]);
 
   useEffect(() => {
     loadAccounts();
@@ -131,6 +169,18 @@ export default function SettingsPage() {
     return colors[color] || colors.blue;
   };
 
+  const handleConnectCloud = async (providerId: string) => {
+    // TODO: Implement OAuth flow when multi-tenant architecture is applied
+    alert(`OAuth flow for ${providerId} will be implemented with multi-tenant architecture`);
+  };
+
+  const handleDisconnectCloud = async (providerId: string) => {
+    const confirmed = confirm(`Are you sure you want to disconnect ${providerId}?`);
+    if (confirmed) {
+      alert(`Disconnect functionality will be implemented with multi-tenant architecture`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
@@ -142,8 +192,32 @@ export default function SettingsPage() {
             <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
               ⚙️ Settings
             </h1>
-            <p className="text-gray-400 mt-2">Manage your connected social media accounts</p>
+            <p className="text-gray-400 mt-2">Manage your social media accounts and cloud storage</p>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 border-b border-white/10">
+          <button
+            onClick={() => setActiveTab('social')}
+            className={`px-6 py-3 font-semibold transition border-b-2 ${
+              activeTab === 'social'
+                ? 'text-blue-400 border-blue-400'
+                : 'text-gray-400 border-transparent hover:text-white'
+            }`}
+          >
+            📱 Social Media
+          </button>
+          <button
+            onClick={() => setActiveTab('cloud')}
+            className={`px-6 py-3 font-semibold transition border-b-2 ${
+              activeTab === 'cloud'
+                ? 'text-blue-400 border-blue-400'
+                : 'text-gray-400 border-transparent hover:text-white'
+            }`}
+          >
+            ☁️ Cloud Storage
+          </button>
         </div>
 
         {/* Success/Error Messages */}
@@ -161,8 +235,11 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Connected Accounts Section */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8">
+        {/* Social Media Tab */}
+        {activeTab === 'social' && (
+          <>
+            {/* Connected Accounts Section */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8">
           <h2 className="text-2xl font-bold text-white mb-6">🔗 Connected Accounts</h2>
 
           {loading ? (
@@ -287,7 +364,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Info Section */}
-        <div className="mt-8 bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
+        <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
           <h3 className="text-lg font-bold text-blue-300 mb-2">ℹ️ About OAuth Connections</h3>
           <ul className="text-gray-300 text-sm space-y-2">
             <li>• Your account credentials are stored securely and encrypted</li>
@@ -297,6 +374,110 @@ export default function SettingsPage() {
             <li>• Coming soon: Multi-account support for posting to multiple profiles</li>
           </ul>
         </div>
+          </>
+        )}
+
+        {/* Cloud Storage Tab */}
+        {activeTab === 'cloud' && (
+          <>
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">☁️ Cloud Storage Connections</h2>
+              <p className="text-gray-400 mb-6">
+                Connect your cloud storage accounts to access files directly from Orla³
+              </p>
+
+              {/* Multi-Tenant Notice */}
+              <div className="mb-6 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-blue-300 font-semibold mb-1">Coming Soon: Per-User Cloud Storage</p>
+                    <p className="text-gray-300 text-sm">
+                      OAuth connections will be enabled after the multi-tenant architecture migration. Each user will have their own private cloud storage connections.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cloudProviders.map((provider) => (
+                  <div
+                    key={provider.id}
+                    className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-white/20 transition"
+                  >
+                    {/* Provider Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 bg-gradient-to-br ${provider.color} rounded-lg flex items-center justify-center text-2xl`}>
+                          {provider.icon}
+                        </div>
+                        <div>
+                          <h3 className="text-white font-bold">{provider.name}</h3>
+                          {provider.connected && (
+                            <span className="text-xs text-green-400 flex items-center gap-1">
+                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                              Connected
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-gray-400 text-sm mb-4">{provider.description}</p>
+
+                    {/* Connection Details */}
+                    {provider.connected && provider.email && (
+                      <div className="mb-4 p-3 bg-white/5 rounded-lg">
+                        <p className="text-xs text-gray-400 mb-1">Connected as:</p>
+                        <p className="text-white text-sm font-medium">{provider.email}</p>
+                        {provider.connectedAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Since {new Date(provider.connectedAt).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Button */}
+                    {provider.connected ? (
+                      <button
+                        onClick={() => handleDisconnectCloud(provider.id)}
+                        className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 hover:border-red-500/50 text-red-300 font-semibold rounded-lg transition"
+                      >
+                        Disconnect
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleConnectCloud(provider.id)}
+                        className={`w-full px-4 py-2 bg-gradient-to-r ${provider.color} hover:opacity-90 text-white font-semibold rounded-lg transition`}
+                      >
+                        Connect {provider.name}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <div>
+                  <h3 className="text-white font-bold mb-2">Your Data is Secure</h3>
+                  <p className="text-gray-400 text-sm">
+                    We use OAuth 2.0 for secure authentication. We never store your passwords. You can revoke access at any time from your cloud provider's settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
