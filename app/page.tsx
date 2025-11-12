@@ -23,7 +23,7 @@ export default function LandingPage() {
         'Basic competitor tracking (2 competitors)',
         'Credit rollover (up to 250)',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
     },
     {
@@ -43,7 +43,7 @@ export default function LandingPage() {
         'Priority support',
         'Credit rollover (up to 1,000)',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: true,
     },
     {
@@ -64,7 +64,7 @@ export default function LandingPage() {
         'White-label options',
         'Credit rollover (up to 3,000)',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Get Started',
       popular: false,
     },
     {
@@ -123,7 +123,7 @@ export default function LandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full border border-blue-400/30">
           <span className="text-blue-300 font-semibold">
-            🚀 Your Entire Marketing Team, Powered by AI
+            🚀 Marketing Superpowers, Powered by AI
           </span>
         </div>
         <h1 className="text-6xl md:text-7xl font-black text-white mb-6">
@@ -144,7 +144,7 @@ export default function LandingPage() {
             href="/signup"
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
           >
-            Start Free Trial
+            Get Started
           </Link>
           <button className="border-2 border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-lg font-bold text-lg transition backdrop-blur-sm">
             Watch Demo
@@ -154,13 +154,13 @@ export default function LandingPage() {
         {/* Social Proof */}
         <div className="flex flex-wrap justify-center gap-8 text-gray-400 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> No credit card required
-          </div>
-          <div className="flex items-center gap-2">
             <span className="text-green-400">✓</span> Cancel anytime
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> 14-day free trial
+            <span className="text-green-400">✓</span> Instant access
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> All features included
           </div>
         </div>
       </section>
@@ -249,7 +249,7 @@ export default function LandingPage() {
       {/* ROI Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Your Complete Marketing Department at a Fraction of the Cost
+          Amplify Your Marketing at a Fraction of the Cost
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
           Get CMO-level strategy, professional content creation, and full-service marketing execution,
@@ -259,8 +259,8 @@ export default function LandingPage() {
           {[
             {
               metric: '£200k+/year',
-              label: 'vs Hiring a Marketing Team',
-              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get it all for £99/month.',
+              label: 'Traditional Marketing Costs',
+              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get the same output for £99/month.',
             },
             {
               metric: 'Enterprise-Grade',
@@ -292,7 +292,7 @@ export default function LandingPage() {
       {/* Features Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Your AI Marketing Team at Your Fingertips
+          Professional Marketing Tools at Your Fingertips
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
           8 industry-leading AI models working together to create content that converts
@@ -545,20 +545,20 @@ export default function LandingPage() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Get Your Full Marketing Department Today
+            Supercharge Your Marketing Today
           </h2>
           <p className="text-xl text-blue-100 mb-8">
             CMO-level strategy, professional content, and enterprise-grade execution,
-            powered by 8 world-class AI models for 95% less than hiring costs.
+            powered by 8 world-class AI models at a fraction of traditional costs.
           </p>
           <Link
             href="/signup"
             className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
           >
-            Start Free Trial - No Credit Card Required
+            Get Started Now
           </Link>
           <p className="text-blue-200 text-sm">
-            14-day free trial • Cancel anytime • Full marketing team capabilities
+            Cancel anytime • Professional marketing capabilities • Instant access
           </p>
         </div>
       </section>
