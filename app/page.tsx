@@ -168,25 +168,87 @@ export default function LandingPage() {
       {/* Powered By Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-y border-white/10">
         <h3 className="text-center text-gray-400 mb-8 uppercase tracking-wider text-sm font-bold">
-          Powered by Industry-Leading AI
+          Built on World-Class AI Infrastructure
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
+        <p className="text-center text-gray-300 mb-12 max-w-3xl mx-auto">
+          We use 7 specialized AI models — each chosen for specific tasks to deliver the best quality at optimal cost
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { name: 'Claude Sonnet 4', desc: 'Elite content writing', icon: '🧠' },
-            { name: 'GPT-4 Turbo', desc: 'Lightning-fast generation', icon: '⚡' },
-            { name: 'Google Gemini', desc: 'Multi-modal intelligence', icon: '💎' },
-            { name: 'Imagen 4 Ultra', desc: 'Photorealistic images', icon: '🎨' },
-            { name: 'Veo 3.1', desc: 'Cinematic video generation', icon: '🎬' },
-            { name: 'Unsplash Pro', desc: 'Millions of stock photos', icon: '📸' },
-            { name: 'DALL-E 3', desc: 'Creative visuals', icon: '🖼️' },
-            { name: 'Competitor AI', desc: 'Market intelligence', icon: '🔍' },
+            {
+              name: 'Claude Sonnet 4',
+              icon: '🧠',
+              use: 'Strategic Content & Analysis',
+              why: 'Unmatched at deep thinking, brand strategy analysis, and long-form blog posts that require nuanced understanding',
+            },
+            {
+              name: 'GPT-4o',
+              icon: '💬',
+              use: 'Conversational Content',
+              why: 'Excels at creative, engaging social captions, ad copy, and comment replies with natural, human-like tone',
+            },
+            {
+              name: 'Gemini 2.0 Flash',
+              icon: '⚡',
+              use: 'Structured Visual Content',
+              why: 'Optimized for fast, structured outputs like social carousels and blog atomization with perfect formatting',
+            },
+            {
+              name: 'GPT-4o Mini',
+              icon: '🔧',
+              use: 'Quick Analytical Tasks',
+              why: '15x cheaper than premium models for simple tasks like keyword selection and basic research',
+            },
+            {
+              name: 'Perplexity AI',
+              icon: '🔍',
+              use: 'Real-Time Web Research',
+              why: 'Live web scraping for competitor analysis and trending topics — always current, never outdated',
+            },
+            {
+              name: 'Google Imagen 3',
+              icon: '🎨',
+              use: 'AI Image Generation',
+              why: 'Photorealistic images with precise prompt adherence at $0.03/image — exceptional quality-to-cost ratio',
+            },
+            {
+              name: 'Google Veo 3.1',
+              icon: '🎬',
+              use: 'Cinematic Video Generation',
+              why: 'Industry-leading 8-second videos with native audio — worth the premium for brand-critical content',
+            },
+            {
+              name: 'Runway ML Gen-3',
+              icon: '🎥',
+              use: 'Alternative Video Generation',
+              why: 'Cost-effective 5-second videos at $0.10 each — perfect for high-volume social content',
+            },
+            {
+              name: 'Pexels API',
+              icon: '📸',
+              use: 'Stock Photo Library',
+              why: 'Millions of high-quality, copyright-free images — instant visual assets without licensing costs',
+            },
           ].map((tech, idx) => (
-            <div key={idx} className="text-center">
-              <div className="text-4xl mb-2">{tech.icon}</div>
-              <div className="text-white font-bold text-sm">{tech.name}</div>
-              <div className="text-gray-500 text-xs">{tech.desc}</div>
+            <div
+              key={idx}
+              className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:border-blue-400/30 transition"
+            >
+              <div className="flex items-start gap-4 mb-3">
+                <div className="text-4xl">{tech.icon}</div>
+                <div className="flex-1">
+                  <div className="text-white font-bold text-lg mb-1">{tech.name}</div>
+                  <div className="text-blue-400 text-sm font-semibold">{tech.use}</div>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm leading-relaxed">{tech.why}</p>
             </div>
           ))}
+        </div>
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 text-sm">
+            Multi-provider AI strategy reduces costs by 60-75% while maintaining premium quality
+          </p>
         </div>
       </section>
 
