@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import json
@@ -11,6 +11,7 @@ import httpx
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from utils.auth import decode_token
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -45,12 +46,26 @@ class CompetitorData(BaseModel):
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-def load_brand_strategy():
-    """Load brand strategy from PostgreSQL"""
+def get_user_from_token(request: Request):
+    """Extract user_id from JWT token"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
+
+def load_brand_strategy(user_id: str):
+    """Load brand strategy from PostgreSQL for a specific user"""
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
+        cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         strategy = cur.fetchone()
         cur.close()
         conn.close()
@@ -138,17 +153,20 @@ Focus on their MARKETING and CONTENT, not their product features."""
         return ""
 
 @router.post("/add")
-async def add_competitor(competitor: Competitor):
+async def add_competitor(request: Request, competitor: Competitor):
     """Add a new competitor to track"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         cur.execute("""
-            INSERT INTO competitors (name, industry, location, social_handles)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO competitors (user_id, name, industry, location, social_handles)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING id, name, industry, location, social_handles, added_at
         """, (
+            user_id,
             competitor.name,
             competitor.industry,
             competitor.location,
@@ -168,14 +186,16 @@ async def add_competitor(competitor: Competitor):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/list")
-async def list_competitors():
+async def list_competitors(request: Request):
     """Get all tracked competitors with their analyses"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         cur.execute("""
-            SELECT 
+            SELECT
                 c.*,
                 ca.marketing_they_do_well,
                 ca.gaps_they_miss as content_gaps,
@@ -185,8 +205,9 @@ async def list_competitors():
                 ca.strategic_summary
             FROM competitors c
             LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+            WHERE c.user_id = %s
             ORDER BY c.added_at DESC
-        """)
+        """, (user_id,))
         
         competitors = cur.fetchall()
         cur.close()
@@ -225,14 +246,16 @@ async def list_competitors():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{competitor_id}")
-async def delete_competitor(competitor_id: str):
+async def delete_competitor(competitor_id: str, request: Request):
     """Remove a competitor"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Delete competitor (cascade will delete analysis)
-        cur.execute("DELETE FROM competitors WHERE id = %s", (competitor_id,))
+
+        # Delete competitor (cascade will delete analysis) - security: ensure user owns this competitor
+        cur.execute("DELETE FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
         conn.commit()
         cur.close()
         conn.close()
@@ -245,25 +268,27 @@ async def delete_competitor(competitor_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{competitor_id}/analyze")
-async def analyze_competitor(competitor_id: str):
+async def analyze_competitor(competitor_id: str, request: Request):
     """Run brand-aware MARKETING analysis on competitor"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Get competitor
-        cur.execute("SELECT * FROM competitors WHERE id = %s", (competitor_id,))
+
+        # Get competitor (security: ensure user owns this competitor)
+        cur.execute("SELECT * FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
         competitor = cur.fetchone()
-        
+
         if not competitor:
             cur.close()
             conn.close()
             raise HTTPException(status_code=404, detail="Competitor not found")
-        
+
         competitor = dict(competitor)
-        
+
         # Load brand strategy for context
-        brand_strategy = load_brand_strategy()
+        brand_strategy = load_brand_strategy(user_id)
         
         brand_context = ""
         if brand_strategy:
@@ -411,22 +436,24 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/insights")
-async def get_insights():
+async def get_insights(request: Request):
     """Get overall competitive MARKETING insights across all competitors"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        cur.execute("SELECT * FROM competitors ORDER BY added_at DESC")
+
+        cur.execute("SELECT * FROM competitors WHERE user_id = %s ORDER BY added_at DESC", (user_id,))
         competitors = cur.fetchall()
         cur.close()
         conn.close()
-        
+
         if not competitors:
             return {"insights": "No competitors added yet. Add competitors to get insights."}
-        
+
         # Load brand strategy
-        brand_strategy = load_brand_strategy()
+        brand_strategy = load_brand_strategy(user_id)
         
         brand_context = ""
         if brand_strategy:
@@ -490,18 +517,21 @@ Be specific and tactical about CONTENT & MARKETING only."""
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/summary")
-async def get_competitor_summary():
+async def get_competitor_summary(request: Request):
     """Get structured summary of all competitor MARKETING analyses for Strategy Planner"""
     try:
+        user_id = get_user_from_token(request)
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         cur.execute("""
             SELECT c.*, ca.*
             FROM competitors c
             LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+            WHERE c.user_id = %s
             ORDER BY c.added_at DESC
-        """)
+        """, (user_id,))
         competitors = cur.fetchall()
         cur.close()
         conn.close()
