@@ -51,11 +51,12 @@ type CloudStorageProvider = {
 };
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'social' | 'cloud'>('social');
+  const [activeTab, setActiveTab] = useState<'social' | 'cloud' | 'billing'>('social');
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [billingLoading, setBillingLoading] = useState(false);
   const [cloudProviders, setCloudProviders] = useState<CloudStorageProvider[]>([
     {
       id: 'google_drive',
@@ -234,6 +235,35 @@ export default function SettingsPage() {
     }
   };
 
+  const handleManageBilling = async () => {
+    setBillingLoading(true);
+    setErrorMessage('');
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${config.apiUrl}/payment/create-portal-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.portal_url) {
+        // Redirect to Stripe Customer Portal
+        window.location.href = data.portal_url;
+      } else {
+        setErrorMessage(data.detail || 'Failed to open billing portal');
+      }
+    } catch (error) {
+      console.error('Failed to open billing portal:', error);
+      setErrorMessage('Failed to open billing portal');
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
@@ -270,6 +300,16 @@ export default function SettingsPage() {
             }`}
           >
             ☁️ Cloud Storage
+          </button>
+          <button
+            onClick={() => setActiveTab('billing')}
+            className={`px-6 py-3 font-semibold transition border-b-2 ${
+              activeTab === 'billing'
+                ? 'text-blue-400 border-blue-400'
+                : 'text-gray-400 border-transparent hover:text-white'
+            }`}
+          >
+            💳 Billing & Subscription
           </button>
         </div>
 
@@ -524,6 +564,136 @@ export default function SettingsPage() {
                   <h3 className="text-white font-bold mb-2">Your Data is Secure</h3>
                   <p className="text-gray-400 text-sm">
                     We use OAuth 2.0 for secure authentication. We never store your passwords. You can revoke access at any time from your cloud provider's settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Billing & Subscription Tab */}
+        {activeTab === 'billing' && (
+          <>
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">💳 Billing & Subscription</h2>
+              <p className="text-gray-400 mb-6">
+                Manage your subscription, payment methods, and billing history
+              </p>
+
+              <div className="space-y-6">
+                {/* Stripe Customer Portal Button */}
+                <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl p-6 border border-blue-500/30">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-white mb-2">Manage Your Subscription</h3>
+                      <p className="text-gray-300 text-sm mb-4">
+                        Access the Stripe Customer Portal to manage your subscription, update payment methods, view invoices, and more.
+                      </p>
+                      <ul className="text-gray-400 text-sm space-y-2 mb-4">
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Update payment methods
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          View and download invoices
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Upgrade or downgrade your plan
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Cancel your subscription (if needed)
+                        </li>
+                      </ul>
+                      <button
+                        onClick={handleManageBilling}
+                        disabled={billingLoading}
+                        className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {billingLoading ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Opening Portal...
+                          </>
+                        ) : (
+                          <>
+                            Open Billing Portal
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Link
+                    href="/payment/plans"
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 transition group"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-2xl">⬆️</span>
+                      </div>
+                      <h4 className="font-semibold text-white">Upgrade Plan</h4>
+                    </div>
+                    <p className="text-gray-400 text-sm">Get more credits and features</p>
+                  </Link>
+
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-2xl">📊</span>
+                      </div>
+                      <h4 className="font-semibold text-white">Usage</h4>
+                    </div>
+                    <p className="text-gray-400 text-sm">View detailed usage stats</p>
+                  </div>
+
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <span className="text-2xl">💰</span>
+                      </div>
+                      <h4 className="font-semibold text-white">Invoices</h4>
+                    </div>
+                    <p className="text-gray-400 text-sm">Download past invoices</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <div>
+                  <h3 className="text-white font-bold mb-2">Secure Payment Processing</h3>
+                  <p className="text-gray-400 text-sm">
+                    All payment information is securely handled by Stripe, our PCI-compliant payment processor. We never store your payment details on our servers.
                   </p>
                 </div>
               </div>

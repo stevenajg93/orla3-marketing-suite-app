@@ -328,6 +328,54 @@ async def get_payment_status(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/payment/create-portal-session")
+async def create_customer_portal_session(request: Request):
+    """
+    Create Stripe Customer Portal session
+
+    This allows users to:
+    - Update payment methods
+    - View billing history
+    - Cancel subscription
+    - Update subscription
+    """
+    try:
+        user_id = get_user_from_token(request)
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT stripe_customer_id FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if not user['stripe_customer_id']:
+            raise HTTPException(status_code=400, detail="No Stripe customer ID found. Please complete a payment first.")
+
+        # Create Customer Portal session
+        portal_session = stripe.billing_portal.Session.create(
+            customer=user['stripe_customer_id'],
+            return_url=f"{FRONTEND_URL}/dashboard/settings",
+        )
+
+        logger.info(f"✅ Created Customer Portal session for user {user_id}")
+
+        return {
+            "success": True,
+            "portal_url": portal_session.url
+        }
+
+    except stripe.error.StripeError as e:
+        logger.error(f"❌ Stripe error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Error creating portal session: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/payment/webhook")
 async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
     """
