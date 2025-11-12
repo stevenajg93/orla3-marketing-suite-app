@@ -70,7 +70,7 @@ AI-powered marketing automation platform for videographers and creative professi
   - **Claude Sonnet 4**: Strategic analysis & brand-critical content
   - **GPT-4o**: Creative conversational content
   - **Gemini 2.0 Flash**: Structured visual content
-  - **Imagen 3**: AI image generation (Vertex AI)
+  - **Imagen 4 Ultra**: AI image generation (Vertex AI)
   - **Veo 3.1**: AI video generation (Vertex AI)
   - **GPT-4o-mini**: Simple analytical tasks
 - **APIs**: Google Drive API, Unsplash API, OAuth 2.0
@@ -270,7 +270,7 @@ Backend API docs (when running locally): http://localhost:8000/docs
 - `POST /brand-voice/upload` - Upload brand assets
 
 **AI Generation**
-- `POST /ai/generate-image` - Generate image with Google Imagen 3
+- `POST /ai/generate-image` - Generate image with Google Imagen 4 Ultra
 - `POST /ai/generate-video` - Generate video with Google Veo 3.1
 - `GET /ai/video-status/{job_id}` - Check video generation status
 
@@ -344,7 +344,7 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 - ✅ All content scoped to authenticated users
 
 **AI Image & Video Generation (Nov 7, 2025)**
-- ✅ Google Imagen 3 integration for text-to-image generation ($0.03/image)
+- ✅ Google Imagen 4 Ultra integration for text-to-image generation
 - ✅ Google Veo 3.1 integration for text-to-video generation ($6 per 8s video)
 - ✅ Added to both Media Library and Social Manager
 - ✅ Aspect ratio options: 1:1, 16:9, 9:16, 4:3, 3:4

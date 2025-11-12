@@ -26,12 +26,13 @@ Backend:   FastAPI + Python 3.14+ + psycopg2
 Database:  PostgreSQL (Railway)
 Auth:      JWT tokens + bcrypt password hashing
 Payments:  Stripe (subscriptions + credit purchases)
-AI:        Multi-provider optimization (7 models)
+AI:        Multi-provider optimization (8 models)
            - Perplexity AI (real-time web research)
            - Claude Sonnet 4 (strategic/brand-critical)
            - GPT-4o (creative conversational content)
            - Gemini 2.0 Flash (structured visual content)
-           - Imagen 3 (AI image generation - Vertex AI)
+           - Videographer Smart Search (intelligent content discovery)
+           - Imagen 4 Ultra (AI image generation - Vertex AI)
            - Veo 3.1 (AI video generation - Vertex AI)
            - GPT-4o-mini (simple analytical tasks)
 Publishing: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook,
@@ -285,6 +286,70 @@ npm run dev
 - All database queries filtered by user_id automatically
 - No cross-user data leakage
 
+### 0.1. Email Verification System
+**Files**: `backend/routes/auth.py`, `backend/utils/email.py`, `app/verify-email/page.tsx`, `app/resend-verification/page.tsx`
+
+**Complete email verification flow with pay-to-access gate:**
+
+**Features:**
+- Email verification required before login (HTTP 403 gate)
+- Resend API integration for transactional emails
+- 7-day verification token expiry
+- Beautiful HTML email templates (ORLA³ branded)
+- One-click verification from email link
+- Resend functionality for expired/lost emails
+- Welcome email after successful verification
+
+**Database Fields:**
+```sql
+users table:
+- email_verified (BOOLEAN) - Default false
+- verification_token (TEXT) - Unique verification token
+- verification_token_expires (TIMESTAMPTZ) - 7-day expiry
+```
+
+**Backend Endpoints:**
+```
+POST /auth/register              # Generates token, sends verification email
+POST /auth/verify-email          # Validates token, marks email as verified
+POST /auth/resend-verification   # Regenerates token, resends email
+POST /auth/login                 # Blocks unverified users (HTTP 403)
+```
+
+**Frontend Pages:**
+- `/verify-email?token=...` - Auto-verifies from email link, redirects to dashboard
+- `/resend-verification` - Manual form to request new verification email
+- `UnverifiedEmailBanner` - In-dashboard warning banner with resend button
+
+**Email Templates (Resend):**
+1. **Verification Email**: Sent on registration with verification link
+2. **Welcome Email**: Sent after successful verification
+3. **Password Reset Email**: For password recovery flow
+
+**Environment Variables:**
+```bash
+RESEND_API_KEY=re_...           # Resend API key for email sending
+FROM_EMAIL=noreply@orla3.com    # Sender email address
+FRONTEND_URL=https://...         # For verification links
+```
+
+**Two-Gate Access Model:**
+1. **Email Verification Gate** (HTTP 403) - First barrier
+   - User registers → receives verification email
+   - Must click link to verify
+   - Cannot login until verified
+
+2. **Payment Gate** (HTTP 402) - Second barrier
+   - Even after email verification, must have active paid subscription
+   - Blocks free plans and inactive subscriptions
+   - Redirects to Stripe checkout
+
+**Security:**
+- Tokens are single-use (cleared after verification)
+- 7-day expiry automatically enforced
+- Secure token generation with secrets module
+- Graceful handling if Resend not configured (logs warning)
+
 ### 1. Payment & Credit Management System
 **Files**: `backend/routes/payment.py`, `backend/routes/credits.py`, `backend/utils/credits.py`
 
@@ -433,7 +498,7 @@ This strategy is **automatically applied** to all content generation.
 
 - Google Drive OAuth integration
 - Browse folders and import assets
-- **AI Image Generation** (Google Imagen 3)
+- **AI Image Generation** (Google Imagen 4 Ultra)
   - Text-to-image with aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
   - $0.03 per image
   - Gallery view with download/preview
@@ -518,7 +583,7 @@ DELETE /brand-voice/assets/{id}   # Delete asset
 
 ### AI Generation
 ```
-POST   /ai/generate-image          # Generate image (Imagen 3)
+POST   /ai/generate-image          # Generate image (Imagen 4 Ultra)
 POST   /ai/generate-video          # Generate video (Veo 3.1)
 GET    /ai/video-status/{job_id}   # Check video generation status
 ```
@@ -616,8 +681,8 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Automatic filtering by user context
 
 **1. AI Image & Video Generation (Nov 7, 2025)**
-- ✅ **Google Imagen 3 integration**
-  - Text-to-image generation ($0.03/image)
+- ✅ **Google Imagen 4 Ultra integration**
+  - Text-to-image generation
   - 5 aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
   - Integrated into Media Library and Social Manager
   - Gallery view with download/preview buttons
