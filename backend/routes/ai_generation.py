@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, Literal
 import os
@@ -7,6 +7,8 @@ import base64
 from logger import setup_logger
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleAuthRequest
+from utils.auth import decode_token
+from utils.credits import deduct_credits, InsufficientCreditsError
 
 logger = setup_logger(__name__)
 router = APIRouter()
@@ -24,6 +26,20 @@ if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
     logger.warning(f"   GCP_REFRESH_TOKEN: {'✓' if GCP_REFRESH_TOKEN else '✗'}")
 else:
     logger.info(f"🔧 OAuth2 configured for Vertex AI (Project: {GCP_PROJECT_ID})")
+
+def get_user_from_request(request: Request) -> str:
+    """Extract user_id from JWT token in Authorization header"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
 
 def get_access_token() -> str:
     """
@@ -80,20 +96,21 @@ class VideoGenerateResponse(BaseModel):
     error: Optional[str] = None
 
 @router.post("/generate-image", response_model=ImageGenerateResponse)
-async def generate_image(request: ImageGenerateRequest):
+async def generate_image(image_request: ImageGenerateRequest, request: Request):
     """
-    Generate an image using Google Imagen 3 (Nano Banana) via Vertex AI.
+    Generate an image using Google Imagen 4 Ultra via Vertex AI.
 
-    Imagen 3 is Google's state-of-the-art text-to-image model:
+    Imagen 4 Ultra is Google's state-of-the-art text-to-image model:
     - Superior photorealism compared to DALL-E 3
     - Better prompt adherence and understanding
     - More natural lighting and composition
-    - Cost: $0.02-0.04 per image
+    - Cost: 20 credits per image
 
     This uses OAuth2 authentication via Vertex AI REST API.
 
     Args:
-        request: ImageGenerateRequest with prompt and aspect ratio
+        image_request: ImageGenerateRequest with prompt and aspect ratio
+        request: FastAPI Request for authentication
 
     Returns:
         ImageGenerateResponse with base64 encoded image data
@@ -107,10 +124,36 @@ async def generate_image(request: ImageGenerateRequest):
         )
 
     try:
+        # Get user_id from JWT token
+        user_id = get_user_from_request(request)
+
+        # Check and deduct credits BEFORE generating (20 credits for ultra quality)
+        try:
+            deduct_credits(
+                user_id=user_id,
+                operation_type="ai_image_ultra",
+                operation_details={
+                    "prompt": image_request.prompt[:100],
+                    "aspect_ratio": image_request.aspect_ratio,
+                    "model": "imagen-4.0-ultra"
+                },
+                description=f"Generated AI image (Imagen 4 Ultra) - {image_request.aspect_ratio}"
+            )
+        except InsufficientCreditsError as e:
+            logger.warning(f"❌ Insufficient credits for user {user_id}: {e}")
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_credits",
+                    "message": f"Insufficient credits. Required: {e.required}, Available: {e.available}",
+                    "required": e.required,
+                    "available": e.available
+                }
+            )
         # Get fresh access token
         access_token = get_access_token()
 
-        logger.info(f"🎨 Generating image with Imagen 4 Ultra: '{request.prompt[:60]}...' (aspect: {request.aspect_ratio})")
+        logger.info(f"🎨 Generating image with Imagen 4 Ultra for user {user_id}: '{image_request.prompt[:60]}...' (aspect: {image_request.aspect_ratio})")
 
         # Vertex AI Imagen 4 Ultra endpoint (highest quality)
         endpoint = (
@@ -122,11 +165,11 @@ async def generate_image(request: ImageGenerateRequest):
         # Request payload for Imagen 4 Ultra with quality enhancements
         payload = {
             "instances": [{
-                "prompt": request.prompt
+                "prompt": image_request.prompt
             }],
             "parameters": {
-                "sampleCount": request.num_images,
-                "aspectRatio": request.aspect_ratio,
+                "sampleCount": image_request.num_images,
+                "aspectRatio": image_request.aspect_ratio,
                 "sampleImageSize": "2K",  # Maximum resolution
                 "enhancePrompt": True,  # AI-enhanced prompts for better quality
                 "safetySetting": "block_some",
@@ -223,7 +266,7 @@ async def generate_image(request: ImageGenerateRequest):
         )
 
 @router.post("/generate-video-veo", response_model=VideoGenerateResponse)
-async def generate_video_veo(request: VideoGenerateRequest):
+async def generate_video_veo(video_request: VideoGenerateRequest, request: Request):
     """
     Generate a video using Google Veo 3.1 via Vertex AI.
 
@@ -234,11 +277,12 @@ async def generate_video_veo(request: VideoGenerateRequest):
     - Audio generation included
     - Production-ready quality
 
-    Cost: $6 per 8-second video (via credits)
+    Cost: 200 credits per 8-second video
     Generation time: 2-5 minutes (async long-running operation)
 
     Args:
-        request: VideoGenerateRequest with prompt, duration, and resolution
+        video_request: VideoGenerateRequest with prompt, duration, and resolution
+        request: FastAPI Request for authentication
 
     Returns:
         VideoGenerateResponse with operation ID for status tracking
@@ -252,13 +296,40 @@ async def generate_video_veo(request: VideoGenerateRequest):
         )
 
     try:
+        # Get user_id from JWT token
+        user_id = get_user_from_request(request)
+
+        # Check and deduct credits BEFORE generating (200 credits for 8-second video)
+        try:
+            deduct_credits(
+                user_id=user_id,
+                operation_type="ai_video_8sec",
+                operation_details={
+                    "prompt": video_request.prompt[:100],
+                    "duration": video_request.duration_seconds,
+                    "resolution": video_request.resolution,
+                    "model": "veo-3.1"
+                },
+                description=f"Generated AI video (Veo 3.1) - {video_request.duration_seconds}s, {video_request.resolution}"
+            )
+        except InsufficientCreditsError as e:
+            logger.warning(f"❌ Insufficient credits for user {user_id}: {e}")
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_credits",
+                    "message": f"Insufficient credits. Required: {e.required}, Available: {e.available}",
+                    "required": e.required,
+                    "available": e.available
+                }
+            )
         # Get fresh access token (same as Imagen 3)
         access_token = get_access_token()
 
         # Ensure duration is 4, 6, or 8 seconds (Veo requirement)
-        duration = 8 if request.duration_seconds > 6 else (6 if request.duration_seconds > 4 else 4)
+        duration = 8 if video_request.duration_seconds > 6 else (6 if video_request.duration_seconds > 4 else 4)
 
-        logger.info(f"🎬 Generating video with Veo 3.1: '{request.prompt[:60]}...' ({duration}s, {request.resolution})")
+        logger.info(f"🎬 Generating video with Veo 3.1 for user {user_id}: '{video_request.prompt[:60]}...' ({duration}s, {video_request.resolution})")
 
         # Vertex AI Veo 3.1 endpoint
         endpoint = (
@@ -270,11 +341,11 @@ async def generate_video_veo(request: VideoGenerateRequest):
         # Request payload for Veo 3.1
         payload = {
             "instances": [{
-                "prompt": request.prompt
+                "prompt": video_request.prompt
             }],
             "parameters": {
                 "durationSeconds": duration,
-                "resolution": request.resolution,
+                "resolution": video_request.resolution,
                 "generateAudio": True,  # Required for Veo 3
                 "sampleCount": 1,
                 "aspectRatio": "16:9",

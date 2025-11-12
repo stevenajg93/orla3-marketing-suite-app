@@ -15,6 +15,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from utils.auth import decode_token
+from utils.credits import add_credits
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -190,9 +191,54 @@ PRICING_PLANS = {
     }
 }
 
+# Credit Top-Up Packages (one-time purchases)
+CREDIT_PACKAGES = {
+    "credits_500": {
+        "name": "500 Credits",
+        "price_id": os.getenv("STRIPE_CREDITS_500_PRICE_ID"),
+        "price": 125,
+        "currency": "GBP",
+        "credits": 500,
+        "description": "Emergency credit top-up",
+        "price_per_credit": 0.25
+    },
+    "credits_1000": {
+        "name": "1,000 Credits",
+        "price_id": os.getenv("STRIPE_CREDITS_1000_PRICE_ID"),
+        "price": 200,
+        "currency": "GBP",
+        "credits": 1000,
+        "description": "Credit boost for campaigns",
+        "price_per_credit": 0.20
+    },
+    "credits_2500": {
+        "name": "2,500 Credits",
+        "price_id": os.getenv("STRIPE_CREDITS_2500_PRICE_ID"),
+        "price": 400,
+        "currency": "GBP",
+        "credits": 2500,
+        "description": "Big campaign pack",
+        "price_per_credit": 0.16,
+        "badge": "Best Value"
+    },
+    "credits_5000": {
+        "name": "5,000 Credits",
+        "price_id": os.getenv("STRIPE_CREDITS_5000_PRICE_ID"),
+        "price": 650,
+        "currency": "GBP",
+        "credits": 5000,
+        "description": "Major campaign pack",
+        "price_per_credit": 0.13
+    }
+}
+
 
 class CheckoutRequest(BaseModel):
     plan: str  # starter, professional, enterprise
+
+
+class CreditPurchaseRequest(BaseModel):
+    package: str  # credits_500, credits_1000, credits_2500, credits_5000
 
 
 @router.get("/payment/plans")
@@ -202,6 +248,101 @@ async def get_pricing_plans():
         "success": True,
         "plans": PRICING_PLANS
     }
+
+
+@router.get("/payment/credit-packages")
+async def get_credit_packages():
+    """Get available credit top-up packages"""
+    return {
+        "success": True,
+        "packages": CREDIT_PACKAGES
+    }
+
+
+@router.post("/payment/purchase-credits")
+async def purchase_credits(data: CreditPurchaseRequest, request: Request):
+    """
+    Create Stripe checkout session for credit purchase (one-time payment)
+
+    This is different from subscriptions - it's a one-time payment that adds
+    credits to the user's balance immediately after payment.
+    """
+    try:
+        user_id = get_user_from_token(request)
+
+        if data.package not in CREDIT_PACKAGES:
+            raise HTTPException(status_code=400, detail="Invalid credit package selected")
+
+        package = CREDIT_PACKAGES[data.package]
+        price_id = package["price_id"]
+
+        if not price_id:
+            raise HTTPException(status_code=500, detail=f"Price ID not configured for {data.package}")
+
+        # Get user email
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT email, name, stripe_customer_id FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Create or reuse Stripe customer
+        if user['stripe_customer_id']:
+            customer_id = user['stripe_customer_id']
+        else:
+            customer = stripe.Customer.create(
+                email=user['email'],
+                name=user['name'],
+                metadata={"user_id": user_id}
+            )
+            customer_id = customer.id
+
+            # Save customer ID
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("UPDATE users SET stripe_customer_id = %s WHERE id = %s", (customer_id, user_id))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+        # Create Checkout Session for ONE-TIME payment
+        checkout_session = stripe.checkout.Session.create(
+            customer=customer_id,
+            payment_method_types=['card'],
+            line_items=[{
+                'price': price_id,
+                'quantity': 1,
+            }],
+            mode='payment',  # ONE-TIME payment (not subscription)
+            success_url=f"{FRONTEND_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}&type=credits",
+            cancel_url=f"{FRONTEND_URL}/dashboard",
+            metadata={
+                "user_id": user_id,
+                "package": data.package,
+                "credits": package["credits"],
+                "purchase_type": "credit_topup"
+            }
+        )
+
+        logger.info(f"✅ Created credit purchase checkout for user {user_id}: {package['credits']} credits")
+
+        return {
+            "success": True,
+            "checkout_url": checkout_session.url,
+            "session_id": checkout_session.id,
+            "credits": package["credits"]
+        }
+
+    except stripe.error.StripeError as e:
+        logger.error(f"❌ Stripe error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Error creating credit purchase checkout: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/payment/create-checkout")
@@ -434,34 +575,64 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
 
 
 async def handle_checkout_success(session):
-    """Handle successful checkout session"""
+    """Handle successful checkout session (subscription OR credit purchase)"""
     user_id = session['metadata']['user_id']
-    plan = session['metadata']['plan']
     customer_id = session['customer']
-    subscription_id = session['subscription']
 
-    logger.info(f"💳 Checkout completed for user {user_id}: {plan} plan")
+    # Check if this is a credit purchase or subscription
+    purchase_type = session['metadata'].get('purchase_type')
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    if purchase_type == 'credit_topup':
+        # Handle credit purchase
+        credits = int(session['metadata']['credits'])
+        package = session['metadata']['package']
+        payment_intent_id = session.get('payment_intent')
 
-    try:
-        cur.execute("""
-            UPDATE users
-            SET plan = %s,
-                stripe_customer_id = %s,
-                stripe_subscription_id = %s,
-                subscription_status = 'active',
-                subscription_started_at = NOW()
-            WHERE id = %s
-        """, (plan, customer_id, subscription_id, user_id))
+        logger.info(f"💳 Credit purchase completed for user {user_id}: {credits} credits")
 
-        conn.commit()
-        logger.info(f"✅ Updated user {user_id} to {plan} plan")
+        try:
+            # Add credits to user's balance
+            result = add_credits(
+                user_id=user_id,
+                credits=credits,
+                transaction_type='purchased',
+                description=f"Purchased {credits} credits ({package})",
+                stripe_payment_intent_id=payment_intent_id
+            )
 
-    finally:
-        cur.close()
-        conn.close()
+            logger.info(f"✅ Added {credits} credits to user {user_id}. New balance: {result['balance_after']}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to add credits for user {user_id}: {str(e)}")
+            raise
+
+    else:
+        # Handle subscription checkout
+        plan = session['metadata']['plan']
+        subscription_id = session['subscription']
+
+        logger.info(f"💳 Subscription checkout completed for user {user_id}: {plan} plan")
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+                UPDATE users
+                SET plan = %s,
+                    stripe_customer_id = %s,
+                    stripe_subscription_id = %s,
+                    subscription_status = 'active',
+                    subscription_started_at = NOW()
+                WHERE id = %s
+            """, (plan, customer_id, subscription_id, user_id))
+
+            conn.commit()
+            logger.info(f"✅ Updated user {user_id} to {plan} plan")
+
+        finally:
+            cur.close()
+            conn.close()
 
 
 async def handle_subscription_created(subscription):

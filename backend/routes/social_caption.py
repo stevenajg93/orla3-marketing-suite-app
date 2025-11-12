@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional
 import anthropic
@@ -12,6 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 import google.generativeai as genai
 from openai import OpenAI
+from utils.auth import decode_token
+from utils.credits import deduct_credits, InsufficientCreditsError
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -29,6 +31,20 @@ class CaptionRequest(BaseModel):
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+def get_user_from_request(request: Request) -> str:
+    """Extract user_id from JWT token in Authorization header"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
 
 def load_brand_strategy():
     """Load brand strategy from PostgreSQL"""
@@ -98,9 +114,36 @@ def build_brand_context(strategy: dict) -> str:
     return context
 
 @router.post("/generate-caption")
-async def generate_caption(request: CaptionRequest):
+async def generate_caption(caption_request: CaptionRequest, request: Request):
     """Generate contextual caption based on user prompt and post details"""
     try:
+        # Get user_id from JWT token
+        user_id = get_user_from_request(request)
+
+        # Check and deduct credits BEFORE generating
+        try:
+            deduct_credits(
+                user_id=user_id,
+                operation_type="social_caption",
+                operation_details={
+                    "prompt": caption_request.prompt[:100],
+                    "platforms": caption_request.platforms,
+                    "post_type": caption_request.postType
+                },
+                description=f"Generated social caption for {', '.join(caption_request.platforms)}"
+            )
+        except InsufficientCreditsError as e:
+            logger.warning(f"❌ Insufficient credits for user {user_id}: {e}")
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_credits",
+                    "message": f"Insufficient credits. Required: {e.required}, Available: {e.available}",
+                    "required": e.required,
+                    "available": e.available
+                }
+            )
+
         # Configure OpenAI API
         openai_key = os.getenv("OPENAI_API_KEY")
         if not openai_key:
@@ -114,26 +157,26 @@ async def generate_caption(request: CaptionRequest):
 
         # Build context for GPT-4o
         platform_limits = []
-        if "x" in request.platforms:
+        if "x" in caption_request.platforms:
             platform_limits.append("X/Twitter (280 chars max)")
-        if "instagram" in request.platforms:
+        if "instagram" in caption_request.platforms:
             platform_limits.append("Instagram (2200 chars max)")
-        if "linkedin" in request.platforms:
+        if "linkedin" in caption_request.platforms:
             platform_limits.append("LinkedIn (3000 chars max)")
-        if "facebook" in request.platforms:
+        if "facebook" in caption_request.platforms:
             platform_limits.append("Facebook (63,206 chars max)")
 
         platform_text = ", ".join(platform_limits) if platform_limits else "general social media"
-        media_text = f"{request.mediaCount} image(s)" if request.hasMedia else "no media"
+        media_text = f"{caption_request.mediaCount} image(s)" if caption_request.hasMedia else "no media"
 
         prompt = f"""{brand_context}Create an engaging social media caption for {platform_text}.
 
-User's request: {request.prompt}
+User's request: {caption_request.prompt}
 
 Post details:
-- Post type: {request.postType}
+- Post type: {caption_request.postType}
 - Attached media: {media_text}
-- Target platforms: {", ".join(request.platforms) if request.platforms else "general"}
+- Target platforms: {", ".join(caption_request.platforms) if caption_request.platforms else "general"}
 
 Requirements:
 - CRITICAL: Apply Orla³'s brand voice, tone, and messaging pillars throughout
@@ -157,7 +200,7 @@ Return ONLY the caption text, no explanations or meta-commentary."""
 
         caption = response.choices[0].message.content.strip()
 
-        logger.info(f"Generated brand-aligned caption (GPT-4o) for: {request.prompt}")
+        logger.info(f"✅ Generated brand-aligned caption (GPT-4o) for user {user_id}: {caption_request.prompt[:50]}")
         return {"caption": caption, "success": True}
 
     except Exception as e:

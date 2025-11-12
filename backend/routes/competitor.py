@@ -12,6 +12,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from utils.auth import decode_token
+from utils.credits import deduct_credits, InsufficientCreditsError
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -272,6 +273,28 @@ async def analyze_competitor(competitor_id: str, request: Request):
     """Run brand-aware MARKETING analysis on competitor"""
     try:
         user_id = get_user_from_token(request)
+
+        # Check and deduct credits BEFORE analyzing (5 credits)
+        try:
+            deduct_credits(
+                user_id=user_id,
+                operation_type="competitor_analysis",
+                operation_details={
+                    "competitor_id": competitor_id
+                },
+                description=f"Analyzed competitor (ID: {competitor_id})"
+            )
+        except InsufficientCreditsError as e:
+            logger.warning(f"❌ Insufficient credits for user {user_id}: {e}")
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_credits",
+                    "message": f"Insufficient credits. Required: {e.required}, Available: {e.available}",
+                    "required": e.required,
+                    "available": e.available
+                }
+            )
 
         conn = get_db_connection()
         cur = conn.cursor()

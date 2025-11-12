@@ -10,6 +10,7 @@ from openai import OpenAI
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
+from utils.credits import deduct_credits, InsufficientCreditsError
 
 router = APIRouter()
 
@@ -171,6 +172,27 @@ async def analyze_brand_voice(request: Request, include_competitors: bool = True
     """
     try:
         user_id = get_user_from_token(request)
+
+        # Check and deduct credits BEFORE generating strategy (10 credits)
+        try:
+            deduct_credits(
+                user_id=user_id,
+                operation_type="strategy_generation",
+                operation_details={
+                    "include_competitors": include_competitors
+                },
+                description="Generated brand strategy and marketing intelligence"
+            )
+        except InsufficientCreditsError as e:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_credits",
+                    "message": f"Insufficient credits. Required: {e.required}, Available: {e.available}",
+                    "required": e.required,
+                    "available": e.available
+                }
+            )
 
         # Load assets from PostgreSQL for this user
         assets = load_brand_voice_assets(user_id)

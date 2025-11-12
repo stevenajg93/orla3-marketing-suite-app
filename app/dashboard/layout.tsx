@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useCredits } from '@/lib/hooks/useCredits';
+import CreditPurchaseModal from '@/components/CreditPurchaseModal';
 
 export default function DashboardLayout({
   children,
@@ -12,7 +14,9 @@ export default function DashboardLayout({
 }) {
   const { user, logout } = useAuth();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
   const pathname = usePathname();
+  const { credits, loading: creditsLoading } = useCredits();
 
   const handleLogout = async () => {
     await logout();
@@ -49,14 +53,26 @@ export default function DashboardLayout({
 
               {/* Buy More Credits Button - Hidden for system admin */}
               {user?.email !== 's.gillespie@gecslabs.com' && (
-                <Link
-                  href="/dashboard/billing"
+                <button
+                  onClick={() => setShowCreditModal(true)}
                   className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-lg border border-blue-400/30 hover:border-blue-400/50 transition group"
                 >
-                  <span className="text-blue-300 font-bold group-hover:text-blue-200">500</span>
-                  <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
-                  <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
-                </Link>
+                  {creditsLoading ? (
+                    <span className="text-gray-400 text-sm">Loading...</span>
+                  ) : credits ? (
+                    <>
+                      <span className={`font-bold group-hover:text-blue-200 ${
+                        credits.warning_threshold ? 'text-yellow-400' : 'text-blue-300'
+                      }`}>
+                        {credits.balance.toLocaleString()}
+                      </span>
+                      <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
+                      <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400 text-sm">--</span>
+                  )}
+                </button>
               )}
 
               {/* Account Dropdown */}
@@ -227,6 +243,16 @@ export default function DashboardLayout({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+
+      {/* Credit Purchase Modal */}
+      <CreditPurchaseModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        onSuccess={() => {
+          setShowCreditModal(false);
+          // Credits will auto-refresh via webhook
+        }}
+      />
     </div>
   );
 }

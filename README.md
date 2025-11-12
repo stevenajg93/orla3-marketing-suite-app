@@ -31,10 +31,20 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Structured insights**: What they do well, what to avoid, opportunities
 - **Feeds into strategy**: Automatically influences content generation
 
+### 💳 Payment & Credit System
+- **Stripe Integration**: Secure subscription and credit purchases
+- **4 Subscription Tiers**: Starter (£25), Professional (£75), Business (£150), Enterprise (£300)
+- **Credit-Based Usage**: All AI operations deducted from monthly allocation
+- **Credit Top-Ups**: Buy additional credits when needed (500-5000 credits)
+- **Real-Time Balance**: Live credit display in dashboard header
+- **Usage Tracking**: Complete transaction history and audit trail
+- **Email Verification**: Pay-to-access model with email verification gate
+- **Customer Portal**: Self-service billing management via Stripe
+
 ### 📁 Media Management
 - **Google Drive integration**: Import assets directly
-- **AI Image Generation**: Google Imagen 3 via Vertex AI ($0.03/image)
-- **AI Video Generation**: Google Veo 3.1 ($6 per 8s video with audio)
+- **AI Image Generation**: Google Imagen 4 Ultra (20 credits per image)
+- **AI Video Generation**: Google Veo 3.1 (200 credits per 8s video with audio)
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
@@ -102,7 +112,8 @@ backend/
 ```
 
 ### Database Schema
-- `users` - User accounts with JWT authentication
+- `users` - User accounts with JWT authentication, subscription plans, and credit balances
+- `credit_transactions` - Complete audit trail of all credit operations
 - `brand_strategy` - Brand voice, messaging pillars, competitive positioning (per user)
 - `brand_voice_assets` - Uploaded files with extracted text (per user)
 - `content_library` - Generated content with metadata (per user)
@@ -304,6 +315,20 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**Payment & Credit Management System (Nov 12, 2025)**
+- ✅ **Stripe payment integration** with subscription and one-time credit purchases
+- ✅ **Credit tracking system** with PostgreSQL functions and audit trail
+- ✅ **4 subscription tiers** - Starter (2000 credits), Pro (10000), Business (25000), Enterprise (20000)
+- ✅ **4 credit top-up packages** - 500, 1000, 2500, 5000 credits (£125-£650)
+- ✅ **Credit deduction** integrated into all AI operations (social captions, images, videos, strategy, competitor analysis)
+- ✅ **Real-time credit display** in dashboard header with low balance warnings
+- ✅ **Credit purchase modal** with package selection and Stripe checkout
+- ✅ **Webhook processing** for automatic credit addition and subscription updates
+- ✅ **Usage costs**: Social Caption (2), Blog (5), AI Image (20), AI Video (200), Strategy (10), Competitor Analysis (5)
+- ✅ **Rollover limits** by plan: Starter (250), Pro (1000), Business (3000), Enterprise (unlimited)
+- ✅ **Email verification gate** - Users must verify email to access paid features
+- ✅ **Customer Portal** - Self-service billing management via Stripe
+
 **Brand Asset Management & Cloud Storage (Nov 12, 2025)**
 - ✅ **Google Cloud Storage integration** for persistent brand assets (logos, images)
 - ✅ **Brand asset extraction** from PDFs (colors, fonts, logos)
@@ -370,5 +395,5 @@ Built with love by the ORLA³ team. For questions or contributions, open an issu
 ---
 
 **Last Updated:** November 12, 2025
-**Version:** 0.2.0
-**Status:** Production-ready with GCS storage, brand asset extraction, multi-cloud OAuth, and multi-tenant architecture ready
+**Version:** 0.3.0
+**Status:** Production-ready with Stripe payments, credit management, GCS storage, brand asset extraction, multi-cloud OAuth, and multi-tenant architecture ready

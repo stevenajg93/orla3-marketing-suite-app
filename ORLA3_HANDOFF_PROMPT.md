@@ -88,11 +88,25 @@ orla3-marketing-suite-app/
 
 ### PostgreSQL Tables
 
-**users** - User accounts and authentication
+**users** - User accounts, authentication, subscriptions, and credits
 ```sql
-- id, email, password_hash (bcrypt)
+- id, email, password_hash (bcrypt), email_verified
+- plan, subscription_status, subscription_started_at, stripe_customer_id
+- credit_balance, monthly_credit_allocation, last_credit_reset_at
+- total_credits_used, total_credits_purchased
 - created_at, updated_at
 - JWT tokens for authentication
+```
+
+**credit_transactions** - Complete credit audit trail
+```sql
+- id, user_id (foreign key)
+- transaction_type (spent/purchased/allocated/refunded)
+- amount, balance_after
+- operation_type (social_caption/blog_post/ai_image_ultra/ai_video_8sec/etc)
+- operation_details (JSONB), description
+- stripe_payment_intent_id, stripe_charge_id
+- created_at
 ```
 
 **brand_strategy** - Single source of brand truth (per user)
@@ -271,7 +285,73 @@ npm run dev
 - All database queries filtered by user_id automatically
 - No cross-user data leakage
 
-### 1. Brand Strategy Intelligence
+### 1. Payment & Credit Management System
+**Files**: `backend/routes/payment.py`, `backend/routes/credits.py`, `backend/utils/credits.py`
+
+**Complete Stripe integration with credit-based usage system:**
+
+**Subscription Plans:**
+- **Starter** (£25/month): 2000 credits/month, 250 rollover limit
+- **Professional** (£75/month): 10,000 credits/month, 1000 rollover limit
+- **Business** (£150/month): 25,000 credits/month, 3000 rollover limit
+- **Enterprise** (£300/month): 20,000 credits/month, unlimited rollover
+
+**Credit Top-Up Packages** (one-time purchases):
+- 500 credits: £125 (£0.25/credit)
+- 1000 credits: £200 (£0.20/credit)
+- 2500 credits: £400 (£0.16/credit)
+- 5000 credits: £650 (£0.13/credit)
+
+**Credit Costs:**
+- Social Caption: 2 credits
+- Blog Post: 5 credits
+- AI Image (Imagen 4 Ultra): 20 credits
+- AI Video (Veo 3.1 - 8sec): 200 credits
+- Strategy Generation: 10 credits
+- Competitor Analysis: 5 credits
+- Brand Voice Analysis: 3 credits
+
+**Key Features:**
+- Pre-flight credit checking (prevents failed operations)
+- Atomic deduction via PostgreSQL functions
+- Complete transaction audit trail
+- HTTP 402 response when insufficient credits
+- Real-time balance updates in frontend
+- Webhook processing for purchases
+- Email verification gate (pay-to-access model)
+- Stripe Customer Portal for billing management
+
+**Payment Endpoints:**
+```
+POST   /payment/create-checkout         # Create subscription checkout
+POST   /payment/purchase-credits        # Create credit top-up checkout
+POST   /payment/webhook                 # Stripe webhook handler
+POST   /payment/create-portal-session   # Customer Portal access
+GET    /payment/subscription            # Get user subscription
+GET    /payment/credit-packages         # Get available credit packages
+```
+
+**Credit Endpoints:**
+```
+GET    /credits/balance                 # Get current credit balance
+GET    /credits/history                 # Get transaction history
+GET    /credits/costs                   # Get operation costs
+GET    /credits/check/{operation_type}  # Check if user has enough credits
+```
+
+**Frontend Components:**
+- `lib/hooks/useCredits.ts` - React hook for credit management
+- `components/CreditPurchaseModal.tsx` - Credit purchase UI
+- Dashboard header credit display with low balance warnings
+
+**Credit Deduction Integration:**
+All AI endpoints check credits before processing:
+- `routes/social_caption.py` - `/generate-caption`
+- `routes/ai_generation.py` - `/generate-image`, `/generate-video-veo`
+- `routes/strategy.py` - `/analyze`
+- `routes/competitor.py` - `/{id}/analyze`
+
+### 2. Brand Strategy Intelligence
 **File**: `backend/routes/strategy.py`
 
 Upload brand materials → AI analyzes (Claude Sonnet 4) → Generates comprehensive strategy:
@@ -456,6 +536,36 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 - **CORS protection** - Restricted to verified origins only
 
 ### Recent Updates (Nov 2025)
+
+**0. Payment & Credit Management System (Nov 12, 2025)**
+- ✅ **Complete Stripe integration**
+  - Subscription checkout with 4 tier plans (Starter, Professional, Business, Enterprise)
+  - Credit top-up packages (500, 1000, 2500, 5000 credits at £125-£650)
+  - Webhook processing for automatic credit allocation and subscription updates
+  - Stripe Customer Portal for self-service billing management
+
+- ✅ **Credit tracking and enforcement**
+  - PostgreSQL credit_transactions table with complete audit trail
+  - Database functions: record_credit_transaction(), has_sufficient_credits(), reset_monthly_credits()
+  - Credit columns in users table: credit_balance, monthly_credit_allocation, total_credits_used, total_credits_purchased
+  - Rollover limits by plan: Starter (250), Professional (1000), Business (3000), Enterprise (unlimited)
+
+- ✅ **Credit deduction integration**
+  - All AI operations deduct credits BEFORE processing
+  - HTTP 402 response with detailed error when insufficient credits
+  - Operation costs: Social Caption (2), Blog (5), AI Image (20), AI Video (200), Strategy (10), Competitor (5)
+  - Integrated into: social_caption.py, ai_generation.py, strategy.py, competitor.py
+
+- ✅ **Frontend credit management**
+  - Real-time credit balance in dashboard header with low balance warnings (yellow < 20%)
+  - Credit purchase modal with 4 package options and pricing details
+  - React hook (useCredits.ts) for state management
+  - Monthly allocation and usage percentage display
+
+- ✅ **Pay-to-access model**
+  - Email verification gate - users must verify email to use platform
+  - Subscription required for all AI operations
+  - Credit system prevents overuse and enforces limits
 
 **0. Brand Asset Management & Cloud Storage (Nov 12, 2025)**
 - ✅ **Google Cloud Storage (GCS) integration**
@@ -709,6 +819,8 @@ curl https://orla3-marketing-suite-app-production.up.railway.app/
 - [x] Social publishing infrastructure (9 platforms, Nov 7 2025)
 - [x] JWT authentication with bcrypt (Nov 2025)
 - [x] Multi-user support with per-user data isolation (Nov 2025)
+- [x] Complete Stripe payment integration with credit management (Nov 12 2025)
+- [x] Credit-based usage enforcement on all AI operations (Nov 12 2025)
 
 ---
 
@@ -725,5 +837,5 @@ For questions about this codebase:
 ---
 
 **Last Updated**: November 12, 2025
-**Architecture Version**: 2.5 (GCS Storage + Brand Asset Extraction + Multi-Cloud OAuth + Multi-Tenant Ready)
-**Status**: ✅ Production-ready, zero technical debt, fully secure, persistent storage, multi-cloud integrated, multi-tenant architecture prepared
+**Architecture Version**: 3.0 (Payment & Credit System + GCS Storage + Brand Asset Extraction + Multi-Cloud OAuth + Multi-Tenant Ready)
+**Status**: ✅ Production-ready with complete Stripe payments, credit management, zero technical debt, fully secure, persistent storage, multi-cloud integrated, multi-tenant architecture prepared
