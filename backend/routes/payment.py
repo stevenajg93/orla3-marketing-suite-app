@@ -54,13 +54,13 @@ PRICING_PLANS = {
         "credits": 500,
         "features": [
             "500 credits/month",
-            "~100 social captions or 50 blog posts",
+            "~250 social captions or 100 blog posts",
             "25 AI-generated ultra images",
             "2 AI-generated videos (8-sec)",
             "1 brand voice profile",
-            "3 social accounts",
+            "9 social platform publishing",
             "Content calendar",
-            "Basic competitor tracking (2 competitors)",
+            "Basic competitor tracking",
             "Credit rollover (up to 250)"
         ]
     },
@@ -74,13 +74,13 @@ PRICING_PLANS = {
         "features": [
             "500 credits/month",
             "2 months FREE (annual billing)",
-            "~100 social captions or 50 blog posts",
+            "~250 social captions or 100 blog posts",
             "25 AI-generated ultra images",
             "2 AI-generated videos (8-sec)",
             "1 brand voice profile",
-            "3 social accounts",
+            "9 social platform publishing",
             "Content calendar",
-            "Basic competitor tracking (2 competitors)",
+            "Basic competitor tracking",
             "Credit rollover (up to 250)"
         ]
     },
@@ -93,11 +93,11 @@ PRICING_PLANS = {
         "credits": 2000,
         "features": [
             "2,000 credits/month",
-            "~400 social posts or 200 blog posts",
+            "~1,000 social captions or 400 blog posts",
             "100 AI-generated ultra images",
             "10 AI-generated videos (8-sec)",
             "3 brand voice profiles",
-            "10 social accounts",
+            "9 social platform publishing",
             "Auto-publishing & scheduling",
             "Advanced competitor analysis (5 competitors)",
             "Priority support",
@@ -114,11 +114,11 @@ PRICING_PLANS = {
         "features": [
             "2,000 credits/month",
             "2 months FREE (annual billing)",
-            "~400 social posts or 200 blog posts",
+            "~1,000 social captions or 400 blog posts",
             "100 AI-generated ultra images",
             "10 AI-generated videos (8-sec)",
             "3 brand voice profiles",
-            "10 social accounts",
+            "9 social platform publishing",
             "Auto-publishing & scheduling",
             "Advanced competitor analysis (5 competitors)",
             "Priority support",
@@ -134,11 +134,11 @@ PRICING_PLANS = {
         "credits": 6000,
         "features": [
             "6,000 credits/month",
-            "~1,200 social posts or 600 blog posts",
+            "~3,000 social captions or 1,200 blog posts",
             "300 AI-generated ultra images",
             "30 AI-generated videos (8-sec)",
             "10 brand voice profiles",
-            "25 social accounts",
+            "9 social platform publishing",
             "Multi-user collaboration (5 seats)",
             "Unlimited competitor tracking",
             "API access",
@@ -156,11 +156,11 @@ PRICING_PLANS = {
         "features": [
             "6,000 credits/month",
             "2 months FREE (annual billing)",
-            "~1,200 social posts or 600 blog posts",
+            "~3,000 social captions or 1,200 blog posts",
             "300 AI-generated ultra images",
             "30 AI-generated videos (8-sec)",
             "10 brand voice profiles",
-            "25 social accounts",
+            "9 social platform publishing",
             "Multi-user collaboration (5 seats)",
             "Unlimited competitor tracking",
             "API access",
@@ -177,16 +177,16 @@ PRICING_PLANS = {
         "credits": 20000,
         "features": [
             "20,000 credits/month",
-            "~4,000 social posts or 2,000 blog posts",
+            "~10,000 social captions or 4,000 blog posts",
             "1,000 AI-generated ultra images",
             "100 AI-generated videos (8-sec)",
             "Unlimited brand voices",
-            "Unlimited social accounts",
+            "9 social platform publishing",
             "Unlimited team members",
             "Dedicated account manager",
             "Custom integrations",
             "SLA guarantees",
-            "Full credit rollover"
+            "Full credit rollover (unlimited)"
         ]
     }
 }

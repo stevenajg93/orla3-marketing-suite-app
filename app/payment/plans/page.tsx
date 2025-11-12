@@ -30,13 +30,13 @@ export default function SelectPlanPage() {
       description: 'Perfect for freelancers and content creators',
       features: [
         '500 credits/month',
-        '~100 social captions or 50 blog posts',
+        '~250 social captions or 100 blog posts',
         '25 AI-generated ultra images',
         '2 AI-generated videos (8-sec)',
         '1 brand voice profile',
-        '3 social accounts',
+        '9 social platform publishing',
         'Content calendar',
-        'Basic competitor tracking (2 competitors)',
+        'Basic competitor tracking',
         'Credit rollover (up to 250)',
       ],
       popular: false,
@@ -49,11 +49,11 @@ export default function SelectPlanPage() {
       description: 'Ideal for small businesses and agencies',
       features: [
         '2,000 credits/month',
-        '~400 social posts or 200 blog posts',
+        '~1,000 social captions or 400 blog posts',
         '100 AI-generated ultra images',
         '10 AI-generated videos (8-sec)',
         '3 brand voice profiles',
-        '10 social accounts',
+        '9 social platform publishing',
         'Auto-publishing & scheduling',
         'Advanced competitor analysis (5 competitors)',
         'Priority support',
@@ -69,11 +69,11 @@ export default function SelectPlanPage() {
       description: 'For growing companies and marketing teams',
       features: [
         '6,000 credits/month',
-        '~1,200 social posts or 600 blog posts',
+        '~3,000 social captions or 1,200 blog posts',
         '300 AI-generated ultra images',
         '30 AI-generated videos (8-sec)',
         '10 brand voice profiles',
-        '25 social accounts',
+        '9 social platform publishing',
         'Multi-user collaboration (5 seats)',
         'Unlimited competitor tracking',
         'API access',
@@ -90,16 +90,16 @@ export default function SelectPlanPage() {
       description: 'Custom solutions for large organizations',
       features: [
         '20,000 credits/month',
-        '~4,000 social posts or 2,000 blog posts',
+        '~10,000 social captions or 4,000 blog posts',
         '1,000 AI-generated ultra images',
         '100 AI-generated videos (8-sec)',
         'Unlimited brand voices',
-        'Unlimited social accounts',
+        '9 social platform publishing',
         'Unlimited team members',
         'Dedicated account manager',
         'Custom integrations',
         'SLA guarantees',
-        'Full credit rollover',
+        'Full credit rollover (unlimited)',
       ],
       popular: false,
     },
@@ -301,7 +301,7 @@ export default function SelectPlanPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video - exceptional value
+            Full transparency on costs - spend credits how you choose. Mix and match content types based on your needs.
           </p>
         </div>
       </section>
