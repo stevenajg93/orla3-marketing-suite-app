@@ -74,6 +74,20 @@ FRONTEND_URL=https://orla3-marketing-suite.vercel.app
 BACKEND_URL=https://orla3-backend.up.railway.app
 ```
 
+### Email Service (Resend)
+```bash
+# Get from: https://resend.com/api-keys
+# Free tier: 3,000 emails/month, 100 emails/day
+RESEND_API_KEY=re_...
+FROM_EMAIL=noreply@orla3.com
+```
+
+> **Note**: To use email verification, you need to:
+> 1. Sign up at https://resend.com
+> 2. Get your API key from https://resend.com/api-keys
+> 3. Add your domain or use Resend's test domain for development
+> 4. Configure FROM_EMAIL to match your verified domain
+
 ---
 
 ## 📝 Optional - Social Media (If Needed)

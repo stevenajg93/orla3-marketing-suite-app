@@ -27,6 +27,11 @@ from utils.auth import (
     validate_password_strength,
     validate_email
 )
+from utils.email import (
+    send_verification_email,
+    send_password_reset_email,
+    send_welcome_email
+)
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -204,8 +209,8 @@ async def register(request: RegisterRequest, req: Request):
 
         logger.info(f"✅ New user registered: {request.email} (ID: {user['id']})")
 
-        # TODO: Send verification email
-        # send_verification_email(request.email, verification_token)
+        # Send verification email
+        send_verification_email(request.email, verification_token)
 
         return {
             "success": True,
@@ -568,6 +573,66 @@ async def logout(request: RefreshTokenRequest):
 # EMAIL VERIFICATION
 # ============================================================================
 
+@router.post("/auth/resend-verification")
+async def resend_verification_email(request: ForgotPasswordRequest):
+    """
+    Resend email verification link to user
+
+    Args:
+        request: Email address of user
+
+    Returns:
+        Success message
+    """
+    user = get_user_by_email(request.email)
+
+    # Don't reveal if email exists (security best practice)
+    if not user:
+        return {
+            "success": True,
+            "message": "If the email exists and is unverified, a verification link has been sent"
+        }
+
+    # Check if already verified
+    if user['email_verified']:
+        return {
+            "success": True,
+            "message": "Email is already verified"
+        }
+
+    # Generate new verification token
+    verification_token = generate_verification_token()
+    verification_expires = datetime.utcnow() + timedelta(days=7)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE users
+            SET verification_token = %s, verification_token_expires = %s
+            WHERE id = %s
+        """, (verification_token, verification_expires, user['id']))
+
+        conn.commit()
+
+        logger.info(f"📧 Verification email resent to: {request.email}")
+
+        # Send verification email
+        send_verification_email(request.email, verification_token)
+
+        return {
+            "success": True,
+            "message": "If the email exists and is unverified, a verification link has been sent",
+            # For development: include verification token
+            "verification_token": verification_token if os.getenv("ENVIRONMENT") == "development" else None
+        }
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 @router.post("/auth/verify-email")
 async def verify_email(request: VerifyEmailRequest):
     """
@@ -603,6 +668,9 @@ async def verify_email(request: VerifyEmailRequest):
         conn.commit()
 
         logger.info(f"✅ Email verified: {user['email']}")
+
+        # Send welcome email
+        send_welcome_email(user['email'], user['name'])
 
         return {
             "success": True,
@@ -652,8 +720,8 @@ async def forgot_password(request: ForgotPasswordRequest):
 
         logger.info(f"🔑 Password reset requested: {request.email}")
 
-        # TODO: Send reset email
-        # send_password_reset_email(request.email, reset_token)
+        # Send reset email
+        send_password_reset_email(request.email, reset_token)
 
         return {
             "success": True,

@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useAuth } from '@/lib/context/AuthContext';
+import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 
 const contentCreation = [
   { name: 'Blog Writer', icon: '✍️', href: '/dashboard/blog', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
@@ -62,9 +64,16 @@ const ToolCard = ({ tool }: { tool: any }) => {
 };
 
 export default function Dashboard() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Unverified Email Banner */}
+        {user && !user.email_verified && (
+          <UnverifiedEmailBanner userEmail={user.email} />
+        )}
+
         <div className="mb-12">
           <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 mb-4">
             🎪 Orla³ Marketing Suite
