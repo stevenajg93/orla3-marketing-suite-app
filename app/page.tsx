@@ -133,7 +133,7 @@ export default function LandingPage() {
           </span>
         </h1>
         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Let AI handle the routine marketing — daily posts, captions, blog updates — so you can
+          Let AI handle the routine marketing - daily posts, captions, blog updates - so you can
           focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
           <span className="text-white font-bold">8 world-class AI models</span> and{' '}
           <span className="text-white font-bold">millions of stock assets</span> to keep your
@@ -171,7 +171,7 @@ export default function LandingPage() {
           Built on World-Class AI Infrastructure
         </h3>
         <p className="text-center text-gray-300 mb-12 max-w-3xl mx-auto">
-          We use 7 specialized AI models — each chosen for specific tasks to deliver the best quality at optimal cost
+          We use 7 specialized AI models, each chosen for specific tasks to deliver the best quality at optimal cost
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
@@ -203,25 +203,25 @@ export default function LandingPage() {
               name: 'Perplexity AI',
               icon: '🔍',
               use: 'Real-Time Web Research',
-              why: 'Live web scraping for competitor analysis and trending topics — always current, never outdated',
+              why: 'Live web scraping for competitor analysis and trending topics. Always current, never outdated.',
             },
             {
               name: 'Google Imagen 3',
               icon: '🎨',
               use: 'AI Image Generation',
-              why: 'Photorealistic images with precise prompt adherence at $0.03/image — exceptional quality-to-cost ratio',
+              why: 'Photorealistic images with precise prompt adherence at $0.03/image. Exceptional quality-to-cost ratio.',
             },
             {
               name: 'Google Veo 3.1',
               icon: '🎬',
               use: 'Cinematic Video Generation',
-              why: 'Industry-leading 8-second videos with native audio — cinematic quality for brand-critical content',
+              why: 'Industry-leading 8-second videos with native audio. Cinematic quality for brand-critical content.',
             },
             {
               name: 'Pexels API',
               icon: '📸',
               use: 'Stock Photo Library',
-              why: 'Millions of high-quality, copyright-free images — instant visual assets without licensing costs',
+              why: 'Millions of high-quality, copyright-free images. Instant visual assets without licensing costs.',
             },
           ].map((tech, idx) => (
             <div
@@ -252,7 +252,7 @@ export default function LandingPage() {
           Your Complete Marketing Department at a Fraction of the Cost
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          Get CMO-level strategy, professional content creation, and full-service marketing execution —
+          Get CMO-level strategy, professional content creation, and full-service marketing execution,
           all powered by 8 world-class AI models working together.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
@@ -303,7 +303,7 @@ export default function LandingPage() {
               icon: '✨',
               title: 'Elite AI Content Writers',
               description:
-                'Claude Sonnet 4, GPT-4, and Gemini automatically selected for each task. Blog posts, social captions, ad copy — all written by the best AI for the job.',
+                'Claude Sonnet 4, GPT-4, and Gemini automatically selected for each task. Blog posts, social captions, ad copy all written by the best AI for the job.',
               time: 'Save 30 hours/week',
             },
             {
@@ -536,7 +536,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video — exceptional value
+            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video - exceptional value
           </p>
         </div>
       </section>
@@ -548,14 +548,14 @@ export default function LandingPage() {
             Get Your Full Marketing Department Today
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            CMO-level strategy, professional content, and enterprise-grade execution —
+            CMO-level strategy, professional content, and enterprise-grade execution,
             powered by 8 world-class AI models for 95% less than hiring costs.
           </p>
           <Link
             href="/signup"
             className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
           >
-            Start Free Trial — No Credit Card Required
+            Start Free Trial - No Credit Card Required
           </Link>
           <p className="text-blue-200 text-sm">
             14-day free trial • Cancel anytime • Full marketing team capabilities
