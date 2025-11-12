@@ -42,44 +42,150 @@ def get_user_from_token(request: Request):
 
     return payload.get('sub')  # user_id
 
-# Pricing Plans (you can move these to database later)
+# Pricing Plans (matches landing page pricing)
 PRICING_PLANS = {
-    "starter": {
+    "starter_monthly": {
         "name": "Starter",
-        "price_id": os.getenv("STRIPE_STARTER_PRICE_ID"),  # You'll get this from Stripe dashboard
-        "price_monthly": 29,
+        "price_id": os.getenv("STRIPE_STARTER_MONTHLY_PRICE_ID"),
+        "price": 99,
+        "currency": "GBP",
+        "interval": "month",
+        "credits": 500,
         "features": [
-            "500 AI generation credits/month",
-            "Basic brand voice training",
-            "Up to 3 social platforms",
-            "Content library",
-            "Email support"
+            "500 credits/month",
+            "~100 social captions or 50 blog posts",
+            "25 AI-generated ultra images",
+            "2 AI-generated videos (8-sec)",
+            "1 brand voice profile",
+            "3 social accounts",
+            "Content calendar",
+            "Basic competitor tracking (2 competitors)",
+            "Credit rollover (up to 250)"
         ]
     },
-    "professional": {
-        "name": "Professional",
-        "price_id": os.getenv("STRIPE_PRO_PRICE_ID"),
-        "price_monthly": 79,
+    "starter_annual": {
+        "name": "Starter (Annual)",
+        "price_id": os.getenv("STRIPE_STARTER_ANNUAL_PRICE_ID"),
+        "price": 990,
+        "currency": "GBP",
+        "interval": "year",
+        "credits": 500,
         "features": [
-            "2,000 AI generation credits/month",
-            "Advanced brand voice training",
-            "Unlimited social platforms",
-            "Competitor analysis",
-            "Cloud storage integration",
-            "Priority email support"
+            "500 credits/month",
+            "2 months FREE (annual billing)",
+            "~100 social captions or 50 blog posts",
+            "25 AI-generated ultra images",
+            "2 AI-generated videos (8-sec)",
+            "1 brand voice profile",
+            "3 social accounts",
+            "Content calendar",
+            "Basic competitor tracking (2 competitors)",
+            "Credit rollover (up to 250)"
+        ]
+    },
+    "professional_monthly": {
+        "name": "Professional",
+        "price_id": os.getenv("STRIPE_PRO_MONTHLY_PRICE_ID"),
+        "price": 249,
+        "currency": "GBP",
+        "interval": "month",
+        "credits": 2000,
+        "features": [
+            "2,000 credits/month",
+            "~400 social posts or 200 blog posts",
+            "100 AI-generated ultra images",
+            "10 AI-generated videos (8-sec)",
+            "3 brand voice profiles",
+            "10 social accounts",
+            "Auto-publishing & scheduling",
+            "Advanced competitor analysis (5 competitors)",
+            "Priority support",
+            "Credit rollover (up to 1,000)"
+        ]
+    },
+    "professional_annual": {
+        "name": "Professional (Annual)",
+        "price_id": os.getenv("STRIPE_PRO_ANNUAL_PRICE_ID"),
+        "price": 2490,
+        "currency": "GBP",
+        "interval": "year",
+        "credits": 2000,
+        "features": [
+            "2,000 credits/month",
+            "2 months FREE (annual billing)",
+            "~400 social posts or 200 blog posts",
+            "100 AI-generated ultra images",
+            "10 AI-generated videos (8-sec)",
+            "3 brand voice profiles",
+            "10 social accounts",
+            "Auto-publishing & scheduling",
+            "Advanced competitor analysis (5 competitors)",
+            "Priority support",
+            "Credit rollover (up to 1,000)"
+        ]
+    },
+    "business_monthly": {
+        "name": "Business",
+        "price_id": os.getenv("STRIPE_BUSINESS_MONTHLY_PRICE_ID"),
+        "price": 499,
+        "currency": "GBP",
+        "interval": "month",
+        "credits": 6000,
+        "features": [
+            "6,000 credits/month",
+            "~1,200 social posts or 600 blog posts",
+            "300 AI-generated ultra images",
+            "30 AI-generated videos (8-sec)",
+            "10 brand voice profiles",
+            "25 social accounts",
+            "Multi-user collaboration (5 seats)",
+            "Unlimited competitor tracking",
+            "API access",
+            "White-label options",
+            "Credit rollover (up to 3,000)"
+        ]
+    },
+    "business_annual": {
+        "name": "Business (Annual)",
+        "price_id": os.getenv("STRIPE_BUSINESS_ANNUAL_PRICE_ID"),
+        "price": 4990,
+        "currency": "GBP",
+        "interval": "year",
+        "credits": 6000,
+        "features": [
+            "6,000 credits/month",
+            "2 months FREE (annual billing)",
+            "~1,200 social posts or 600 blog posts",
+            "300 AI-generated ultra images",
+            "30 AI-generated videos (8-sec)",
+            "10 brand voice profiles",
+            "25 social accounts",
+            "Multi-user collaboration (5 seats)",
+            "Unlimited competitor tracking",
+            "API access",
+            "White-label options",
+            "Credit rollover (up to 3,000)"
         ]
     },
     "enterprise": {
         "name": "Enterprise",
         "price_id": os.getenv("STRIPE_ENTERPRISE_PRICE_ID"),
-        "price_monthly": 199,
+        "price": 999,
+        "currency": "GBP",
+        "interval": "month",
+        "credits": 20000,
         "features": [
-            "10,000 AI generation credits/month",
-            "White-label brand voice",
-            "Unlimited everything",
-            "Team collaboration",
+            "20,000 credits/month",
+            "~4,000 social posts or 2,000 blog posts",
+            "1,000 AI-generated ultra images",
+            "100 AI-generated videos (8-sec)",
+            "Unlimited brand voices",
+            "Unlimited social accounts",
+            "Unlimited team members",
+            "Dedicated account manager",
             "Custom integrations",
-            "Dedicated account manager"
+            "SLA guarantees",
+            "Full credit rollover"
         ]
     }
 }
