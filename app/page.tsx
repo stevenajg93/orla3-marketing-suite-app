@@ -9,18 +9,18 @@ export default function LandingPage() {
   const plans = [
     {
       name: 'Starter',
-      price: billingCycle === 'monthly' ? 99 : 990,
-      credits: 500,
+      price: billingCycle === 'monthly' ? 25 : 250,
+      credits: 2000,
       description: 'Perfect for freelancers and content creators',
       features: [
-        '500 credits/month',
-        '~100 social captions or 50 blog posts',
-        '25 AI-generated ultra images',
-        '2 AI-generated videos (8-sec)',
+        '2,000 credits/month',
+        '~400 social captions or 100 blog posts',
+        '100 AI-generated ultra images',
+        '10 AI-generated videos (8-sec)',
         '1 brand voice profile',
-        '3 social accounts',
+        '9 social platform publishing',
         'Content calendar',
-        'Basic competitor tracking (2 competitors)',
+        'Basic competitor tracking',
         'Credit rollover (up to 250)',
       ],
       cta: 'Get Started',
@@ -28,18 +28,18 @@ export default function LandingPage() {
     },
     {
       name: 'Professional',
-      price: billingCycle === 'monthly' ? 249 : 2490,
-      credits: 2000,
+      price: billingCycle === 'monthly' ? 75 : 750,
+      credits: 10000,
       description: 'Ideal for small businesses and agencies',
       features: [
-        '2,000 credits/month',
-        '~400 social posts or 200 blog posts',
-        '100 AI-generated ultra images',
-        '10 AI-generated videos (8-sec)',
+        '10,000 credits/month',
+        '~2,000 social posts or 500 blog posts',
+        '500 AI-generated ultra images',
+        '50 AI-generated videos (8-sec)',
         '3 brand voice profiles',
-        '10 social accounts',
+        '9 social platform publishing',
         'Auto-publishing & scheduling',
-        'Advanced competitor analysis (5 competitors)',
+        'Advanced competitor analysis',
         'Priority support',
         'Credit rollover (up to 1,000)',
       ],
@@ -48,17 +48,17 @@ export default function LandingPage() {
     },
     {
       name: 'Business',
-      price: billingCycle === 'monthly' ? 499 : 4990,
-      credits: 6000,
+      price: billingCycle === 'monthly' ? 150 : 1500,
+      credits: 25000,
       description: 'For growing companies and marketing teams',
       features: [
-        '6,000 credits/month',
-        '~1,200 social posts or 600 blog posts',
-        '300 AI-generated ultra images',
-        '30 AI-generated videos (8-sec)',
+        '25,000 credits/month',
+        '~5,000 social posts or 1,250 blog posts',
+        '1,250 AI-generated ultra images',
+        '125 AI-generated videos (8-sec)',
         '10 brand voice profiles',
-        '25 social accounts',
-        'Multi-user collaboration (5 seats)',
+        '9 social platform publishing',
+        'Multi-user collaboration',
         'Unlimited competitor tracking',
         'API access',
         'White-label options',
@@ -69,21 +69,21 @@ export default function LandingPage() {
     },
     {
       name: 'Enterprise',
-      price: 999,
+      price: 300,
       credits: 20000,
       description: 'Custom solutions for large organizations',
       features: [
         '20,000 credits/month',
-        '~4,000 social posts or 2,000 blog posts',
+        '~4,000 social posts or 1,000 blog posts',
         '1,000 AI-generated ultra images',
         '100 AI-generated videos (8-sec)',
         'Unlimited brand voices',
-        'Unlimited social accounts',
+        '9 social platform publishing',
         'Unlimited team members',
         'Dedicated account manager',
         'Custom integrations',
         'SLA guarantees',
-        'Full credit rollover',
+        'Full credit rollover (unlimited)',
       ],
       cta: 'Contact Sales',
       popular: false,
@@ -135,7 +135,7 @@ export default function LandingPage() {
         <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
           Let AI handle the routine marketing - daily posts, captions, blog updates - so you can
           focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
-          <span className="text-white font-bold">8 world-class AI models</span> and{' '}
+          <span className="text-white font-bold">7 specialized AI models</span> and{' '}
           <span className="text-white font-bold">millions of stock assets</span> to keep your
           business visible while you do what you do best.
         </p>
@@ -171,7 +171,7 @@ export default function LandingPage() {
           Built on World-Class AI Infrastructure
         </h3>
         <p className="text-center text-gray-300 mb-12 max-w-3xl mx-auto">
-          We use 7 specialized AI models, each chosen for specific tasks to deliver the best quality at optimal cost
+          We use 7 specialized AI models plus millions of stock assets, each chosen for specific tasks to deliver the best quality at optimal cost
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
@@ -206,10 +206,10 @@ export default function LandingPage() {
               why: 'Live web scraping for competitor analysis and trending topics. Always current, never outdated.',
             },
             {
-              name: 'Google Imagen 3',
+              name: 'Google Imagen 4 Ultra',
               icon: '🎨',
               use: 'AI Image Generation',
-              why: 'Photorealistic images with precise prompt adherence at $0.03/image. Exceptional quality-to-cost ratio.',
+              why: 'Photorealistic images with precise prompt adherence. State-of-the-art quality for brand-critical visuals.',
             },
             {
               name: 'Google Veo 3.1',
@@ -253,14 +253,14 @@ export default function LandingPage() {
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
           Get CMO-level strategy, professional content creation, and full-service marketing execution,
-          all powered by 8 world-class AI models working together.
+          all powered by 7 specialized AI models working together.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
               metric: '£200k+/year',
               label: 'Traditional Marketing Costs',
-              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get the same output for £99/month.',
+              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get the same output starting from £25/month.',
             },
             {
               metric: 'Enterprise-Grade',
@@ -295,7 +295,7 @@ export default function LandingPage() {
           Professional Marketing Tools at Your Fingertips
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          8 industry-leading AI models working together to create content that converts
+          7 specialized AI models working together to create content that converts
         </p>
         <div className="grid md:grid-cols-3 gap-8">
           {[
@@ -549,7 +549,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-xl text-blue-100 mb-8">
             CMO-level strategy, professional content, and enterprise-grade execution,
-            powered by 8 world-class AI models at a fraction of traditional costs.
+            powered by 7 specialized AI models at a fraction of traditional costs.
           </p>
           <Link
             href="/signup"
