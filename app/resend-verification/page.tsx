@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import config from '@/lib/config';
+import { config } from '@/lib/config';
 
 export default function ResendVerificationPage() {
   const [email, setEmail] = useState('');
