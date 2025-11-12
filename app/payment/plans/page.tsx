@@ -301,7 +301,7 @@ export default function SelectPlanPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Full transparency on costs - spend credits how you choose. Mix and match content types based on your needs.
+            Each plan shows approximate content output. Mix and match however you need - your credits, your choice.
           </p>
         </div>
       </section>

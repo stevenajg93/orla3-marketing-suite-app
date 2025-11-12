@@ -255,30 +255,30 @@ export default function LandingPage() {
       {/* ROI Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Amplify Your Marketing at a Fraction of the Cost
+          Strategy-First Marketing That Actually Works
         </h2>
         <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          Get CMO-level strategy, professional content creation, and full-service marketing execution,
-          all powered by 8 specialized AI models working together.
+          Not just content generation. A complete marketing system that starts with you, analyzes your market,
+          builds strategy, and executes across all channels automatically.
         </p>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
-              metric: '£200k+/year',
-              label: 'Traditional Marketing Costs',
-              description: 'CMO, content writer, and social media manager cost £165-290k/year. Get the same output starting from £25/month.',
+              metric: 'AI Auto-Select',
+              label: 'Best Model, Best Price',
+              description: 'Our system automatically chooses the optimal AI model for each task from 8 options, maximizing your credits and results at the best live market price.',
             },
             {
-              metric: 'Enterprise-Grade',
-              label: 'Marketing Capabilities',
+              metric: 'Chain Reaction',
+              label: 'Strategy-First System',
               description:
-                'Professional content strategy, multi-channel publishing, competitor analysis, and brand management.',
+                'Starts with your brand identity and strengths, analyzes competitor strategies, identifies your unique angle, then generates all content from this strategic foundation.',
             },
             {
-              metric: '10x ROI',
-              label: 'On Your Investment',
+              metric: 'Full Automation',
+              label: 'Knowledge → Results',
               description:
-                'Professional marketing execution for 95% less than traditional hiring costs.',
+                'Feed your knowledge once. Get personalized strategy. Apply automated actions. Schedule everywhere from one place. Sit back and watch the results compound.',
             },
           ].map((stat, idx) => (
             <div
@@ -542,7 +542,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Full transparency on costs - spend credits how you choose. Mix and match content types based on your needs.
+            Each plan shows approximate content output. Mix and match however you need - your credits, your choice.
           </p>
         </div>
       </section>
