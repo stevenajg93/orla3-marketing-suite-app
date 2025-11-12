@@ -85,6 +85,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadAccounts();
+    loadCloudConnections();
 
     // Check for OAuth callback messages
     const params = new URLSearchParams(window.location.search);
@@ -170,14 +171,66 @@ export default function SettingsPage() {
   };
 
   const handleConnectCloud = async (providerId: string) => {
-    // TODO: Implement OAuth flow when multi-tenant architecture is applied
-    alert(`OAuth flow for ${providerId} will be implemented with multi-tenant architecture`);
+    // Get JWT token from localStorage
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setErrorMessage('Please log in to connect cloud storage');
+      return;
+    }
+
+    // Redirect to OAuth flow (backend will handle everything)
+    window.location.href = `${config.apiUrl}/cloud-storage/connect/${providerId}`;
   };
 
   const handleDisconnectCloud = async (providerId: string) => {
     const confirmed = confirm(`Are you sure you want to disconnect ${providerId}?`);
-    if (confirmed) {
-      alert(`Disconnect functionality will be implemented with multi-tenant architecture`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${config.apiUrl}/cloud-storage/disconnect/${providerId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setSuccessMessage(`✅ ${providerId} disconnected successfully`);
+        // Reload cloud connections
+        loadCloudConnections();
+      } else {
+        setErrorMessage('Failed to disconnect provider');
+      }
+    } catch (error) {
+      setErrorMessage('Failed to disconnect provider');
+    }
+  };
+
+  const loadCloudConnections = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${config.apiUrl}/cloud-storage/connections`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update cloud providers state with connected status
+        setCloudProviders(prev => prev.map(provider => {
+          const connection = data.connections.find((c: any) => c.provider === provider.id);
+          return {
+            ...provider,
+            connected: !!connection,
+            email: connection?.provider_email,
+            connectedAt: connection?.connected_at,
+          };
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load cloud connections:', error);
     }
   };
 
@@ -386,20 +439,19 @@ export default function SettingsPage() {
                 Connect your cloud storage accounts to access files directly from Orla³
               </p>
 
-              {/* Multi-Tenant Notice */}
-              <div className="mb-6 bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <p className="text-blue-300 font-semibold mb-1">Coming Soon: Per-User Cloud Storage</p>
-                    <p className="text-gray-300 text-sm">
-                      OAuth connections will be enabled after the multi-tenant architecture migration. Each user will have their own private cloud storage connections.
+              {/* Success notice for OAuth callback */}
+              {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('cloud_connected') && (
+                <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="text-green-300">
+                      Cloud storage connected successfully!
                     </p>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cloudProviders.map((provider) => (
