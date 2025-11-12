@@ -37,8 +37,8 @@ GEMINI_API_KEY=...
 
 ### Google Drive
 ```bash
-GOOGLE_CLIENT_ID=801348292668-k2fskk6c1jqd1ogo1dvucrh5f09nv16e.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
 GOOGLE_REFRESH_TOKEN=YOUR_GOOGLE_REFRESH_TOKEN
 ```
 
@@ -122,8 +122,8 @@ TWITTER_ACCESS_TOKEN_SECRET=
 
 ### Option 2: Railway CLI
 ```bash
-railway variables set GOOGLE_CLIENT_ID="801348292668-k2fskk6c1jqd1ogo1dvucrh5f09nv16e.apps.googleusercontent.com"
-railway variables set GOOGLE_CLIENT_SECRET="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"
+railway variables set GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+railway variables set GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
 railway variables set GOOGLE_REFRESH_TOKEN="1//03fso22qjmuvd..."
 # ... repeat for all variables
 ```
