@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
+import { ApiError } from '@/lib/api-client';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,6 +24,15 @@ export default function LoginPage() {
       await login(email, password);
       router.push('/dashboard');
     } catch (err: any) {
+      // Check if error is 402 Payment Required
+      if (err instanceof ApiError && err.status === 402) {
+        // Store email for post-payment redirect
+        localStorage.setItem('pending_login_email', email);
+        // Redirect to plan selection
+        router.push('/payment/plans');
+        return;
+      }
+
       setError(err.message || 'Login failed');
     } finally {
       setLoading(false);

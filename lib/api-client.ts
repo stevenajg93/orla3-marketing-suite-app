@@ -68,8 +68,17 @@ export async function apiRequest<T = any>(
         }
       }
 
+      // Try to get error message from response body
+      let errorMessage = response.statusText;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+      } catch {
+        // If JSON parsing fails, use statusText
+      }
+
       throw new ApiError(
-        `API request failed: ${response.statusText}`,
+        errorMessage,
         response.status,
         endpoint
       );

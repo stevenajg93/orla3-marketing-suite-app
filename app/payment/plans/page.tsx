@@ -1,0 +1,310 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { config } from '@/lib/config';
+
+export default function SelectPlanPage() {
+  const router = useRouter();
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showPaymentRequired, setShowPaymentRequired] = useState(false);
+
+  // Check if user was redirected from login due to payment requirement
+  useEffect(() => {
+    const pendingLogin = localStorage.getItem('pending_login_email');
+    if (pendingLogin) {
+      setShowPaymentRequired(true);
+      // Clear the flag
+      localStorage.removeItem('pending_login_email');
+    }
+  }, []);
+
+  const plans = [
+    {
+      name: 'Starter',
+      planId: billingCycle === 'monthly' ? 'starter_monthly' : 'starter_annual',
+      price: billingCycle === 'monthly' ? 99 : 990,
+      credits: 500,
+      description: 'Perfect for freelancers and content creators',
+      features: [
+        '500 credits/month',
+        '~100 social captions or 50 blog posts',
+        '25 AI-generated ultra images',
+        '2 AI-generated videos (8-sec)',
+        '1 brand voice profile',
+        '3 social accounts',
+        'Content calendar',
+        'Basic competitor tracking (2 competitors)',
+        'Credit rollover (up to 250)',
+      ],
+      popular: false,
+    },
+    {
+      name: 'Professional',
+      planId: billingCycle === 'monthly' ? 'professional_monthly' : 'professional_annual',
+      price: billingCycle === 'monthly' ? 249 : 2490,
+      credits: 2000,
+      description: 'Ideal for small businesses and agencies',
+      features: [
+        '2,000 credits/month',
+        '~400 social posts or 200 blog posts',
+        '100 AI-generated ultra images',
+        '10 AI-generated videos (8-sec)',
+        '3 brand voice profiles',
+        '10 social accounts',
+        'Auto-publishing & scheduling',
+        'Advanced competitor analysis (5 competitors)',
+        'Priority support',
+        'Credit rollover (up to 1,000)',
+      ],
+      popular: true,
+    },
+    {
+      name: 'Business',
+      planId: billingCycle === 'monthly' ? 'business_monthly' : 'business_annual',
+      price: billingCycle === 'monthly' ? 499 : 4990,
+      credits: 6000,
+      description: 'For growing companies and marketing teams',
+      features: [
+        '6,000 credits/month',
+        '~1,200 social posts or 600 blog posts',
+        '300 AI-generated ultra images',
+        '30 AI-generated videos (8-sec)',
+        '10 brand voice profiles',
+        '25 social accounts',
+        'Multi-user collaboration (5 seats)',
+        'Unlimited competitor tracking',
+        'API access',
+        'White-label options',
+        'Credit rollover (up to 3,000)',
+      ],
+      popular: false,
+    },
+    {
+      name: 'Enterprise',
+      planId: 'enterprise',
+      price: 999,
+      credits: 20000,
+      description: 'Custom solutions for large organizations',
+      features: [
+        '20,000 credits/month',
+        '~4,000 social posts or 2,000 blog posts',
+        '1,000 AI-generated ultra images',
+        '100 AI-generated videos (8-sec)',
+        'Unlimited brand voices',
+        'Unlimited social accounts',
+        'Unlimited team members',
+        'Dedicated account manager',
+        'Custom integrations',
+        'SLA guarantees',
+        'Full credit rollover',
+      ],
+      popular: false,
+    },
+  ];
+
+  const handleSelectPlan = async (planId: string, planName: string) => {
+    setLoading(planId);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`${config.apiUrl}/payment/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ plan: planId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe checkout
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (err: any) {
+      console.error('Error creating checkout:', err);
+      setError(err.message || 'Failed to start checkout process');
+      setLoading(null);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Navigation */}
+      <nav className="border-b border-white/10 backdrop-blur-lg bg-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                ORLA³
+              </h1>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-black text-white mb-4">
+            Choose Your Plan
+          </h1>
+          <p className="text-xl text-gray-300 mb-8">
+            Select a plan to access the Orla³ Marketing Automation Platform
+          </p>
+
+          {showPaymentRequired && (
+            <div className="max-w-2xl mx-auto mb-8 bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💳</span>
+                <div>
+                  <p className="text-blue-300 font-semibold mb-1">Payment Required</p>
+                  <p className="text-blue-200 text-sm">
+                    To access your account, please select and pay for a subscription plan below.
+                    Your account will be activated immediately after payment.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="max-w-2xl mx-auto mb-8 bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+              <p className="text-red-300">{error}</p>
+            </div>
+          )}
+
+          {/* Billing Toggle */}
+          <div className="inline-flex bg-white/10 backdrop-blur-lg rounded-lg p-1 border border-white/20">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-md font-semibold transition ${
+                billingCycle === 'monthly'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle('annual')}
+              className={`px-6 py-2 rounded-md font-semibold transition ${
+                billingCycle === 'annual'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Annual <span className="text-green-400">(Save 17%)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {plans.map((plan) => (
+            <div
+              key={plan.planId}
+              className={`bg-white/10 backdrop-blur-lg rounded-2xl p-8 border ${
+                plan.popular
+                  ? 'border-blue-400 ring-2 ring-blue-400/50 scale-105'
+                  : 'border-white/20'
+              } hover:border-blue-400/50 transition relative`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+
+              <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+              <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
+
+              <div className="mb-6">
+                <span className="text-5xl font-black text-white">£{plan.price}</span>
+                {plan.name !== 'Enterprise' && (
+                  <span className="text-gray-400">
+                    /{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 border border-blue-400/30">
+                  <p className="text-blue-300 font-bold text-center">
+                    {plan.credits.toLocaleString()} Credits/month
+                  </p>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-gray-300">
+                    <span className="text-green-400 mt-1">✓</span>
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleSelectPlan(plan.planId, plan.name)}
+                disabled={loading !== null}
+                className={`w-full py-3 rounded-lg font-bold text-center transition ${
+                  plan.popular
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {loading === plan.planId ? 'Loading...' : 'Select Plan'}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Credit Cost Breakdown */}
+        <div className="mt-16 bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+          <h3 className="text-2xl font-bold text-white mb-6 text-center">
+            How Credits Work
+          </h3>
+          <div className="grid md:grid-cols-5 gap-6">
+            {[
+              { action: 'Social Caption', credits: 2, icon: '✍️' },
+              { action: 'Full Blog Post', credits: 5, icon: '📝' },
+              { action: 'AI Image (Standard)', credits: 10, icon: '🖼️' },
+              { action: 'AI Image (Ultra)', credits: 20, icon: '🎨' },
+              { action: 'AI Video (8-sec)', credits: 200, icon: '🎬' },
+            ].map((item, idx) => (
+              <div key={idx} className="text-center">
+                <div className="text-4xl mb-2">{item.icon}</div>
+                <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
+                  {item.credits}
+                </div>
+                <div className="text-gray-300 text-sm">{item.action}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-gray-400 mt-6 text-sm">
+            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video - exceptional value
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}

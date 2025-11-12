@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api } from '@/lib/api-client';
+import { api, ApiError } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -75,7 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      throw new Error(error.response?.data?.detail || error.message || 'Login failed');
+      // Re-throw ApiError to preserve status code for 402 handling
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new Error(error.message || 'Login failed');
     }
   };
 
