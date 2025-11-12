@@ -34,9 +34,7 @@ AI-powered marketing automation platform for videographers and creative professi
 ### 📁 Media Management
 - **Google Drive integration**: Import assets directly
 - **AI Image Generation**: Google Imagen 3 via Vertex AI ($0.03/image)
-- **AI Video Generation**:
-  - Google Veo 3.1 ($6 per 8s video with audio) - Primary
-  - Runway ML Gen-3 Alpha Turbo ($0.10 per 5s video) - Alternative
+- **AI Video Generation**: Google Veo 3.1 ($6 per 8s video with audio)
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
@@ -62,8 +60,7 @@ AI-powered marketing automation platform for videographers and creative professi
   - **GPT-4o**: Creative conversational content
   - **Gemini 2.0 Flash**: Structured visual content
   - **Imagen 3**: AI image generation (Vertex AI)
-  - **Veo 3.1**: AI video generation (Vertex AI, primary)
-  - **Runway ML Gen-3**: AI video generation (alternative)
+  - **Veo 3.1**: AI video generation (Vertex AI)
   - **GPT-4o-mini**: Simple analytical tasks
 - **APIs**: Google Drive API, Unsplash API, OAuth 2.0
 - **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
@@ -315,7 +312,6 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 **AI Image & Video Generation (Nov 7, 2025)**
 - ✅ Google Imagen 3 integration for text-to-image generation ($0.03/image)
 - ✅ Google Veo 3.1 integration for text-to-video generation ($6 per 8s video)
-- ✅ Runway ML Gen-3 Alpha Turbo as alternative video provider ($0.10 per 5s)
 - ✅ Added to both Media Library and Social Manager
 - ✅ Aspect ratio options: 1:1, 16:9, 9:16, 4:3, 3:4
 - ✅ Video resolution options: 720p HD, 1080p Full HD

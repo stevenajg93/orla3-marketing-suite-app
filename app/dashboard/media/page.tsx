@@ -329,7 +329,7 @@ export default function MediaLibrary() {
               content: contentItem?.content || '',
               status: 'draft',
               platform: 'AI Generated',
-              tags: ['ai-generated', 'runway-veo'],
+              tags: ['ai-generated', 'veo-video'],
               media_url: status.video_url
             });
             console.log('✅ Video updated in database:', contentId);
@@ -343,7 +343,7 @@ export default function MediaLibrary() {
               content: videoState?.prompt || 'AI generated video',
               status: 'draft',
               platform: 'AI Generated',
-              tags: ['ai-generated', 'runway-veo', 'recovered'],
+              tags: ['ai-generated', 'veo-video', 'recovered'],
               media_url: status.video_url
             });
             console.log('✅ Video created in database (fallback)');
@@ -693,8 +693,8 @@ export default function MediaLibrary() {
             ) : activeTab === 'ai-videos' ? (
               <>
                 <h2 className="text-xl font-bold text-white mb-4">🎬 AI Video Generation</h2>
-                <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-300">Runway ML Gen-3 • $0.10 per 5s video</p>
+                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-300">Google Veo 3.1 • $6 per 8s video with audio</p>
                 </div>
                 <div className="mb-4">
                   <label className="block text-white font-bold mb-2 text-sm">Resolution</label>

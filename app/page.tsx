@@ -215,13 +215,7 @@ export default function LandingPage() {
               name: 'Google Veo 3.1',
               icon: '🎬',
               use: 'Cinematic Video Generation',
-              why: 'Industry-leading 8-second videos with native audio — worth the premium for brand-critical content',
-            },
-            {
-              name: 'Runway ML Gen-3',
-              icon: '🎥',
-              use: 'Alternative Video Generation',
-              why: 'Cost-effective 5-second videos at $0.10 each — perfect for high-volume social content',
+              why: 'Industry-leading 8-second videos with native audio — cinematic quality for brand-critical content',
             },
             {
               name: 'Pexels API',

@@ -31,8 +31,7 @@ AI:        Multi-provider optimization (7 models)
            - GPT-4o (creative conversational content)
            - Gemini 2.0 Flash (structured visual content)
            - Imagen 3 (AI image generation - Vertex AI)
-           - Veo 3.1 (AI video generation - Vertex AI, primary)
-           - Runway ML Gen-3 (AI video generation - alternative)
+           - Veo 3.1 (AI video generation - Vertex AI)
            - GPT-4o-mini (simple analytical tasks)
 Publishing: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook,
            TikTok, YouTube, Reddit, Tumblr, WordPress)
@@ -358,8 +357,7 @@ This strategy is **automatically applied** to all content generation.
   - $0.03 per image
   - Gallery view with download/preview
 - **AI Video Generation**
-  - **Google Veo 3.1** (primary): Text-to-video with resolution options (720p, 1080p), $6 per 8s video with audio
-  - **Runway ML Gen-3 Alpha Turbo** (alternative): $0.10 per 5s video
+  - **Google Veo 3.1**: Text-to-video with resolution options (720p, 1080p), $6 per 8s video with audio
   - Async generation (2-5 minutes)
   - Status tracking via job ID
 - Unified content library with filtering
@@ -483,8 +481,7 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Gallery view with download/preview buttons
 
 - ✅ **AI Video Generation**
-  - **Google Veo 3.1** (primary): $6 per 8s video with native audio
-  - **Runway ML Gen-3 Alpha Turbo** (alternative): $0.10 per 5s video
+  - **Google Veo 3.1**: $6 per 8s video with native audio
   - 720p HD and 1080p Full HD options
   - Async generation with status tracking
   - 2-5 minute generation time
