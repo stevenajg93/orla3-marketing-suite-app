@@ -24,13 +24,15 @@
 Frontend:  Next.js 15 + React + TypeScript + Tailwind CSS
 Backend:   FastAPI + Python 3.14+ + psycopg2
 Database:  PostgreSQL (Railway)
-AI:        Multi-provider optimization (6 models)
+Auth:      JWT tokens + bcrypt password hashing
+AI:        Multi-provider optimization (7 models)
            - Perplexity AI (real-time web research)
            - Claude Sonnet 4 (strategic/brand-critical)
            - GPT-4o (creative conversational content)
            - Gemini 2.0 Flash (structured visual content)
-           - Gemini Imagen 3 (AI image generation)
-           - Gemini Veo 3.1 (AI video generation)
+           - Imagen 3 (AI image generation - Vertex AI)
+           - Veo 3.1 (AI video generation - Vertex AI, primary)
+           - Runway ML Gen-3 (AI video generation - alternative)
            - GPT-4o-mini (simple analytical tasks)
 Publishing: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook,
            TikTok, YouTube, Reddit, Tumblr, WordPress)
@@ -86,8 +88,16 @@ orla3-marketing-suite-app/
 
 ### PostgreSQL Tables
 
-**brand_strategy** - Single source of brand truth
+**users** - User accounts and authentication
 ```sql
+- id, email, password_hash (bcrypt)
+- created_at, updated_at
+- JWT tokens for authentication
+```
+
+**brand_strategy** - Single source of brand truth (per user)
+```sql
+- user_id (foreign key)
 - brand_voice (JSONB): tone, personality traits
 - messaging_pillars (TEXT[]): core messages
 - language_patterns (JSONB): writing style, phrases, vocabulary
@@ -95,28 +105,32 @@ orla3-marketing-suite-app/
 - competitive_positioning (JSONB): unique value, gaps to exploit
 ```
 
-**brand_voice_assets** - Uploaded brand materials
+**brand_voice_assets** - Uploaded brand materials (per user)
 ```sql
+- user_id (foreign key)
 - filename, file_path, category (brand_guideline/example_content/community)
 - extracted_text, metadata (JSONB)
 - created_at
 ```
 
-**content_library** - All generated content
+**content_library** - All generated content (per user)
 ```sql
+- user_id (foreign key)
 - title, content (JSONB), type (blog/carousel/caption)
 - status (draft/published), tags (TEXT[])
 - created_at, updated_at
 ```
 
-**competitors** - Competitor tracking
+**competitors** - Competitor tracking (per user)
 ```sql
+- user_id (foreign key)
 - name, website, social_handles (JSONB)
 - analysis (JSONB): marketing insights, gaps, opportunities
 ```
 
-**calendar_events** - Content calendar
+**calendar_events** - Content calendar (per user)
 ```sql
+- user_id (foreign key)
 - title, content_id, platform, scheduled_for
 - status, notes
 ```
@@ -237,6 +251,26 @@ npm run dev
 
 ## 🎨 KEY FEATURES EXPLAINED
 
+### 0. Authentication & Multi-User Support
+**Files**: `backend/routes/auth.py`, `backend/middleware/user_context.py`
+
+**Features:**
+- JWT-based authentication with bcrypt password hashing
+- User context middleware adds `user_id` to all requests
+- Per-user data isolation (all content, strategies, competitors scoped to user)
+- Secure signup/login/refresh token endpoints
+
+**Endpoints:**
+- `POST /auth/signup` - Register new user
+- `POST /auth/login` - User login (returns JWT)
+- `POST /auth/refresh` - Refresh authentication token
+
+**Security:**
+- Passwords hashed with bcrypt before storage
+- JWT tokens expire and require refresh
+- All database queries filtered by user_id automatically
+- No cross-user data leakage
+
 ### 1. Brand Strategy Intelligence
 **File**: `backend/routes/strategy.py`
 
@@ -323,11 +357,11 @@ This strategy is **automatically applied** to all content generation.
   - Text-to-image with aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
   - $0.03 per image
   - Gallery view with download/preview
-- **AI Video Generation** (Google Veo 3.1)
-  - Text-to-video with resolution options (720p, 1080p)
-  - $6 per 8-second video with audio
+- **AI Video Generation**
+  - **Google Veo 3.1** (primary): Text-to-video with resolution options (720p, 1080p), $6 per 8s video with audio
+  - **Runway ML Gen-3 Alpha Turbo** (alternative): $0.10 per 5s video
   - Async generation (2-5 minutes)
-  - Status tracking
+  - Status tracking via job ID
 - Unified content library with filtering
 - Tag-based organization
 
@@ -356,10 +390,17 @@ This strategy is **automatically applied** to all content generation.
 
 ## 📊 API ENDPOINTS
 
+### Authentication
+```
+POST   /auth/signup                # Register new user
+POST   /auth/login                 # User login (returns JWT)
+POST   /auth/refresh               # Refresh authentication token
+```
+
 ### Strategy
 ```
-POST   /strategy/analyze          # Generate brand strategy
-GET    /strategy/current           # Get current strategy
+POST   /strategy/analyze          # Generate brand strategy (user-scoped)
+GET    /strategy/current           # Get current strategy (user-scoped)
 POST   /strategy/market-research   # Keyword research
 GET    /strategy/next-keyword      # Auto-select next keyword
 ```
@@ -417,6 +458,23 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 
 ### Recent Updates (Nov 2025)
 
+**0. Authentication & Multi-User Support (Nov 2025)**
+- ✅ **JWT-based authentication**
+  - Bcrypt password hashing
+  - Secure signup/login/refresh endpoints
+  - User context middleware for automatic user_id injection
+
+- ✅ **Per-user data isolation**
+  - All content scoped to authenticated user
+  - Separate brand strategies per user
+  - Individual competitor tracking
+  - Personal content libraries
+
+- ✅ **Database updates**
+  - Added `users` table with authentication fields
+  - All tables include user_id foreign keys
+  - Automatic filtering by user context
+
 **1. AI Image & Video Generation (Nov 7, 2025)**
 - ✅ **Google Imagen 3 integration**
   - Text-to-image generation ($0.03/image)
@@ -424,11 +482,11 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Integrated into Media Library and Social Manager
   - Gallery view with download/preview buttons
 
-- ✅ **Google Veo 3.1 integration**
-  - Text-to-video generation ($6 per 8-second video)
+- ✅ **AI Video Generation**
+  - **Google Veo 3.1** (primary): $6 per 8s video with native audio
+  - **Runway ML Gen-3 Alpha Turbo** (alternative): $0.10 per 5s video
   - 720p HD and 1080p Full HD options
   - Async generation with status tracking
-  - Native audio generation included
   - 2-5 minute generation time
 
 - ✅ **New backend route**: `backend/routes/ai_generation.py`
@@ -568,13 +626,13 @@ curl https://orla3-marketing-suite-app-production.up.railway.app/
 ## 📈 FUTURE ENHANCEMENTS
 
 ### Recommended Improvements
-1. **Authentication**: Add user accounts with Auth0/Clerk
-2. **Multi-user**: Separate brand strategies per user
-3. **Publishing**: Direct publish to social platforms
-4. **Analytics**: Track content performance
-5. **Webhooks**: Auto-publish on schedule
-6. **Image Generation**: AI-generated visuals
-7. **Video Scripts**: Script generator for videographers
+1. **Advanced Analytics**: Track content performance across all platforms
+2. **Scheduled Publishing**: Auto-publish on schedule with webhooks
+3. **Team Collaboration**: Share brand strategies and content between team members
+4. **CRM Integration**: Connect with customer management systems
+5. **Video Scripts**: AI-generated scripts for videographers
+6. **A/B Testing**: Test multiple content variations
+7. **Advanced Reporting**: ROI tracking and performance dashboards
 
 ### Technical Debt: NONE ✅
 - ✅ Clean architecture with centralized config
@@ -618,8 +676,10 @@ curl https://orla3-marketing-suite-app-production.up.railway.app/
 - [x] No 'any' types (9 replaced with proper types)
 - [x] No duplicate backend files (6 removed)
 - [x] Secure environment variable pattern (DATABASE_URL fixed)
-- [x] Optimal AI model allocation (4 providers, Nov 7 2025)
+- [x] Optimal AI model allocation (7 providers, Nov 2025)
 - [x] Social publishing infrastructure (9 platforms, Nov 7 2025)
+- [x] JWT authentication with bcrypt (Nov 2025)
+- [x] Multi-user support with per-user data isolation (Nov 2025)
 
 ---
 
@@ -635,6 +695,6 @@ For questions about this codebase:
 
 ---
 
-**Last Updated**: November 7, 2025
-**Architecture Version**: 2.3 (Multi-Provider AI + AI Image/Video Generation + Social Publishing + Market Intelligence)
-**Status**: ✅ Production-ready, zero technical debt, fully secure, optimized AI costs
+**Last Updated**: November 12, 2025
+**Architecture Version**: 2.4 (Multi-User Auth + Multi-Provider AI + AI Image/Video Generation + Social Publishing + Market Intelligence)
+**Status**: ✅ Production-ready, zero technical debt, fully secure, multi-user enabled, optimized AI costs

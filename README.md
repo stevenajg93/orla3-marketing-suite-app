@@ -33,8 +33,10 @@ AI-powered marketing automation platform for videographers and creative professi
 
 ### 📁 Media Management
 - **Google Drive integration**: Import assets directly
-- **AI Image Generation**: Google Imagen 3 via Vertex AI ($0.02-0.04/image)
-- **AI Video Generation**: Runway ML Gen-3 Alpha Turbo ($0.10 per 5s video)
+- **AI Image Generation**: Google Imagen 3 via Vertex AI ($0.03/image)
+- **AI Video Generation**:
+  - Google Veo 3.1 ($6 per 8s video with audio) - Primary
+  - Runway ML Gen-3 Alpha Turbo ($0.10 per 5s video) - Alternative
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
@@ -53,15 +55,17 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS (Vercel)
 - **Backend**: FastAPI, Python 3.14+ (Railway)
 - **Database**: PostgreSQL (Railway)
+- **Authentication**: JWT tokens, bcrypt password hashing
 - **AI**: Multi-provider optimization
   - **Perplexity AI**: Real-time web research
   - **Claude Sonnet 4**: Strategic analysis & brand-critical content
   - **GPT-4o**: Creative conversational content
   - **Gemini 2.0 Flash**: Structured visual content
   - **Imagen 3**: AI image generation (Vertex AI)
-  - **Runway ML Gen-3**: AI video generation (production-ready)
+  - **Veo 3.1**: AI video generation (Vertex AI, primary)
+  - **Runway ML Gen-3**: AI video generation (alternative)
   - **GPT-4o-mini**: Simple analytical tasks
-- **APIs**: Google Drive API, Unsplash API
+- **APIs**: Google Drive API, Unsplash API, OAuth 2.0
 - **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
 - **Node**: v24.10.0, npm 11.6.0
 
@@ -74,20 +78,38 @@ lib/
 
 backend/
 ├── routes/            # FastAPI route handlers
+│   ├── auth.py       # User authentication (JWT, bcrypt)
 │   ├── strategy.py   # Brand strategy (PostgreSQL)
 │   ├── library.py    # Content CRUD (PostgreSQL)
 │   ├── competitor.py # Competitor analysis (PostgreSQL)
-│   └── draft.py      # Blog generation
+│   ├── draft.py      # Blog generation
+│   ├── carousel.py   # Social carousel generation
+│   ├── social_caption.py # Social media captions
+│   ├── atomize.py    # Blog-to-social atomization
+│   ├── ads.py        # Ad campaign generation
+│   ├── comments.py   # AI comment replies
+│   ├── publisher.py  # Multi-platform publishing
+│   ├── ai_generation.py # Image/video generation
+│   ├── oauth.py      # OAuth flows (Google Drive, etc.)
+│   ├── drive.py      # Google Drive integration
+│   ├── brand_voice_upload.py # Brand asset uploads
+│   ├── calendar.py   # Content calendar
+│   ├── social.py     # Social media utilities
+│   ├── collaboration.py # Team collaboration
+│   ├── crm.py        # CRM integration
+│   └── primer.py     # Onboarding/primers
+├── middleware/       # User context, CORS
 ├── schema.sql        # PostgreSQL schema
 └── main.py           # FastAPI app with CORS
 ```
 
 ### Database Schema
-- `brand_strategy` - Brand voice, messaging pillars, competitive positioning
-- `brand_voice_assets` - Uploaded files with extracted text
-- `content_library` - Generated content with metadata
-- `competitors` - Competitor profiles and analysis
-- `calendar_events` - Content calendar
+- `users` - User accounts with JWT authentication
+- `brand_strategy` - Brand voice, messaging pillars, competitive positioning (per user)
+- `brand_voice_assets` - Uploaded files with extracted text (per user)
+- `content_library` - Generated content with metadata (per user)
+- `competitors` - Competitor profiles and analysis (per user)
+- `calendar_events` - Content calendar (per user)
 
 ---
 
@@ -194,6 +216,15 @@ npm run dev
 
 **For detailed setup instructions and security best practices, see `SETUP.md`**
 
+### Automation Scripts
+```bash
+npm run orla:automate  # Daily content generation automation
+npm run orla:report    # Generate analytics report
+npm run orla:engage    # Automated engagement
+```
+
+The daily automation script (`scripts/daily.js`) can be scheduled via cron for hands-free content generation.
+
 ---
 
 ## 📖 API Documentation
@@ -236,6 +267,23 @@ Backend API docs (when running locally): http://localhost:8000/docs
 
 ---
 
+## 🔐 Authentication & Multi-User
+
+**User Management:**
+- JWT-based authentication with bcrypt password hashing
+- User context middleware (all requests scoped to authenticated user)
+- Secure signup/login/token refresh endpoints
+- Per-user data isolation (strategies, content, competitors, calendar)
+
+**Endpoints:**
+- `POST /auth/signup` - Register new account
+- `POST /auth/login` - User login (returns JWT)
+- `POST /auth/refresh` - Refresh authentication token
+
+All generated content, brand strategies, and competitor analyses are scoped to the authenticated user.
+
+---
+
 ## 🎨 Brand Voice System
 
 1. **Upload brand materials** (PDFs, DOCX, TXT, images with text)
@@ -258,9 +306,16 @@ Backend API docs (when running locally): http://localhost:8000/docs
 
 ### Recent Updates (Nov 2025)
 
+**Authentication & Multi-User Support (Nov 2025)**
+- ✅ JWT-based authentication with bcrypt password hashing
+- ✅ User context middleware for per-user data isolation
+- ✅ Secure signup/login/refresh endpoints
+- ✅ All content scoped to authenticated users
+
 **AI Image & Video Generation (Nov 7, 2025)**
 - ✅ Google Imagen 3 integration for text-to-image generation ($0.03/image)
 - ✅ Google Veo 3.1 integration for text-to-video generation ($6 per 8s video)
+- ✅ Runway ML Gen-3 Alpha Turbo as alternative video provider ($0.10 per 5s)
 - ✅ Added to both Media Library and Social Manager
 - ✅ Aspect ratio options: 1:1, 16:9, 9:16, 4:3, 3:4
 - ✅ Video resolution options: 720p HD, 1080p Full HD
@@ -306,3 +361,9 @@ MIT License - See LICENSE file for details
 ## 🤝 Contributing
 
 Built with love by the ORLA³ team. For questions or contributions, open an issue!
+
+---
+
+**Last Updated:** November 12, 2025
+**Version:** 0.1.0
+**Status:** Production-ready with multi-user authentication, AI-powered content generation, and 9-platform publishing
