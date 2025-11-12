@@ -386,14 +386,22 @@ export default function LandingPage() {
                   <span>Commission custom video content for your biggest campaigns</span>
                 </li>
               </ul>
-              <a
-                href="https://orla3.com/browse"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
-              >
-                Find Videographers Near Me →
-              </a>
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="https://orla3.com/browse"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+                >
+                  Find Videographers Near Me →
+                </a>
+                <Link
+                  href="/dashboard/billing"
+                  className="inline-block bg-white/10 hover:bg-white/20 border-2 border-purple-400/50 hover:border-purple-400 text-white px-8 py-4 rounded-lg font-bold text-lg transition"
+                >
+                  Buy More Credits
+                </Link>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
