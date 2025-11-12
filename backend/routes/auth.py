@@ -322,6 +322,16 @@ async def login(request: LoginRequest, req: Request):
             detail="Please verify your email before logging in. Check your inbox for the verification link."
         )
 
+    # Check if user has an active paid subscription
+    subscription_status = user.get('subscription_status', 'inactive')
+    if user['plan'] == 'free' or subscription_status not in ['active', 'trialing']:
+        # Allow access if subscription is active or in trial period
+        # Block if: free plan, canceled, past_due, unpaid, or inactive
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Please select and pay for a plan to access the platform."
+        )
+
     # Verify password
     if not verify_password(request.password, user['password_hash']):
         # Record failed login
