@@ -17,38 +17,49 @@ const planningAnalysis = [
   { name: 'Analytics', icon: '📊', href: '/dashboard/analytics', description: 'Track performance', color: 'from-teal-500 to-teal-600', disabled: true },
   { name: 'Brand Voice', icon: '🎯', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cyan-500 to-cyan-600', disabled: false },
   { name: 'Competitor Analysis', icon: '🔍', href: '/dashboard/competitor', description: 'Market insights', color: 'from-rose-500 to-rose-600', disabled: false },
-{ name: 'Strategy Planner', icon: '🎪', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-violet-500 to-violet-600', disabled: false },
+  { name: 'Strategy Planner', icon: '🎪', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-violet-500 to-violet-600', disabled: false },
+  { name: 'Find a Videographer', icon: '🎬', href: 'https://orla3.com/browse', description: 'Hire professional creators', color: 'from-purple-500 to-pink-500', external: true },
 ];
 
-const ToolCard = ({ tool }: { tool: any }) => (
-  <Link
-    href={tool.disabled ? '#' : tool.href}
-    className={`group relative overflow-hidden rounded-2xl border border-white/10 transition-all ${
-      tool.disabled 
-        ? 'opacity-50 cursor-not-allowed' 
-        : 'hover:scale-105 hover:border-white/30 cursor-pointer'
-    }`}
-  >
-    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
-    <div className="relative p-6 bg-white/5 backdrop-blur-lg">
-      <div className="flex items-start justify-between">
-        <div className="text-5xl mb-4">{tool.icon}</div>
-        {tool.isNew && (
-          <span className="px-2 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 text-xs font-bold animate-pulse">
-            NEW
+const ToolCard = ({ tool }: { tool: any }) => {
+  const LinkWrapper = tool.external ? 'a' : Link;
+  const linkProps = tool.external
+    ? { href: tool.href, target: '_blank', rel: 'noopener noreferrer' }
+    : { href: tool.disabled ? '#' : tool.href };
+
+  return (
+    <LinkWrapper
+      {...linkProps}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 transition-all ${
+        tool.disabled
+          ? 'opacity-50 cursor-not-allowed'
+          : 'hover:scale-105 hover:border-white/30 cursor-pointer'
+      }`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
+      <div className="relative p-6 bg-white/5 backdrop-blur-lg">
+        <div className="flex items-start justify-between">
+          <div className="text-5xl mb-4">{tool.icon}</div>
+          {tool.isNew && (
+            <span className="px-2 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 text-xs font-bold animate-pulse">
+              NEW
+            </span>
+          )}
+          {tool.external && (
+            <span className="text-gray-400 text-xs">↗</span>
+          )}
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-2">{tool.name}</h3>
+        <p className="text-gray-400">{tool.description}</p>
+        {tool.disabled && (
+          <span className="inline-block mt-3 px-3 py-1 bg-yellow-600/30 text-yellow-400 text-xs font-bold rounded-full">
+            Coming Soon
           </span>
         )}
       </div>
-      <h3 className="text-2xl font-bold text-white mb-2">{tool.name}</h3>
-      <p className="text-gray-400">{tool.description}</p>
-      {tool.disabled && (
-        <span className="inline-block mt-3 px-3 py-1 bg-yellow-600/30 text-yellow-400 text-xs font-bold rounded-full">
-          Coming Soon
-        </span>
-      )}
-    </div>
-  </Link>
-);
+    </LinkWrapper>
+  );
+};
 
 export default function Dashboard() {
   return (

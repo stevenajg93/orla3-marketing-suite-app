@@ -1,3 +1,21 @@
+# Environment & Secrets
 .env
+*.env
+
+# OAuth Tokens & Credentials
 oauth_tokens.json
-get_oauth_token.py
+credentials/
+credentials.json
+token.pickle
+*.pickle
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary Files
+brand_voice_assets/
+*.log

@@ -304,6 +304,14 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**Brand Asset Management & Cloud Storage (Nov 12, 2025)**
+- ✅ **Google Cloud Storage integration** for persistent brand assets (logos, images)
+- ✅ **Brand asset extraction** from PDFs (colors, fonts, logos)
+- ✅ **OAuth token generators** for Google Drive, OneDrive, Dropbox
+- ✅ **Multi-tenant architecture migration** created (ready to apply)
+- ✅ Database schema updates for per-user cloud storage tokens
+- ✅ Comprehensive environment variable documentation
+
 **Authentication & Multi-User Support (Nov 2025)**
 - ✅ JWT-based authentication with bcrypt password hashing
 - ✅ User context middleware for per-user data isolation
@@ -362,5 +370,5 @@ Built with love by the ORLA³ team. For questions or contributions, open an issu
 ---
 
 **Last Updated:** November 12, 2025
-**Version:** 0.1.0
-**Status:** Production-ready with multi-user authentication, AI-powered content generation, and 9-platform publishing
+**Version:** 0.2.0
+**Status:** Production-ready with GCS storage, brand asset extraction, multi-cloud OAuth, and multi-tenant architecture ready

@@ -165,11 +165,11 @@ async def analyze_brand_voice(include_competitors: bool = True):
         brand_context = {
             "guidelines": [],
             "voice_samples": [],
-            "community": []
+            "target_audience_insights": []
         }
-        
+
         print(f"Processing {len(assets)} assets...")
-        
+
         for asset in assets:
             # Get text from metadata or content_preview
             text = ""
@@ -177,17 +177,17 @@ async def analyze_brand_voice(include_competitors: bool = True):
                 text = asset['metadata'].get('full_text', '')
             if not text:
                 text = asset.get('content_preview', '')
-            
+
             # Try to extract if not available
             if not text or text == "No text extracted":
                 print(f"Extracting text from {asset['filename']}...")
                 text = extract_text_from_file(asset['file_path'])
-            
+
             # Skip if no text extracted
             if not text or len(text) < 50:
                 print(f"Skipping {asset['filename']} - insufficient text")
                 continue
-            
+
             # Categorize
             category = asset['category']
             if category == 'guidelines':
@@ -200,13 +200,19 @@ async def analyze_brand_voice(include_competitors: bool = True):
                     'filename': asset['filename'],
                     'text': text[:2000]
                 })
-            elif category in ['community_videographer', 'community_client']:
-                brand_context['community'].append({
+            elif category == 'target_audience_insights':
+                brand_context['target_audience_insights'].append({
                     'filename': asset['filename'],
                     'text': text[:1500]
                 })
-        
-        print(f"Context prepared: {len(brand_context['guidelines'])} guidelines, {len(brand_context['voice_samples'])} samples, {len(brand_context['community'])} community files")
+            # Support legacy categories for backwards compatibility
+            elif category in ['community_videographer', 'community_client']:
+                brand_context['target_audience_insights'].append({
+                    'filename': asset['filename'],
+                    'text': text[:1500]
+                })
+
+        print(f"Context prepared: {len(brand_context['guidelines'])} guidelines, {len(brand_context['voice_samples'])} samples, {len(brand_context['target_audience_insights'])} audience insights")
         
         # Load competitor MARKETING insights if requested
         competitor_context = ""
@@ -245,11 +251,11 @@ CRITICAL: Use competitive insights ONLY for CONTENT & MARKETING strategy, NOT pr
 **VOICE SAMPLES ({len(brand_context['voice_samples'])} files):**
 {chr(10).join([f"- {item['filename']}: {item['text'][:500]}..." for item in brand_context['voice_samples']]) if brand_context['voice_samples'] else "None uploaded"}
 
-**COMMUNITY CONVERSATIONS ({len(brand_context['community'])} files):**
-{chr(10).join([f"- {item['filename']}: {item['text'][:300]}..." for item in brand_context['community']]) if brand_context['community'] else "None uploaded"}
+**TARGET AUDIENCE INSIGHTS ({len(brand_context['target_audience_insights'])} files):**
+{chr(10).join([f"- {item['filename']}: {item['text'][:300]}..." for item in brand_context['target_audience_insights']]) if brand_context['target_audience_insights'] else "None uploaded"}
 """
 
-        prompt = f"""You are a CONTENT MARKETING strategist creating a comprehensive CONTENT & MESSAGING strategy for Orla³.
+        prompt = f"""You are a CONTENT MARKETING strategist creating a comprehensive CONTENT & MESSAGING strategy.
 
 BRAND VOICE TRAINING MATERIALS:
 {brand_files_context}

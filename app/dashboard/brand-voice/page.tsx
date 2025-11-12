@@ -28,9 +28,8 @@ type DriveFile = {
 const CATEGORIES = [
   { id: 'guidelines', name: 'Brand Guidelines', icon: '📋', description: 'Official brand docs, style guides' },
   { id: 'voice_samples', name: 'Voice Samples', icon: '✍️', description: 'Your emails, blogs, copy' },
-  { id: 'community_videographer', name: 'Videographer Community', icon: '🎥', description: 'Discord chats, forums' },
-  { id: 'community_client', name: 'Client Community', icon: '💼', description: 'Client conversations' },
-  { id: 'logos', name: 'Logos & Assets', icon: '🎨', description: 'Visual brand assets' }
+  { id: 'logos', name: 'Logos & Assets', icon: '🎨', description: 'Visual brand assets' },
+  { id: 'target_audience_insights', name: 'Target Audience Insights', icon: '🎯', description: 'How your audience talks, their pain points' }
 ];
 
 export default function BrandVoice() {
@@ -194,7 +193,7 @@ export default function BrandVoice() {
         <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Upload Training Assets</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -302,7 +301,7 @@ export default function BrandVoice() {
             <div className="text-6xl mb-4">🎯</div>
             <h2 className="text-2xl font-bold text-white mb-2">No Training Assets Yet</h2>
             <p className="text-gray-400 mb-6">
-              Upload your brand guidelines, writing samples, and community chats to train the AI
+              Upload your brand guidelines, writing samples, logos, and target audience insights to train the AI
             </p>
           </div>
         )}

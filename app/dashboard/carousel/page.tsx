@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
+
+interface BrandAssets {
+  brand_colors: string[];
+  brand_fonts: string[];
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+}
 
 export default function CarouselMakerPage() {
   const router = useRouter();
@@ -16,12 +24,53 @@ export default function CarouselMakerPage() {
   const [caption, setCaption] = useState("");
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [saveMessage, setSaveMessage] = useState("");
+  const [brandAssets, setBrandAssets] = useState<BrandAssets>({
+    brand_colors: ['#C8A530', '#3D2B63'], // Default fallback colors
+    brand_fonts: [],
+    logo_url: null,
+    primary_color: '#C8A530',
+    secondary_color: '#3D2B63'
+  });
 
   const [formData, setFormData] = useState({
     post_summary: "Learn how to hire the perfect corporate videographer in the UK. Discover pricing factors, quality indicators, and expert tips.",
     target_platform: "instagram",
     angle: "problem-solution",
   });
+
+  // Fetch brand assets on mount
+  useEffect(() => {
+    const fetchBrandAssets = async () => {
+      try {
+        const res = await fetch(`${config.apiUrl}/brand-assets`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.brand_colors && data.brand_colors.length > 0) {
+            setBrandAssets({
+              brand_colors: data.brand_colors,
+              brand_fonts: data.brand_fonts || [],
+              logo_url: data.logo_url,
+              primary_color: data.primary_color || data.brand_colors[0],
+              secondary_color: data.secondary_color || data.brand_colors[1]
+            });
+            console.log('✅ Loaded brand assets:', data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch brand assets:', err);
+      }
+    };
+
+    fetchBrandAssets();
+  }, []);
+
+  // Helper to get font family string with brand fonts
+  const getBrandFontFamily = () => {
+    if (brandAssets.brand_fonts && brandAssets.brand_fonts.length > 0) {
+      return `${brandAssets.brand_fonts.map(f => `"${f}"`).join(', ')}, system-ui, -apple-system, sans-serif`;
+    }
+    return 'system-ui, -apple-system, sans-serif';
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -199,14 +248,14 @@ export default function CarouselMakerPage() {
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center" style={{ padding: `${50 * scale}px` }}>
-            <div 
-              style={{ 
+            <div
+              style={{
                 fontSize: `${120 * scale}px`,
                 lineHeight: 0.95,
                 fontWeight: 900,
                 color: 'white',
                 textShadow: '0 4px 30px rgba(0,0,0,1)',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: getBrandFontFamily(),
                 marginBottom: `${20 * scale}px`,
                 width: '100%',
                 whiteSpace: 'pre-wrap',
@@ -255,7 +304,7 @@ export default function CarouselMakerPage() {
             justifyContent: 'center',
             fontSize: `${36 * scale}px`,
             fontWeight: 700,
-            backgroundColor: '#C8A530',
+            backgroundColor: brandAssets.primary_color || '#C8A530',
             color: 'white',
           }}>
             {idx}
@@ -268,7 +317,7 @@ export default function CarouselMakerPage() {
             borderRadius: `${20 * scale}px`,
             fontSize: `${24 * scale}px`,
             fontWeight: 600,
-            backgroundColor: '#3D2B63',
+            backgroundColor: brandAssets.secondary_color || '#3D2B63',
             color: 'white',
           }}>
             {idx + 1}/{totalSlides}
@@ -279,7 +328,7 @@ export default function CarouselMakerPage() {
           fontSize: `${60 * scale}px`,
           fontWeight: 700,
           color: 'black',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: getBrandFontFamily(),
           marginBottom: `${30 * scale}px`,
           textAlign: 'center',
         }}>
@@ -290,7 +339,7 @@ export default function CarouselMakerPage() {
           fontSize: `${32 * scale}px`,
           lineHeight: 1.6,
           color: '#374151',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: getBrandFontFamily(),
           textAlign: 'center',
         }}>
           {slide.body}
@@ -300,15 +349,33 @@ export default function CarouselMakerPage() {
           <div style={{
             marginTop: `${30 * scale}px`,
             paddingTop: `${30 * scale}px`,
-            borderTop: `${4 * scale}px solid #C8A530`,
+            borderTop: `${4 * scale}px solid ${brandAssets.primary_color || '#C8A530'}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: `${10 * scale}px`,
           }}>
-            <div style={{
-              fontSize: `${28 * scale}px`,
-              fontWeight: 600,
-              color: '#C8A530',
-            }}>
-              ORLA³
-            </div>
+            {brandAssets.logo_url && (
+              <img
+                src={brandAssets.logo_url.startsWith('http') ? brandAssets.logo_url : `${config.apiUrl}/${brandAssets.logo_url}`}
+                alt="Brand Logo"
+                style={{
+                  maxHeight: `${40 * scale}px`,
+                  maxWidth: `${200 * scale}px`,
+                  objectFit: 'contain',
+                }}
+                crossOrigin="anonymous"
+              />
+            )}
+            {!brandAssets.logo_url && (
+              <div style={{
+                fontSize: `${28 * scale}px`,
+                fontWeight: 600,
+                color: brandAssets.primary_color || '#C8A530',
+              }}>
+                ORLA³
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -347,7 +414,10 @@ export default function CarouselMakerPage() {
             <div className="text-4xl">🎠</div>
             <div>
               <h1 className="text-2xl font-bold text-white">Carousel Maker</h1>
-              <p className="text-sm text-purple-300">Instagram-ready carousels with ORLA3 branding</p>
+              <p className="text-sm text-purple-300">
+                Instagram-ready carousels with your brand colors, fonts & logo
+                {brandAssets.brand_colors.length > 2 && <span className="ml-2 text-green-400">✓ Branded</span>}
+              </p>
             </div>
           </div>
           {result && editMode && (
@@ -480,9 +550,9 @@ export default function CarouselMakerPage() {
                               onChange={(e) => updateSlide(idx, 'title', e.target.value)}
                               rows={2}
                               className="text-6xl font-black text-white bg-transparent border-2 border-transparent hover:border-white/30 focus:border-white/50 focus:outline-none px-2 py-2 rounded w-full mb-4 text-center resize-none leading-none"
-                              style={{ 
-                                textShadow: '0 4px 30px rgba(0,0,0,1)', 
-                                fontFamily: 'system-ui, -apple-system, sans-serif', 
+                              style={{
+                                textShadow: '0 4px 30px rgba(0,0,0,1)',
+                                fontFamily: getBrandFontFamily(),
                                 fontWeight: 900,
                               }}
                             />
@@ -504,13 +574,13 @@ export default function CarouselMakerPage() {
                       {!isFirstSlide && (
                         <div className="h-full flex flex-col justify-center items-center p-10 text-center relative">
                           <div className="absolute top-6 left-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ backgroundColor: '#C8A530', color: 'white' }}>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ backgroundColor: brandAssets.primary_color || '#C8A530', color: 'white' }}>
                               {idx}
                             </div>
                           </div>
 
                           <div className="absolute top-6 right-6">
-                            <div className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: '#3D2B63', color: 'white' }}>
+                            <div className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: brandAssets.secondary_color || '#3D2B63', color: 'white' }}>
                               {idx + 1}/{totalSlides}
                             </div>
                           </div>
@@ -520,7 +590,7 @@ export default function CarouselMakerPage() {
                             value={slide.title}
                             onChange={(e) => updateSlide(idx, 'title', e.target.value)}
                             className="text-3xl font-bold text-black bg-transparent border-2 border-transparent hover:border-gray-300 focus:border-gray-400 focus:outline-none px-3 py-2 rounded w-full mb-6 text-center"
-                            style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 700 }}
+                            style={{ fontFamily: getBrandFontFamily(), fontWeight: 700 }}
                           />
 
                           <textarea
@@ -528,12 +598,25 @@ export default function CarouselMakerPage() {
                             onChange={(e) => updateSlide(idx, 'body', e.target.value)}
                             rows={isLastSlide ? 4 : 6}
                             className="text-base leading-relaxed text-gray-700 bg-transparent border-2 border-transparent hover:border-gray-300 focus:border-gray-400 focus:outline-none px-4 py-2 rounded w-full resize-none"
-                            style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+                            style={{ fontFamily: getBrandFontFamily() }}
                           />
 
                           {isLastSlide && (
-                            <div className="mt-6 pt-6 border-t-2" style={{ borderColor: '#C8A530' }}>
-                              <p className="text-sm font-semibold" style={{ color: '#C8A530' }}>ORLA³</p>
+                            <div className="mt-6 pt-6 border-t-2 flex flex-col items-center gap-2" style={{ borderColor: brandAssets.primary_color || '#C8A530' }}>
+                              {brandAssets.logo_url && (
+                                <img
+                                  src={brandAssets.logo_url.startsWith('http') ? brandAssets.logo_url : `${config.apiUrl}/${brandAssets.logo_url}`}
+                                  alt="Brand Logo"
+                                  style={{
+                                    maxHeight: '20px',
+                                    maxWidth: '100px',
+                                    objectFit: 'contain',
+                                  }}
+                                />
+                              )}
+                              {!brandAssets.logo_url && (
+                                <p className="text-sm font-semibold" style={{ color: brandAssets.primary_color || '#C8A530' }}>ORLA³</p>
+                              )}
                             </div>
                           )}
                         </div>

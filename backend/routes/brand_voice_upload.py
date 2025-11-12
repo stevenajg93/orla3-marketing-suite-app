@@ -11,6 +11,8 @@ from pathlib import Path
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from lib.brand_asset_extractor import extract_brand_assets, find_logo_file, find_logo_from_database
+from lib.gcs_storage import upload_bytes_to_gcs, is_image_file, is_video_file
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -21,7 +23,7 @@ if not DATABASE_URL:
 
 # Storage paths
 BRAND_VOICE_DIR = "brand_voice_assets"
-UPLOAD_CATEGORIES = ["guidelines", "voice_samples", "community_videographer", "community_client"]
+UPLOAD_CATEGORIES = ["guidelines", "voice_samples", "logos", "target_audience_insights"]
 
 # Ensure directories exist
 for category in UPLOAD_CATEGORIES:
@@ -29,6 +31,113 @@ for category in UPLOAD_CATEGORIES:
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+def auto_extract_brand_assets():
+    """
+    Automatically extract brand assets from uploaded guidelines.
+    Called after guideline uploads to update brand_strategy table.
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Get all guideline assets
+        cur.execute("""
+            SELECT filename, file_path, metadata
+            FROM brand_voice_assets
+            WHERE category = 'guidelines'
+            ORDER BY uploaded_at DESC
+        """)
+
+        guidelines = cur.fetchall()
+
+        if not guidelines:
+            cur.close()
+            conn.close()
+            logger.info("No guidelines found for extraction")
+            return
+
+        # Extract text from all guidelines
+        all_text = ""
+        for guideline in guidelines:
+            # Get full text from metadata
+            if guideline.get('metadata') and isinstance(guideline['metadata'], dict):
+                full_text = guideline['metadata'].get('full_text', '')
+                if full_text:
+                    all_text += f"\n\n{full_text}"
+
+        if not all_text:
+            cur.close()
+            conn.close()
+            logger.warning("Could not extract text from guidelines")
+            return
+
+        logger.info(f"Extracting brand assets from {len(all_text)} characters of text")
+
+        # Extract brand assets (colors, fonts)
+        assets = extract_brand_assets(all_text)
+
+        # Find logo file (prefer database/GCS, fallback to filesystem)
+        logo_url = find_logo_from_database(conn)
+        if not logo_url:
+            # Fallback to local filesystem for backwards compatibility
+            brand_voice_dir = Path(BRAND_VOICE_DIR)
+            logo_url = find_logo_file(brand_voice_dir, "guidelines")
+            if not logo_url:
+                logo_url = find_logo_file(brand_voice_dir, "logos")
+
+        assets['logo_url'] = logo_url
+        logger.info(f"Logo URL: {logo_url or 'Not found'}")
+
+        logger.info(f"Extracted: {len(assets['brand_colors'])} colors, {len(assets['brand_fonts'])} fonts")
+
+        # Check if brand_strategy exists
+        cur.execute("SELECT id FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
+        strategy_exists = cur.fetchone()
+
+        if strategy_exists:
+            # Update existing strategy
+            cur.execute("""
+                UPDATE brand_strategy
+                SET brand_colors = %s,
+                    brand_fonts = %s,
+                    logo_url = %s,
+                    primary_color = %s,
+                    secondary_color = %s
+                WHERE id = %s
+            """, (
+                assets['brand_colors'],
+                assets['brand_fonts'],
+                assets['logo_url'],
+                assets['primary_color'],
+                assets['secondary_color'],
+                strategy_exists['id']
+            ))
+        else:
+            # Create new brand_strategy entry with just visual assets
+            cur.execute("""
+                INSERT INTO brand_strategy (
+                    brand_colors, brand_fonts, logo_url,
+                    primary_color, secondary_color
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                assets['brand_colors'],
+                assets['brand_fonts'],
+                assets['logo_url'],
+                assets['primary_color'],
+                assets['secondary_color']
+            ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        logger.info("✅ Brand assets auto-extracted and saved")
+
+    except Exception as e:
+        logger.error(f"Error in auto-extraction: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 def extract_text_from_file(filepath: str) -> str:
     """Extract text from various file types"""
@@ -130,18 +239,46 @@ async def upload_brand_assets(
         uploaded_files = []
         
         for file in files:
-            # Save file to disk
-            file_path = f"{BRAND_VOICE_DIR}/{category}/{file.filename}"
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            
-            file_size = os.path.getsize(file_path)
+            # Read file content
+            file_content = await file.read()
+            file_size = len(file_content)
             file_ext = os.path.splitext(file.filename)[1].lower().lstrip('.')
             if not file_ext:
                 file_ext = "unknown"
-            
-            # Extract text content
-            text_content = extract_text_from_file(file_path)
+
+            # Determine storage strategy
+            is_media_file = is_image_file(file.filename) or is_video_file(file.filename)
+
+            if is_media_file:
+                # Upload media files to GCS for persistent storage
+                logger.info(f"Uploading media file to GCS: {file.filename}")
+                gcs_url = upload_bytes_to_gcs(
+                    file_content,
+                    file.filename,
+                    destination_folder=f"brand_assets/{category}",
+                    content_type=file.content_type or "application/octet-stream"
+                )
+
+                if gcs_url:
+                    file_path = gcs_url  # Store GCS URL instead of local path
+                    text_content = ""  # Media files don't need text extraction
+                    logger.info(f"✅ Uploaded to GCS: {gcs_url}")
+                else:
+                    # Fallback to local storage if GCS fails
+                    logger.warning(f"GCS upload failed for {file.filename}, using local storage")
+                    file_path = f"{BRAND_VOICE_DIR}/{category}/{file.filename}"
+                    with open(file_path, "wb") as buffer:
+                        buffer.write(file_content)
+                    text_content = ""
+            else:
+                # Save text/document files to local disk (temporary - text extracted to DB)
+                file_path = f"{BRAND_VOICE_DIR}/{category}/{file.filename}"
+                with open(file_path, "wb") as buffer:
+                    buffer.write(file_content)
+
+                # Extract text content from documents
+                text_content = extract_text_from_file(file_path)
+                logger.info(f"Extracted {len(text_content)} characters from {file.filename}")
             
             # Insert into PostgreSQL
             cur.execute("""
@@ -166,8 +303,14 @@ async def upload_brand_assets(
         conn.commit()
         cur.close()
         conn.close()
-        
+
         logger.info(f"Uploaded {len(files)} files to category: {category}")
+
+        # Auto-extract brand assets if uploading guidelines
+        if category == "guidelines":
+            logger.info("Triggering auto-extraction of brand assets...")
+            auto_extract_brand_assets()
+
         return {"success": True, "uploaded": uploaded_files}
         
     except Exception as e:
@@ -295,17 +438,12 @@ VOICE SAMPLES (Your actual writing)
 {chr(10).join(context_by_category.get('voice_samples', [])) or 'No voice samples uploaded'}
 
 {'='*80}
-VIDEOGRAPHER COMMUNITY CONVERSATIONS
+TARGET AUDIENCE INSIGHTS (How your audience talks, their pain points, real conversations)
 {'='*80}
-{chr(10).join(context_by_category.get('community_videographer', [])) or 'No community chats uploaded'}
+{chr(10).join(context_by_category.get('target_audience_insights', [])) or 'No audience insights uploaded'}
 
-{'='*80}
-CLIENT COMMUNITY CONVERSATIONS
-{'='*80}
-{chr(10).join(context_by_category.get('community_client', [])) or 'No client chats uploaded'}
-
-INSTRUCTION: Use this context to understand the brand voice, industry language, real pain points, 
-and authentic communication style. Write content that matches this voice naturally."""
+INSTRUCTION: Use this context to understand the brand voice, target audience language, real pain points,
+and authentic communication style. Write content that matches this voice naturally and resonates with the target audience."""
 
         return {
             "context": full_context,
@@ -407,8 +545,14 @@ async def import_from_drive(file_id: str, filename: str, category: str):
         conn.commit()
         cur.close()
         conn.close()
-        
+
         logger.info(f"🎉 Import complete: {filename}")
+
+        # Auto-extract brand assets if importing guidelines
+        if category == "guidelines":
+            logger.info("Triggering auto-extraction of brand assets...")
+            auto_extract_brand_assets()
+
         return {"success": True, "asset": asset}
         
     except Exception as e:

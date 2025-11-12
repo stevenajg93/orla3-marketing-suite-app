@@ -457,7 +457,38 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 
 ### Recent Updates (Nov 2025)
 
-**0. Authentication & Multi-User Support (Nov 2025)**
+**0. Brand Asset Management & Cloud Storage (Nov 12, 2025)**
+- ✅ **Google Cloud Storage (GCS) integration**
+  - Persistent storage for brand logos and images
+  - Bucket auto-creation with public access
+  - OAuth2 authentication with refresh tokens
+  - Railway ephemeral filesystem → GCS (logos survive redeploys)
+
+- ✅ **Brand asset extraction from PDFs**
+  - Automatic color extraction (hex, RGB formats)
+  - Font family detection from brand guidelines
+  - Logo discovery from uploaded files (GCS or local)
+  - Stored in PostgreSQL brand_strategy table
+
+- ✅ **OAuth token generators** for multi-cloud support
+  - `get_google_drive_token.py` - Google Drive OAuth2
+  - `get_onedrive_token.py` - Microsoft OneDrive OAuth2
+  - `get_dropbox_token.py` - Dropbox OAuth2
+  - Each opens browser, handles OAuth flow, returns refresh token
+
+- ✅ **Multi-tenant architecture migration** (prepared, not applied yet)
+  - New tables: users, user_cloud_storage_tokens, refresh_tokens, audit_log
+  - Added user_id foreign keys to all content tables
+  - Per-user OAuth tokens (encrypted in database)
+  - System admin role (no billing for s.gillespie@gecslabs.com)
+  - See: `backend/migrations/001_add_multi_tenant_architecture.sql`
+
+- ✅ **Comprehensive documentation**
+  - `backend/MULTI_TENANT_ARCHITECTURE_PLAN.md` - Full refactor plan
+  - `backend/RAILWAY_ENVIRONMENT_VARIABLES.md` - Production setup guide
+  - Updated `.env.example` with all cloud storage variables
+
+**1. Authentication & Multi-User Support (Nov 2025)**
 - ✅ **JWT-based authentication**
   - Bcrypt password hashing
   - Secure signup/login/refresh endpoints
@@ -694,5 +725,5 @@ For questions about this codebase:
 ---
 
 **Last Updated**: November 12, 2025
-**Architecture Version**: 2.4 (Multi-User Auth + Multi-Provider AI + AI Image/Video Generation + Social Publishing + Market Intelligence)
-**Status**: ✅ Production-ready, zero technical debt, fully secure, multi-user enabled, optimized AI costs
+**Architecture Version**: 2.5 (GCS Storage + Brand Asset Extraction + Multi-Cloud OAuth + Multi-Tenant Ready)
+**Status**: ✅ Production-ready, zero technical debt, fully secure, persistent storage, multi-cloud integrated, multi-tenant architecture prepared

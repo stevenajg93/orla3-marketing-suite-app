@@ -47,11 +47,15 @@ export default function DashboardLayout({
                 </span>
               </a>
 
-              {/* Credits Badge (placeholder) */}
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-400/30">
-                <span className="text-blue-300 font-bold">500</span>
-                <span className="text-gray-400 text-sm">credits</span>
-              </div>
+              {/* Buy More Credits Button */}
+              <Link
+                href="/dashboard/billing"
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-lg border border-blue-400/30 hover:border-blue-400/50 transition group"
+              >
+                <span className="text-blue-300 font-bold group-hover:text-blue-200">500</span>
+                <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
+                <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
+              </Link>
 
               {/* Account Dropdown */}
               <div className="relative">

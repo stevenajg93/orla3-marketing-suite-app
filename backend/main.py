@@ -30,7 +30,7 @@ app.add_middleware(
 # User Context Middleware - Adds user_id to all requests for multi-tenant architecture
 app.add_middleware(UserContextMiddleware)
 
-from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, strategy, calendar, library, competitor, ai_generation, oauth, auth
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, brand_assets, strategy, calendar, library, competitor, ai_generation, oauth, auth
 
 app.include_router(auth.router, tags=["authentication"])
 app.include_router(carousel.router, prefix="/carousel", tags=["carousel"])
@@ -42,6 +42,7 @@ app.include_router(social.router, prefix="/social", tags=["social"])
 app.include_router(social_caption.router, prefix="/social-caption", tags=["social"])
 app.include_router(brand_voice.router, prefix="/brand-voice", tags=["brand-voice"])
 app.include_router(brand_voice_upload.router, prefix="/brand-voice", tags=["brand-voice"])
+app.include_router(brand_assets.router, tags=["brand-assets"])
 app.include_router(strategy.router, prefix="/strategy", tags=["strategy"])
 app.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 app.include_router(library.router, prefix="/library", tags=["library"])
