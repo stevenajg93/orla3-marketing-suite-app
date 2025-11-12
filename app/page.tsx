@@ -14,13 +14,14 @@ export default function LandingPage() {
       description: 'Perfect for freelancers and content creators',
       features: [
         '2,000 credits/month',
-        '~400 social captions or 100 blog posts',
-        '100 AI-generated ultra images',
-        '10 AI-generated videos (8-sec)',
+        'Social captions (2 credits each)',
+        'Blog posts (5 credits each)',
+        'AI images - Standard (10 credits)',
+        'AI images - Ultra (20 credits)',
+        'AI videos 8s (200 credits)',
         '1 brand voice profile',
         '9 social platform publishing',
         'Content calendar',
-        'Basic competitor tracking',
         'Credit rollover (up to 250)',
       ],
       cta: 'Get Started',
@@ -33,9 +34,11 @@ export default function LandingPage() {
       description: 'Ideal for small businesses and agencies',
       features: [
         '10,000 credits/month',
-        '~2,000 social posts or 500 blog posts',
-        '500 AI-generated ultra images',
-        '50 AI-generated videos (8-sec)',
+        'Social captions (2 credits each)',
+        'Blog posts (5 credits each)',
+        'AI images - Standard (10 credits)',
+        'AI images - Ultra (20 credits)',
+        'AI videos 8s (200 credits)',
         '3 brand voice profiles',
         '9 social platform publishing',
         'Auto-publishing & scheduling',
@@ -53,9 +56,11 @@ export default function LandingPage() {
       description: 'For growing companies and marketing teams',
       features: [
         '25,000 credits/month',
-        '~5,000 social posts or 1,250 blog posts',
-        '1,250 AI-generated ultra images',
-        '125 AI-generated videos (8-sec)',
+        'Social captions (2 credits each)',
+        'Blog posts (5 credits each)',
+        'AI images - Standard (10 credits)',
+        'AI images - Ultra (20 credits)',
+        'AI videos 8s (200 credits)',
         '10 brand voice profiles',
         '9 social platform publishing',
         'Multi-user collaboration',
@@ -74,9 +79,11 @@ export default function LandingPage() {
       description: 'Custom solutions for large organizations',
       features: [
         '20,000 credits/month',
-        '~4,000 social posts or 1,000 blog posts',
-        '1,000 AI-generated ultra images',
-        '100 AI-generated videos (8-sec)',
+        'Social captions (2 credits each)',
+        'Blog posts (5 credits each)',
+        'AI images - Standard (10 credits)',
+        'AI images - Ultra (20 credits)',
+        'AI videos 8s (200 credits)',
         'Unlimited brand voices',
         '9 social platform publishing',
         'Unlimited team members',
@@ -542,7 +549,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-gray-400 mt-6 text-sm">
-            Video generation with Veo 3.1 is premium cinematic content at $3.20 per video - exceptional value
+            Full transparency on costs - spend credits how you choose. Mix and match content types based on your needs.
           </p>
         </div>
       </section>
