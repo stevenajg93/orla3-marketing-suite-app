@@ -47,15 +47,17 @@ export default function DashboardLayout({
                 </span>
               </a>
 
-              {/* Buy More Credits Button */}
-              <Link
-                href="/dashboard/billing"
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-lg border border-blue-400/30 hover:border-blue-400/50 transition group"
-              >
-                <span className="text-blue-300 font-bold group-hover:text-blue-200">500</span>
-                <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
-                <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
-              </Link>
+              {/* Buy More Credits Button - Hidden for system admin */}
+              {user?.email !== 's.gillespie@gecslabs.com' && (
+                <Link
+                  href="/dashboard/billing"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-lg border border-blue-400/30 hover:border-blue-400/50 transition group"
+                >
+                  <span className="text-blue-300 font-bold group-hover:text-blue-200">500</span>
+                  <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
+                  <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
+                </Link>
+              )}
 
               {/* Account Dropdown */}
               <div className="relative">
@@ -144,26 +146,29 @@ export default function DashboardLayout({
                           Account Settings
                         </Link>
 
-                        <Link
-                          href="/dashboard/billing"
-                          className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/10 hover:text-white transition"
-                          onClick={() => setIsAccountMenuOpen(false)}
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        {/* Billing & Credits - Hidden for system admin */}
+                        {user?.email !== 's.gillespie@gecslabs.com' && (
+                          <Link
+                            href="/dashboard/billing"
+                            className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/10 hover:text-white transition"
+                            onClick={() => setIsAccountMenuOpen(false)}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                            />
-                          </svg>
-                          Billing & Credits
-                        </Link>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                              />
+                            </svg>
+                            Billing & Credits
+                          </Link>
+                        )}
 
                         <Link
                           href="/"

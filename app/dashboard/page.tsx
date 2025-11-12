@@ -104,24 +104,6 @@ export default function Dashboard() {
             {planningAnalysis.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
           </div>
         </div>
-
-        {/* Quick Stats Banner */}
-        <div className="mt-12 bg-gradient-to-r from-purple-900/40 via-pink-900/40 to-purple-900/40 backdrop-blur-lg rounded-2xl border border-purple-400/30 p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-2">🚀 Ready to Create?</h2>
-              <p className="text-gray-300">Your AI-powered marketing suite is fully equipped</p>
-            </div>
-            <div className="flex gap-4">
-              <Link href="/dashboard/blog" className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg text-white font-bold transition">
-                Start Writing →
-              </Link>
-              <Link href="/dashboard/social" className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
-                Publish Now →
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
