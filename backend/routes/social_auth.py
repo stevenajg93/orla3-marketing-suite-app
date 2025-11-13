@@ -61,10 +61,10 @@ WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
 PLATFORM_CONFIG = {
     "instagram": {
         # Instagram uses Facebook OAuth (Meta owns Instagram)
-        # Note: Only permissions available in Development Mode (no app review needed)
+        # Requires Instagram Business or Creator account (not personal account)
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
-        "scopes": ["public_profile", "instagram_basic", "pages_show_list"],
+        "scopes": ["public_profile", "pages_show_list", "instagram_business_basic", "instagram_business_content_publish", "instagram_business_manage_comments"],
         "client_id": INSTAGRAM_CLIENT_ID,
         "client_secret": INSTAGRAM_CLIENT_SECRET,
     },

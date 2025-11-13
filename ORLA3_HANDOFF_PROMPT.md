@@ -550,9 +550,11 @@ This strategy is **automatically applied** to all content generation.
   - Page credentials (page_access_token, selected_page_id) stored in service_metadata
   - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
   - Added via "Manage everything on your page" use case in Meta console
-- ⚠️ **Instagram**: OAuth 2.0 connection working
-  - Current permissions: `public_profile`, `instagram_basic`, `pages_show_list`
-  - ⚠️ **Publishing blocked**: `instagram_content_publish` permission needs to be added in Meta console
+- ✅ **Instagram**: Full OAuth 2.0 + publishing for Business/Creator accounts (WORKING)
+  - Active permissions: `public_profile`, `pages_show_list`, `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_comments`
+  - Requires Instagram Business or Creator account (not personal account)
+  - Can publish posts and manage comments
+  - Added via "manage messaging & content on instagram" use case in Meta console
 - 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
 
 **OAuth 2.0 Endpoints:**
@@ -686,12 +688,13 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - ✅ **Publishing enabled**: pages_manage_posts added via "Manage everything on your page" use case
   - End-to-end flow working: OAuth → List Pages → Select Page → Publish Post
 
-- ✅ **Instagram OAuth 2.0** (connection working, publishing needs permission)
+- ✅ **Instagram Business Publishing** (Nov 13, 2025) - COMPLETE & WORKING
   - Instagram uses Facebook's OAuth system (unified Meta platform)
   - Both share same callback URL: `/callback/facebook`
-  - Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list` (working)
-  - ⚠️ **Publishing needs**: `instagram_content_publish` permission via Meta console use case
-  - Users can connect accounts, publishing works once permission is added in Meta console
+  - Instagram Business permissions: `public_profile`, `pages_show_list`, `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_comments`
+  - Requires Instagram Business or Creator account (not personal account)
+  - Added via "manage messaging & content on instagram" use case in Meta console
+  - End-to-end flow working: OAuth → Publish posts → Manage comments
 
 - ✅ **OAuth flow implementation**
   - Two-step flow: Frontend calls `/get-auth-url/{platform}` with JWT
