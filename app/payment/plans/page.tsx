@@ -145,13 +145,13 @@ export default function SelectPlanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
       {/* Navigation */}
       <nav className="border-b border-white/10 backdrop-blur-lg bg-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
                 ORLA³
               </h1>
             </div>
@@ -170,9 +170,9 @@ export default function SelectPlanPage() {
           </p>
 
           {showPaymentRequired && (
-            <div className="max-w-2xl mx-auto mb-8 bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+            <div className="max-w-2xl mx-auto mb-8 bg-cobalt/20 border border-blue-500/50 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">💳</span>
+                <span className="text-2xl"></span>
                 <div>
                   <p className="text-blue-300 font-semibold mb-1">Payment Required</p>
                   <p className="text-blue-200 text-sm">
@@ -196,7 +196,7 @@ export default function SelectPlanPage() {
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-md font-semibold transition ${
                 billingCycle === 'monthly'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  ? 'bg-gradient-to-r from-cobalt to-royal text-white'
                   : 'text-gray-300 hover:text-white'
               }`}
             >
@@ -206,7 +206,7 @@ export default function SelectPlanPage() {
               onClick={() => setBillingCycle('annual')}
               className={`px-6 py-2 rounded-md font-semibold transition ${
                 billingCycle === 'annual'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  ? 'bg-gradient-to-r from-cobalt to-royal text-white'
                   : 'text-gray-300 hover:text-white'
               }`}
             >
@@ -222,13 +222,13 @@ export default function SelectPlanPage() {
               key={plan.planId}
               className={`bg-white/10 backdrop-blur-lg rounded-2xl p-8 border ${
                 plan.popular
-                  ? 'border-blue-400 ring-2 ring-blue-400/50 scale-105'
+                  ? 'border-cobalt-400 ring-2 ring-blue-400/50 scale-105'
                   : 'border-white/20'
-              } hover:border-blue-400/50 transition relative`}
+              } hover:border-cobalt-400/50 transition relative`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                  <span className="bg-gradient-to-r from-cobalt to-royal text-white px-4 py-1 rounded-full text-sm font-bold">
                     Most Popular
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export default function SelectPlanPage() {
               </div>
 
               <div className="mb-6">
-                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 border border-blue-400/30">
+                <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
                   <p className="text-blue-300 font-bold text-center">
                     {plan.credits.toLocaleString()} Credits/month
                   </p>
@@ -257,7 +257,7 @@ export default function SelectPlanPage() {
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-gray-300">
-                    <span className="text-green-400 mt-1">✓</span>
+                    <span className="text-green-400 mt-1"></span>
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}
@@ -268,7 +268,7 @@ export default function SelectPlanPage() {
                 disabled={loading !== null}
                 className={`w-full py-3 rounded-lg font-bold text-center transition ${
                   plan.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                    ? 'bg-gradient-to-r from-cobalt to-royal hover:from-blue-700 hover:to-purple-700 text-white'
                     : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -285,15 +285,15 @@ export default function SelectPlanPage() {
           </h3>
           <div className="grid md:grid-cols-5 gap-6">
             {[
-              { action: 'Social Caption', credits: 2, icon: '✍️' },
-              { action: 'Full Blog Post', credits: 5, icon: '📝' },
-              { action: 'AI Image (Standard)', credits: 10, icon: '🖼️' },
-              { action: 'AI Image (Ultra)', credits: 20, icon: '🎨' },
-              { action: 'AI Video (8-sec)', credits: 200, icon: '🎬' },
+              { action: 'Social Caption', credits: 2, icon: '' },
+              { action: 'Full Blog Post', credits: 5, icon: '' },
+              { action: 'AI Image (Standard)', credits: 10, icon: '' },
+              { action: 'AI Image (Ultra)', credits: 20, icon: '' },
+              { action: 'AI Video (8-sec)', credits: 200, icon: '' },
             ].map((item, idx) => (
               <div key={idx} className="text-center">
                 <div className="text-4xl mb-2">{item.icon}</div>
-                <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
+                <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
                   {item.credits}
                 </div>
                 <div className="text-gray-300 text-sm">{item.action}</div>

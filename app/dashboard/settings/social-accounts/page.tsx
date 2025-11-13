@@ -91,7 +91,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'instagram',
       name: 'Instagram',
-      icon: '📷',
+      icon: '',
       description: 'Share photos and stories with your followers',
       color: 'from-pink-500 to-purple-500',
       requirements: 'Requires Instagram Business Account'
@@ -99,7 +99,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'linkedin',
       name: 'LinkedIn',
-      icon: '💼',
+      icon: '',
       description: 'Professional content for your network',
       color: 'from-blue-600 to-blue-700',
       requirements: 'Personal or Company Page'
@@ -107,7 +107,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'facebook',
       name: 'Facebook',
-      icon: '👍',
+      icon: '',
       description: 'Connect with friends and pages',
       color: 'from-blue-500 to-blue-600',
       requirements: 'Facebook Page access required'
@@ -123,7 +123,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'tiktok',
       name: 'TikTok',
-      icon: '🎵',
+      icon: '',
       description: 'Short-form video content',
       color: 'from-black to-pink-500',
       requirements: 'TikTok Creator account'
@@ -131,7 +131,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'youtube',
       name: 'YouTube',
-      icon: '▶️',
+      icon: '',
       description: 'Share videos with the world',
       color: 'from-red-600 to-red-700',
       requirements: 'YouTube channel'
@@ -139,7 +139,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'reddit',
       name: 'Reddit',
-      icon: '🤖',
+      icon: '',
       description: 'Engage with communities',
       color: 'from-orange-500 to-red-500',
       requirements: 'Reddit account with verified email'
@@ -147,7 +147,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'tumblr',
       name: 'Tumblr',
-      icon: '🔷',
+      icon: '',
       description: 'Blogging and social platform',
       color: 'from-indigo-500 to-blue-600',
       requirements: 'Tumblr blog'
@@ -155,7 +155,7 @@ export default function SocialAccountsSettings() {
     {
       id: 'wordpress',
       name: 'WordPress',
-      icon: '📝',
+      icon: '',
       description: 'Publish blog posts to your site',
       color: 'from-gray-700 to-gray-900',
       requirements: 'Self-hosted WordPress with REST API'
@@ -163,7 +163,7 @@ export default function SocialAccountsSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -208,7 +208,7 @@ export default function SocialAccountsSettings() {
                   {Object.values(connections).filter(c => c.connected).length} of {platforms.length} platforms connected
                 </p>
               </div>
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
                 {Object.values(connections).filter(c => c.connected).length}
               </div>
             </div>
@@ -295,9 +295,9 @@ export default function SocialAccountsSettings() {
         {/* Info Boxes */}
         <div className="mt-8 grid md:grid-cols-2 gap-6">
           {/* How it Works */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-blue-400 mb-3">
-              🚀 How It Works
+          <div className="bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-cobalt-300 mb-3">
+              How It Works
             </h4>
             <ul className="text-gray-300 space-y-2 text-sm">
               <li>• Click "Connect Account" for any platform</li>
@@ -310,7 +310,7 @@ export default function SocialAccountsSettings() {
           {/* Privacy & Security */}
           <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
             <h4 className="text-lg font-semibold text-green-400 mb-3">
-              🔒 Privacy & Security
+              Privacy & Security
             </h4>
             <ul className="text-gray-300 space-y-2 text-sm">
               <li>• Your credentials are encrypted and secure</li>
@@ -322,10 +322,10 @@ export default function SocialAccountsSettings() {
         </div>
 
         {/* Coming Soon Badge */}
-        <div className="mt-8 bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
+        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">✨</span>
-            <h4 className="text-lg font-semibold text-purple-400">
+            <span className="text-2xl"></span>
+            <h4 className="text-lg font-semibold text-gold">
               Coming Soon
             </h4>
           </div>

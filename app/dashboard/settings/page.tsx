@@ -7,7 +7,7 @@ export default function SettingsPage() {
     {
       id: 'cloud-storage',
       name: 'Cloud Storage',
-      icon: '☁️',
+      icon: '',
       description: 'Connect Google Drive, OneDrive, and Dropbox',
       href: '/dashboard/settings/cloud-storage',
       badge: 'Active'
@@ -15,7 +15,7 @@ export default function SettingsPage() {
     {
       id: 'social-accounts',
       name: 'Social Accounts',
-      icon: '🔗',
+      icon: '',
       description: 'Connect Instagram, LinkedIn, Twitter, and more',
       href: '/dashboard/settings/social-accounts',
       badge: 'Active'
@@ -23,7 +23,7 @@ export default function SettingsPage() {
     {
       id: 'profile',
       name: 'Profile',
-      icon: '👤',
+      icon: '',
       description: 'Manage your account details',
       href: '/dashboard/settings/profile',
       comingSoon: true
@@ -31,7 +31,7 @@ export default function SettingsPage() {
     {
       id: 'billing',
       name: 'Billing',
-      icon: '💳',
+      icon: '',
       description: 'Manage subscription and payment methods',
       href: '/dashboard/settings/billing',
       comingSoon: true
@@ -39,7 +39,7 @@ export default function SettingsPage() {
     {
       id: 'team',
       name: 'Team',
-      icon: '👥',
+      icon: '',
       description: 'Invite team members and manage permissions',
       href: '/dashboard/settings/team',
       comingSoon: true
@@ -47,7 +47,7 @@ export default function SettingsPage() {
     {
       id: 'api',
       name: 'API Keys',
-      icon: '🔑',
+      icon: '',
       description: 'Generate API keys for integrations',
       href: '/dashboard/settings/api',
       comingSoon: true
@@ -55,7 +55,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -83,7 +83,7 @@ export default function SettingsPage() {
             >
               {/* Badge */}
               {tab.comingSoon ? (
-                <div className="absolute top-4 right-4 bg-purple-500/20 border border-purple-500 text-purple-300 text-xs px-2 py-1 rounded-full font-semibold">
+                <div className="absolute top-4 right-4 bg-cobalt/20 border border-cobalt text-cobalt-300 text-xs px-2 py-1 rounded-full font-semibold">
                   Coming Soon
                 </div>
               ) : tab.badge && (
@@ -107,7 +107,7 @@ export default function SettingsPage() {
 
               {/* Arrow Icon (only for active tabs) */}
               {!tab.comingSoon && (
-                <div className="mt-4 text-blue-400 flex items-center gap-2 text-sm font-semibold">
+                <div className="mt-4 text-cobalt-300 flex items-center gap-2 text-sm font-semibold">
                   Manage
                   <span className="text-lg">→</span>
                 </div>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
               href="/dashboard/settings/cloud-storage"
               className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
             >
-              <div className="text-3xl">📁</div>
+              <div className="text-3xl"></div>
               <div>
                 <h4 className="text-white font-semibold">Connect Cloud Storage</h4>
                 <p className="text-gray-400 text-sm">Import brand assets from Drive</p>
@@ -136,7 +136,7 @@ export default function SettingsPage() {
               href="/dashboard/settings/social-accounts"
               className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
             >
-              <div className="text-3xl">🔗</div>
+              <div className="text-3xl"></div>
               <div>
                 <h4 className="text-white font-semibold">Connect Social Accounts</h4>
                 <p className="text-gray-400 text-sm">Start publishing to your platforms</p>
@@ -146,11 +146,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+        <div className="mt-8 bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <div className="text-3xl">💡</div>
+            <div className="text-3xl"></div>
             <div>
-              <h4 className="text-lg font-semibold text-blue-400 mb-2">
+              <h4 className="text-lg font-semibold text-cobalt-300 mb-2">
                 Need Help?
               </h4>
               <p className="text-gray-300 text-sm mb-3">
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   href="https://docs.orla3.ai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-sm font-semibold transition"
+                  className="px-4 py-2 bg-cobalt/20 hover:bg-cobalt/30 text-blue-300 rounded-lg text-sm font-semibold transition"
                 >
                   Documentation
                 </a>

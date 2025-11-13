@@ -79,28 +79,28 @@ export default function CloudStorageSettings() {
     {
       id: 'google_drive',
       name: 'Google Drive',
-      icon: '📁',
+      icon: '',
       description: 'Access your files from Google Drive',
       color: 'from-blue-500 to-cyan-500'
     },
     {
       id: 'onedrive',
       name: 'Microsoft OneDrive',
-      icon: '☁️',
+      icon: '',
       description: 'Access your files from OneDrive',
       color: 'from-blue-600 to-indigo-600'
     },
     {
       id: 'dropbox',
       name: 'Dropbox',
-      icon: '📦',
+      icon: '',
       description: 'Access your files from Dropbox',
       color: 'from-indigo-500 to-purple-500'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -205,9 +205,9 @@ export default function CloudStorageSettings() {
         )}
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-blue-400 mb-2">
-            🔒 Privacy & Security
+        <div className="mt-8 bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
+          <h4 className="text-lg font-semibold text-cobalt-300 mb-2">
+            Privacy & Security
           </h4>
           <ul className="text-gray-300 space-y-2 text-sm">
             <li>• Your credentials are encrypted and stored securely</li>
