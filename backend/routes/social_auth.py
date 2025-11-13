@@ -63,7 +63,7 @@ PLATFORM_CONFIG = {
         # Instagram uses Facebook OAuth (Meta owns Instagram)
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
-        "scopes": ["instagram_basic", "instagram_content_publish", "pages_read_engagement"],
+        "scopes": ["instagram_basic", "instagram_content_publish", "pages_show_list", "pages_read_engagement"],
         "client_id": INSTAGRAM_CLIENT_ID,
         "client_secret": INSTAGRAM_CLIENT_SECRET,
     },
