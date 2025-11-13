@@ -656,7 +656,7 @@ export default function SocialManagerPage() {
   };
 
   const getPlatformIcon = (platform: Platform) => {
-    return platforms.find(p => p.id === platform)?.icon || "📱";
+    return platforms.find(p => p.id === platform)?.icon || "";
   };
 
   return (
@@ -667,7 +667,7 @@ export default function SocialManagerPage() {
             ← Back to Dashboard
           </button>
           <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-            📱 Social Manager
+            Social Manager
           </h1>
           <p className="text-cobalt-300 mt-1">Create, engage, and schedule all your social content</p>
         </div>
@@ -1064,7 +1064,7 @@ export default function SocialManagerPage() {
                   )}
                 </div>
                 <button className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
-                  💾 Save Settings
+                  Save Settings
                 </button>
               </div>
             )}
@@ -1122,7 +1122,7 @@ export default function SocialManagerPage() {
                   onClick={() => setMediaLibraryTab('ai-images')}
                   className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'ai-images' ? 'bg-gradient-to-r from-gold-600 to-gold-intense text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
-                  🍌 AI Images
+                  AI Images
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('ai-videos')}
@@ -1396,12 +1396,12 @@ export default function SocialManagerPage() {
                   </div>
                 )}
 
-                {/* AI Images Tab (Imagen 3 - Nano Banana 🍌) */}
+                {/* AI Images Tab (Imagen 3 - Nano Banana ) */}
                 {mediaLibraryTab === 'ai-images' && (
                   <div>
                     <div className="mb-6 space-y-4">
                       <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-4">
-                        <h4 className="text-lg font-bold text-gold-400 mb-2">🍌 Google Imagen 3 (Nano Banana)</h4>
+                        <h4 className="text-lg font-bold text-gold-400 mb-2">Google Imagen 3 (Nano Banana)</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate high-quality AI images from text prompts. Cost: $0.03 per image.</p>
                       </div>
 
@@ -1434,14 +1434,14 @@ export default function SocialManagerPage() {
                           disabled={generatingAiImage || !aiImagePrompt.trim()}
                           className="px-8 py-2 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
                         >
-                          {generatingAiImage ? '🍌 Generating...' : '🍌 Generate Image'}
+                          {generatingAiImage ? 'Generating...' : 'Generate Image'}
                         </button>
                       </div>
                     </div>
 
                     {aiGeneratedImages.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🍌</div>
+                        <div className="text-6xl mb-4"></div>
                         <h3 className="text-xl font-bold text-white mb-2">No AI Images Generated Yet</h3>
                         <p className="text-gray-400">Enter a prompt above and click Generate to create AI images</p>
                       </div>

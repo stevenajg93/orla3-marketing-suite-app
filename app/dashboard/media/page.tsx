@@ -541,7 +541,7 @@ export default function MediaLibrary() {
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            💾 Generated Content
+            Generated Content
           </button>
           <button
             onClick={() => setActiveTab('ai-images')}
@@ -551,7 +551,7 @@ export default function MediaLibrary() {
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            🍌 AI Images
+            AI Images
           </button>
           <button
             onClick={() => setActiveTab('ai-videos')}
@@ -657,7 +657,7 @@ export default function MediaLibrary() {
               </>
             ) : activeTab === 'ai-images' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">🍌 AI Image Generation</h2>
+                <h2 className="text-xl font-bold text-white mb-4">AI Image Generation</h2>
                 <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Imagen 3 • $0.03/image</p>
                 </div>
@@ -687,7 +687,7 @@ export default function MediaLibrary() {
                   disabled={generatingAiImage || !aiImagePrompt.trim()}
                   className="w-full bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
-                  {generatingAiImage ? '🍌 Generating...' : '🍌 Generate Image'}
+                  {generatingAiImage ? 'Generating...' : 'Generate Image'}
                 </button>
               </>
             ) : activeTab === 'ai-videos' ? (
@@ -807,7 +807,7 @@ export default function MediaLibrary() {
           <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {activeTab === 'drive' ? 'Your Drive Assets' : activeTab === 'unsplash' ? 'Unsplash Images' : activeTab === 'ai-images' ? '🍌 AI Generated Images' : activeTab === 'ai-videos' ? 'AI Generated Videos' : '💾 Generated Content'}
+                {activeTab === 'drive' ? 'Your Drive Assets' : activeTab === 'unsplash' ? 'Unsplash Images' : activeTab === 'ai-images' ? 'AI Generated Images' : activeTab === 'ai-videos' ? 'AI Generated Videos' : 'Generated Content'}
               </h2>
               {activeTab === 'drive' && breadcrumbs.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
@@ -849,7 +849,7 @@ export default function MediaLibrary() {
                         <p className="text-white text-sm mb-2 line-clamp-2">{image.prompt}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-gold-600 to-gold-intense text-white">
-                            🍌 {image.aspect_ratio}
+                            {image.aspect_ratio}
                           </span>
                           <span className="text-gray-400 text-xs">
                             {new Date(image.timestamp).toLocaleDateString()}

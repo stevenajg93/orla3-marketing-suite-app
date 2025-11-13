@@ -11,7 +11,7 @@ const contentCreation = [
 ];
 
 const socialManagement = [
-  { name: 'Social Manager', icon: '📱', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gradient-to-r from-green-500 to-emerald-500', isNew: true },
+  { name: 'Social Manager', icon: '', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gradient-to-r from-green-500 to-emerald-500', isNew: true },
 ];
 
 const planningAnalysis = [
@@ -95,7 +95,7 @@ export default function Dashboard() {
         {/* TIER 2: Social Management */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl">📱</span>
+            <span className="text-3xl"></span>
             Social Management
           </h2>
           <div className="grid grid-cols-1 gap-6">

@@ -639,7 +639,7 @@ export default function CarouselMakerPage() {
                 ← Start Over
               </button>
               <button onClick={saveToLibrary} className="flex-1 py-3 bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 rounded-lg text-black font-semibold transition">
-                💾 Save
+                Save
               </button>
               <button
                 onClick={handleExport}

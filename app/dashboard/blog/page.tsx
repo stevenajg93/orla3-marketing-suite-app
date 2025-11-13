@@ -370,7 +370,7 @@ export default function BlogWriter() {
                 onClick={saveToLibrary}
                 className="bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
               >
-                💾 Save to Library
+                Save to Library
               </button>
               <Link href="/dashboard/carousel" className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
                 🎠 Atomize to Carousel
@@ -379,7 +379,7 @@ export default function BlogWriter() {
                 onClick={saveAndOpenSocialManager}
                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center"
               >
-                📱 Open in Social Manager
+                Open in Social Manager
               </button>
             </div>
           </div>

@@ -146,8 +146,8 @@ export default function ContentCalendar() {
   };
 
   const getPlatformIcon = (platform?: string) => {
-    if (!platform) return '📱';
-    return platformConfig[platform as keyof typeof platformConfig]?.icon || '📱';
+    if (!platform) return '';
+    return platformConfig[platform as keyof typeof platformConfig]?.icon || '';
   };
 
   return (
@@ -169,7 +169,7 @@ export default function ContentCalendar() {
               onClick={() => router.push('/dashboard/social')}
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
             >
-              📱 Create in Social Manager
+              Create in Social Manager
             </button>
             <button
               onClick={() => {
