@@ -784,7 +784,7 @@ export default function LandingPage() {
               Annual <span className="text-green-400">(Save 17%)</span>
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
