@@ -1,10 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 
 export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
 
   const plans = [
     {
@@ -120,49 +124,79 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-full border border-cobalt-400/30">
-          <span className="text-cobalt-300 font-semibold">
-            Marketing Superpowers, Powered by AI
-          </span>
-        </div>
-        <h1 className="text-6xl md:text-7xl font-black text-white mb-6">
-          Automate Your Marketing
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
-            Keep Creating Brilliance
-          </span>
-        </h1>
-        <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Let AI handle the routine marketing - daily posts, captions, blog updates - so you can
-          focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
-          <span className="text-white font-bold">8 specialized AI models</span> and{' '}
-          <span className="text-white font-bold">millions of stock assets</span> to keep your
-          business visible while you do what you do best.
-        </p>
-        <div className="flex gap-4 justify-center mb-8">
-          <Link
-            href="/signup"
-            className="bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center relative overflow-hidden">
+        <motion.div
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="relative z-10"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-full border border-cobalt-400/30"
           >
-            Get Started
-          </Link>
-          <button className="border-2 border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-lg font-bold text-lg transition backdrop-blur-sm">
-            Watch Demo
-          </button>
-        </div>
+            <span className="text-cobalt-300 font-semibold">
+              Marketing Superpowers, Powered by AI
+            </span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-6xl md:text-7xl font-black text-white mb-6"
+          >
+            Automate Your Marketing
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+              Keep Creating Brilliance
+            </span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto"
+          >
+            Let AI handle the routine marketing - daily posts, captions, blog updates - so you can
+            focus on what matters: <span className="text-white font-bold">your craft</span>. Access{' '}
+            <span className="text-white font-bold">8 specialized AI models</span> and{' '}
+            <span className="text-white font-bold">millions of stock assets</span> to keep your
+            business visible while you do what you do best.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex gap-4 justify-center mb-8"
+          >
+            <Link
+              href="/signup"
+              className="bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl hover:scale-105 hover:shadow-cobalt/50"
+            >
+              Get Started
+            </Link>
+            <button className="border-2 border-white/20 hover:border-white/40 text-white px-8 py-4 rounded-lg font-bold text-lg transition backdrop-blur-sm hover:scale-105">
+              Watch Demo
+            </button>
+          </motion.div>
 
-        {/* Social Proof */}
-        <div className="flex flex-wrap justify-center gap-8 text-gray-400 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-green-400"></span> Cancel anytime
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-green-400"></span> Instant access
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-green-400"></span> All features included
-          </div>
-        </div>
+          {/* Social Proof */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-wrap justify-center gap-8 text-gray-400 text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-green-400"></span> Cancel anytime
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-400"></span> Instant access
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-400"></span> All features included
+            </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Powered By Section */}
@@ -254,13 +288,21 @@ export default function LandingPage() {
 
       {/* ROI Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Strategy-First Marketing That Actually Works
-        </h2>
-        <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          Not just content generation. A complete marketing system that starts with you, analyzes your market,
-          builds strategy, and executes across all channels automatically.
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Strategy-First Marketing That Actually Works
+          </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Not just content generation. A complete marketing system that starts with you, analyzes your market,
+            builds strategy, and executes across all channels automatically.
+          </p>
+        </motion.div>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {[
             {
@@ -281,28 +323,47 @@ export default function LandingPage() {
                 'Feed your knowledge once. Get personalized strategy. Apply automated actions. Schedule everywhere from one place. Sit back and watch the results compound.',
             },
           ].map((stat, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className="bg-gradient-to-br from-cobalt/10 to-royal/10 backdrop-blur-lg rounded-2xl p-8 border border-cobalt-400/30 text-center"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: idx * 0.2, type: 'spring', bounce: 0.4 }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+              className="bg-gradient-to-br from-cobalt/10 to-royal/10 backdrop-blur-lg rounded-2xl p-8 border border-cobalt-400/30 hover:border-cobalt-400/50 text-center hover:shadow-2xl hover:shadow-cobalt/20 transition-all"
             >
-              <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: idx * 0.2 + 0.3 }}
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2"
+              >
                 {stat.metric}
-              </div>
+              </motion.div>
               <div className="text-white font-bold text-xl mb-3">{stat.label}</div>
               <p className="text-gray-400">{stat.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* Features Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Professional Marketing Tools at Your Fingertips
-        </h2>
-        <p className="text-xl text-gray-300 text-center mb-12 max-w-3xl mx-auto">
-          8 specialized AI models working together to create content that converts
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Professional Marketing Tools at Your Fingertips
+          </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            8 specialized AI models working together to create content that converts
+          </p>
+        </motion.div>
         <div className="grid md:grid-cols-3 gap-8">
           {[
             {
@@ -348,9 +409,14 @@ export default function LandingPage() {
               time: 'Instant access',
             },
           ].map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-cobalt-400/50 transition group"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-cobalt-400/50 hover:shadow-2xl hover:shadow-cobalt/10 transition-all group"
             >
               <div className="text-5xl mb-4">{feature.icon}</div>
               <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
@@ -358,8 +424,138 @@ export default function LandingPage() {
               <div className="inline-block px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full">
                 <span className="text-green-300 text-sm font-semibold">{feature.time}</span>
               </div>
-            </div>
+            </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* Social Engagement Suite - NEW SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
+        {/* Animated background gradient */}
+        <motion.div
+          animate={{
+            background: [
+              'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+              'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)',
+              'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+            ],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 pointer-events-none"
+        />
+
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-full border border-cobalt-400/30">
+              <span className="text-cobalt-300 font-semibold">Social Engagement Suite</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Don't Just Post. <span className="text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">Engage & Grow</span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              AI-powered engagement tools that find conversations, reply authentically, and build relationships while you focus on creating
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {[
+              {
+                title: 'AI Comment Replies',
+                description: 'Automatically generate brand-aligned responses to comments across all platforms. Never leave your audience hanging again.',
+                icon: '💬',
+                features: ['Brand voice consistency', 'Sentiment analysis', 'Priority sorting', 'Multi-platform support'],
+                gradient: 'from-blue-500/20 to-cobalt/20',
+                borderGradient: 'from-blue-400/30 to-cobalt-400/30',
+              },
+              {
+                title: 'Social Discovery',
+                description: 'Search non-follower posts by keywords and trends. Find and engage with relevant conversations before your competitors do.',
+                icon: '🔍',
+                features: ['Keyword tracking', 'Trend monitoring', 'Real-time discovery', 'Engagement suggestions'],
+                gradient: 'from-royal/20 to-purple-500/20',
+                borderGradient: 'from-royal-400/30 to-purple-400/30',
+              },
+              {
+                title: 'Trends Search',
+                description: 'Real-time trending topics discovery to inform your content strategy and engagement timing. Stay ahead of the curve.',
+                icon: '📈',
+                features: ['Live trend analysis', 'Industry insights', 'Timing optimization', 'Content opportunities'],
+                gradient: 'from-gold/20 to-amber-500/20',
+                borderGradient: 'from-gold-400/30 to-amber-400/30',
+              },
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                className={`bg-gradient-to-br ${feature.gradient} backdrop-blur-lg rounded-2xl p-8 border border-gradient-to-r ${feature.borderGradient} hover:shadow-2xl hover:shadow-cobalt/20 transition-shadow`}
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.2 + 0.3, type: 'spring', bounce: 0.5 }}
+                  className="text-6xl mb-4"
+                >
+                  {feature.icon}
+                </motion.div>
+                <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
+                <p className="text-gray-300 mb-6">{feature.description}</p>
+                <ul className="space-y-2">
+                  {feature.features.map((item, idx) => (
+                    <motion.li
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.2 + 0.5 + idx * 0.1 }}
+                      className="flex items-center gap-2 text-sm text-gray-400"
+                    >
+                      <span className="text-green-400">✓</span>
+                      <span>{item}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="text-center"
+          >
+            <div className="inline-block bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+              <p className="text-gray-300 mb-4">
+                <span className="text-white font-bold">Engagement Suite</span> transforms passive posting into active community building
+              </p>
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-1">3x</div>
+                  <div className="text-gray-400">More Engagement</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-royal to-purple-400 mb-1">5x</div>
+                  <div className="text-gray-400">Faster Growth</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold to-amber-400 mb-1">10x</div>
+                  <div className="text-gray-400">Time Saved</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -543,15 +739,29 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" id="pricing">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">
-          Simple, Transparent Pricing
-        </h2>
-        <p className="text-xl text-gray-300 text-center mb-12">
-          Pay only for what you use with our flexible credit system
-        </p>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="text-xl text-gray-300">
+            Pay only for what you use with our flexible credit system
+          </p>
+        </motion.div>
 
         {/* Billing Toggle */}
-        <div className="flex justify-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-12"
+        >
           <div className="bg-white/10 backdrop-blur-lg rounded-lg p-1 inline-flex border border-white/20">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -579,13 +789,18 @@ export default function LandingPage() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {plans.map((plan, index) => (
-            <div
+            <motion.div
               key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -10, transition: { duration: 0.2 } }}
               className={`bg-white/10 backdrop-blur-lg rounded-2xl p-8 border ${
                 plan.popular
                   ? 'border-cobalt-400 ring-2 ring-blue-400/50 scale-105'
                   : 'border-white/20'
-              } hover:border-cobalt-400/50 transition relative`}
+              } hover:border-cobalt-400/50 hover:shadow-2xl hover:shadow-cobalt/20 transition-all relative`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -634,7 +849,7 @@ export default function LandingPage() {
               >
                 {plan.cta}
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -668,24 +883,55 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="bg-gradient-to-r from-cobalt to-royal rounded-3xl p-12">
-          <h2 className="text-4xl font-bold text-white mb-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8, type: 'spring', bounce: 0.3 }}
+          className="bg-gradient-to-r from-cobalt to-royal rounded-3xl p-12 shadow-2xl"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-4xl font-bold text-white mb-4"
+          >
             Supercharge Your Marketing Today
-          </h2>
-          <p className="text-xl text-cobalt-100 mb-8">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-xl text-cobalt-100 mb-8"
+          >
             CMO-level strategy, professional content, and enterprise-grade execution,
             powered by 8 specialized AI models at a fraction of traditional costs.
-          </p>
-          <Link
-            href="/signup"
-            className="bg-white text-cobalt px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Get Started Now
-          </Link>
-          <p className="text-cobalt-200 text-sm">
+            <Link
+              href="/signup"
+              className="bg-white text-cobalt px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all inline-block mb-4 shadow-lg"
+            >
+              Get Started Now
+            </Link>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-cobalt-200 text-sm"
+          >
             Cancel anytime • Professional marketing capabilities • Instant access
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
       </section>
 
       {/* Footer */}

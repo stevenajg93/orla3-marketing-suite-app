@@ -531,8 +531,8 @@ This strategy is **automatically applied** to all content generation.
 - Unified content library with filtering
 - Tag-based organization
 
-### 5. Social Media Publishing
-**Files**: `backend/routes/social_auth.py`, `backend/routes/publisher.py`
+### 5. Social Media Publishing & Engagement
+**Files**: `backend/routes/social_auth.py`, `backend/routes/publisher.py`, `backend/routes/comments.py`
 
 **OAuth 2.0 Multi-Tenant Architecture:**
 - ✅ **All 9 Platforms**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
@@ -540,6 +540,12 @@ This strategy is **automatically applied** to all content generation.
 - ✅ **Secure Token Storage**: OAuth tokens stored encrypted in `connected_services` table
 - ✅ **PKCE Security**: Twitter OAuth 2.0 uses SHA256 code challenge (stored in `oauth_states.metadata`)
 - ✅ **CSRF Protection**: State tokens with 10-minute expiry in `oauth_states` table
+
+**Engagement Features:**
+- ✅ **AI Comment Replies**: Automatically generate brand-aligned responses to comments (`backend/routes/comments.py`)
+- ✅ **Social Discovery**: Search non-follower posts by keywords and trends to engage with relevant conversations
+- ✅ **Trends Search**: Real-time trending topics discovery to inform content strategy and engagement timing
+- Uses platform APIs to search, analyze sentiment, and suggest engagement opportunities
 
 **Platform Status:**
 - ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published) ✅ WORKING

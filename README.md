@@ -48,16 +48,19 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Content library**: Filter by type, status, tags
 - **Unified dashboard**: All content in one place
 
-### 📢 Social Media Publishing
+### 📢 Social Media Publishing & Engagement
 - **9 Platform Support**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
 - **OAuth 2.0 Multi-Tenant**: Users connect their own accounts securely
 - **Platform Status**:
   - ✅ **Twitter/X: WORKING** - Full OAuth 2.0 with PKCE + publishing
   - ✅ **Facebook: WORKING** - Full multi-tenant architecture with Page management + publishing
-  - ✅ **Instagram: WORKING** - Full OAuth 2.0 + publishing for Business/Creator accounts 🎉
+  - ✅ **Instagram: WORKING** - Full OAuth 2.0 + publishing for Business/Creator accounts
   - 🔄 LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress: OAuth 2.0 ready (redirect URIs needed)
-- **3 Platforms Live**: Twitter, Facebook, Instagram all publishing successfully!
-- **Database**: Per-user tokens stored encrypted in `connected_services` table
+- **3 Platforms Live**: Twitter, Facebook, Instagram all publishing successfully
+- **AI Comment Replies**: Automatically generate brand-aligned responses to comments across all platforms
+- **Social Discovery**: Search non-follower posts by keywords and trends to engage with relevant conversations
+- **Trends Search**: Real-time trending topics discovery to inform content strategy and engagement timing
+- **Database**: Per-user tokens stored encrypted in connected_services table
 - **PKCE Security**: Twitter OAuth 2.0 with SHA256 code challenge
 - **Facebook Pages**: Users can select which Page to post to, credentials stored in service_metadata
 - **Instagram**: Uses Facebook Login API with instagram_basic, instagram_content_publish, instagram_manage_messages
