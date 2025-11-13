@@ -22,7 +22,7 @@ function PaymentSuccessContent() {
   }, [countdown, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center px-4">
       <div className="max-w-2xl w-full">
         {/* Success Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 text-center">
@@ -57,21 +57,21 @@ function PaymentSuccessContent() {
           <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
             <div className="space-y-3 text-left">
               <div className="flex items-start gap-3">
-                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-green-400 text-xl"></span>
                 <div className="flex-1">
                   <p className="text-white font-semibold">Subscription Activated</p>
                   <p className="text-gray-400 text-sm">Your account is now fully active</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-green-400 text-xl"></span>
                 <div className="flex-1">
                   <p className="text-white font-semibold">Credits Added</p>
                   <p className="text-gray-400 text-sm">Your monthly credits are ready to use</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-green-400 text-xl">✓</span>
+                <span className="text-green-400 text-xl"></span>
                 <div className="flex-1">
                   <p className="text-white font-semibold">Receipt Sent</p>
                   <p className="text-gray-400 text-sm">Check your email for the payment receipt</p>
@@ -94,7 +94,7 @@ function PaymentSuccessContent() {
             </p>
             <div className="w-full bg-white/10 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-1000"
+                className="bg-gradient-to-r from-cobalt to-royal h-2 rounded-full transition-all duration-1000"
                 style={{ width: `${((5 - countdown) / 5) * 100}%` }}
               />
             </div>
@@ -103,7 +103,7 @@ function PaymentSuccessContent() {
           {/* Manual Navigation */}
           <Link
             href="/dashboard"
-            className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+            className="inline-block bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
           >
             Go to Dashboard Now →
           </Link>
@@ -115,19 +115,19 @@ function PaymentSuccessContent() {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
               href="/dashboard/brand-voice"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               Set up your brand voice →
             </Link>
             <Link
               href="/dashboard/social"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               Connect social accounts →
             </Link>
             <Link
               href="/dashboard/strategy"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               Generate content strategy →
             </Link>
@@ -141,7 +141,7 @@ function PaymentSuccessContent() {
 export default function PaymentSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     }>

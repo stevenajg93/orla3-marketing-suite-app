@@ -146,7 +146,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
+        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
           <div className="flex items-start gap-4">
             <div className="text-3xl"></div>
             <div>

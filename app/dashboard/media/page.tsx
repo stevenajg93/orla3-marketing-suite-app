@@ -216,7 +216,7 @@ export default function MediaLibrary() {
             tags: ['ai-generated', 'imagen-4-ultra', '2K'],
             media_url: response.image_data
           });
-          console.log('✨ AI Image saved to content library');
+          console.log('AI Image saved to content library');
 
           // Reload content to show in Generated Content tab
           loadGeneratedContent();
@@ -225,7 +225,7 @@ export default function MediaLibrary() {
           // Don't block the UI - image is still in local state
         }
 
-        console.log('✨ AI Image generated successfully');
+        console.log('AI Image generated successfully');
       } else {
         alert(`Failed to generate image: ${response.error || 'Unknown error'}`);
       }
@@ -263,10 +263,10 @@ export default function MediaLibrary() {
         });
 
         if (!saveResponse.success || !saveResponse.item?.id) {
-          console.error('❌ Failed to save video to database:', saveResponse.error);
+          console.error('Failed to save video to database:', saveResponse.error);
           alert(`Video generation started but failed to save to database: ${saveResponse.error || 'Unknown error'}\n\nThe video will generate but you\'ll need to recover it manually.`);
         } else {
-          console.log('✨ Video job saved to database:', saveResponse.item.id);
+          console.log('Video job saved to database:', saveResponse.item.id);
         }
 
         // Add to local state
@@ -302,7 +302,7 @@ export default function MediaLibrary() {
   const pollVideoStatus = async (jobId: string, contentId?: string) => {
     // Mark this video as being polled (prevent duplicate pollers)
     activePollers.current.add(jobId);
-    console.log('🎬 Started polling:', jobId);
+    console.log('Started polling:', jobId);
 
     const maxAttempts = 60; // 5 minutes max (every 5 seconds)
     let attempts = 0;
@@ -317,7 +317,7 @@ export default function MediaLibrary() {
         const status = await api.get(endpoint);
 
         if (status.success && status.status === 'complete' && status.video_url) {
-          console.log('✅ Video generation complete:', status.video_url);
+          console.log('Video generation complete:', status.video_url);
 
           // Update or create database entry with final video URL
           if (contentId) {
@@ -332,10 +332,10 @@ export default function MediaLibrary() {
               tags: ['ai-generated', 'veo-video'],
               media_url: status.video_url
             });
-            console.log('✅ Video updated in database:', contentId);
+            console.log('Video updated in database:', contentId);
           } else {
             // Fallback: Create new entry if initial save failed
-            console.warn('⚠️ No contentId - creating new database entry');
+            console.warn('No contentId - creating new database entry');
             const videoState = aiGeneratedVideos.find(v => v.job_id === jobId);
             await api.post('/library/content', {
               title: `AI Video: ${videoState?.prompt.substring(0, 50) || 'Recovered'}`,
@@ -346,7 +346,7 @@ export default function MediaLibrary() {
               tags: ['ai-generated', 'veo-video', 'recovered'],
               media_url: status.video_url
             });
-            console.log('✅ Video created in database (fallback)');
+            console.log('Video created in database (fallback)');
           }
 
           // Add to AI Videos tab (component state)
@@ -379,12 +379,12 @@ export default function MediaLibrary() {
           if (attempts < maxAttempts) {
             setTimeout(checkStatus, 5000); // Check every 5 seconds
           } else {
-            console.error('❌ Video generation timeout');
+            console.error('Video generation timeout');
             activePollers.current.delete(jobId);
             console.log('🛑 Stopped polling (timeout):', jobId);
           }
         } else if (status.error) {
-          console.error('❌ Video generation failed:', status.error);
+          console.error('Video generation failed:', status.error);
           activePollers.current.delete(jobId);
           console.log('🛑 Stopped polling (error):', jobId);
         }
@@ -440,21 +440,21 @@ export default function MediaLibrary() {
 
   const getFileIcon = (type: string) => {
     switch(type) {
-      case 'folder': return '📁';
-      case 'video': return '🎬';
-      case 'image': return '🖼️';
-      case 'document': return '📄';
-      case 'blog': return '📝';
-      case 'carousel': return '🎨';
-      case 'caption': return '💬';
-      default: return '📄';
+      case 'folder': return '';
+      case 'video': return '';
+      case 'image': return '';
+      case 'document': return '';
+      case 'blog': return '';
+      case 'carousel': return '';
+      case 'caption': return '';
+      default: return '';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'published': return 'bg-green-600';
-      case 'scheduled': return 'bg-blue-600';
+      case 'scheduled': return 'bg-cobalt';
       case 'draft': return 'bg-yellow-600';
       default: return 'bg-gray-600';
     }
@@ -463,7 +463,7 @@ export default function MediaLibrary() {
   const currentAssets = activeTab === 'drive' ? assets : activeTab === 'pexels-photos' ? pexelsPhotos : activeTab === 'pexels-videos' ? pexelsVideos : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -471,17 +471,17 @@ export default function MediaLibrary() {
               ← Back to Dashboard
             </Link>
             <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
-              📁 Media Library
+              Media Library
             </h1>
             <p className="text-gray-400 mt-2">Manage Google Drive assets & generated AI content</p>
           </div>
         </div>
 
         {/* Premium Content CTA Banner */}
-        <div className="mb-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-xl p-6 border border-purple-400/30">
+        <div className="mb-6 bg-gradient-to-r from-royal/20 to-cobalt/20 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-4xl">🎬</div>
+              <div className="text-4xl"></div>
               <div>
                 <h3 className="text-white font-bold text-lg">
                   Need Professional Video or Photography?
@@ -495,7 +495,7 @@ export default function MediaLibrary() {
               href="https://orla3.com/browse"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-bold transition whitespace-nowrap"
+              className="bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-700 hover:to-gold-700 text-white px-6 py-3 rounded-lg font-bold transition whitespace-nowrap"
             >
               Find Creators Near Me →
             </a>
@@ -511,17 +511,17 @@ export default function MediaLibrary() {
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            🔗 Google Drive Assets
+            Google Drive Assets
           </button>
           <button
             onClick={() => setActiveTab('pexels-photos')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'pexels-photos'
-                ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
+                ? 'bg-gradient-to-r from-cobalt-600 to-cobalt-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            📸 Pexels Photos
+            Pexels Photos
           </button>
           <button
             onClick={() => setActiveTab('pexels-videos')}
@@ -531,7 +531,7 @@ export default function MediaLibrary() {
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            🎬 Pexels Videos
+            Pexels Videos
           </button>
           <button
             onClick={() => setActiveTab('generated')}
@@ -557,11 +557,11 @@ export default function MediaLibrary() {
             onClick={() => setActiveTab('ai-videos')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'ai-videos'
-                ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            🎬 AI Videos
+            AI Videos
           </button>
         </div>
 
@@ -613,8 +613,8 @@ export default function MediaLibrary() {
               </>
             ) : activeTab === 'pexels-photos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">📸 Search Pexels Photos</h2>
-                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-3 mb-4">
+                <h2 className="text-xl font-bold text-white mb-4">Search Pexels Photos</h2>
+                <div className="bg-gradient-to-r from-royal-900/30 to-gold-900/30 border border-cobalt/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Free stock photos • Millions available</p>
                 </div>
                 <input
@@ -623,19 +623,19 @@ export default function MediaLibrary() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchPexelsPhotos()}
                   placeholder="e.g., videography, camera"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cobalt mb-4"
                 />
                 <button
                   onClick={searchPexelsPhotos}
                   disabled={loading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
-                  {loading ? '🔍 Searching...' : '🔍 Search Photos'}
+                  {loading ? 'Searching...' : 'Search Photos'}
                 </button>
               </>
             ) : activeTab === 'pexels-videos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">🎬 Search Pexels Videos</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Search Pexels Videos</h2>
                 <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Free stock videos • Thousands available</p>
                 </div>
@@ -652,7 +652,7 @@ export default function MediaLibrary() {
                   disabled={loading}
                   className="w-full bg-green-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
-                  {loading ? '🔍 Searching...' : '🔍 Search Videos'}
+                  {loading ? 'Searching...' : 'Search Videos'}
                 </button>
               </>
             ) : activeTab === 'ai-images' ? (
@@ -692,8 +692,8 @@ export default function MediaLibrary() {
               </>
             ) : activeTab === 'ai-videos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">🎬 AI Video Generation</h2>
-                <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-3 mb-4">
+                <h2 className="text-xl font-bold text-white mb-4">AI Video Generation</h2>
+                <div className="bg-gradient-to-r from-royal-900/30 to-gold-900/30 border border-cobalt/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Veo 3.1 • $6 per 8s video with audio</p>
                 </div>
                 <div className="mb-4">
@@ -717,9 +717,9 @@ export default function MediaLibrary() {
                 <button
                   onClick={generateAiVideo}
                   disabled={generatingAiVideo || !aiVideoPrompt.trim()}
-                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
-                  {generatingAiVideo ? '🎬 Generating...' : '🎬 Generate Video'}
+                  {generatingAiVideo ? 'Generating...' : 'Generate Video'}
                 </button>
                 <p className="text-xs text-gray-400 mt-3">⏱️ Video generation takes 2-5 minutes</p>
               </>
@@ -749,11 +749,11 @@ export default function MediaLibrary() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   >
                     <option value="all">All Types</option>
-                    <option value="blog">📝 Blogs</option>
-                    <option value="carousel">🎨 Carousels</option>
-                    <option value="caption">💬 Captions</option>
-                    <option value="image">🖼️ Images</option>
-                    <option value="video">🎬 Videos</option>
+                    <option value="blog">Blogs</option>
+                    <option value="carousel">Carousels</option>
+                    <option value="caption">Captions</option>
+                    <option value="image">Images</option>
+                    <option value="video">Videos</option>
                   </select>
                 </div>
 
@@ -766,9 +766,9 @@ export default function MediaLibrary() {
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   >
                     <option value="all">All Status</option>
-                    <option value="draft">📝 Draft</option>
-                    <option value="published">✅ Published</option>
-                    <option value="scheduled">📅 Scheduled</option>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="scheduled">Scheduled</option>
                   </select>
                 </div>
 
@@ -807,7 +807,7 @@ export default function MediaLibrary() {
           <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {activeTab === 'drive' ? '🔗 Your Drive Assets' : activeTab === 'unsplash' ? '✨ Unsplash Images' : activeTab === 'ai-images' ? '🍌 AI Generated Images' : activeTab === 'ai-videos' ? '🎬 AI Generated Videos' : '💾 Generated Content'}
+                {activeTab === 'drive' ? 'Your Drive Assets' : activeTab === 'unsplash' ? 'Unsplash Images' : activeTab === 'ai-images' ? '🍌 AI Generated Images' : activeTab === 'ai-videos' ? 'AI Generated Videos' : '💾 Generated Content'}
               </h2>
               {activeTab === 'drive' && breadcrumbs.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
@@ -870,7 +870,7 @@ export default function MediaLibrary() {
                         </button>
                         <button
                           onClick={() => setPreviewAsset({ ...image, name: image.prompt, type: 'image', id: idx.toString() })}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                          className="flex-1 bg-cobalt hover:bg-cobalt-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                         >
                           👁️ View
                         </button>
@@ -890,7 +890,7 @@ export default function MediaLibrary() {
                   {aiGeneratedVideos.map((video: any, idx: number) => (
                     <div
                       key={idx}
-                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-pink-400 transition-all"
+                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-gold-400 transition-all"
                     >
                       {video.status === 'complete' && video.url ? (
                         <video
@@ -899,17 +899,17 @@ export default function MediaLibrary() {
                           controls
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-red-700 to-pink-700 flex items-center justify-center">
+                        <div className="w-full h-48 bg-gradient-to-br from-red-700 to-red-800 flex items-center justify-center">
                           <span className="text-white text-sm">
-                            {video.status === 'generating' ? '⏳ Generating...' : '🎬 Video'}
+                            {video.status === 'generating' ? '⏳ Generating...' : 'Video'}
                           </span>
                         </div>
                       )}
                       <div className="p-4 bg-slate-800/50">
                         <p className="text-white text-sm mb-2 line-clamp-2">{video.prompt}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-red-600 to-pink-600 text-white">
-                            🎬 {video.resolution}
+                          <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-red-600 to-red-700 text-white">
+                            {video.resolution}
                           </span>
                           <span className="text-gray-400 text-xs">
                             {new Date(video.timestamp).toLocaleDateString()}
@@ -931,7 +931,7 @@ export default function MediaLibrary() {
                           </button>
                           <button
                             onClick={() => window.open(video.url, '_blank')}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                            className="flex-1 bg-cobalt hover:bg-cobalt-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                           >
                             👁️ View
                           </button>
@@ -1038,7 +1038,7 @@ export default function MediaLibrary() {
                           />
                         </div>
                       ) : (
-                        <div className="w-full h-40 bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center">
+                        <div className="w-full h-40 bg-gradient-to-br from-cobalt-700 to-royal-900 flex items-center justify-center">
                           <span className="text-6xl">{getFileIcon(item.content_type)}</span>
                         </div>
                       )}
@@ -1113,9 +1113,9 @@ export default function MediaLibrary() {
                         <h3 className="text-white font-bold text-sm mb-2 truncate">{asset.name}</h3>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs px-2 py-1 rounded font-medium ${
-                            asset.type === 'folder' ? 'bg-yellow-600 text-white' : asset.source === 'drive' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+                            asset.type === 'folder' ? 'bg-yellow-600 text-white' : asset.source === 'drive' ? 'bg-cobalt text-white' : 'bg-cobalt text-white'
                           }`}>
-                            {asset.type === 'folder' ? '📁 Folder' : asset.source === 'drive' ? '🔗 Drive' : '✨ Unsplash'}
+                            {asset.type === 'folder' ? 'Folder' : asset.source === 'drive' ? 'Drive' : 'Unsplash'}
                           </span>
                           {asset.size && parseInt(asset.size) > 0 && (
                             <span className="text-gray-300 text-xs">
@@ -1136,7 +1136,7 @@ export default function MediaLibrary() {
                         </button>
                         <button
                           onClick={() => window.open(`https://drive.google.com/file/d/${asset.id}/view`, '_blank')}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                          className="flex-1 bg-cobalt hover:bg-cobalt-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                         >
                           👁️ View
                         </button>
@@ -1185,7 +1185,7 @@ export default function MediaLibrary() {
                   <p className="text-gray-400 text-lg mb-4">Preview not available for this file type</p>
                   <button
                     onClick={() => window.open(`https://drive.google.com/file/d/${previewAsset.id}/view`, '_blank')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                    className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-6 rounded-lg"
                   >
                     Open in Google Drive
                   </button>
@@ -1200,7 +1200,7 @@ export default function MediaLibrary() {
                 </button>
                 <button
                   onClick={() => window.open(`https://drive.google.com/file/d/${previewAsset.id}/view`, '_blank')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                  className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-6 rounded-lg"
                 >
                   👁️ Open in Drive
                 </button>
@@ -1264,7 +1264,7 @@ export default function MediaLibrary() {
                   {previewContent.tags && previewContent.tags.length > 0 && (
                     <div className="flex gap-2 flex-wrap">
                       {previewContent.tags.map((tag: string, idx: number) => (
-                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-red-600 to-pink-600 text-white">
+                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-red-600 to-red-700 text-white">
                           {tag}
                         </span>
                       ))}
@@ -1319,9 +1319,9 @@ export default function MediaLibrary() {
                     navigator.clipboard.writeText(previewContent.content);
                     alert('Copied to clipboard!');
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                  className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-6 rounded-lg"
                 >
-                  📋 Copy {previewContent.content_type === 'image' || previewContent.content_type === 'video' ? 'Prompt' : 'Content'}
+                  Copy {previewContent.content_type === 'image' || previewContent.content_type === 'video' ? 'Prompt' : 'Content'}
                 </button>
                 <button
                   onClick={() => deleteGeneratedContent(previewContent.id)}

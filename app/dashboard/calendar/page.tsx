@@ -18,14 +18,14 @@ type ContentEvent = {
 };
 
 const platformConfig = {
-  instagram: { icon: '📷', color: 'from-pink-500 to-purple-500', name: 'Instagram' },
-  linkedin: { icon: '💼', color: 'from-blue-600 to-blue-700', name: 'LinkedIn' },
-  facebook: { icon: '👍', color: 'from-blue-500 to-blue-600', name: 'Facebook' },
-  x: { icon: '❌', color: 'from-slate-800 to-slate-900', name: 'X' },
-  tiktok: { icon: '🎵', color: 'from-black to-pink-500', name: 'TikTok' },
-  youtube: { icon: '▶️', color: 'from-red-600 to-red-700', name: 'YouTube' },
-  reddit: { icon: '🤖', color: 'from-orange-500 to-red-500', name: 'Reddit' },
-  tumblr: { icon: '🔷', color: 'from-indigo-500 to-blue-600', name: 'Tumblr' },
+  instagram: { icon: '', color: 'from-gold-intense to-cobalt', name: 'Instagram' },
+  linkedin: { icon: '', color: 'from-blue-600 to-blue-700', name: 'LinkedIn' },
+  facebook: { icon: '', color: 'from-blue-500 to-blue-600', name: 'Facebook' },
+  x: { icon: '', color: 'from-slate-800 to-slate-900', name: 'X' },
+  tiktok: { icon: '', color: 'from-royal-900 to-cobalt', name: 'TikTok' },
+  youtube: { icon: '', color: 'from-red-600 to-red-700', name: 'YouTube' },
+  reddit: { icon: '', color: 'from-orange-500 to-red-500', name: 'Reddit' },
+  tumblr: { icon: '', color: 'from-cobalt to-royal', name: 'Tumblr' },
 };
 
 export default function ContentCalendar() {
@@ -129,7 +129,7 @@ export default function ContentCalendar() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published': return 'bg-green-600/80';
-      case 'scheduled': return 'bg-blue-600/80';
+      case 'scheduled': return 'bg-cobalt/80';
       case 'draft': return 'bg-yellow-600/80';
       default: return 'bg-gray-600/80';
     }
@@ -137,11 +137,11 @@ export default function ContentCalendar() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'blog': return '📝';
-      case 'video': return '🎬';
-      case 'carousel': return '🎨';
-      case 'text': return '💬';
-      default: return '📄';
+      case 'blog': return '';
+      case 'video': return '';
+      case 'carousel': return '';
+      case 'text': return '';
+      default: return '';
     }
   };
 
@@ -151,18 +151,18 @@ export default function ContentCalendar() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/dashboard" className="text-purple-400 hover:text-purple-300 mb-2 inline-block text-sm">
+            <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-2 inline-block text-sm">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-              📅 Content Calendar
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+              Content Calendar
             </h1>
-            <p className="text-purple-300 mt-2">Plan and schedule your content across all platforms</p>
+            <p className="text-cobalt-300 mt-2">Plan and schedule your content across all platforms</p>
           </div>
           <div className="flex gap-3">
             <button
@@ -178,7 +178,7 @@ export default function ContentCalendar() {
               }}
               className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
             >
-              ➕ Quick Add
+              Quick Add
             </button>
           </div>
         </div>
@@ -206,7 +206,7 @@ export default function ContentCalendar() {
           {/* Day Headers */}
           <div className="grid grid-cols-7 gap-2 mb-2">
             {dayNames.map(day => (
-              <div key={day} className="text-center text-purple-300 font-bold text-sm py-2">
+              <div key={day} className="text-center text-cobalt-300 font-bold text-sm py-2">
                 {day}
               </div>
             ))}
@@ -225,14 +225,14 @@ export default function ContentCalendar() {
                   className={`min-h-32 p-2 rounded-lg border transition-all ${
                     day
                       ? isToday
-                        ? 'bg-purple-900/30 border-purple-500 cursor-pointer hover:bg-purple-900/40'
-                        : 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 hover:border-purple-500/30'
+                        ? 'bg-royal-900/30 border-cobalt cursor-pointer hover:bg-royal-900/40'
+                        : 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 hover:border-cobalt/30'
                       : 'bg-transparent border-transparent'
                   }`}
                 >
                   {day && (
                     <>
-                      <div className={`text-sm font-bold mb-2 ${isToday ? 'text-purple-400' : 'text-white'}`}>
+                      <div className={`text-sm font-bold mb-2 ${isToday ? 'text-gold' : 'text-white'}`}>
                         {day.getDate()}
                       </div>
                       <div className="space-y-1">
@@ -248,7 +248,7 @@ export default function ContentCalendar() {
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
-                          <div className="text-xs text-purple-400 font-semibold">
+                          <div className="text-xs text-gold font-semibold">
                             +{dayEvents.length - 3} more
                           </div>
                         )}
@@ -264,26 +264,26 @@ export default function ContentCalendar() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-4">
-            <h3 className="text-white font-bold mb-2">✅ Published</h3>
+            <h3 className="text-white font-bold mb-2">Published</h3>
             <p className="text-3xl font-black text-green-400">
               {events.filter(e => e.status === 'published').length}
             </p>
           </div>
-          <div className="bg-blue-900/40 border border-blue-400/30 rounded-xl p-4">
-            <h3 className="text-white font-bold mb-2">📅 Scheduled</h3>
-            <p className="text-3xl font-black text-blue-400">
+          <div className="bg-blue-900/40 border border-cobalt-400/30 rounded-xl p-4">
+            <h3 className="text-white font-bold mb-2">Scheduled</h3>
+            <p className="text-3xl font-black text-cobalt-300">
               {events.filter(e => e.status === 'scheduled').length}
             </p>
           </div>
           <div className="bg-yellow-900/40 border border-yellow-400/30 rounded-xl p-4">
-            <h3 className="text-white font-bold mb-2">📝 Drafts</h3>
+            <h3 className="text-white font-bold mb-2">Drafts</h3>
             <p className="text-3xl font-black text-yellow-400">
               {events.filter(e => e.status === 'draft').length}
             </p>
           </div>
-          <div className="bg-purple-900/40 border border-purple-400/30 rounded-xl p-4">
-            <h3 className="text-white font-bold mb-2">📊 Total</h3>
-            <p className="text-3xl font-black text-purple-400">
+          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-4">
+            <h3 className="text-white font-bold mb-2">Total</h3>
+            <p className="text-3xl font-black text-gold">
               {events.length}
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function ContentCalendar() {
           <div className="bg-slate-900 rounded-2xl border border-white/20 max-w-2xl w-full p-8" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-2xl font-bold text-white mb-6">Quick Add to Calendar</h3>
             <p className="text-gray-400 mb-6">
-              📅 {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
             
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -306,7 +306,7 @@ export default function ContentCalendar() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   placeholder="e.g., Morning motivation post"
                   required
                 />
@@ -318,12 +318,12 @@ export default function ContentCalendar() {
                   <select
                     value={formData.content_type}
                     onChange={(e) => setFormData({...formData, content_type: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   >
-                    <option value="text">💬 Text Post</option>
-                    <option value="video">🎬 Video</option>
-                    <option value="carousel">🎨 Carousel</option>
-                    <option value="blog">📝 Blog</option>
+                    <option value="text">Text Post</option>
+                    <option value="video">Video</option>
+                    <option value="carousel">Carousel</option>
+                    <option value="blog">Blog</option>
                   </select>
                 </div>
 
@@ -332,16 +332,16 @@ export default function ContentCalendar() {
                   <select
                     value={formData.platform}
                     onChange={(e) => setFormData({...formData, platform: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   >
-                    <option value="instagram">📷 Instagram</option>
-                    <option value="linkedin">💼 LinkedIn</option>
-                    <option value="facebook">👍 Facebook</option>
-                    <option value="x">❌ X</option>
-                    <option value="tiktok">🎵 TikTok</option>
-                    <option value="youtube">▶️ YouTube</option>
-                    <option value="reddit">🤖 Reddit</option>
-                    <option value="tumblr">🔷 Tumblr</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="x">X</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="reddit">Reddit</option>
+                    <option value="tumblr">Tumblr</option>
                   </select>
                 </div>
               </div>
@@ -351,11 +351,11 @@ export default function ContentCalendar() {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                 >
-                  <option value="draft">📝 Draft</option>
-                  <option value="scheduled">📅 Scheduled</option>
-                  <option value="published">✅ Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="published">Published</option>
                 </select>
               </div>
 
@@ -364,7 +364,7 @@ export default function ContentCalendar() {
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 h-32 resize-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt h-32 resize-none"
                   placeholder="Add your caption or content here..."
                 />
               </div>
@@ -372,9 +372,9 @@ export default function ContentCalendar() {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                  className="flex-1 bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-600 hover:to-gold-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
                 >
-                  ✅ Add to Calendar
+                  Add to Calendar
                 </button>
                 <button
                   type="button"

@@ -88,14 +88,14 @@ export default function CloudStorageSettings() {
       name: 'Microsoft OneDrive',
       icon: '',
       description: 'Access your files from OneDrive',
-      color: 'from-blue-600 to-indigo-600'
+      color: 'from-cobalt to-royal'
     },
     {
       id: 'dropbox',
       name: 'Dropbox',
       icon: '',
       description: 'Access your files from Dropbox',
-      color: 'from-indigo-500 to-purple-500'
+      color: 'from-cobalt to-royal'
     }
   ];
 
@@ -138,7 +138,7 @@ export default function CloudStorageSettings() {
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cobalt"></div>
             <p className="text-gray-400 mt-4">Loading connections...</p>
           </div>
         ) : (
@@ -205,7 +205,7 @@ export default function CloudStorageSettings() {
         )}
 
         {/* Info Box */}
-        <div className="mt-8 bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
+        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
           <h4 className="text-lg font-semibold text-cobalt-300 mb-2">
             Privacy & Security
           </h4>

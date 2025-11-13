@@ -132,21 +132,21 @@ export default function CompetitorAnalysis() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <Link href="/dashboard" className="text-purple-400 hover:text-purple-300 mb-4 inline-block">← Back to Dashboard</Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-pink-400 mb-2">🔍 Competitor Analysis</h1>
+          <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-4 inline-block">← Back to Dashboard</Link>
+          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-intense mb-2">Competitor Analysis</h1>
           <p className="text-xl text-gray-300">Track competitors and discover content opportunities</p>
         </div>
 
         <div className="flex gap-4 mb-8">
-          <button onClick={() => setShowAddForm(!showAddForm)} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg text-white font-bold transition">
+          <button onClick={() => setShowAddForm(!showAddForm)} className="px-6 py-3 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition">
             {showAddForm ? '✕ Cancel' : '+ Add Competitor'}
           </button>
           {competitors.length > 0 && (
-            <button onClick={loadInsights} disabled={loadingInsights} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg text-white font-bold transition disabled:opacity-50">
-              {loadingInsights ? '✨ Analyzing...' : '💡 Get Strategic Insights'}
+            <button onClick={loadInsights} disabled={loadingInsights} className="px-6 py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 rounded-lg text-white font-bold transition disabled:opacity-50">
+              {loadingInsights ? 'Analyzing...' : 'Get Strategic Insights'}
             </button>
           )}
         </div>
@@ -155,44 +155,44 @@ export default function CompetitorAnalysis() {
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
             <h2 className="text-2xl font-bold text-white mb-4">Add Competitor</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input type="text" placeholder="Competitor Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
-              <input type="text" placeholder="Industry (optional)" value={formData.industry} onChange={(e) => setFormData({...formData, industry: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
+              <input type="text" placeholder="Competitor Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="Industry (optional)" value={formData.industry} onChange={(e) => setFormData({...formData, industry: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
             </div>
-            <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 mb-4" />
+            <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense mb-4" />
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+            <div className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-300">
-                <span className="font-semibold">🤖 AI-Powered Research:</span> When you click "Analyze", Perplexity AI will automatically research this competitor's website and social media to provide accurate, real-time insights!
+                <span className="font-semibold">AI-Powered Research:</span> When you click "Analyze", Perplexity AI will automatically research this competitor's website and social media to provide accurate, real-time insights!
               </p>
             </div>
 
             <h3 className="text-lg font-semibold text-white mb-3">Social Media Handles (Optional but Recommended)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              <input type="text" placeholder="📷 Instagram: @handle" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
-              <input type="text" placeholder="💼 LinkedIn: company-name" value={formData.linkedin} onChange={(e) => setFormData({...formData, linkedin: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
-              <input type="text" placeholder="𝕏 X/Twitter: @handle" value={formData.x} onChange={(e) => setFormData({...formData, x: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
-              <input type="text" placeholder="🎵 TikTok: @handle" value={formData.tiktok} onChange={(e) => setFormData({...formData, tiktok: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
-              <input type="text" placeholder="📺 YouTube: channel-name" value={formData.youtube} onChange={(e) => setFormData({...formData, youtube: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-rose-500" />
+              <input type="text" placeholder="Instagram: @handle" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="LinkedIn: company-name" value={formData.linkedin} onChange={(e) => setFormData({...formData, linkedin: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="𝕏 X/Twitter: @handle" value={formData.x} onChange={(e) => setFormData({...formData, x: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="TikTok: @handle" value={formData.tiktok} onChange={(e) => setFormData({...formData, tiktok: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="📺 YouTube: channel-name" value={formData.youtube} onChange={(e) => setFormData({...formData, youtube: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
             </div>
-            <button onClick={addCompetitor} disabled={loading} className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg text-white font-bold transition disabled:opacity-50">
-              {loading ? 'Adding...' : '✓ Add Competitor'}
+            <button onClick={addCompetitor} disabled={loading} className="w-full py-4 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition disabled:opacity-50">
+              {loading ? 'Adding...' : 'Add Competitor'}
             </button>
           </div>
         )}
 
         {insights && (
-          <div className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-lg rounded-xl p-6 border border-purple-500/30 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">💡 Strategic Insights</h2>
+          <div className="bg-gradient-to-br from-royal-900/50 to-cobalt-900/50 backdrop-blur-lg rounded-xl p-6 border border-cobalt/30 mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Strategic Insights</h2>
             <p className="text-gray-200 whitespace-pre-wrap leading-relaxed">{insights}</p>
           </div>
         )}
 
         {competitors.length === 0 ? (
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="text-6xl mb-4"></div>
             <h2 className="text-2xl font-bold text-white mb-2">No Competitors Yet</h2>
             <p className="text-gray-400 mb-6">Add competitors to start analyzing their content strategy</p>
-            <button onClick={() => setShowAddForm(true)} className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg text-white font-bold transition">+ Add Your First Competitor</button>
+            <button onClick={() => setShowAddForm(true)} className="px-6 py-3 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition">+ Add Your First Competitor</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
@@ -208,10 +208,10 @@ export default function CompetitorAnalysis() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {comp.handles?.instagram && <span className="px-3 py-1 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-full text-xs text-pink-300">📷 {comp.handles.instagram}</span>}
-                  {comp.handles?.linkedin && <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs text-blue-300">💼 {comp.handles.linkedin}</span>}
+                  {comp.handles?.instagram && <span className="px-3 py-1 bg-gradient-to-r from-gold/20 to-cobalt/20 border border-gold-intense/30 rounded-full text-xs text-gold-300">{comp.handles.instagram}</span>}
+                  {comp.handles?.linkedin && <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/30 rounded-full text-xs text-blue-300">{comp.handles.linkedin}</span>}
                   {comp.handles?.x && <span className="px-3 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-xs text-gray-300">𝕏 {comp.handles.x}</span>}
-                  {comp.handles?.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">🎵 {comp.handles.tiktok}</span>}
+                  {comp.handles?.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">{comp.handles.tiktok}</span>}
                   {comp.handles?.youtube && <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">📺 {comp.handles.youtube}</span>}
                 </div>
 
@@ -233,8 +233,8 @@ export default function CompetitorAnalysis() {
 
                     {/* Strategic Summary */}
                     {comp.analysis.strategic_summary && (
-                      <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-purple-300 mb-2">📊 Strategic Summary</h4>
+                      <div className="bg-royal-900/30 border border-cobalt/30 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-cobalt-300 mb-2">Strategic Summary</h4>
                         <p className="text-sm text-gray-200">{comp.analysis.strategic_summary}</p>
                       </div>
                     )}
@@ -254,7 +254,7 @@ export default function CompetitorAnalysis() {
                         {comp.analysis.marketing_they_do_well && comp.analysis.marketing_they_do_well.length > 0 && (
                           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-green-300 mb-3 flex items-center gap-2">
-                              <span>✅</span> Marketing They Do Well
+                              <span></span> Marketing They Do Well
                             </h4>
                             <ul className="space-y-2">
                               {comp.analysis.marketing_they_do_well.map((item, i) => (
@@ -271,7 +271,7 @@ export default function CompetitorAnalysis() {
                         {comp.analysis.content_gaps && comp.analysis.content_gaps.length > 0 && (
                           <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-yellow-300 mb-3 flex items-center gap-2">
-                              <span>🎯</span> Content Gaps (Opportunities)
+                              <span></span> Content Gaps (Opportunities)
                             </h4>
                             <ul className="space-y-2">
                               {comp.analysis.content_gaps.map((gap, i) => (
@@ -286,9 +286,9 @@ export default function CompetitorAnalysis() {
 
                         {/* Positioning Messaging */}
                         {comp.analysis.positioning_messaging && (
-                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                          <div className="bg-blue-900/20 border border-cobalt/30 rounded-lg p-4">
                             <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
-                              <span>💬</span> Our Messaging Position
+                              <span></span> Our Messaging Position
                             </h4>
                             <p className="text-sm text-gray-200">{comp.analysis.positioning_messaging}</p>
                           </div>
@@ -296,14 +296,14 @@ export default function CompetitorAnalysis() {
 
                         {/* Content Opportunities */}
                         {comp.analysis.content_opportunities && comp.analysis.content_opportunities.length > 0 && (
-                          <div className="bg-pink-900/20 border border-pink-500/30 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-pink-300 mb-3 flex items-center gap-2">
-                              <span>💡</span> Content Opportunities
+                          <div className="bg-gold-900/20 border border-gold-intense/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gold-300 mb-3 flex items-center gap-2">
+                              <span></span> Content Opportunities
                             </h4>
                             <ul className="space-y-2">
                               {comp.analysis.content_opportunities.map((opp, i) => (
                                 <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
-                                  <span className="text-pink-400">•</span>
+                                  <span className="text-gold-400">•</span>
                                   <span>{opp}</span>
                                 </li>
                               ))}
@@ -322,9 +322,9 @@ export default function CompetitorAnalysis() {
                 <button 
                   onClick={() => analyzeCompetitor(comp.id)} 
                   disabled={analyzing === comp.id} 
-                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
                 >
-                  {analyzing === comp.id ? '🔄 Analyzing...' : comp.analysis ? '🔄 Re-Analyze' : '🔍 Analyze Competitor'}
+                  {analyzing === comp.id ? '🔄 Analyzing...' : comp.analysis ? '🔄 Re-Analyze' : 'Analyze Competitor'}
                 </button>
               </div>
             ))}

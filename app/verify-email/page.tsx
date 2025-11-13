@@ -48,11 +48,11 @@ function VerifyEmailContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
             ORLA³
           </h1>
           <p className="text-gray-400 mt-2">Marketing Automation Suite</p>
@@ -62,7 +62,7 @@ function VerifyEmailContent() {
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
           {status === 'loading' && (
             <div className="text-center">
-              <div className="inline-block w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <div className="inline-block w-16 h-16 border-4 border-cobalt border-t-transparent rounded-full animate-spin mb-4"></div>
               <h2 className="text-2xl font-bold text-white mb-2">Verifying Email...</h2>
               <p className="text-gray-400">Please wait while we verify your email address</p>
             </div>
@@ -79,7 +79,7 @@ function VerifyEmailContent() {
               <p className="text-gray-400">{message}</p>
               <Link
                 href="/dashboard"
-                className="inline-block mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition"
+                className="inline-block mt-6 px-6 py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white font-semibold rounded-lg transition"
               >
                 Go to Dashboard
               </Link>
@@ -103,7 +103,7 @@ function VerifyEmailContent() {
               <div className="space-y-3">
                 <Link
                   href="/login"
-                  className="block w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition"
+                  className="block w-full py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white font-semibold rounded-lg transition"
                 >
                   Go to Login
                 </Link>
@@ -130,8 +130,8 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="inline-block w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="inline-block w-16 h-16 border-4 border-cobalt border-t-transparent rounded-full animate-spin"></div>
       </div>
     }>
       <VerifyEmailContent />

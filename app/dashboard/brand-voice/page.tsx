@@ -26,10 +26,10 @@ type DriveFile = {
 };
 
 const CATEGORIES = [
-  { id: 'guidelines', name: 'Brand Guidelines', icon: '📋', description: 'Official brand docs, style guides' },
-  { id: 'voice_samples', name: 'Voice Samples', icon: '✍️', description: 'Your emails, blogs, copy' },
-  { id: 'logos', name: 'Logos & Assets', icon: '🎨', description: 'Visual brand assets' },
-  { id: 'target_audience_insights', name: 'Target Audience Insights', icon: '🎯', description: 'How your audience talks, their pain points' }
+  { id: 'guidelines', name: 'Brand Guidelines', icon: '', description: 'Official brand docs, style guides' },
+  { id: 'voice_samples', name: 'Voice Samples', icon: '', description: 'Your emails, blogs, copy' },
+  { id: 'logos', name: 'Logos & Assets', icon: '', description: 'Visual brand assets' },
+  { id: 'target_audience_insights', name: 'Target Audience Insights', icon: '', description: 'How your audience talks, their pain points' }
 ];
 
 export default function BrandVoice() {
@@ -97,13 +97,13 @@ export default function BrandVoice() {
       
       if (res.ok) {
         loadAssets();
-        alert('✅ File imported successfully!');
+        alert('File imported successfully!');
       } else {
-        alert('❌ Import failed');
+        alert('Import failed');
       }
     } catch (err) {
       console.error('Import failed');
-      alert('❌ Import failed');
+      alert('Import failed');
     } finally {
       setUploading(false);
     }
@@ -178,14 +178,14 @@ export default function BrandVoice() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <Link href="/dashboard" className="text-purple-400 hover:text-purple-300 mb-4 inline-block">
+          <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-4 inline-block">
             ← Back to Dashboard
           </Link>
           <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">
-            🎯 Brand Voice
+            Brand Voice
           </h1>
           <p className="text-xl text-gray-300">Train AI with your authentic voice and brand assets</p>
         </div>
@@ -238,7 +238,7 @@ export default function BrandVoice() {
                   className="hidden"
                   accept=".txt,.docx,.pdf,.json,.md,.png,.jpg,.jpeg,.gif,.svg,.mp4,.mov,.avi,.zip,.csv,.xlsx"
                 />
-                📁 Browse Files
+                Browse Files
               </label>
               <button
                 onClick={() => {
@@ -248,7 +248,7 @@ export default function BrandVoice() {
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition"
               >
-                🔗 Import from Google Drive
+                Import from Google Drive
               </button>
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function BrandVoice() {
 
         {assets.length === 0 && (
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4">🎯</div>
+            <div className="text-6xl mb-4"></div>
             <h2 className="text-2xl font-bold text-white mb-2">No Training Assets Yet</h2>
             <p className="text-gray-400 mb-6">
               Upload your brand guidelines, writing samples, logos, and target audience insights to train the AI
@@ -309,9 +309,9 @@ export default function BrandVoice() {
         {/* Google Drive Modal */}
         {showDriveModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gradient-to-br from-slate-900 to-purple-900 rounded-2xl border border-white/20 max-w-6xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-br from-slate-900 to-royal-800 rounded-2xl border border-white/20 max-w-6xl w-full max-h-[80vh] overflow-hidden flex flex-col">
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">🔗 Import from Google Drive</h2>
+                <h2 className="text-2xl font-bold text-white">Import from Google Drive</h2>
                 <button onClick={() => setShowDriveModal(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
               </div>
 
@@ -327,7 +327,7 @@ export default function BrandVoice() {
                         : 'bg-white/10 text-gray-300 hover:bg-white/20'
                     }`}
                   >
-                    📁 All Files
+                    All Files
                   </button>
                   {driveFolders.map(folder => (
                     <button
@@ -339,7 +339,7 @@ export default function BrandVoice() {
                           : 'bg-white/10 text-gray-300 hover:bg-white/20'
                       }`}
                     >
-                      📁 {folder.name}
+                      {folder.name}
                     </button>
                   ))}
                 </div>
@@ -355,13 +355,13 @@ export default function BrandVoice() {
                       return (
                         <div key={file.id} className="p-4 bg-white/5 border border-white/10 rounded-lg flex items-center justify-between">
                           <div className="flex items-center gap-3 flex-1">
-                            <span className="text-2xl">{isFolder ? '📁' : '📄'}</span>
+                            <span className="text-2xl">{isFolder ? '' : ''}</span>
                             <span className="text-white truncate">{file.name}</span>
                           </div>
                           {isFolder ? (
                             <button
                               onClick={() => loadDriveFiles(file.id)}
-                              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-semibold transition"
+                              className="px-4 py-2 bg-cobalt hover:bg-cobalt rounded-lg text-white font-semibold transition"
                             >
                               Browse →
                             </button>

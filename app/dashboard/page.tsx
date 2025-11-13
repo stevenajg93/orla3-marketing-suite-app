@@ -5,9 +5,9 @@ import { useAuth } from '@/lib/context/AuthContext';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
 
 const contentCreation = [
-  { name: 'Blog Writer', icon: '✍️', href: '/dashboard/blog', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
-  { name: 'Carousel Maker', icon: '🎨', href: '/dashboard/carousel', description: 'Engaging social carousels', color: 'from-purple-500 to-purple-600' },
-  { name: 'Media Library', icon: '📁', href: '/dashboard/media', description: 'Browse & manage assets', color: 'from-yellow-500 to-yellow-600' },
+  { name: 'Blog Writer', icon: '', href: '/dashboard/blog', description: 'AI-powered long-form content', color: 'from-blue-500 to-blue-600' },
+  { name: 'Carousel Maker', icon: '', href: '/dashboard/carousel', description: 'Engaging social carousels', color: 'from-cobalt to-cobalt-600' },
+  { name: 'Media Library', icon: '', href: '/dashboard/media', description: 'Browse & manage assets', color: 'from-yellow-500 to-yellow-600' },
 ];
 
 const socialManagement = [
@@ -15,12 +15,12 @@ const socialManagement = [
 ];
 
 const planningAnalysis = [
-  { name: 'Content Calendar', icon: '📅', href: '/dashboard/calendar', description: 'Plan & schedule content', color: 'from-indigo-500 to-indigo-600' },
-  { name: 'Analytics', icon: '📊', href: '/dashboard/analytics', description: 'Track performance', color: 'from-teal-500 to-teal-600', disabled: true },
-  { name: 'Brand Voice', icon: '🎯', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cyan-500 to-cyan-600', disabled: false },
-  { name: 'Competitor Analysis', icon: '🔍', href: '/dashboard/competitor', description: 'Market insights', color: 'from-rose-500 to-rose-600', disabled: false },
-  { name: 'Strategy Planner', icon: '🎪', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-violet-500 to-violet-600', disabled: false },
-  { name: 'Find a Videographer', icon: '🎬', href: 'https://orla3.com/browse', description: 'Hire professional creators', color: 'from-purple-500 to-pink-500', external: true },
+  { name: 'Content Calendar', icon: '', href: '/dashboard/calendar', description: 'Plan & schedule content', color: 'from-royal to-royal-600' },
+  { name: 'Analytics', icon: '', href: '/dashboard/analytics', description: 'Track performance', color: 'from-teal-500 to-teal-600', disabled: true },
+  { name: 'Brand Voice', icon: '', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cyan-500 to-cyan-600', disabled: false },
+  { name: 'Competitor Analysis', icon: '', href: '/dashboard/competitor', description: 'Market insights', color: 'from-gold-intense to-gold-600', disabled: false },
+  { name: 'Strategy Planner', icon: '', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-cobalt to-cobalt-600', disabled: false },
+  { name: 'Find a Videographer', icon: '', href: 'https://orla3.com/browse', description: 'Hire professional creators', color: 'from-cobalt to-gold-intense', external: true },
 ];
 
 const ToolCard = ({ tool }: { tool: any }) => {
@@ -67,7 +67,7 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Unverified Email Banner */}
         {user && !user.email_verified && (
@@ -76,7 +76,7 @@ export default function Dashboard() {
 
         <div className="mb-12">
           <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 mb-4">
-            🎪 Orla³ Marketing Suite
+            Orla³ Marketing Suite
           </h1>
           <p className="text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
         </div>
@@ -84,7 +84,7 @@ export default function Dashboard() {
         {/* TIER 1: Content Creation */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl">✨</span>
+            <span className="text-3xl"></span>
             Content Creation
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -106,7 +106,7 @@ export default function Dashboard() {
         {/* TIER 3: Planning & Intelligence */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl">📊</span>
+            <span className="text-3xl"></span>
             Planning & Intelligence
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

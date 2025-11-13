@@ -149,11 +149,11 @@ export default function BlogWriter() {
       });
 
 
-      setSaveMessage('✅ Saved to Media Library!');
+      setSaveMessage('Saved to Media Library!');
       setTimeout(() => setSaveMessage(''), 3000);
       return true;
     } catch (err) {
-      setSaveMessage('❌ Failed to save');
+      setSaveMessage('Failed to save');
       return false;
     }
   };
@@ -185,7 +185,7 @@ export default function BlogWriter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -193,7 +193,7 @@ export default function BlogWriter() {
               ← Back to Dashboard
             </Link>
             <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
-              ✍️ Blog Writer
+              Blog Writer
             </h1>
             <p className="text-gray-400 mt-2">AI-powered SEO content engine with live market research</p>
           </div>
@@ -202,7 +202,7 @@ export default function BlogWriter() {
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 border border-green-400/30 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">🤖 Autonomous Mode</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">Autonomous Mode</h3>
               <p className="text-green-100">Strategic keyword + market research + blog generation</p>
             </div>
             <button
@@ -210,7 +210,7 @@ export default function BlogWriter() {
               disabled={loading}
               className="bg-white hover:bg-green-50 text-green-700 font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
-              {researching ? '🔍 Researching Market...' : loading ? '✨ Generating...' : '⚡ Auto-Generate'}
+              {researching ? 'Researching Market...' : loading ? 'Generating...' : 'Auto-Generate'}
             </button>
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function BlogWriter() {
               disabled={researching}
               className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {researching ? '🔍 Researching...' : '🔍 Research Market First'}
+              {researching ? 'Researching...' : 'Research Market First'}
             </button>
             
             <button
@@ -268,7 +268,7 @@ export default function BlogWriter() {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '✨ Generating Blog...' : '🚀 Generate Blog Post'}
+              {loading ? 'Generating Blog...' : 'Generate Blog Post'}
             </button>
           </div>
 
@@ -280,8 +280,8 @@ export default function BlogWriter() {
         </div>
 
         {marketResearch && (
-          <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 backdrop-blur-lg rounded-2xl p-8 border border-blue-400/30 mb-6">
-            <h3 className="text-2xl font-bold text-white mb-6">🔍 Market Intelligence</h3>
+          <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-900/40 backdrop-blur-lg rounded-2xl p-8 border border-cobalt-400/30 mb-6">
+            <h3 className="text-2xl font-bold text-white mb-6">Market Intelligence</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -289,7 +289,7 @@ export default function BlogWriter() {
                 <ul className="space-y-2">
                   {marketResearch.competitor_angles?.map((angle: string, i: number) => (
                     <li key={i} className="text-gray-300 flex items-start">
-                      <span className="text-blue-400 mr-2">•</span>
+                      <span className="text-cobalt-300 mr-2">•</span>
                       {angle}
                     </li>
                   ))}
@@ -301,7 +301,7 @@ export default function BlogWriter() {
                 <ul className="space-y-2">
                   {marketResearch.content_gaps?.map((gap: string, i: number) => (
                     <li key={i} className="text-gray-300 flex items-start">
-                      <span className="text-green-400 mr-2">✓</span>
+                      <span className="text-green-400 mr-2"></span>
                       {gap}
                     </li>
                   ))}
@@ -311,11 +311,11 @@ export default function BlogWriter() {
 
             {marketResearch.orla3_unique_angles && (
               <div className="mt-6 pt-6 border-t border-white/10">
-                <h4 className="text-lg font-bold text-yellow-300 mb-3">🎯 ORLA³ Unique Angles</h4>
+                <h4 className="text-lg font-bold text-yellow-300 mb-3">ORLA³ Unique Angles</h4>
                 <ul className="space-y-2">
                   {marketResearch.orla3_unique_angles.map((angle: string, i: number) => (
                     <li key={i} className="text-white flex items-start">
-                      <span className="text-yellow-400 mr-2">⭐</span>
+                      <span className="text-yellow-400 mr-2"></span>
                       {angle}
                     </li>
                   ))}
@@ -372,7 +372,7 @@ export default function BlogWriter() {
               >
                 💾 Save to Library
               </button>
-              <Link href="/dashboard/carousel" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
+              <Link href="/dashboard/carousel" className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center">
                 🎠 Atomize to Carousel
               </Link>
               <button

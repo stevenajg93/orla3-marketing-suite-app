@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function PaymentCanceledPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center px-4">
       <div className="max-w-2xl w-full">
         {/* Canceled Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 text-center">
@@ -51,7 +51,7 @@ export default function PaymentCanceledPage() {
           <div className="space-y-4">
             <Link
               href="/payment/plans"
-              className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+              className="block w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
             >
               Try Again
             </Link>
@@ -70,19 +70,19 @@ export default function PaymentCanceledPage() {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <a
               href="mailto:support@orla3.com"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               Contact Support
             </a>
             <Link
               href="/#pricing"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               View Pricing Details
             </Link>
             <Link
               href="/login"
-              className="text-blue-400 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-blue-300 transition"
             >
               Sign In
             </Link>

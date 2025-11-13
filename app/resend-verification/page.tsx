@@ -37,11 +37,11 @@ export default function ResendVerificationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
             ORLA³
           </h1>
           <p className="text-gray-400 mt-2">Marketing Automation Suite</p>
@@ -73,7 +73,7 @@ export default function ResendVerificationPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt focus:ring-2 focus:ring-blue-500/20 transition"
                     placeholder="you@company.com"
                   />
                 </div>
@@ -81,7 +81,7 @@ export default function ResendVerificationPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Resend Verification Email'}
                 </button>
@@ -90,7 +90,7 @@ export default function ResendVerificationPage() {
               <div className="mt-6 text-center">
                 <Link
                   href="/login"
-                  className="text-blue-400 hover:text-blue-300 font-semibold transition text-sm"
+                  className="text-cobalt-300 hover:text-blue-300 font-semibold transition text-sm"
                 >
                   Back to Login
                 </Link>
@@ -109,7 +109,7 @@ export default function ResendVerificationPage() {
               </p>
               <Link
                 href="/login"
-                className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white font-semibold rounded-lg transition"
               >
                 Go to Login
               </Link>

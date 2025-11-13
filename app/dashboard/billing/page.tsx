@@ -111,15 +111,15 @@ export default function BillingPage() {
   const progressPercentage = (creditsRemaining / totalCredits) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-            💳 Billing & Credits
+          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+            Billing & Credits
           </h1>
           <p className="text-gray-400 mt-2">Manage your subscription and credit balance</p>
         </div>
@@ -130,7 +130,7 @@ export default function BillingPage() {
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Current Plan</h2>
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold">
+              <span className="bg-gradient-to-r from-cobalt to-royal text-white px-4 py-2 rounded-full text-sm font-bold">
                 {currentPlan}
               </span>
             </div>
@@ -148,7 +148,7 @@ export default function BillingPage() {
                 <p className="text-xl font-semibold text-white">December 12, 2025</p>
               </div>
               <div className="pt-4">
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-bold transition">
+                <button className="w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-6 py-3 rounded-lg font-bold transition">
                   Manage Subscription
                 </button>
               </div>
@@ -186,7 +186,7 @@ export default function BillingPage() {
               <div className="pt-4">
                 <a
                   href="#buy-credits"
-                  className="block w-full bg-white/10 hover:bg-white/20 border-2 border-purple-400/50 hover:border-purple-400 text-white px-6 py-3 rounded-lg font-bold text-center transition"
+                  className="block w-full bg-white/10 hover:bg-white/20 border-2 border-cobalt-400/50 hover:border-cobalt-400 text-white px-6 py-3 rounded-lg font-bold text-center transition"
                 >
                   Buy More Credits
                 </a>
@@ -204,7 +204,7 @@ export default function BillingPage() {
             {creditPacks.map((pack, idx) => (
               <div
                 key={idx}
-                className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:border-purple-400/50 transition relative"
+                className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:border-cobalt-400/50 transition relative"
               >
                 {pack.bonus > 0 && (
                   <div className="absolute -top-3 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-3 py-1 rounded-full font-bold">
@@ -212,7 +212,7 @@ export default function BillingPage() {
                   </div>
                 )}
                 <div className="text-center mb-4">
-                  <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
+                  <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
                     {(pack.credits + pack.bonus).toLocaleString()}
                   </p>
                   <p className="text-gray-400 text-sm">credits</p>
@@ -221,7 +221,7 @@ export default function BillingPage() {
                   <p className="text-2xl font-bold text-white">£{pack.price}</p>
                   <p className="text-gray-500 text-xs">one-time payment</p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition">
+                <button className="w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-4 py-2 rounded-lg font-semibold transition">
                   Purchase
                 </button>
               </div>
@@ -231,7 +231,7 @@ export default function BillingPage() {
 
         {/* Pricing Plans */}
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">📊 Upgrade Your Plan</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Upgrade Your Plan</h2>
           <p className="text-gray-400 mb-6">Get more credits every month with a higher tier plan.</p>
 
           {/* Billing Toggle */}
@@ -241,7 +241,7 @@ export default function BillingPage() {
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-6 py-2 rounded-md font-semibold transition ${
                   billingCycle === 'monthly'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    ? 'bg-gradient-to-r from-cobalt to-royal text-white'
                     : 'text-gray-300 hover:text-white'
                 }`}
               >
@@ -251,7 +251,7 @@ export default function BillingPage() {
                 onClick={() => setBillingCycle('annual')}
                 className={`px-6 py-2 rounded-md font-semibold transition ${
                   billingCycle === 'annual'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                    ? 'bg-gradient-to-r from-cobalt to-royal text-white'
                     : 'text-gray-300 hover:text-white'
                 }`}
               >
@@ -269,9 +269,9 @@ export default function BillingPage() {
                   plan.name === currentPlan
                     ? 'border-green-400 ring-2 ring-green-400/50'
                     : plan.popular
-                    ? 'border-blue-400 ring-2 ring-blue-400/50'
+                    ? 'border-cobalt-400 ring-2 ring-blue-400/50'
                     : 'border-white/20'
-                } hover:border-blue-400/50 transition relative`}
+                } hover:border-cobalt-400/50 transition relative`}
               >
                 {plan.name === currentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -282,7 +282,7 @@ export default function BillingPage() {
                 )}
                 {plan.popular && plan.name !== currentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-gradient-to-r from-cobalt to-royal text-white px-4 py-1 rounded-full text-sm font-bold">
                       Most Popular
                     </span>
                   </div>
@@ -301,7 +301,7 @@ export default function BillingPage() {
                 </div>
 
                 <div className="mb-6">
-                  <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 border border-blue-400/30">
+                  <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
                     <p className="text-blue-300 font-bold text-center">
                       {plan.credits.toLocaleString()} Credits/month
                     </p>
@@ -311,7 +311,7 @@ export default function BillingPage() {
                 <ul className="space-y-2 mb-6 text-sm">
                   {plan.features.slice(0, 5).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-gray-300">
-                      <span className="text-green-400 mt-1">✓</span>
+                      <span className="text-green-400 mt-1"></span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -322,7 +322,7 @@ export default function BillingPage() {
                     plan.name === currentPlan
                       ? 'bg-white/10 text-gray-400 cursor-not-allowed'
                       : plan.popular
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                      ? 'bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white'
                       : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                   }`}
                   disabled={plan.name === currentPlan}
@@ -336,7 +336,7 @@ export default function BillingPage() {
 
         {/* Usage History */}
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-          <h2 className="text-2xl font-bold text-white mb-6">📈 Recent Activity</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
 
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -365,19 +365,19 @@ export default function BillingPage() {
         </div>
 
         {/* Credit Cost Reference */}
-        <div className="mt-8 bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
+        <div className="mt-8 bg-blue-900/30 border border-cobalt/50 rounded-lg p-6">
           <h3 className="text-lg font-bold text-blue-300 mb-4">ℹ️ Credit Costs</h3>
           <div className="grid md:grid-cols-5 gap-4 text-center">
             {[
-              { action: 'Social Caption', credits: 2, icon: '✍️' },
-              { action: 'Full Blog Post', credits: 5, icon: '📝' },
-              { action: 'AI Image (Standard)', credits: 10, icon: '🖼️' },
-              { action: 'AI Image (Ultra)', credits: 20, icon: '🎨' },
-              { action: 'AI Video (8-sec)', credits: 200, icon: '🎬' },
+              { action: 'Social Caption', credits: 2, icon: '' },
+              { action: 'Full Blog Post', credits: 5, icon: '' },
+              { action: 'AI Image (Standard)', credits: 10, icon: '' },
+              { action: 'AI Image (Ultra)', credits: 20, icon: '' },
+              { action: 'AI Video (8-sec)', credits: 200, icon: '' },
             ].map((item, idx) => (
               <div key={idx}>
                 <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-1">
+                <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-1">
                   {item.credits}
                 </div>
                 <div className="text-gray-300 text-sm">{item.action}</div>

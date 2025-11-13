@@ -24,14 +24,14 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
       {/* Top Navigation Bar */}
       <nav className="border-b border-white/10 backdrop-blur-lg bg-white/5 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center">
-              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
                 ORLA³
               </h1>
             </Link>
@@ -43,10 +43,10 @@ export default function DashboardLayout({
                 href="https://orla3.com/browse"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 rounded-lg border border-purple-400/30 transition group"
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal/20 to-cobalt/20 hover:from-cobalt/30 hover:to-gold/30 rounded-lg border border-cobalt-400/30 transition group"
               >
-                <span className="text-2xl">🎬</span>
-                <span className="text-purple-300 font-semibold group-hover:text-purple-200">
+                <span className="text-2xl"></span>
+                <span className="text-cobalt-300 font-semibold group-hover:text-cobalt-200">
                   Find Creators
                 </span>
               </a>
@@ -55,7 +55,7 @@ export default function DashboardLayout({
               {user?.email !== 's.gillespie@gecslabs.com' && (
                 <button
                   onClick={() => setShowCreditModal(true)}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-lg border border-blue-400/30 hover:border-blue-400/50 transition group"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cobalt/20 to-royal/20 hover:from-cobalt/30 hover:to-royal/30 rounded-lg border border-cobalt-400/30 hover:border-cobalt-400/50 transition group"
                 >
                   {creditsLoading ? (
                     <span className="text-gray-400 text-sm">Loading...</span>
@@ -81,7 +81,7 @@ export default function DashboardLayout({
                   onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
                   className="flex items-center gap-3 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cobalt to-gold rounded-full flex items-center justify-center text-white font-bold">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div className="hidden md:block text-left">

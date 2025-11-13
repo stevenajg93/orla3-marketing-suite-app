@@ -93,7 +93,7 @@ export default function SocialAccountsSettings() {
       name: 'Instagram',
       icon: '',
       description: 'Share photos and stories with your followers',
-      color: 'from-pink-500 to-purple-500',
+      color: 'from-gold-intense to-cobalt',
       requirements: 'Requires Instagram Business Account'
     },
     {
@@ -125,7 +125,7 @@ export default function SocialAccountsSettings() {
       name: 'TikTok',
       icon: '',
       description: 'Short-form video content',
-      color: 'from-black to-pink-500',
+      color: 'from-royal-900 to-cobalt',
       requirements: 'TikTok Creator account'
     },
     {
@@ -149,7 +149,7 @@ export default function SocialAccountsSettings() {
       name: 'Tumblr',
       icon: '',
       description: 'Blogging and social platform',
-      color: 'from-indigo-500 to-blue-600',
+      color: 'from-cobalt to-royal',
       requirements: 'Tumblr blog'
     },
     {
@@ -214,7 +214,7 @@ export default function SocialAccountsSettings() {
             </div>
             <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-cobalt to-royal transition-all duration-500"
                 style={{
                   width: `${(Object.values(connections).filter(c => c.connected).length / platforms.length) * 100}%`
                 }}
@@ -226,7 +226,7 @@ export default function SocialAccountsSettings() {
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cobalt"></div>
             <p className="text-gray-400 mt-4">Loading connections...</p>
           </div>
         ) : (
@@ -295,7 +295,7 @@ export default function SocialAccountsSettings() {
         {/* Info Boxes */}
         <div className="mt-8 grid md:grid-cols-2 gap-6">
           {/* How it Works */}
-          <div className="bg-cobalt/10 border border-blue-500/30 rounded-xl p-6">
+          <div className="bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
             <h4 className="text-lg font-semibold text-cobalt-300 mb-3">
               How It Works
             </h4>

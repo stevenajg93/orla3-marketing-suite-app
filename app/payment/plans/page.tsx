@@ -170,7 +170,7 @@ export default function SelectPlanPage() {
           </p>
 
           {showPaymentRequired && (
-            <div className="max-w-2xl mx-auto mb-8 bg-cobalt/20 border border-blue-500/50 rounded-lg p-4">
+            <div className="max-w-2xl mx-auto mb-8 bg-cobalt/20 border border-cobalt/50 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl"></span>
                 <div>
@@ -268,7 +268,7 @@ export default function SelectPlanPage() {
                 disabled={loading !== null}
                 className={`w-full py-3 rounded-lg font-bold text-center transition ${
                   plan.popular
-                    ? 'bg-gradient-to-r from-cobalt to-royal hover:from-blue-700 hover:to-purple-700 text-white'
+                    ? 'bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white'
                     : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >

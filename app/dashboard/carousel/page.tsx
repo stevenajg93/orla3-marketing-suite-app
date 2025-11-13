@@ -53,7 +53,7 @@ export default function CarouselMakerPage() {
               primary_color: data.primary_color || data.brand_colors[0],
               secondary_color: data.secondary_color || data.brand_colors[1]
             });
-            console.log('✅ Loaded brand assets:', data);
+            console.log('Loaded brand assets:', data);
           }
         }
       } catch (err) {
@@ -89,7 +89,7 @@ export default function CarouselMakerPage() {
 
       const data = await res.json();
       setResult(data);
-      setCaption(`💡 ${formData.post_summary.split('.')[0]}.\n\nSwipe through to learn more! 👉\n\nWhich tip resonates most with you? Comment below! 👇`);
+      setCaption(`${formData.post_summary.split('.')[0]}.\n\nSwipe through to learn more! 👉\n\nWhich tip resonates most with you? Comment below! 👇`);
       setEditMode(true);
     } catch (e: any) {
       setError(e.message);
@@ -150,11 +150,11 @@ export default function CarouselMakerPage() {
         })
       });
 
-      setSaveMessage("✅ Saved!");
+      setSaveMessage("Saved!");
       setTimeout(() => setSaveMessage(""), 2000);
     } catch (err) {
       console.error(err);
-      setSaveMessage("❌ Failed");
+      setSaveMessage("Failed");
     }
   };
   const handleExport = async () => {
@@ -198,10 +198,10 @@ export default function CarouselMakerPage() {
         await new Promise(resolve => setTimeout(resolve, 800));
       }
 
-      alert('✅ All slides exported successfully! Check your downloads folder.');
+      alert('All slides exported successfully! Check your downloads folder.');
     } catch (error) {
       console.error('Export error:', error);
-      alert('❌ Export failed. Please try again.');
+      alert('Export failed. Please try again.');
     } finally {
       setExporting(false);
     }
@@ -383,7 +383,7 @@ export default function CarouselMakerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
       {/* Hidden export versions - 1080x1080 */}
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         {result?.slides?.map((slide, idx: number) => (
@@ -414,9 +414,9 @@ export default function CarouselMakerPage() {
             <div className="text-4xl">🎠</div>
             <div>
               <h1 className="text-2xl font-bold text-white">Carousel Maker</h1>
-              <p className="text-sm text-purple-300">
+              <p className="text-sm text-cobalt-300">
                 Instagram-ready carousels with your brand colors, fonts & logo
-                {brandAssets.brand_colors.length > 2 && <span className="ml-2 text-green-400">✓ Branded</span>}
+                {brandAssets.brand_colors.length > 2 && <span className="ml-2 text-green-400">Branded</span>}
               </p>
             </div>
           </div>
@@ -439,23 +439,23 @@ export default function CarouselMakerPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-purple-300 mb-2">Post Summary</label>
+                <label className="block text-sm text-cobalt-300 mb-2">Post Summary</label>
                 <textarea
                   value={formData.post_summary}
                   onChange={(e) => setFormData({ ...formData, post_summary: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt"
                   placeholder="Summarize your content..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-purple-300 mb-2">Platform</label>
+                  <label className="block text-sm text-cobalt-300 mb-2">Platform</label>
                   <select
                     value={formData.target_platform}
                     onChange={(e) => setFormData({ ...formData, target_platform: e.target.value })}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
                   >
                     <option value="instagram">Instagram</option>
                     <option value="linkedin">LinkedIn</option>
@@ -463,11 +463,11 @@ export default function CarouselMakerPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-purple-300 mb-2">Angle</label>
+                  <label className="block text-sm text-cobalt-300 mb-2">Angle</label>
                   <select
                     value={formData.angle}
                     onChange={(e) => setFormData({ ...formData, angle: e.target.value })}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
                   >
                     <option value="problem-solution">Problem-Solution</option>
                     <option value="myth-busting">Myth-Busting</option>
@@ -482,7 +482,7 @@ export default function CarouselMakerPage() {
                 disabled={loading}
                 className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold disabled:opacity-50 transition"
               >
-                {loading ? "⏳ Generating..." : "✨ Generate Professional Carousel"}
+                {loading ? "⏳ Generating..." : "Generate Professional Carousel"}
               </button>
             </div>
           </div>
@@ -490,26 +490,26 @@ export default function CarouselMakerPage() {
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 mb-6">
-            <p className="text-red-200">❌ {error}</p>
+            <p className="text-red-200">{error}</p>
           </div>
         )}
 
         {result && editMode && (
           <div className="space-y-6">
             <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-              <h3 className="text-lg font-bold text-white mb-3">📝 Post Caption</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Post Caption</h3>
               <textarea
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 rows={4}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-500 resize-none font-mono text-sm"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt resize-none font-mono text-sm"
               />
-              <p className="text-xs text-purple-400 mt-2">💡 Optimized for Instagram engagement</p>
+              <p className="text-xs text-gold mt-2">Optimized for Instagram engagement</p>
             </div>
 
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">✨ Edit Your Carousel</h2>
-              <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded-full text-blue-300 text-sm">
+              <h2 className="text-2xl font-bold text-white">Edit Your Carousel</h2>
+              <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/50 rounded-full text-blue-300 text-sm">
                 {result.platform} • {result.slides?.length || 0} slides
               </span>
             </div>

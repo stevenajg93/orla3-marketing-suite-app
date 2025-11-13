@@ -142,7 +142,7 @@ export default function LandingPage() {
         <div className="flex gap-4 justify-center mb-8">
           <Link
             href="/signup"
-            className="bg-gradient-to-r from-cobalt to-royal hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+            className="bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
           >
             Get Started
           </Link>
@@ -396,7 +396,7 @@ export default function LandingPage() {
                 href="https://orla3.com/browse"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-gradient-to-r from-cobalt to-gold-intense hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
+                className="inline-block bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-700 hover:to-gold-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition shadow-2xl"
               >
                 Find Videographers Near Me →
               </a>
@@ -509,7 +509,7 @@ export default function LandingPage() {
                 href={plan.cta === 'Contact Sales' ? '/contact' : '/signup'}
                 className={`block w-full py-3 rounded-lg font-bold text-center transition ${
                   plan.popular
-                    ? 'bg-gradient-to-r from-cobalt to-royal hover:from-blue-700 hover:to-purple-700 text-white'
+                    ? 'bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white'
                     : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                 }`}
               >
@@ -559,7 +559,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
+            className="bg-white text-cobalt px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition inline-block mb-4"
           >
             Get Started Now
           </Link>
