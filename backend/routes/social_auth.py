@@ -157,11 +157,12 @@ def store_oauth_state(user_id: str, platform: str, state: str):
 
     try:
         # Store state temporarily (expires in 10 minutes)
+        # Note: table uses 'provider' column name (from cloud storage OAuth)
         cur.execute("""
-            INSERT INTO oauth_states (user_id, platform, state, expires_at)
+            INSERT INTO oauth_states (user_id, provider, state, expires_at)
             VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes')
-            ON CONFLICT (user_id, platform)
-            DO UPDATE SET state = EXCLUDED.state, expires_at = EXCLUDED.expires_at
+            ON CONFLICT (state)
+            DO UPDATE SET expires_at = EXCLUDED.expires_at
         """, (user_id, platform, state))
 
         conn.commit()
@@ -181,8 +182,9 @@ def verify_oauth_state(state: str) -> tuple[str, str]:
     cur = conn.cursor()
 
     try:
+        # Note: table uses 'provider' column name (from cloud storage OAuth)
         cur.execute("""
-            SELECT user_id, platform
+            SELECT user_id, provider
             FROM oauth_states
             WHERE state = %s AND expires_at > NOW()
         """, (state,))
@@ -196,7 +198,7 @@ def verify_oauth_state(state: str) -> tuple[str, str]:
         cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
         conn.commit()
 
-        return result['user_id'], result['platform']
+        return result['user_id'], result['provider']
     finally:
         cur.close()
         conn.close()
