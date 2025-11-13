@@ -11,7 +11,7 @@ const contentCreation = [
 ];
 
 const socialManagement = [
-  { name: 'Social Manager', icon: '', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gradient-to-r from-green-500 to-emerald-500', isNew: true },
+  { name: 'Social Manager', icon: '', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gradient-to-r from-green-500 to-emerald-500' },
 ];
 
 const planningAnalysis = [
