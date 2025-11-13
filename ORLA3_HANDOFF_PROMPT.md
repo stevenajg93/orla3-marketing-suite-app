@@ -542,20 +542,24 @@ This strategy is **automatically applied** to all content generation.
 - ✅ **CSRF Protection**: State tokens with 10-minute expiry in `oauth_states` table
 
 **Platform Status:**
-- ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published)
-- ✅ **Facebook**: Complete multi-tenant architecture with Page management + publishing (WORKING)
+- ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published) ✅ WORKING
+- ✅ **Facebook**: Complete multi-tenant architecture with Page management + publishing ✅ WORKING
   - Users can list their managed Pages (working)
   - Users can select which Page to post to (working)
   - Users can publish posts to selected Page (working)
   - Page credentials (page_access_token, selected_page_id) stored in service_metadata
   - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
   - Added via "Manage everything on your page" use case in Meta console
-- ✅ **Instagram**: Full OAuth 2.0 + publishing for Business/Creator accounts (WORKING)
-  - Active permissions: `public_profile`, `pages_show_list`, `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_comments`
+- ✅ **Instagram**: Full OAuth 2.0 + publishing for Business/Creator accounts 🎉 WORKING
+  - Uses Facebook Login API (NOT separate Instagram app)
+  - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `business_management`, `instagram_basic`, `instagram_content_publish`, `instagram_manage_messages`
   - Requires Instagram Business or Creator account (not personal account)
-  - Can publish posts and manage comments
-  - Added via "manage messaging & content on instagram" use case in Meta console
+  - Can publish posts and manage messages
+  - Uses Facebook app credentials (App ID: 3637140849749643)
+  - Permissions from "API setup with Facebook login" in Meta console
 - 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
+
+**🎉 3 PLATFORMS LIVE: Twitter ✅ | Facebook ✅ | Instagram ✅**
 
 **OAuth 2.0 Endpoints:**
 - `GET /social-auth/get-auth-url/{platform}` - Get OAuth URL (requires JWT auth)
@@ -688,13 +692,15 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - ✅ **Publishing enabled**: pages_manage_posts added via "Manage everything on your page" use case
   - End-to-end flow working: OAuth → List Pages → Select Page → Publish Post
 
-- ✅ **Instagram Business Publishing** (Nov 13, 2025) - COMPLETE & WORKING
+- ✅ **Instagram Publishing - WORKING!** (Nov 13, 2025) 🎉
   - Instagram uses Facebook's OAuth system (unified Meta platform)
-  - Both share same callback URL: `/callback/facebook`
-  - Instagram Business permissions: `public_profile`, `pages_show_list`, `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_comments`
+  - Uses Facebook app credentials (NOT separate Instagram app)
+  - Both Instagram and Facebook share same callback URL: `/callback/facebook`
+  - Instagram permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `business_management`, `instagram_basic`, `instagram_content_publish`, `instagram_manage_messages`
+  - Permissions from "API setup with Facebook login" (NOT instagram_business_* versions)
   - Requires Instagram Business or Creator account (not personal account)
-  - Added via "manage messaging & content on instagram" use case in Meta console
-  - End-to-end flow working: OAuth → Publish posts → Manage comments
+  - End-to-end flow working: OAuth → Publish posts → Manage messages
+  - **Key Learning**: Use regular instagram_* permissions (activated), not instagram_business_* (not activated)
 
 - ✅ **OAuth flow implementation**
   - Two-step flow: Frontend calls `/get-auth-url/{platform}` with JWT
