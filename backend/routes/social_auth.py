@@ -202,10 +202,64 @@ def verify_oauth_state(state: str) -> tuple[str, str]:
         conn.close()
 
 
+@router.get("/get-auth-url/{platform}")
+async def get_auth_url(platform: str, request: Request):
+    """
+    Get OAuth authorization URL for a platform (requires JWT auth)
+    Frontend should call this, then redirect to the returned URL
+    """
+    if platform not in PLATFORM_CONFIG:
+        raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
+
+    config = PLATFORM_CONFIG[platform]
+
+    if not config['client_id'] or not config['client_secret']:
+        raise HTTPException(
+            status_code=500,
+            detail=f"{platform.title()} OAuth credentials not configured"
+        )
+
+    # Get user_id from JWT token (this is why we need this endpoint)
+    user_id = get_user_from_token(request)
+
+    # Generate CSRF state token
+    state = secrets.token_urlsafe(32)
+    store_oauth_state(user_id, platform, state)
+
+    # Build authorization URL
+    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{platform}"
+    scope = " ".join(config['scopes'])
+
+    params = {
+        "client_id": config['client_id'],
+        "redirect_uri": redirect_uri,
+        "scope": scope,
+        "state": state,
+        "response_type": "code",
+    }
+
+    # Platform-specific parameters
+    if platform == "twitter":
+        params["code_challenge"] = "challenge"
+        params["code_challenge_method"] = "plain"
+
+    # Build URL
+    auth_url = config['auth_url'] + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
+
+    logger.info(f"Generated OAuth URL for user {user_id}, platform {platform}")
+
+    return {
+        "success": True,
+        "auth_url": auth_url,
+        "platform": platform
+    }
+
+
 @router.get("/connect/{platform}")
 async def connect_platform(platform: str, request: Request):
     """
-    Initiate OAuth flow for a social platform
+    Initiate OAuth flow for a social platform (legacy endpoint)
+    Use /get-auth-url instead for better security with JWT auth
     """
     if platform not in PLATFORM_CONFIG:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")

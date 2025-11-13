@@ -21,17 +21,15 @@ export default function SocialAccountsSettings() {
   // Check for OAuth callback success/error in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const socialConnect = params.get('social_connect');
-    const platform = params.get('platform');
+    const successPlatform = params.get('success'); // Backend sends ?success=platform
     const errorMsg = params.get('error');
 
-    if (socialConnect === 'success' && platform) {
-      setSuccess(`Successfully connected to ${formatPlatformName(platform)}!`);
+    if (successPlatform) {
+      setSuccess(`Successfully connected to ${formatPlatformName(successPlatform)}!`);
       window.history.replaceState({}, '', '/dashboard/settings/social-accounts');
       loadConnections();
-    } else if (socialConnect === 'error' || errorMsg) {
-      const message = errorMsg || params.get('message') || 'Failed to connect';
-      setError(message);
+    } else if (errorMsg) {
+      setError(errorMsg);
       window.history.replaceState({}, '', '/dashboard/settings/social-accounts');
     }
   }, []);
@@ -63,9 +61,20 @@ export default function SocialAccountsSettings() {
     }
   };
 
-  const connectPlatform = (platform: string) => {
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${config.apiUrl}/social-auth/connect/${platform}`;
+  const connectPlatform = async (platform: string) => {
+    try {
+      // First, get the OAuth URL from backend (with JWT auth)
+      const response = await api.get(`/social-auth/get-auth-url/${platform}`);
+
+      if (response.auth_url) {
+        // Then redirect to the OAuth provider
+        window.location.href = response.auth_url;
+      } else {
+        setError('Failed to initiate OAuth flow');
+      }
+    } catch (err: any) {
+      setError(err.message || `Failed to connect to ${formatPlatformName(platform)}`);
+    }
   };
 
   const disconnectPlatform = async (platform: string) => {
