@@ -434,13 +434,17 @@ async def oauth_callback(platform: str, code: str, state: str):
             expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
             try:
+                # Format service_name (e.g., "twitter" -> "Twitter")
+                service_name = platform.capitalize()
+
                 cur.execute("""
                     INSERT INTO connected_services
-                    (user_id, service_type, service_id, access_token, refresh_token,
+                    (user_id, service_type, service_name, service_id, access_token, refresh_token,
                      token_expires_at, service_metadata, is_active)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, true)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, true)
                     ON CONFLICT (user_id, service_type)
                     DO UPDATE SET
+                        service_name = EXCLUDED.service_name,
                         service_id = EXCLUDED.service_id,
                         access_token = EXCLUDED.access_token,
                         refresh_token = EXCLUDED.refresh_token,
@@ -451,6 +455,7 @@ async def oauth_callback(platform: str, code: str, state: str):
                 """, (
                     user_id,
                     platform,
+                    service_name,
                     service_id,
                     access_token,
                     refresh_token,
