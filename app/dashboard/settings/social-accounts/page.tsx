@@ -43,8 +43,8 @@ export default function SocialAccountsSettings() {
   const loadConnections = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/publisher/status');
-      setConnections(response.platforms || {});
+      const response = await api.get('/social-auth/status');
+      setConnections(response.connections || {});
     } catch (err: any) {
       console.error('Error loading connections:', err);
       setError(err.message || 'Failed to load social account connections');
@@ -91,25 +91,25 @@ export default function SocialAccountsSettings() {
     {
       id: 'instagram',
       name: 'Instagram',
-      icon: '',
+      icon: 'IG',
       description: 'Share photos and stories with your followers',
-      color: 'from-gold-intense to-cobalt',
+      iconBg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
       requirements: 'Requires Instagram Business Account'
     },
     {
       id: 'linkedin',
       name: 'LinkedIn',
-      icon: '',
+      icon: 'in',
       description: 'Professional content for your network',
-      color: 'from-cobalt to-cobalt-700',
+      iconBg: 'bg-gradient-to-br from-blue-600 to-blue-700',
       requirements: 'Personal or Company Page'
     },
     {
       id: 'facebook',
       name: 'Facebook',
-      icon: '',
+      icon: 'f',
       description: 'Connect with friends and pages',
-      color: 'from-cobalt to-cobalt-600',
+      iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
       requirements: 'Facebook Page access required'
     },
     {
@@ -117,47 +117,47 @@ export default function SocialAccountsSettings() {
       name: 'X (Twitter)',
       icon: '𝕏',
       description: 'Share thoughts and updates in real-time',
-      color: 'from-slate-800 to-slate-900',
+      iconBg: 'bg-gradient-to-br from-slate-800 to-black',
       requirements: 'X/Twitter account'
     },
     {
       id: 'tiktok',
       name: 'TikTok',
-      icon: '',
+      icon: 'TT',
       description: 'Short-form video content',
-      color: 'from-royal-900 to-cobalt',
+      iconBg: 'bg-gradient-to-br from-cyan-400 via-slate-900 to-pink-500',
       requirements: 'TikTok Creator account'
     },
     {
       id: 'youtube',
       name: 'YouTube',
-      icon: '',
+      icon: 'YT',
       description: 'Share videos with the world',
-      color: 'from-red-600 to-red-700',
+      iconBg: 'bg-gradient-to-br from-red-600 to-red-700',
       requirements: 'YouTube channel'
     },
     {
       id: 'reddit',
       name: 'Reddit',
-      icon: '',
+      icon: 'RD',
       description: 'Engage with communities',
-      color: 'from-gold-intense to-red-500',
+      iconBg: 'bg-gradient-to-br from-orange-600 to-red-600',
       requirements: 'Reddit account with verified email'
     },
     {
       id: 'tumblr',
       name: 'Tumblr',
-      icon: '',
+      icon: 't.',
       description: 'Blogging and social platform',
-      color: 'from-cobalt to-royal',
+      iconBg: 'bg-gradient-to-br from-blue-900 to-slate-900',
       requirements: 'Tumblr blog'
     },
     {
       id: 'wordpress',
       name: 'WordPress',
-      icon: '',
+      icon: 'W',
       description: 'Publish blog posts to your site',
-      color: 'from-gray-700 to-gray-900',
+      iconBg: 'bg-gradient-to-br from-slate-700 to-slate-900',
       requirements: 'Self-hosted WordPress with REST API'
     }
   ];
@@ -241,7 +241,7 @@ export default function SocialAccountsSettings() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
-                      <div className={`text-4xl p-3 rounded-xl bg-gradient-to-br ${platform.color}`}>
+                      <div className={`w-14 h-14 flex items-center justify-center rounded-xl ${platform.iconBg} text-white font-bold text-lg`}>
                         {platform.icon}
                       </div>
                       <div>
@@ -278,7 +278,7 @@ export default function SocialAccountsSettings() {
                     ) : (
                       <button
                         onClick={() => connectPlatform(platform.id)}
-                        className={`px-4 py-2 bg-gradient-to-r ${platform.color} hover:opacity-90 text-white rounded-lg font-semibold transition shadow-lg text-sm`}
+                        className="px-4 py-2 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white rounded-lg font-semibold transition shadow-lg text-sm"
                       >
                         Connect Account
                       </button>
@@ -319,17 +319,16 @@ export default function SocialAccountsSettings() {
           </div>
         </div>
 
-        {/* Coming Soon Badge */}
+        {/* Platform Support */}
         <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl"></span>
             <h4 className="text-lg font-semibold text-gold">
-              Coming Soon
+              Full OAuth Support
             </h4>
           </div>
           <p className="text-gray-300 text-sm">
-            OAuth flows for each platform are currently in development. Connect your accounts via API keys in the meantime,
-            or contact support for early access to beta OAuth integrations.
+            All 9 platforms support secure OAuth 2.0 authentication. Click "Connect Account" on any platform to securely link your account.
+            Your credentials are encrypted and stored securely. You can disconnect at any time.
           </p>
         </div>
       </div>
