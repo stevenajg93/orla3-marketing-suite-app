@@ -1,705 +1,180 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api } from '@/lib/api-client';
-import { config } from '@/lib/config';
-
-type SocialAccount = {
-  id: string;
-  platform: string;
-  account_name: string;
-  account_username?: string;
-  account_email?: string;
-  profile_image_url?: string;
-  is_active: boolean;
-  is_default: boolean;
-  connected_at: string;
-  last_used_at?: string;
-};
-
-type Platform = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  description: string;
-  available: boolean;
-};
-
-const PLATFORMS: Platform[] = [
-  { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: 'blue', description: 'Professional network & business content', available: true },
-  { id: 'instagram', name: 'Instagram', icon: '📸', color: 'pink', description: 'Visual stories & photos', available: false },
-  { id: 'facebook', name: 'Facebook', icon: '👥', color: 'blue', description: 'Social network & community', available: false },
-  { id: 'twitter', name: 'Twitter/X', icon: '🐦', color: 'sky', description: 'Real-time news & conversations', available: false },
-  { id: 'youtube', name: 'YouTube', icon: '▶️', color: 'red', description: 'Video content & channels', available: false },
-  { id: 'tiktok', name: 'TikTok', icon: '🎵', color: 'purple', description: 'Short-form video content', available: false },
-  { id: 'reddit', name: 'Reddit', icon: '🤖', color: 'orange', description: 'Communities & discussions', available: false },
-  { id: 'tumblr', name: 'Tumblr', icon: '📝', color: 'indigo', description: 'Blogging & microblogging', available: false },
-  { id: 'wordpress', name: 'WordPress', icon: '✍️', color: 'gray', description: 'Blog posts & articles', available: false },
-];
-
-type CloudStorageProvider = {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  color: string;
-  connected: boolean;
-  email?: string;
-  connectedAt?: string;
-};
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'social' | 'cloud' | 'billing'>('social');
-  const [accounts, setAccounts] = useState<SocialAccount[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [billingLoading, setBillingLoading] = useState(false);
-  const [cloudProviders, setCloudProviders] = useState<CloudStorageProvider[]>([
+  const tabs = [
     {
-      id: 'google_drive',
-      name: 'Google Drive',
-      icon: '📁',
-      description: 'Access files from Google Drive',
-      color: 'from-blue-500 to-blue-600',
-      connected: false,
-    },
-    {
-      id: 'onedrive',
-      name: 'Microsoft OneDrive',
+      id: 'cloud-storage',
+      name: 'Cloud Storage',
       icon: '☁️',
-      description: 'Access files from OneDrive',
-      color: 'from-blue-600 to-cyan-600',
-      connected: false,
+      description: 'Connect Google Drive, OneDrive, and Dropbox',
+      href: '/dashboard/settings/cloud-storage',
+      badge: 'Active'
     },
     {
-      id: 'dropbox',
-      name: 'Dropbox',
-      icon: '📦',
-      description: 'Access files from Dropbox',
-      color: 'from-indigo-500 to-blue-500',
-      connected: false,
+      id: 'social-accounts',
+      name: 'Social Accounts',
+      icon: '🔗',
+      description: 'Connect Instagram, LinkedIn, Twitter, and more',
+      href: '/dashboard/settings/social-accounts',
+      badge: 'Active'
     },
-  ]);
-
-  useEffect(() => {
-    loadAccounts();
-    loadCloudConnections();
-
-    // Check for OAuth callback messages
-    const params = new URLSearchParams(window.location.search);
-    const success = params.get('success');
-    const error = params.get('error');
-
-    if (success === 'linkedin_connected') {
-      setSuccessMessage('🎉 LinkedIn account connected successfully!');
-      // Clear URL params
-      window.history.replaceState({}, '', '/dashboard/settings');
-    } else if (error) {
-      const errorMessages: { [key: string]: string } = {
-        'invalid_state': '❌ Invalid OAuth state. Please try again.',
-        'token_failed': '❌ Failed to exchange token. Please try again.',
-        'profile_failed': '❌ Failed to fetch profile. Please check permissions.',
-        'oauth_failed': '❌ OAuth failed. Please try again.'
-      };
-      setErrorMessage(errorMessages[error] || '❌ An error occurred during authentication.');
-      window.history.replaceState({}, '', '/dashboard/settings');
+    {
+      id: 'profile',
+      name: 'Profile',
+      icon: '👤',
+      description: 'Manage your account details',
+      href: '/dashboard/settings/profile',
+      comingSoon: true
+    },
+    {
+      id: 'billing',
+      name: 'Billing',
+      icon: '💳',
+      description: 'Manage subscription and payment methods',
+      href: '/dashboard/settings/billing',
+      comingSoon: true
+    },
+    {
+      id: 'team',
+      name: 'Team',
+      icon: '👥',
+      description: 'Invite team members and manage permissions',
+      href: '/dashboard/settings/team',
+      comingSoon: true
+    },
+    {
+      id: 'api',
+      name: 'API Keys',
+      icon: '🔑',
+      description: 'Generate API keys for integrations',
+      href: '/dashboard/settings/api',
+      comingSoon: true
     }
-  }, []);
-
-  const loadAccounts = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get('/auth/accounts');
-      setAccounts(data.accounts || []);
-    } catch (err) {
-      console.error('Failed to load accounts:', err);
-      setErrorMessage('Failed to load connected accounts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const connectPlatform = (platform: string) => {
-    // Redirect to OAuth flow
-    window.location.href = `${config.apiUrl}/auth/${platform}`;
-  };
-
-  const disconnectAccount = async (accountId: string, platformName: string) => {
-    if (!confirm(`Are you sure you want to disconnect this ${platformName} account?`)) {
-      return;
-    }
-
-    try {
-      await api.delete(`/auth/accounts/${accountId}`);
-      setSuccessMessage(`✅ ${platformName} account disconnected`);
-      loadAccounts();
-    } catch (err) {
-      console.error('Failed to disconnect:', err);
-      setErrorMessage('Failed to disconnect account');
-    }
-  };
-
-  const setDefaultAccount = async (accountId: string, platformName: string) => {
-    try {
-      await api.post(`/auth/accounts/${accountId}/set-default`);
-      setSuccessMessage(`⭐ Set as default ${platformName} account`);
-      loadAccounts();
-    } catch (err) {
-      console.error('Failed to set default:', err);
-      setErrorMessage('Failed to set default account');
-    }
-  };
-
-  const getConnectedAccount = (platformId: string): SocialAccount | undefined => {
-    return accounts.find(acc => acc.platform === platformId && acc.is_active);
-  };
-
-  const getPlatformColor = (color: string) => {
-    const colors: { [key: string]: string } = {
-      blue: 'from-blue-600 to-blue-700',
-      pink: 'from-pink-600 to-pink-700',
-      sky: 'from-sky-600 to-sky-700',
-      red: 'from-red-600 to-red-700',
-      purple: 'from-purple-600 to-purple-700',
-      orange: 'from-orange-600 to-orange-700',
-      indigo: 'from-indigo-600 to-indigo-700',
-      gray: 'from-gray-600 to-gray-700',
-    };
-    return colors[color] || colors.blue;
-  };
-
-  const handleConnectCloud = async (providerId: string) => {
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      setErrorMessage('Please log in to connect cloud storage');
-      return;
-    }
-
-    // Redirect to OAuth flow (backend will handle everything)
-    window.location.href = `${config.apiUrl}/cloud-storage/connect/${providerId}`;
-  };
-
-  const handleDisconnectCloud = async (providerId: string) => {
-    const confirmed = confirm(`Are you sure you want to disconnect ${providerId}?`);
-    if (!confirmed) return;
-
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${config.apiUrl}/cloud-storage/disconnect/${providerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setSuccessMessage(`✅ ${providerId} disconnected successfully`);
-        // Reload cloud connections
-        loadCloudConnections();
-      } else {
-        setErrorMessage('Failed to disconnect provider');
-      }
-    } catch (error) {
-      setErrorMessage('Failed to disconnect provider');
-    }
-  };
-
-  const loadCloudConnections = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${config.apiUrl}/cloud-storage/connections`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Update cloud providers state with connected status
-        setCloudProviders(prev => prev.map(provider => {
-          const connection = data.connections.find((c: any) => c.provider === provider.id);
-          return {
-            ...provider,
-            connected: !!connection,
-            email: connection?.provider_email,
-            connectedAt: connection?.connected_at,
-          };
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to load cloud connections:', error);
-    }
-  };
-
-  const handleManageBilling = async () => {
-    setBillingLoading(true);
-    setErrorMessage('');
-
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${config.apiUrl}/payment/create-portal-session`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.portal_url) {
-        // Redirect to Stripe Customer Portal
-        window.location.href = data.portal_url;
-      } else {
-        setErrorMessage(data.detail || 'Failed to open billing portal');
-      }
-    } catch (error) {
-      console.error('Failed to open billing portal:', error);
-      setErrorMessage('Failed to open billing portal');
-    } finally {
-      setBillingLoading(false);
-    }
-  };
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
-              ← Back to Dashboard
-            </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-              ⚙️ Settings
-            </h1>
-            <p className="text-gray-400 mt-2">Manage your social media accounts and cloud storage</p>
-          </div>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
+          <p className="text-gray-400">
+            Manage your account, connections, and preferences
+          </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-white/10">
-          <button
-            onClick={() => setActiveTab('social')}
-            className={`px-6 py-3 font-semibold transition border-b-2 ${
-              activeTab === 'social'
-                ? 'text-blue-400 border-blue-400'
-                : 'text-gray-400 border-transparent hover:text-white'
-            }`}
-          >
-            📱 Social Media
-          </button>
-          <button
-            onClick={() => setActiveTab('cloud')}
-            className={`px-6 py-3 font-semibold transition border-b-2 ${
-              activeTab === 'cloud'
-                ? 'text-blue-400 border-blue-400'
-                : 'text-gray-400 border-transparent hover:text-white'
-            }`}
-          >
-            ☁️ Cloud Storage
-          </button>
-          <button
-            onClick={() => setActiveTab('billing')}
-            className={`px-6 py-3 font-semibold transition border-b-2 ${
-              activeTab === 'billing'
-                ? 'text-blue-400 border-blue-400'
-                : 'text-gray-400 border-transparent hover:text-white'
-            }`}
-          >
-            💳 Billing & Subscription
-          </button>
-        </div>
-
-        {/* Success/Error Messages */}
-        {successMessage && (
-          <div className="mb-6 bg-green-900/30 border border-green-500/50 rounded-lg p-4 flex items-center justify-between">
-            <p className="text-green-300">{successMessage}</p>
-            <button onClick={() => setSuccessMessage('')} className="text-green-300 hover:text-white">✕</button>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="mb-6 bg-red-900/30 border border-red-500/50 rounded-lg p-4 flex items-center justify-between">
-            <p className="text-red-300">{errorMessage}</p>
-            <button onClick={() => setErrorMessage('')} className="text-red-300 hover:text-white">✕</button>
-          </div>
-        )}
-
-        {/* Social Media Tab */}
-        {activeTab === 'social' && (
-          <>
-            {/* Connected Accounts Section */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6">🔗 Connected Accounts</h2>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin text-6xl mb-4">⚙️</div>
-              <p className="text-gray-400">Loading accounts...</p>
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="text-center py-12 bg-white/5 rounded-lg border-2 border-dashed border-white/20">
-              <div className="text-6xl mb-4">🔌</div>
-              <h3 className="text-xl font-bold text-white mb-2">No Accounts Connected</h3>
-              <p className="text-gray-400">Connect your first social media account below to start posting!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {accounts.map(account => {
-                const platform = PLATFORMS.find(p => p.id === account.platform);
-                return (
-                  <div
-                    key={account.id}
-                    className="bg-white/10 rounded-lg p-6 border border-white/20 hover:border-white/40 transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-4xl">{platform?.icon || '🔗'}</div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-white">{account.account_name}</h3>
-                            {account.is_default && (
-                              <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                                ⭐ DEFAULT
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-400 text-sm">
-                            {account.account_username && `@${account.account_username} • `}
-                            {account.account_email}
-                          </p>
-                          <p className="text-gray-500 text-xs mt-1">
-                            Connected {new Date(account.connected_at).toLocaleDateString()}
-                            {account.last_used_at && ` • Last used ${new Date(account.last_used_at).toLocaleDateString()}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {!account.is_default && (
-                          <button
-                            onClick={() => setDefaultAccount(account.id, platform?.name || account.platform)}
-                            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition"
-                          >
-                            Set Default
-                          </button>
-                        )}
-                        <button
-                          onClick={() => disconnectAccount(account.id, platform?.name || account.platform)}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Available Platforms Section */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-          <h2 className="text-2xl font-bold text-white mb-6">➕ Connect More Platforms</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PLATFORMS.map(platform => {
-              const connected = getConnectedAccount(platform.id);
-              return (
-                <div
-                  key={platform.id}
-                  className={`bg-white/10 rounded-lg p-6 border ${
-                    connected
-                      ? 'border-green-500/50 bg-green-900/20'
-                      : platform.available
-                      ? 'border-white/20 hover:border-white/40'
-                      : 'border-white/10 opacity-50'
-                  } transition`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-4xl">{platform.icon}</div>
-                    {connected && (
-                      <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                        ✓ CONNECTED
-                      </span>
-                    )}
-                    {!platform.available && (
-                      <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                        COMING SOON
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-lg font-bold text-white mb-1">{platform.name}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{platform.description}</p>
-
-                  {!connected && platform.available && (
-                    <button
-                      onClick={() => connectPlatform(platform.id)}
-                      className={`w-full py-2 bg-gradient-to-r ${getPlatformColor(platform.color)} hover:opacity-90 text-white rounded-lg font-semibold transition`}
-                    >
-                      Connect {platform.name}
-                    </button>
-                  )}
-
-                  {connected && (
-                    <p className="text-green-400 text-sm font-semibold text-center">
-                      {connected.account_name}
-                    </p>
-                  )}
+        {/* Settings Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.id}
+              href={tab.comingSoon ? '#' : tab.href}
+              className={`
+                relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20
+                transition-all duration-300
+                ${tab.comingSoon
+                  ? 'opacity-60 cursor-not-allowed'
+                  : 'hover:border-white/40 hover:bg-white/15 hover:scale-105 cursor-pointer'
+                }
+              `}
+              onClick={(e) => tab.comingSoon && e.preventDefault()}
+            >
+              {/* Badge */}
+              {tab.comingSoon ? (
+                <div className="absolute top-4 right-4 bg-purple-500/20 border border-purple-500 text-purple-300 text-xs px-2 py-1 rounded-full font-semibold">
+                  Coming Soon
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Info Section */}
-        <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-blue-300 mb-2">ℹ️ About OAuth Connections</h3>
-          <ul className="text-gray-300 text-sm space-y-2">
-            <li>• Your account credentials are stored securely and encrypted</li>
-            <li>• You can disconnect any account at any time</li>
-            <li>• Set a default account for each platform to use when posting</li>
-            <li>• Tokens automatically refresh to keep your accounts connected</li>
-            <li>• Coming soon: Multi-account support for posting to multiple profiles</li>
-          </ul>
-        </div>
-          </>
-        )}
-
-        {/* Cloud Storage Tab */}
-        {activeTab === 'cloud' && (
-          <>
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">☁️ Cloud Storage Connections</h2>
-              <p className="text-gray-400 mb-6">
-                Connect your cloud storage accounts to access files directly from Orla³
-              </p>
-
-              {/* Success notice for OAuth callback */}
-              {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('cloud_connected') && (
-                <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <p className="text-green-300">
-                      Cloud storage connected successfully!
-                    </p>
-                  </div>
+              ) : tab.badge && (
+                <div className="absolute top-4 right-4 bg-green-500/20 border border-green-500 text-green-300 text-xs px-2 py-1 rounded-full font-semibold">
+                  {tab.badge}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {cloudProviders.map((provider) => (
-                  <div
-                    key={provider.id}
-                    className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-white/20 transition"
-                  >
-                    {/* Provider Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${provider.color} rounded-lg flex items-center justify-center text-2xl`}>
-                          {provider.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-white font-bold">{provider.name}</h3>
-                          {provider.connected && (
-                            <span className="text-xs text-green-400 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                              Connected
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-gray-400 text-sm mb-4">{provider.description}</p>
-
-                    {/* Connection Details */}
-                    {provider.connected && provider.email && (
-                      <div className="mb-4 p-3 bg-white/5 rounded-lg">
-                        <p className="text-xs text-gray-400 mb-1">Connected as:</p>
-                        <p className="text-white text-sm font-medium">{provider.email}</p>
-                        {provider.connectedAt && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Since {new Date(provider.connectedAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Button */}
-                    {provider.connected ? (
-                      <button
-                        onClick={() => handleDisconnectCloud(provider.id)}
-                        className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 hover:border-red-500/50 text-red-300 font-semibold rounded-lg transition"
-                      >
-                        Disconnect
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleConnectCloud(provider.id)}
-                        className={`w-full px-4 py-2 bg-gradient-to-r ${provider.color} hover:opacity-90 text-white font-semibold rounded-lg transition`}
-                      >
-                        Connect {provider.name}
-                      </button>
-                    )}
-                  </div>
-                ))}
+              {/* Icon */}
+              <div className="text-5xl mb-4">
+                {tab.icon}
               </div>
-            </div>
 
-            {/* Security Notice */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-              <div className="flex items-start gap-3">
-                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <div>
-                  <h3 className="text-white font-bold mb-2">Your Data is Secure</h3>
-                  <p className="text-gray-400 text-sm">
-                    We use OAuth 2.0 for secure authentication. We never store your passwords. You can revoke access at any time from your cloud provider's settings.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Billing & Subscription Tab */}
-        {activeTab === 'billing' && (
-          <>
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">💳 Billing & Subscription</h2>
-              <p className="text-gray-400 mb-6">
-                Manage your subscription, payment methods, and billing history
+              {/* Content */}
+              <h3 className="text-xl font-bold text-white mb-2">
+                {tab.name}
+              </h3>
+              <p className="text-gray-400 text-sm">
+                {tab.description}
               </p>
 
-              <div className="space-y-6">
-                {/* Stripe Customer Portal Button */}
-                <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-xl p-6 border border-blue-500/30">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-2">Manage Your Subscription</h3>
-                      <p className="text-gray-300 text-sm mb-4">
-                        Access the Stripe Customer Portal to manage your subscription, update payment methods, view invoices, and more.
-                      </p>
-                      <ul className="text-gray-400 text-sm space-y-2 mb-4">
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Update payment methods
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          View and download invoices
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Upgrade or downgrade your plan
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Cancel your subscription (if needed)
-                        </li>
-                      </ul>
-                      <button
-                        onClick={handleManageBilling}
-                        disabled={billingLoading}
-                        className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {billingLoading ? (
-                          <>
-                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Opening Portal...
-                          </>
-                        ) : (
-                          <>
-                            Open Billing Portal
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+              {/* Arrow Icon (only for active tabs) */}
+              {!tab.comingSoon && (
+                <div className="mt-4 text-blue-400 flex items-center gap-2 text-sm font-semibold">
+                  Manage
+                  <span className="text-lg">→</span>
                 </div>
+              )}
+            </Link>
+          ))}
+        </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Link
-                    href="/payment/plans"
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-4 transition group"
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-2xl">⬆️</span>
-                      </div>
-                      <h4 className="font-semibold text-white">Upgrade Plan</h4>
-                    </div>
-                    <p className="text-gray-400 text-sm">Get more credits and features</p>
-                  </Link>
+        {/* Quick Actions */}
+        <div className="mt-12 bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+          <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
 
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-2xl">📊</span>
-                      </div>
-                      <h4 className="font-semibold text-white">Usage</h4>
-                    </div>
-                    <p className="text-gray-400 text-sm">View detailed usage stats</p>
-                  </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Link
+              href="/dashboard/settings/cloud-storage"
+              className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
+            >
+              <div className="text-3xl">📁</div>
+              <div>
+                <h4 className="text-white font-semibold">Connect Cloud Storage</h4>
+                <p className="text-gray-400 text-sm">Import brand assets from Drive</p>
+              </div>
+            </Link>
 
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <span className="text-2xl">💰</span>
-                      </div>
-                      <h4 className="font-semibold text-white">Invoices</h4>
-                    </div>
-                    <p className="text-gray-400 text-sm">Download past invoices</p>
-                  </div>
-                </div>
+            <Link
+              href="/dashboard/settings/social-accounts"
+              className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
+            >
+              <div className="text-3xl">🔗</div>
+              <div>
+                <h4 className="text-white font-semibold">Connect Social Accounts</h4>
+                <p className="text-gray-400 text-sm">Start publishing to your platforms</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Help Section */}
+        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">💡</div>
+            <div>
+              <h4 className="text-lg font-semibold text-blue-400 mb-2">
+                Need Help?
+              </h4>
+              <p className="text-gray-300 text-sm mb-3">
+                Check our documentation or contact support if you need assistance with any settings.
+              </p>
+              <div className="flex gap-3">
+                <a
+                  href="https://docs.orla3.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg text-sm font-semibold transition"
+                >
+                  Documentation
+                </a>
+                <a
+                  href="mailto:support@orla3.ai"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition"
+                >
+                  Contact Support
+                </a>
               </div>
             </div>
-
-            {/* Security Notice */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-              <div className="flex items-start gap-3">
-                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <div>
-                  <h3 className="text-white font-bold mb-2">Secure Payment Processing</h3>
-                  <p className="text-gray-400 text-sm">
-                    All payment information is securely handled by Stripe, our PCI-compliant payment processor. We never store your payment details on our servers.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );
