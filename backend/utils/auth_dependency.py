@@ -1,0 +1,121 @@
+"""
+FastAPI Authentication Dependency
+Provides a standard way to extract and validate user_id from JWT tokens
+"""
+
+from fastapi import Depends, HTTPException, status, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.auth import decode_token
+
+security = HTTPBearer()
+
+
+async def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> str:
+    """
+    Extract and validate user_id from JWT token
+
+    Usage in routes:
+    ```python
+    from utils.auth_dependency import get_current_user_id
+
+    @router.get("/my-route")
+    async def my_route(user_id: str = Depends(get_current_user_id)):
+        # user_id is automatically extracted and validated
+        pass
+    ```
+
+    Returns:
+        str: The user_id (UUID) from the JWT token
+
+    Raises:
+        HTTPException: If token is missing, invalid, or expired
+    """
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("sub")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token missing user_id",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user_id
+
+
+def get_user_from_request(request: Request) -> Optional[str]:
+    """
+    Alternative method: Extract user_id from Request object
+
+    Usage:
+    ```python
+    @router.get("/my-route")
+    async def my_route(request: Request):
+        user_id = get_user_from_request(request)
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+    ```
+
+    Returns:
+        Optional[str]: The user_id if valid token exists, None otherwise
+    """
+    auth_header = request.headers.get('authorization')
+
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        return None
+
+    return payload.get('sub')
+
+
+async def get_optional_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> Optional[str]:
+    """
+    Get user_id from JWT token if present, but don't require authentication
+
+    Useful for endpoints that behave differently for authenticated vs unauthenticated users
+
+    Usage:
+    ```python
+    @router.get("/public-route")
+    async def public_route(user_id: Optional[str] = Depends(get_optional_user_id)):
+        if user_id:
+            # Return personalized content
+        else:
+            # Return public content
+    ```
+
+    Returns:
+        Optional[str]: The user_id if valid token exists, None otherwise
+    """
+    if not credentials:
+        return None
+
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    if not payload:
+        return None
+
+    return payload.get("sub")
