@@ -60,14 +60,13 @@ WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
 # OAuth Configuration for each platform
 PLATFORM_CONFIG = {
     "instagram": {
-        # Instagram uses Facebook OAuth (Meta owns Instagram)
-        # Uses FACEBOOK credentials (same OAuth app, not separate Instagram app)
+        # Instagram uses Facebook OAuth but requires separate Instagram app credentials
         # Requires Instagram Business or Creator account (not personal account)
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
         "scopes": ["public_profile", "pages_show_list", "instagram_business_basic", "instagram_business_content_publish", "instagram_business_manage_comments"],
-        "client_id": FACEBOOK_CLIENT_ID,  # Instagram uses Facebook OAuth credentials
-        "client_secret": FACEBOOK_CLIENT_SECRET,  # Instagram uses Facebook OAuth credentials
+        "client_id": INSTAGRAM_CLIENT_ID,
+        "client_secret": INSTAGRAM_CLIENT_SECRET,
     },
     "linkedin": {
         "auth_url": "https://www.linkedin.com/oauth/v2/authorization",
