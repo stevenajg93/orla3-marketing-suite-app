@@ -386,7 +386,18 @@ async def oauth_callback(platform: str, code: str, state: str):
                 token_data["code_verifier"] = code_verifier
 
             # Platform-specific token exchange
-            if platform == "reddit":
+            if platform == "twitter":
+                # Twitter OAuth 2.0 requires Basic auth (NOT in body)
+                # Remove client credentials from body
+                token_data_clean = {k: v for k, v in token_data.items() if k not in ['client_id', 'client_secret']}
+                auth = (config['client_id'], config['client_secret'])
+                response = await client.post(
+                    config['token_url'],
+                    data=token_data_clean,
+                    auth=auth,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+            elif platform == "reddit":
                 # Reddit requires Basic auth
                 auth = (config['client_id'], config['client_secret'])
                 response = await client.post(
