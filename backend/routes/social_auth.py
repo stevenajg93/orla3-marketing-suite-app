@@ -65,7 +65,8 @@ PLATFORM_CONFIG = {
         # Requires Instagram Business or Creator account (not personal account)
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
-        "scopes": ["public_profile", "pages_show_list", "instagram_business_basic", "instagram_business_content_publish", "instagram_business_manage_comments"],
+        # Corrected permission names from Facebook app "Manage content on Instagram" use case
+        "scopes": ["public_profile", "pages_show_list", "pages_read_engagement", "business_management", "instagram_basic", "instagram_content_publishing", "instagram_manage_messages"],
         "client_id": FACEBOOK_CLIENT_ID,  # Instagram Business uses Facebook app
         "client_secret": FACEBOOK_CLIENT_SECRET,  # Instagram Business uses Facebook app
     },
