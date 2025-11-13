@@ -79,7 +79,7 @@ PLATFORM_CONFIG = {
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
         # Note: Only permissions available in Development Mode (no app review needed)
-        "scopes": ["public_profile", "email", "pages_show_list", "pages_read_engagement"],
+        "scopes": ["public_profile", "pages_show_list", "pages_read_engagement"],
         "client_id": FACEBOOK_CLIENT_ID,
         "client_secret": FACEBOOK_CLIENT_SECRET,
     },
