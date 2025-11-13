@@ -78,8 +78,8 @@ PLATFORM_CONFIG = {
     "facebook": {
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
-        # Note: Only permissions available in Development Mode (no app review needed)
-        "scopes": ["public_profile", "pages_show_list", "pages_read_engagement"],
+        # Note: pages_manage_posts requires Meta App Review for production use
+        "scopes": ["public_profile", "pages_show_list", "pages_read_engagement", "pages_manage_posts"],
         "client_id": FACEBOOK_CLIENT_ID,
         "client_secret": FACEBOOK_CLIENT_SECRET,
     },
@@ -639,6 +639,161 @@ async def get_connection_status(request: Request):
 
         return {"success": True, "connections": status}
 
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.get("/facebook/pages")
+async def get_facebook_pages(request: Request):
+    """
+    Get list of Facebook Pages the user manages
+    Requires active Facebook OAuth connection with pages_show_list permission
+    """
+    user_id = get_user_from_token(request)
+
+    # Get user's Facebook OAuth credentials
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT access_token, service_metadata
+            FROM connected_services
+            WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
+        """, (user_id,))
+
+        result = cur.fetchone()
+
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="No active Facebook connection. Please connect your Facebook account first."
+            )
+
+        access_token = result['access_token']
+        metadata = result.get('service_metadata')
+
+        # Get selected page from metadata
+        import json
+        selected_page_id = None
+        if metadata:
+            try:
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                selected_page_id = meta_dict.get('selected_page_id')
+            except:
+                pass
+
+        # Fetch user's Facebook Pages
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://graph.facebook.com/v18.0/me/accounts",
+                params={"access_token": access_token}
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Failed to fetch Facebook pages: {response.text}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to fetch Facebook pages from Meta"
+                )
+
+            pages_data = response.json()
+            pages = pages_data.get("data", [])
+
+            # Format pages for frontend
+            formatted_pages = []
+            for page in pages:
+                page_id = page.get("id")
+                formatted_pages.append({
+                    "id": page_id,
+                    "name": page.get("name"),
+                    "access_token": page.get("access_token"),  # Page-specific token
+                    "category": page.get("category"),
+                    "tasks": page.get("tasks", []),  # Permissions for this page
+                    "selected": page_id == selected_page_id  # Mark selected page
+                })
+
+            logger.info(f"Fetched {len(formatted_pages)} Facebook pages for user {user_id}")
+
+            return {
+                "success": True,
+                "pages": formatted_pages,
+                "count": len(formatted_pages),
+                "selected_page_id": selected_page_id
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching Facebook pages: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Facebook pages")
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.post("/facebook/select-page")
+async def select_facebook_page(request: Request):
+    """
+    Select which Facebook Page to use for publishing
+    Stores page credentials in service_metadata
+    """
+    user_id = get_user_from_token(request)
+
+    # Get page_id and page_access_token from request body
+    body = await request.json()
+    page_id = body.get('page_id')
+    page_access_token = body.get('page_access_token')
+    page_name = body.get('page_name')
+
+    if not page_id or not page_access_token:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing page_id or page_access_token"
+        )
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        import json
+
+        # Store selected page in metadata
+        metadata = json.dumps({
+            "selected_page_id": page_id,
+            "selected_page_name": page_name,
+            "page_access_token": page_access_token
+        })
+
+        cur.execute("""
+            UPDATE connected_services
+            SET service_metadata = %s, updated_at = NOW()
+            WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
+        """, (metadata, user_id))
+
+        if cur.rowcount == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="No active Facebook connection found"
+            )
+
+        conn.commit()
+
+        logger.info(f"Selected Facebook page {page_id} for user {user_id}")
+
+        return {
+            "success": True,
+            "message": f"Selected page: {page_name}",
+            "page_id": page_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error selecting Facebook page: {e}")
+        raise HTTPException(status_code=500, detail="Failed to select Facebook page")
     finally:
         cur.close()
         conn.close()

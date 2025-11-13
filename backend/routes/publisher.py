@@ -473,13 +473,49 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             result.update(publish_result)
 
         elif platform == "facebook":
-            publisher = FacebookPublisher()
-            image_url = publish_request.image_urls[0] if publish_request.image_urls else None
-            publish_result = await publisher.publish_post(
-                caption=publish_request.caption,
-                image_url=image_url
-            )
-            result.update(publish_result)
+            # Get Facebook Page credentials from service_metadata
+            if not credentials.get('service_metadata'):
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="No Facebook Page selected. Please select a page in settings.",
+                    published_at=result["published_at"]
+                )
+
+            import json
+            try:
+                metadata = credentials['service_metadata']
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                page_access_token = meta_dict.get('page_access_token')
+                page_id = meta_dict.get('selected_page_id')
+
+                if not page_access_token or not page_id:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="Facebook Page credentials incomplete. Please reconnect your page.",
+                        published_at=result["published_at"]
+                    )
+
+                publisher = FacebookPublisher(
+                    page_access_token=page_access_token,
+                    page_id=page_id
+                )
+                image_url = publish_request.image_urls[0] if publish_request.image_urls else None
+                publish_result = await publisher.publish_post(
+                    caption=publish_request.caption,
+                    image_url=image_url
+                )
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"Failed to parse Facebook metadata: {e}")
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="Failed to load Facebook Page credentials",
+                    published_at=result["published_at"]
+                )
 
         elif platform == "tiktok":
             result["error"] = "TikTok requires video upload - not supported for text/image posts"
@@ -590,24 +626,32 @@ async def check_publisher_status_legacy():
 
 class FacebookPublisher:
     """
-    Facebook Graph API publisher
-    Requires: Facebook Page Access Token, Facebook Page ID
+    Facebook Graph API publisher (Multi-Tenant)
+    Uses OAuth tokens from connected_services table
+    Requires: pages_manage_posts permission (Meta App Review required)
     """
-    
-    def __init__(self):
-        self.access_token = os.getenv("FACEBOOK_PAGE_ACCESS_TOKEN")
-        self.page_id = os.getenv("FACEBOOK_PAGE_ID")
+
+    def __init__(self, page_access_token: str, page_id: str):
+        """
+        Initialize with user's Facebook Page credentials
+
+        Args:
+            page_access_token: Page-specific access token from /me/accounts
+            page_id: Facebook Page ID to post to
+        """
+        self.access_token = page_access_token
+        self.page_id = page_id
         self.api_version = "v21.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
-    
+
     async def publish_post(self, caption: str, image_url: Optional[str] = None) -> dict:
         """Publish post to Facebook Page"""
         if not self.access_token or not self.page_id:
             return {
                 "success": False,
-                "error": "Facebook credentials not configured. Add FACEBOOK_PAGE_ACCESS_TOKEN and FACEBOOK_PAGE_ID to .env.local"
+                "error": "Facebook credentials not configured"
             }
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 endpoint = f"{self.base_url}/{self.page_id}/feed"
@@ -615,26 +659,26 @@ class FacebookPublisher:
                     "message": caption,
                     "access_token": self.access_token
                 }
-                
+
                 if image_url:
                     data["link"] = image_url
-                
+
                 response = await client.post(endpoint, data=data)
-                
+
                 if response.status_code != 200:
                     return {
                         "success": False,
                         "error": f"Facebook API error: {response.text}"
                     }
-                
+
                 post_id = response.json()["id"]
-                
+
                 return {
                     "success": True,
                     "post_id": post_id,
                     "post_url": f"https://www.facebook.com/{post_id}"
                 }
-                
+
         except Exception as e:
             return {
                 "success": False,
@@ -1023,13 +1067,8 @@ async def publish_content_all_platforms(request: PublishRequest):
             result.update(publish_result)
             
         elif request.platform == "facebook":
-            publisher = FacebookPublisher()
-            image_url = request.image_urls[0] if request.image_urls else None
-            publish_result = await publisher.publish_post(
-                caption=request.caption,
-                image_url=image_url
-            )
-            result.update(publish_result)
+            # Legacy endpoint not supported for Facebook multi-tenant
+            result["error"] = "Facebook publishing requires authentication. Use /publisher/publish with JWT token."
             
         elif request.platform == "tiktok":
             result["error"] = "TikTok requires video upload - not supported for text/image posts"

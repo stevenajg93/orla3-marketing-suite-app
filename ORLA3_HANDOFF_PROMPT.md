@@ -543,9 +543,15 @@ This strategy is **automatically applied** to all content generation.
 
 **Platform Status:**
 - ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published)
+- ✅ **Facebook**: Complete multi-tenant architecture with Page management (requires Meta App Review for posting)
+  - Users can list their managed Pages
+  - Users can select which Page to post to
+  - Page credentials (page_access_token, selected_page_id) stored in service_metadata
+  - Publishing works once `pages_manage_posts` is approved by Meta
 - ✅ **Instagram/Facebook**: OAuth 2.0 connection working with Development Mode permissions
 - ⚠️ **Meta Limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
-  - Current permissions: `public_profile`, `instagram_basic`, `pages_show_list`, `pages_read_engagement`
+  - Current Facebook permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
+  - Current Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list`
   - Users can connect accounts but cannot publish until app goes through Meta review process
 - 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
 
@@ -554,10 +560,13 @@ This strategy is **automatically applied** to all content generation.
 - `GET /social-auth/callback/{platform}` - Handle OAuth callback
 - `GET /social-auth/status` - Check connected platforms for user
 - `POST /social-auth/disconnect/{platform}` - Disconnect platform
+- `GET /social-auth/facebook/pages` - Get user's Facebook Pages (requires JWT auth)
+- `POST /social-auth/facebook/select-page` - Select Facebook Page for publishing (requires JWT auth)
 
 **Publishing Endpoints:**
-- `POST /publisher/publish` - Universal publishing API
-- `GET /publisher/status-all` - Platform status checking
+- `POST /publisher/publish` - Universal publishing API (multi-tenant, uses per-user credentials)
+- `GET /publisher/status` - Check user's connected platforms
+- `GET /publisher/status-all` - Platform status checking (legacy)
 
 **Platform-Specific OAuth Setup:**
 Each platform requires whitelisting redirect URI in developer console:
@@ -570,10 +579,15 @@ https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback
 - Instagram redirect URI should NOT be added separately to Meta Developer Console
 - Twitter requires PKCE (code_verifier stored in `oauth_states.metadata` JSONB column)
 - Twitter OAuth 2.0 uses Basic Authorization header (not request body credentials)
+- **Facebook Page Management** - Users must select a Facebook Page before publishing
+  - Page list fetched from `/me/accounts` endpoint
+  - Each page has its own page_access_token (more secure than user access token)
+  - Selected page credentials stored in connected_services.service_metadata
+  - FacebookPublisher class now requires page_access_token and page_id parameters
 
 **Database Tables:**
 - `oauth_states` - Temporary state tokens for CSRF protection (10min TTL), includes metadata for PKCE
-- `connected_services` - Per-user OAuth tokens and refresh tokens
+- `connected_services` - Per-user OAuth tokens and refresh tokens, service_metadata stores platform-specific config (e.g., Facebook Page selection)
 
 ---
 
@@ -662,10 +676,20 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Migration #007: Added social platforms to connected_services constraint
   - Migration #008: Added unique constraint on (user_id, service_type)
 
+- ✅ **Facebook Multi-Tenant Publishing Architecture** (Nov 13, 2025)
+  - GET /social-auth/facebook/pages - Fetches user's managed Facebook Pages
+  - POST /social-auth/facebook/select-page - Stores selected page credentials
+  - FacebookPublisher refactored to use per-user OAuth tokens (page_access_token, page_id)
+  - Page credentials stored in connected_services.service_metadata (JSONB)
+  - /publisher/publish endpoint retrieves page credentials from service_metadata per-user
+  - Added pages_manage_posts permission to Facebook OAuth scopes
+  - ⚠️ **Publishing works once Meta approves pages_manage_posts permission**
+
 - ✅ **Instagram/Facebook OAuth 2.0** (connection working, publishing limited)
   - Instagram uses Facebook's OAuth system (unified Meta platform)
   - Both share same callback URL: `/callback/facebook`
-  - Development Mode permissions: `public_profile`, `instagram_basic`, `pages_show_list`, `pages_read_engagement`
+  - Facebook permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
+  - Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list`
   - ⚠️ **Publishing limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
   - Users can connect accounts but cannot publish posts until app review approval
 

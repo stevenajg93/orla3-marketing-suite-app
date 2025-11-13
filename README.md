@@ -52,12 +52,14 @@ AI-powered marketing automation platform for videographers and creative professi
 - **9 Platform Support**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
 - **OAuth 2.0 Multi-Tenant**: Users connect their own accounts securely
 - **Platform Status**:
-  - ✅ Twitter/X: Full OAuth 2.0 with PKCE (working)
+  - ✅ Twitter/X: Full OAuth 2.0 with PKCE + publishing (working)
+  - ✅ Facebook: Full multi-tenant architecture with Page management (requires Meta App Review for posting)
   - ✅ Instagram/Facebook: OAuth 2.0 connection (limited permissions in Dev Mode)
   - ⚠️ Meta Limitation: `pages_manage_posts` and `instagram_content_publish` require App Review
   - 🔄 LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress: OAuth 2.0 ready (redirect URIs needed)
 - **Database**: Per-user tokens stored encrypted in `connected_services` table
 - **PKCE Security**: Twitter OAuth 2.0 with SHA256 code challenge
+- **Facebook Pages**: Users can select which Page to post to, credentials stored in service_metadata
 - **Universal API**: Single endpoint for all platforms
 
 ---
@@ -327,9 +329,19 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**Facebook Multi-Tenant Publishing Architecture (Nov 13, 2025)**
+- ✅ **Complete Page management system** - Users can select which Facebook Page to post to
+- ✅ **GET `/social-auth/facebook/pages`** - Fetches user's managed Facebook Pages with page-specific tokens
+- ✅ **POST `/social-auth/facebook/select-page`** - Stores selected page credentials in service_metadata
+- ✅ **FacebookPublisher refactored** - Uses per-user OAuth tokens instead of global environment variables
+- ✅ **Multi-tenant publishing** - `/publisher/publish` fetches page credentials from service_metadata
+- ✅ **pages_manage_posts permission** - Added to Facebook OAuth scopes (requires Meta App Review)
+- ✅ **Page credentials storage** - service_metadata stores: selected_page_id, selected_page_name, page_access_token
+- ⚠️ **Meta App Review Required** - Posting will work once `pages_manage_posts` is approved by Meta
+
 **OAuth 2.0 Multi-Tenant Social Publishing (Nov 13, 2025)**
 - ✅ **Complete OAuth 2.0 implementation** for all 9 social platforms
-- ✅ **Twitter OAuth 2.0 with PKCE** - SHA256 code challenge for security (WORKING)
+- ✅ **Twitter OAuth 2.0 with PKCE** - SHA256 code challenge for security (WORKING + Publishing)
 - ✅ **Instagram/Facebook OAuth 2.0** - Unified Meta OAuth system (WORKING with dev permissions)
 - ⚠️ **Meta App Review Required** - Advanced permissions (`pages_manage_posts`, `instagram_content_publish`) require Meta app review for publishing functionality
 - ✅ **Database schema updates** - 3 migrations (#006, #007, #008) for OAuth support
