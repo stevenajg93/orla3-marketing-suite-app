@@ -60,9 +60,10 @@ WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
 # OAuth Configuration for each platform
 PLATFORM_CONFIG = {
     "instagram": {
-        "auth_url": "https://api.instagram.com/oauth/authorize",
-        "token_url": "https://api.instagram.com/oauth/access_token",
-        "scopes": ["instagram_business_basic", "instagram_business_content_publish", "instagram_business_manage_messages"],
+        # Instagram uses Facebook OAuth (Meta owns Instagram)
+        "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
+        "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
+        "scopes": ["instagram_basic", "instagram_content_publish", "pages_read_engagement"],
         "client_id": INSTAGRAM_CLIENT_ID,
         "client_secret": INSTAGRAM_CLIENT_SECRET,
     },
@@ -270,7 +271,9 @@ async def get_auth_url(platform: str, request: Request):
         store_oauth_state(user_id, platform, state)
 
     # Build authorization URL
-    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{platform}"
+    # Instagram uses Facebook's callback (Meta owns Instagram)
+    callback_platform = "facebook" if platform == "instagram" else platform
+    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{callback_platform}"
     scope = " ".join(config['scopes'])
 
     params = {
@@ -330,7 +333,9 @@ async def connect_platform(platform: str, request: Request):
         store_oauth_state(user_id, platform, state)
 
     # Build authorization URL
-    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{platform}"
+    # Instagram uses Facebook's callback (Meta owns Instagram)
+    callback_platform = "facebook" if platform == "instagram" else platform
+    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{callback_platform}"
     scope = " ".join(config['scopes'])
 
     params = {
@@ -364,11 +369,20 @@ async def oauth_callback(platform: str, code: str, state: str):
     # Verify state (also retrieves code_verifier for Twitter PKCE)
     user_id, verified_platform, code_verifier = verify_oauth_state(state)
 
-    if verified_platform != platform:
+    # Instagram OAuth uses Facebook's callback (both are OK)
+    if verified_platform == "instagram" and platform == "facebook":
+        # Instagram OAuth came through Facebook callback - this is expected
+        actual_platform = "instagram"
+        config = PLATFORM_CONFIG["instagram"]
+    elif verified_platform != platform:
         raise HTTPException(status_code=400, detail="Platform mismatch")
+    else:
+        actual_platform = platform
+        config = PLATFORM_CONFIG[platform]
 
-    config = PLATFORM_CONFIG[platform]
-    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{platform}"
+    # Use the callback URL that was originally sent
+    callback_platform = "facebook" if actual_platform == "instagram" else actual_platform
+    redirect_uri = f"{BACKEND_URL}/social-auth/callback/{callback_platform}"
 
     # Exchange code for tokens
     try:
@@ -425,7 +439,7 @@ async def oauth_callback(platform: str, code: str, state: str):
                 raise HTTPException(status_code=500, detail="No access token returned")
 
             # Get platform-specific user info
-            service_id = await get_platform_user_id(platform, access_token)
+            service_id = await get_platform_user_id(actual_platform, access_token)
 
             # Store tokens in database
             conn = get_db_connection()
@@ -435,7 +449,7 @@ async def oauth_callback(platform: str, code: str, state: str):
 
             try:
                 # Format service_name (e.g., "twitter" -> "Twitter")
-                service_name = platform.capitalize()
+                service_name = actual_platform.capitalize()
 
                 cur.execute("""
                     INSERT INTO connected_services
@@ -454,7 +468,7 @@ async def oauth_callback(platform: str, code: str, state: str):
                         updated_at = NOW()
                 """, (
                     user_id,
-                    platform,
+                    actual_platform,
                     service_name,
                     service_id,
                     access_token,
@@ -464,7 +478,7 @@ async def oauth_callback(platform: str, code: str, state: str):
                 ))
 
                 conn.commit()
-                logger.info(f"Stored {platform} tokens for user {user_id}")
+                logger.info(f"Stored {actual_platform} tokens for user {user_id}")
 
             except Exception as e:
                 conn.rollback()
@@ -476,11 +490,11 @@ async def oauth_callback(platform: str, code: str, state: str):
 
             # Redirect back to frontend settings page
             return RedirectResponse(
-                url=f"{FRONTEND_URL}/dashboard/settings/social-accounts?success={platform}"
+                url=f"{FRONTEND_URL}/dashboard/settings/social-accounts?success={actual_platform}"
             )
 
     except httpx.RequestError as e:
-        logger.error(f"HTTP error during {platform} OAuth: {e}")
+        logger.error(f"HTTP error during {actual_platform} OAuth: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to connect to {platform}")
 
 
