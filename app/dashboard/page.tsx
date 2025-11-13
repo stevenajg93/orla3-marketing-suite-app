@@ -75,7 +75,7 @@ export default function Dashboard() {
         )}
 
         <div className="mb-12">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200 mb-4">
+          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-4">
             Orla³ Marketing Suite
           </h1>
           <p className="text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
