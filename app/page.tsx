@@ -468,7 +468,6 @@ export default function LandingPage() {
               {
                 title: 'AI Comment Replies',
                 description: 'Automatically generate brand-aligned responses to comments across all platforms. Never leave your audience hanging again.',
-                icon: '💬',
                 features: ['Brand voice consistency', 'Sentiment analysis', 'Priority sorting', 'Multi-platform support'],
                 gradient: 'from-blue-500/20 to-cobalt/20',
                 borderGradient: 'from-blue-400/30 to-cobalt-400/30',
@@ -476,7 +475,6 @@ export default function LandingPage() {
               {
                 title: 'Social Discovery',
                 description: 'Search non-follower posts by keywords and trends. Find and engage with relevant conversations before your competitors do.',
-                icon: '🔍',
                 features: ['Keyword tracking', 'Trend monitoring', 'Real-time discovery', 'Engagement suggestions'],
                 gradient: 'from-royal/20 to-purple-500/20',
                 borderGradient: 'from-royal-400/30 to-purple-400/30',
@@ -484,7 +482,6 @@ export default function LandingPage() {
               {
                 title: 'Trends Search',
                 description: 'Real-time trending topics discovery to inform your content strategy and engagement timing. Stay ahead of the curve.',
-                icon: '📈',
                 features: ['Live trend analysis', 'Industry insights', 'Timing optimization', 'Content opportunities'],
                 gradient: 'from-gold/20 to-amber-500/20',
                 borderGradient: 'from-gold-400/30 to-amber-400/30',
@@ -499,15 +496,6 @@ export default function LandingPage() {
                 whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                 className={`bg-gradient-to-br ${feature.gradient} backdrop-blur-lg rounded-2xl p-8 border border-gradient-to-r ${feature.borderGradient} hover:shadow-2xl hover:shadow-cobalt/20 transition-shadow`}
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.2 + 0.3, type: 'spring', bounce: 0.5 }}
-                  className="text-6xl mb-4"
-                >
-                  {feature.icon}
-                </motion.div>
                 <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
                 <p className="text-gray-300 mb-6">{feature.description}</p>
                 <ul className="space-y-2">
