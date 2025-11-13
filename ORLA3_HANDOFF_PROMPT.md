@@ -150,6 +150,28 @@ orla3-marketing-suite-app/
 - status, notes
 ```
 
+**oauth_states** - Temporary OAuth state tokens (10-minute TTL)
+```sql
+- state (TEXT, PRIMARY KEY): CSRF protection token
+- user_id (UUID, foreign key): User initiating OAuth
+- provider (TEXT): Platform name (instagram, linkedin, twitter, etc.)
+- expires_at (TIMESTAMPTZ): 10-minute expiry
+- created_at (TIMESTAMPTZ): Timestamp
+- metadata (JSONB): Optional data (e.g., PKCE code_verifier for Twitter)
+```
+
+**connected_services** - Per-user OAuth tokens
+```sql
+- user_id (UUID, foreign key): User who connected the service
+- service_type (TEXT): Platform name
+- service_id (TEXT): Platform-specific user ID
+- access_token (TEXT): OAuth access token (encrypted)
+- refresh_token (TEXT): OAuth refresh token (encrypted)
+- token_expires_at (TIMESTAMPTZ): Token expiration
+- service_metadata (JSONB): Platform-specific data
+- is_active (BOOLEAN): Connection status
+```
+
 ---
 
 ## 🔧 ENVIRONMENT CONFIGURATION
@@ -510,25 +532,34 @@ This strategy is **automatically applied** to all content generation.
 - Tag-based organization
 
 ### 5. Social Media Publishing
-**File**: `backend/routes/publisher.py`
+**Files**: `backend/routes/social_auth.py`, `backend/routes/publisher.py`
 
-**9-Platform Support:**
-- ✅ **Working**: Twitter/X, WordPress
-- ⚠️ **Ready (needs OAuth tokens)**: Instagram, LinkedIn, Facebook, Reddit, Tumblr
-- 🚧 **Coming Soon**: TikTok, YouTube (video upload required)
+**OAuth 2.0 Multi-Tenant Architecture:**
+- ✅ **All 9 Platforms**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
+- ✅ **Per-User Connections**: Users connect their own accounts via `/dashboard/settings/social-accounts`
+- ✅ **Secure Token Storage**: OAuth tokens stored encrypted in `connected_services` table
+- ✅ **PKCE Security**: Twitter OAuth 2.0 uses SHA256 code challenge (stored in `oauth_states.metadata`)
+- ✅ **CSRF Protection**: State tokens with 10-minute expiry in `oauth_states` table
 
-**Features:**
-- Universal publishing API (`/publisher/publish`)
-- Platform status checking (`/publisher/status-all`)
-- Image/carousel support (Instagram, Facebook, Tumblr)
-- Text post support (all platforms except TikTok/YouTube)
+**OAuth 2.0 Endpoints:**
+- `GET /social-auth/get-auth-url/{platform}` - Get OAuth URL (requires JWT auth)
+- `GET /social-auth/callback/{platform}` - Handle OAuth callback
+- `GET /social-auth/status` - Check connected platforms for user
+- `POST /social-auth/disconnect/{platform}` - Disconnect platform
 
-**OAuth Requirements:**
-- Instagram: Business Account + Access Token
-- LinkedIn: Access Token + Person URN
-- Facebook: Page Access Token + Page ID
-- Twitter: OAuth 1.0a signing (needs fix)
-- Others: Standard OAuth 2.0 tokens
+**Publishing Endpoints:**
+- `POST /publisher/publish` - Universal publishing API
+- `GET /publisher/status-all` - Platform status checking
+
+**Platform-Specific OAuth Setup:**
+Each platform requires whitelisting redirect URI in developer console:
+```
+https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/{platform}
+```
+
+**Database Tables:**
+- `oauth_states` - Temporary state tokens for CSRF protection (10min TTL)
+- `connected_services` - Per-user OAuth tokens and refresh tokens
 
 ---
 
@@ -601,6 +632,37 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 - **CORS protection** - Restricted to verified origins only
 
 ### Recent Updates (Nov 2025)
+
+**0. OAuth 2.0 Multi-Tenant Social Publishing (Nov 13, 2025)**
+- ✅ **Complete OAuth 2.0 implementation** for all 9 social platforms
+  - Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
+  - Per-user account connections via /dashboard/settings/social-accounts
+  - Secure token storage in `connected_services` table
+
+- ✅ **Twitter OAuth 2.0 with PKCE**
+  - SHA256 code challenge/verifier implementation
+  - PKCE code_verifier stored in `oauth_states.metadata` (JSONB column)
+  - Proper OAuth 2.0 flow with state token CSRF protection
+  - Migration #006: Added metadata column to oauth_states table
+
+- ✅ **OAuth flow implementation**
+  - Two-step flow: Frontend calls `/get-auth-url/{platform}` with JWT
+  - Backend generates state token and PKCE challenge (Twitter only)
+  - User redirects to platform for authorization
+  - Callback exchanges code for access/refresh tokens
+  - Tokens stored per-user in database
+
+- ✅ **Frontend social accounts page**
+  - OAuth connection UI for all 9 platforms
+  - Platform-specific logos and branding
+  - Connection status display
+  - Disconnect functionality
+
+- ✅ **Backend routes** (`backend/routes/social_auth.py`)
+  - GET /social-auth/get-auth-url/{platform} - Initiate OAuth (JWT required)
+  - GET /social-auth/callback/{platform} - Handle OAuth callback
+  - GET /social-auth/status - Check user's connected platforms
+  - POST /social-auth/disconnect/{platform} - Remove platform connection
 
 **0. Payment & Credit Management System (Nov 12, 2025)**
 - ✅ **Complete Stripe integration**
@@ -901,6 +963,6 @@ For questions about this codebase:
 
 ---
 
-**Last Updated**: November 12, 2025
-**Architecture Version**: 3.0 (Payment & Credit System + GCS Storage + Brand Asset Extraction + Multi-Cloud OAuth + Multi-Tenant Ready)
-**Status**: ✅ Production-ready with complete Stripe payments, credit management, zero technical debt, fully secure, persistent storage, multi-cloud integrated, multi-tenant architecture prepared
+**Last Updated**: November 13, 2025
+**Architecture Version**: 4.0 (OAuth 2.0 Multi-Tenant Social Publishing + Payment & Credit System + GCS Storage + Brand Asset Extraction)
+**Status**: ✅ Production-ready with OAuth 2.0 for 9 platforms, PKCE security, Stripe payments, credit management, zero technical debt, fully secure
