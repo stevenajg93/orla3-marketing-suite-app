@@ -81,7 +81,7 @@ export default function CloudStorageSettings() {
       name: 'Google Drive',
       icon: '',
       description: 'Access your files from Google Drive',
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-cobalt to-cobalt'
     },
     {
       id: 'onedrive',
@@ -118,8 +118,7 @@ export default function CloudStorageSettings() {
               onClick={() => setError(null)}
               className="float-right text-red-200 hover:text-white"
             >
-              ✕
-            </button>
+              </button>
           </div>
         )}
 
@@ -130,8 +129,7 @@ export default function CloudStorageSettings() {
               onClick={() => setSuccess(null)}
               className="float-right text-green-200 hover:text-white"
             >
-              ✕
-            </button>
+              </button>
           </div>
         )}
 

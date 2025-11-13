@@ -134,7 +134,7 @@ export default function StrategyPlanner() {
                 <div className="text-2xl font-bold text-white">{strategy.assets_analyzed}</div>
                 <div className="text-sm text-gray-400">Total Assets</div>
               </div>
-              <div className="bg-blue-900/40 border border-cobalt-400/30 rounded-lg p-4 text-center">
+              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-4 text-center">
                 <div className="text-3xl mb-2"></div>
                 <div className="text-2xl font-bold text-white">{strategy.categories?.guidelines || 0}</div>
                 <div className="text-sm text-gray-400">Guidelines</div>
@@ -173,7 +173,7 @@ export default function StrategyPlanner() {
             <div className="flex gap-4 justify-center">
               <Link
                 href="/dashboard/brand-voice"
-                className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-cobalt to-cobalt hover:from-cobalt-600 hover:to-cobalt-600 rounded-lg text-white font-bold transition"
               >
                 📤 Upload Brand Assets
               </Link>
@@ -191,7 +191,7 @@ export default function StrategyPlanner() {
             {strategy.competitive_positioning && (
               <div className="bg-gradient-to-br from-gold-900/40 to-gold-800/40 backdrop-blur-lg rounded-xl p-6 border border-gold-400/30">
                 <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <span className="text-3xl">⚔️</span>
+                  <span className="text-3xl"></span>
                   Competitive Positioning
                 </h3>
                 <div className="space-y-6">
@@ -215,14 +215,14 @@ export default function StrategyPlanner() {
                       </ul>
                     </div>
 
-                    <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-4">
-                      <h4 className="text-yellow-400 font-semibold mb-3 flex items-center gap-2">
+                    <div className="bg-yellow-900/30 border border-gold/30 rounded-lg p-4">
+                      <h4 className="text-gold-400 font-semibold mb-3 flex items-center gap-2">
                         <span></span> Gaps to Exploit
                       </h4>
                       <ul className="space-y-2">
                         {strategy.competitive_positioning.gaps_to_exploit.map((item, i) => (
                           <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
-                            <span className="text-yellow-400">•</span>
+                            <span className="text-gold-400">•</span>
                             <span>{item}</span>
                           </li>
                         ))}
@@ -231,7 +231,7 @@ export default function StrategyPlanner() {
 
                     <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4">
                       <h4 className="text-red-400 font-semibold mb-3 flex items-center gap-2">
-                        <span>⛔</span> Avoid
+                        <span></span> Avoid
                       </h4>
                       <ul className="space-y-2">
                         {strategy.competitive_positioning.avoid.map((item, i) => (
@@ -282,7 +282,7 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Messaging Pillars */}
-            <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
+            <div className="bg-gradient-to-br from-royal-900/40 to-cyan-900/40 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
               <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <span className="text-3xl">🏛️</span>
                 Messaging Pillars
@@ -290,7 +290,7 @@ export default function StrategyPlanner() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {strategy.messaging_pillars.map((pillar, i) => (
                   <div key={i} className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-300">#{i + 1}</div>
+                    <div className="text-2xl font-bold text-cobalt-300">#{i + 1}</div>
                     <p className="text-white mt-2">{pillar}</p>
                   </div>
                 ))}
@@ -365,21 +365,21 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Target Audience */}
-            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 backdrop-blur-lg rounded-xl p-6 border border-yellow-400/30">
+            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 backdrop-blur-lg rounded-xl p-6 border border-gold-400/30">
               <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <span className="text-3xl"></span>
                 Target Audience
               </h3>
               <div className="space-y-4">
                 <div>
-                  <span className="text-yellow-400 font-semibold">Primary Audience:</span>
+                  <span className="text-gold-400 font-semibold">Primary Audience:</span>
                   <p className="text-white mt-1">{strategy.target_audience.primary}</p>
                 </div>
                 <div>
-                  <span className="text-yellow-400 font-semibold">Characteristics:</span>
+                  <span className="text-gold-400 font-semibold">Characteristics:</span>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {strategy.target_audience.characteristics.map((char, i) => (
-                      <span key={i} className="px-3 py-1 bg-yellow-500/20 border border-yellow-500 rounded-full text-yellow-300 text-sm font-semibold">
+                      <span key={i} className="px-3 py-1 bg-gold/20 border border-gold rounded-full text-gold-300 text-sm font-semibold">
                         {char}
                       </span>
                     ))}

@@ -122,7 +122,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-full border border-cobalt-400/30">
-          <span className="text-blue-300 font-semibold">
+          <span className="text-cobalt-300 font-semibold">
             Marketing Superpowers, Powered by AI
           </span>
         </div>
@@ -490,7 +490,7 @@ export default function LandingPage() {
 
               <div className="mb-6">
                 <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
-                  <p className="text-blue-300 font-bold text-center">
+                  <p className="text-cobalt-300 font-bold text-center">
                     {plan.credits.toLocaleString()} Credits/month
                   </p>
                 </div>
@@ -553,7 +553,7 @@ export default function LandingPage() {
           <h2 className="text-4xl font-bold text-white mb-4">
             Supercharge Your Marketing Today
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-cobalt-100 mb-8">
             CMO-level strategy, professional content, and enterprise-grade execution,
             powered by 8 specialized AI models at a fraction of traditional costs.
           </p>
@@ -563,7 +563,7 @@ export default function LandingPage() {
           >
             Get Started Now
           </Link>
-          <p className="text-blue-200 text-sm">
+          <p className="text-cobalt-200 text-sm">
             Cancel anytime • Professional marketing capabilities • Instant access
           </p>
         </div>

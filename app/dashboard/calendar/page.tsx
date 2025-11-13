@@ -19,12 +19,12 @@ type ContentEvent = {
 
 const platformConfig = {
   instagram: { icon: '', color: 'from-gold-intense to-cobalt', name: 'Instagram' },
-  linkedin: { icon: '', color: 'from-blue-600 to-blue-700', name: 'LinkedIn' },
-  facebook: { icon: '', color: 'from-blue-500 to-blue-600', name: 'Facebook' },
+  linkedin: { icon: '', color: 'from-cobalt to-cobalt-700', name: 'LinkedIn' },
+  facebook: { icon: '', color: 'from-cobalt to-cobalt-600', name: 'Facebook' },
   x: { icon: '', color: 'from-slate-800 to-slate-900', name: 'X' },
   tiktok: { icon: '', color: 'from-royal-900 to-cobalt', name: 'TikTok' },
   youtube: { icon: '', color: 'from-red-600 to-red-700', name: 'YouTube' },
-  reddit: { icon: '', color: 'from-orange-500 to-red-500', name: 'Reddit' },
+  reddit: { icon: '', color: 'from-gold-intense to-red-500', name: 'Reddit' },
   tumblr: { icon: '', color: 'from-cobalt to-royal', name: 'Tumblr' },
 };
 
@@ -130,7 +130,7 @@ export default function ContentCalendar() {
     switch (status) {
       case 'published': return 'bg-green-600/80';
       case 'scheduled': return 'bg-cobalt/80';
-      case 'draft': return 'bg-yellow-600/80';
+      case 'draft': return 'bg-gold-600/80';
       default: return 'bg-gray-600/80';
     }
   };
@@ -176,7 +176,7 @@ export default function ContentCalendar() {
                 setSelectedDate(new Date());
                 setShowAddModal(true);
               }}
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
+              className="bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
             >
               Quick Add
             </button>
@@ -269,15 +269,15 @@ export default function ContentCalendar() {
               {events.filter(e => e.status === 'published').length}
             </p>
           </div>
-          <div className="bg-blue-900/40 border border-cobalt-400/30 rounded-xl p-4">
+          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-4">
             <h3 className="text-white font-bold mb-2">Scheduled</h3>
             <p className="text-3xl font-black text-cobalt-300">
               {events.filter(e => e.status === 'scheduled').length}
             </p>
           </div>
-          <div className="bg-yellow-900/40 border border-yellow-400/30 rounded-xl p-4">
+          <div className="bg-gold-900/40 border border-gold-400/30 rounded-xl p-4">
             <h3 className="text-white font-bold mb-2">Drafts</h3>
-            <p className="text-3xl font-black text-yellow-400">
+            <p className="text-3xl font-black text-gold-400">
               {events.filter(e => e.status === 'draft').length}
             </p>
           </div>

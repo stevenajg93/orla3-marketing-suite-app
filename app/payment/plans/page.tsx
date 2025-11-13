@@ -174,8 +174,8 @@ export default function SelectPlanPage() {
               <div className="flex items-start gap-3">
                 <span className="text-2xl"></span>
                 <div>
-                  <p className="text-blue-300 font-semibold mb-1">Payment Required</p>
-                  <p className="text-blue-200 text-sm">
+                  <p className="text-cobalt-300 font-semibold mb-1">Payment Required</p>
+                  <p className="text-cobalt-200 text-sm">
                     To access your account, please select and pay for a subscription plan below.
                     Your account will be activated immediately after payment.
                   </p>
@@ -248,7 +248,7 @@ export default function SelectPlanPage() {
 
               <div className="mb-6">
                 <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
-                  <p className="text-blue-300 font-bold text-center">
+                  <p className="text-cobalt-300 font-bold text-center">
                     {plan.credits.toLocaleString()} Credits/month
                   </p>
                 </div>

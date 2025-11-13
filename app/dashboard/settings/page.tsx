@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   href="https://docs.orla3.ai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-cobalt/20 hover:bg-cobalt/30 text-blue-300 rounded-lg text-sm font-semibold transition"
+                  className="px-4 py-2 bg-cobalt/20 hover:bg-cobalt/30 text-cobalt-300 rounded-lg text-sm font-semibold transition"
                 >
                   Documentation
                 </a>

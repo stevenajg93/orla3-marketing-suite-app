@@ -61,13 +61,13 @@ export default function DashboardLayout({
                     <span className="text-gray-400 text-sm">Loading...</span>
                   ) : credits ? (
                     <>
-                      <span className={`font-bold group-hover:text-blue-200 ${
-                        credits.warning_threshold ? 'text-yellow-400' : 'text-blue-300'
+                      <span className={`font-bold group-hover:text-cobalt-200 ${
+                        credits.warning_threshold ? 'text-gold-400' : 'text-cobalt-300'
                       }`}>
                         {credits.balance.toLocaleString()}
                       </span>
                       <span className="text-gray-400 text-sm group-hover:text-gray-300">credits</span>
-                      <span className="text-blue-300 text-xs font-semibold group-hover:text-blue-200">• Buy More</span>
+                      <span className="text-cobalt-300 text-xs font-semibold group-hover:text-cobalt-200">• Buy More</span>
                     </>
                   ) : (
                     <span className="text-gray-400 text-sm">--</span>

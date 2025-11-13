@@ -192,7 +192,7 @@ export default function BlogWriter() {
             <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
               Blog Writer
             </h1>
             <p className="text-gray-400 mt-2">AI-powered SEO content engine with live market research</p>
@@ -225,7 +225,7 @@ export default function BlogWriter() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="e.g., Corporate Video Production"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
 
@@ -236,7 +236,7 @@ export default function BlogWriter() {
                 value={searchIntent}
                 onChange={(e) => setSearchIntent(e.target.value)}
                 placeholder="e.g., Find best corporate videographers"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
 
@@ -249,7 +249,7 @@ export default function BlogWriter() {
                 min="500"
                 max="3000"
                 step="100"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function BlogWriter() {
             <button
               onClick={doMarketResearch}
               disabled={researching}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-cobalt to-cobalt-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {researching ? 'Researching...' : 'Research Market First'}
             </button>
@@ -266,7 +266,7 @@ export default function BlogWriter() {
             <button
               onClick={generateBlog}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Generating Blog...' : 'Generate Blog Post'}
             </button>
@@ -285,7 +285,7 @@ export default function BlogWriter() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-lg font-bold text-blue-300 mb-3">What Competitors Cover</h4>
+                <h4 className="text-lg font-bold text-cobalt-300 mb-3">What Competitors Cover</h4>
                 <ul className="space-y-2">
                   {marketResearch.competitor_angles?.map((angle: string, i: number) => (
                     <li key={i} className="text-gray-300 flex items-start">
@@ -311,11 +311,11 @@ export default function BlogWriter() {
 
             {marketResearch.orla3_unique_angles && (
               <div className="mt-6 pt-6 border-t border-white/10">
-                <h4 className="text-lg font-bold text-yellow-300 mb-3">ORLA³ Unique Angles</h4>
+                <h4 className="text-lg font-bold text-gold-300 mb-3">ORLA³ Unique Angles</h4>
                 <ul className="space-y-2">
                   {marketResearch.orla3_unique_angles.map((angle: string, i: number) => (
                     <li key={i} className="text-white flex items-start">
-                      <span className="text-yellow-400 mr-2"></span>
+                      <span className="text-gold-400 mr-2"></span>
                       {angle}
                     </li>
                   ))}
@@ -324,8 +324,8 @@ export default function BlogWriter() {
             )}
 
             {marketResearch.market_gap && (
-              <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                <p className="text-yellow-200"><strong>Market Gap:</strong> {marketResearch.market_gap}</p>
+              <div className="mt-4 bg-gold/10 border border-gold/30 rounded-lg p-4">
+                <p className="text-gold-200"><strong>Market Gap:</strong> {marketResearch.market_gap}</p>
               </div>
             )}
           </div>
@@ -368,7 +368,7 @@ export default function BlogWriter() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
               <button
                 onClick={saveToLibrary}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
+                className="bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-3 px-6 rounded-lg transition-all"
               >
                 💾 Save to Library
               </button>

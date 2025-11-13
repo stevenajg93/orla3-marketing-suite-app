@@ -509,7 +509,7 @@ export default function CarouselMakerPage() {
 
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Edit Your Carousel</h2>
-              <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/50 rounded-full text-blue-300 text-sm">
+              <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/50 rounded-full text-cobalt-300 text-sm">
                 {result.platform} • {result.slides?.length || 0} slides
               </span>
             </div>
@@ -638,7 +638,7 @@ export default function CarouselMakerPage() {
               >
                 ← Start Over
               </button>
-              <button onClick={saveToLibrary} className="flex-1 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-lg text-black font-semibold transition">
+              <button onClick={saveToLibrary} className="flex-1 py-3 bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 rounded-lg text-black font-semibold transition">
                 💾 Save
               </button>
               <button

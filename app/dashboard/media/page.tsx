@@ -371,7 +371,7 @@ export default function MediaLibrary() {
 
           // Stop polling - remove from active pollers
           activePollers.current.delete(jobId);
-          console.log('🛑 Stopped polling (complete):', jobId);
+          console.log('Stopped polling (complete):', jobId);
           return;
         } else if (status.success && status.status === 'generating') {
           // Still generating, poll again
@@ -381,12 +381,12 @@ export default function MediaLibrary() {
           } else {
             console.error('Video generation timeout');
             activePollers.current.delete(jobId);
-            console.log('🛑 Stopped polling (timeout):', jobId);
+            console.log('Stopped polling (timeout):', jobId);
           }
         } else if (status.error) {
           console.error('Video generation failed:', status.error);
           activePollers.current.delete(jobId);
-          console.log('🛑 Stopped polling (error):', jobId);
+          console.log('Stopped polling (error):', jobId);
         }
       } catch (err) {
         console.error('Error checking video status:', err);
@@ -396,7 +396,7 @@ export default function MediaLibrary() {
           setTimeout(checkStatus, 5000);
         } else {
           activePollers.current.delete(jobId);
-          console.log('🛑 Stopped polling (max retries):', jobId);
+          console.log('Stopped polling (max retries):', jobId);
         }
       }
     };
@@ -455,7 +455,7 @@ export default function MediaLibrary() {
     switch(status) {
       case 'published': return 'bg-green-600';
       case 'scheduled': return 'bg-cobalt';
-      case 'draft': return 'bg-yellow-600';
+      case 'draft': return 'bg-gold-600';
       default: return 'bg-gray-600';
     }
   };
@@ -470,7 +470,7 @@ export default function MediaLibrary() {
             <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
               Media Library
             </h1>
             <p className="text-gray-400 mt-2">Manage Google Drive assets & generated AI content</p>
@@ -507,7 +507,7 @@ export default function MediaLibrary() {
             onClick={() => setActiveTab('drive')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'drive'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                ? 'bg-gradient-to-r from-cobalt to-cobalt-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -537,7 +537,7 @@ export default function MediaLibrary() {
             onClick={() => setActiveTab('generated')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'generated'
-                ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black'
+                ? 'bg-gradient-to-r from-gold to-gold-600 text-black'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -547,7 +547,7 @@ export default function MediaLibrary() {
             onClick={() => setActiveTab('ai-images')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'ai-images'
-                ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white'
+                ? 'bg-gradient-to-r from-gold-600 to-gold-intense text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -576,7 +576,7 @@ export default function MediaLibrary() {
                   <select
                     value={mediaType}
                     onChange={(e) => setMediaType(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="all">All Types</option>
                     <option value="video">Videos</option>
@@ -590,7 +590,7 @@ export default function MediaLibrary() {
                   onClick={handleAllFilesClick}
                   className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
                     selectedFolder === ''
-                      ? 'bg-yellow-600 text-white'
+                      ? 'bg-gold-600 text-white'
                       : 'bg-white/10 text-gray-300 hover:bg-white/20'
                   }`}
                 >
@@ -603,7 +603,7 @@ export default function MediaLibrary() {
                     onClick={() => handleFolderClick(folder.id, folder.name)}
                     className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
                       selectedFolder === folder.id
-                        ? 'bg-yellow-600 text-white'
+                        ? 'bg-gold-600 text-white'
                         : 'bg-white/10 text-gray-300 hover:bg-white/20'
                     }`}
                   >
@@ -658,7 +658,7 @@ export default function MediaLibrary() {
             ) : activeTab === 'ai-images' ? (
               <>
                 <h2 className="text-xl font-bold text-white mb-4">🍌 AI Image Generation</h2>
-                <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Imagen 3 • $0.03/image</p>
                 </div>
                 <div className="mb-4">
@@ -666,7 +666,7 @@ export default function MediaLibrary() {
                   <select
                     value={aiAspectRatio}
                     onChange={(e) => setAiAspectRatio(e.target.value as any)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="1:1">1:1 Square</option>
                     <option value="16:9">16:9 Landscape</option>
@@ -680,12 +680,12 @@ export default function MediaLibrary() {
                   onChange={(e) => setAiImagePrompt(e.target.value)}
                   placeholder="Describe the image you want to generate..."
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
                 />
                 <button
                   onClick={generateAiImage}
                   disabled={generatingAiImage || !aiImagePrompt.trim()}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {generatingAiImage ? '🍌 Generating...' : '🍌 Generate Image'}
                 </button>
@@ -701,7 +701,7 @@ export default function MediaLibrary() {
                   <select
                     value={aiVideoResolution}
                     onChange={(e) => setAiVideoResolution(e.target.value as any)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="720p">720p HD</option>
                     <option value="1080p">1080p Full HD</option>
@@ -712,7 +712,7 @@ export default function MediaLibrary() {
                   onChange={(e) => setAiVideoPrompt(e.target.value)}
                   placeholder="Describe the video you want to generate..."
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
                 />
                 <button
                   onClick={generateAiVideo}
@@ -736,7 +736,7 @@ export default function MediaLibrary() {
                     value={contentSearchQuery}
                     onChange={(e) => setContentSearchQuery(e.target.value)}
                     placeholder="Search by title..."
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
                   />
                 </div>
 
@@ -746,7 +746,7 @@ export default function MediaLibrary() {
                   <select
                     value={contentTypeFilter}
                     onChange={(e) => setContentTypeFilter(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="all">All Types</option>
                     <option value="blog">Blogs</option>
@@ -763,7 +763,7 @@ export default function MediaLibrary() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="all">All Status</option>
                     <option value="draft">Draft</option>
@@ -778,7 +778,7 @@ export default function MediaLibrary() {
                   <select
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
                   >
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
@@ -811,12 +811,12 @@ export default function MediaLibrary() {
               </h2>
               {activeTab === 'drive' && breadcrumbs.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
-                  <span className="cursor-pointer hover:text-yellow-400" onClick={handleAllFilesClick}>Marketing</span>
+                  <span className="cursor-pointer hover:text-gold-400" onClick={handleAllFilesClick}>Marketing</span>
                   {breadcrumbs.map((crumb, index) => (
                     <span key={`breadcrumb-${index}-${crumb.id}`} className="flex items-center gap-2">
                       <span>/</span>
                       <span 
-                        className="cursor-pointer hover:text-yellow-400"
+                        className="cursor-pointer hover:text-gold-400"
                         onClick={() => handleBreadcrumbClick(index)}
                       >
                         {crumb.name}
@@ -838,7 +838,7 @@ export default function MediaLibrary() {
                   {aiGeneratedImages.map((image: any, idx: number) => (
                     <div
                       key={idx}
-                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all"
+                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-gold-400 transition-all"
                     >
                       <img
                         src={image.url}
@@ -848,7 +848,7 @@ export default function MediaLibrary() {
                       <div className="p-4 bg-slate-800/50">
                         <p className="text-white text-sm mb-2 line-clamp-2">{image.prompt}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-yellow-600 to-orange-600 text-white">
+                          <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-gold-600 to-gold-intense text-white">
                             🍌 {image.aspect_ratio}
                           </span>
                           <span className="text-gray-400 text-xs">
@@ -1014,7 +1014,7 @@ export default function MediaLibrary() {
                   })().map((item) => (
                     <div
                       key={item.id}
-                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all cursor-pointer"
+                      className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-gold-400 transition-all cursor-pointer"
                       onClick={() => setPreviewContent(item)}
                     >
                       {/* Show media preview if available, otherwise show icon */}
@@ -1070,7 +1070,7 @@ export default function MediaLibrary() {
               )
             ) : loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-400"></div>
                 <p className="text-gray-400 mt-4">Loading...</p>
               </div>
             ) : currentAssets.length === 0 ? (
@@ -1086,7 +1086,7 @@ export default function MediaLibrary() {
                 {currentAssets.map((asset) => (
                   <div
                     key={asset.id}
-                    className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-yellow-400 transition-all"
+                    className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-gold-400 transition-all"
                   >
                     <div 
                       onClick={() => handleAssetClick(asset)}
@@ -1113,7 +1113,7 @@ export default function MediaLibrary() {
                         <h3 className="text-white font-bold text-sm mb-2 truncate">{asset.name}</h3>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs px-2 py-1 rounded font-medium ${
-                            asset.type === 'folder' ? 'bg-yellow-600 text-white' : asset.source === 'drive' ? 'bg-cobalt text-white' : 'bg-cobalt text-white'
+                            asset.type === 'folder' ? 'bg-gold-600 text-white' : asset.source === 'drive' ? 'bg-cobalt text-white' : 'bg-cobalt text-white'
                           }`}>
                             {asset.type === 'folder' ? 'Folder' : asset.source === 'drive' ? 'Drive' : 'Unsplash'}
                           </span>
@@ -1244,7 +1244,7 @@ export default function MediaLibrary() {
                   {previewContent.tags && previewContent.tags.length > 0 && (
                     <div className="flex gap-2 flex-wrap">
                       {previewContent.tags.map((tag: string, idx: number) => (
-                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white">
+                        <span key={idx} className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-gold-600 to-gold-intense text-white">
                           {tag}
                         </span>
                       ))}

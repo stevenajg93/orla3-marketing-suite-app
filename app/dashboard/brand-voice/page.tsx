@@ -184,7 +184,7 @@ export default function BrandVoice() {
           <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-4 inline-block">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">
+          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-cobalt-400 mb-2">
             Brand Voice
           </h1>
           <p className="text-xl text-gray-300">Train AI with your authentic voice and brand assets</p>
@@ -200,7 +200,7 @@ export default function BrandVoice() {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`p-4 rounded-lg border-2 transition ${
                   selectedCategory === cat.id
-                    ? 'border-cyan-500 bg-cyan-500/20'
+                    ? 'border-cobalt bg-cobalt/20'
                     : 'border-white/20 bg-white/5 hover:border-white/40'
                 }`}
               >
@@ -218,8 +218,8 @@ export default function BrandVoice() {
             onDrop={handleDrop}
             className={`border-2 border-dashed rounded-lg p-12 text-center transition ${
               dragActive
-                ? 'border-cyan-500 bg-cyan-500/10'
-                : 'border-white/20 hover:border-cyan-500/50'
+                ? 'border-cobalt bg-cobalt/10'
+                : 'border-white/20 hover:border-cobalt/50'
             }`}
           >
             <div className="text-6xl mb-4">📤</div>
@@ -230,7 +230,7 @@ export default function BrandVoice() {
               Supported: TXT, DOCX, PDF, JSON (Discord exports), MD
             </p>
             <div className="flex gap-4 justify-center">
-              <label className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold cursor-pointer transition">
+              <label className="inline-block px-6 py-3 bg-gradient-to-r from-cobalt to-cobalt hover:from-cobalt-600 hover:to-cobalt-600 rounded-lg text-white font-bold cursor-pointer transition">
                 <input
                   type="file"
                   multiple
@@ -264,7 +264,7 @@ export default function BrandVoice() {
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-3xl">{category.icon}</span>
                   <h3 className="text-xl font-bold text-white">{category.name}</h3>
-                  <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500 rounded-full text-cyan-300 text-sm font-bold">
+                  <span className="px-3 py-1 bg-cobalt/20 border border-cobalt rounded-full text-cobalt-300 text-sm font-bold">
                     {categoryAssets.length} files
                   </span>
                 </div>

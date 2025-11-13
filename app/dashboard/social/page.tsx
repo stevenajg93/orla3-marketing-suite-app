@@ -88,12 +88,12 @@ export default function SocialManagerPage() {
 
   const platforms = [
     { id: "instagram" as Platform, name: "Instagram", icon: "", color: "from-gold-intense to-cobalt", discovery: true, autoReply: true },
-    { id: "linkedin" as Platform, name: "LinkedIn", icon: "", color: "from-blue-600 to-blue-700", discovery: true, autoReply: true },
-    { id: "facebook" as Platform, name: "Facebook", icon: "", color: "from-blue-500 to-blue-600", discovery: true, autoReply: true },
+    { id: "linkedin" as Platform, name: "LinkedIn", icon: "", color: "from-cobalt to-cobalt-700", discovery: true, autoReply: true },
+    { id: "facebook" as Platform, name: "Facebook", icon: "", color: "from-cobalt to-cobalt-600", discovery: true, autoReply: true },
     { id: "x" as Platform, name: "X", icon: "", color: "from-slate-800 to-slate-900", discovery: true, autoReply: true },
     { id: "tiktok" as Platform, name: "TikTok", icon: "", color: "from-royal-900 to-cobalt", discovery: false, autoReply: true },
     { id: "youtube" as Platform, name: "YouTube", icon: "", color: "from-red-600 to-red-700", discovery: true, autoReply: true },
-    { id: "reddit" as Platform, name: "Reddit", icon: "", color: "from-orange-500 to-red-500", discovery: true, autoReply: false },
+    { id: "reddit" as Platform, name: "Reddit", icon: "", color: "from-gold-intense to-red-500", discovery: true, autoReply: false },
     { id: "tumblr" as Platform, name: "Tumblr", icon: "", color: "from-cobalt to-royal", discovery: true, autoReply: true },
     { id: "wordpress" as Platform, name: "WordPress", icon: "", color: "from-gray-700 to-gray-900", discovery: false, autoReply: false },
   ];
@@ -648,9 +648,9 @@ export default function SocialManagerPage() {
 
   const getSentimentIcon = (sentiment: string) => {
     switch (sentiment) {
-      case "positive": return "😊";
-      case "negative": return "😕";
-      case "question": return "❓";
+      case "positive": return "";
+      case "negative": return "";
+      case "question": return "";
       default: return "";
     }
   };
@@ -725,7 +725,7 @@ export default function SocialManagerPage() {
                   <button
                     onClick={fetchTrendingTopics}
                     disabled={loadingTrends}
-                    className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="px-6 py-2 bg-gradient-to-r from-gold-intense to-red-500 hover:from-orange-600 hover:to-red-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {loadingTrends ? "Searching..." : "Trends"}
                   </button>
@@ -733,7 +733,7 @@ export default function SocialManagerPage() {
 
                 {/* Trending Topics Display */}
                 {showTrends && trends && (
-                  <div className="mb-4 p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-orange-500/30 rounded-lg">
+                  <div className="mb-4 p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-gold-intense/30 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <span></span> Trending Topics in Videography
@@ -875,7 +875,7 @@ export default function SocialManagerPage() {
                   {publishMessage && (
                     <div className={`mt-4 p-4 rounded-lg ${
                       publishMessage.includes("") ? "bg-green-500/20 border border-green-500" : 
-                      publishMessage.includes("") ? "bg-yellow-500/20 border border-yellow-500" : 
+                      publishMessage.includes("") ? "bg-gold/20 border border-gold" : 
                       "bg-red-500/20 border border-red-500"
                     }`}>
                       <p className="text-white font-semibold">{publishMessage}</p>
@@ -885,7 +885,7 @@ export default function SocialManagerPage() {
                             <div key={i} className="flex items-center justify-between text-sm">
                               <span className="text-gray-300 capitalize">{result.platform}: {result.message}</span>
                               {result.url && (
-                                <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-cobalt-300 hover:text-blue-300 underline">View Post</a>
+                                <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-cobalt-300 hover:text-cobalt-300 underline">View Post</a>
                               )}
                             </div>
                           ))}
@@ -934,7 +934,7 @@ export default function SocialManagerPage() {
                 Discovery
               </button>
               <button onClick={() => setEngageSubTab("settings")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "settings" ? "bg-cobalt text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
-                ⚙️ Settings
+                Settings
               </button>
             </div>
 
@@ -1031,7 +1031,7 @@ export default function SocialManagerPage() {
                         <p className="text-white/90 mb-3">{post.content}</p>
                         <div className="flex gap-2 mb-3">
                           {post.hashtags.map((tag, idx) => (
-                            <span key={idx} className="text-xs px-2 py-1 bg-cobalt/20 text-blue-300 rounded-full">#{tag}</span>
+                            <span key={idx} className="text-xs px-2 py-1 bg-cobalt/20 text-cobalt-300 rounded-full">#{tag}</span>
                           ))}
                         </div>
                         <button className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition text-sm">
@@ -1046,7 +1046,7 @@ export default function SocialManagerPage() {
 
             {engageSubTab === "settings" && (
               <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-2xl font-bold text-white mb-6">⚙️ Engagement Settings</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">Engagement Settings</h2>
                 <div className="bg-white/5 rounded-lg p-6 mb-6">
                   <div className="flex items-start justify-between">
                     <div>
@@ -1058,8 +1058,8 @@ export default function SocialManagerPage() {
                     </button>
                   </div>
                   {autoReplyEnabled && (
-                    <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                      <p className="text-yellow-400 text-sm font-semibold">Auto-reply is enabled</p>
+                    <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                      <p className="text-gold-400 text-sm font-semibold">Auto-reply is enabled</p>
                     </div>
                   )}
                 </div>
@@ -1120,7 +1120,7 @@ export default function SocialManagerPage() {
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('ai-images')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'ai-images' ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'ai-images' ? 'bg-gradient-to-r from-gold-600 to-gold-intense text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                   🍌 AI Images
                 </button>
@@ -1225,7 +1225,7 @@ export default function SocialManagerPage() {
                                 key={asset.id}
                                 className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition"
                               >
-                                <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center relative group">
+                                <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative group">
                                   {asset.thumbnail ? (
                                     <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
                                   ) : asset.type === 'folder' ? (
@@ -1400,8 +1400,8 @@ export default function SocialManagerPage() {
                 {mediaLibraryTab === 'ai-images' && (
                   <div>
                     <div className="mb-6 space-y-4">
-                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/30 rounded-lg p-4">
-                        <h4 className="text-lg font-bold text-yellow-400 mb-2">🍌 Google Imagen 3 (Nano Banana)</h4>
+                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-4">
+                        <h4 className="text-lg font-bold text-gold-400 mb-2">🍌 Google Imagen 3 (Nano Banana)</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate high-quality AI images from text prompts. Cost: $0.03 per image.</p>
                       </div>
 
@@ -1410,7 +1410,7 @@ export default function SocialManagerPage() {
                         onChange={(e) => setAiImagePrompt(e.target.value)}
                         placeholder="Describe the image you want to generate... (e.g., 'Professional videographer filming a corporate interview in modern office')"
                         rows={3}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500 resize-none"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold resize-none"
                       />
 
                       <div className="flex gap-4 items-center">
@@ -1419,7 +1419,7 @@ export default function SocialManagerPage() {
                           <select
                             value={aiAspectRatio}
                             onChange={(e) => setAiAspectRatio(e.target.value as any)}
-                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-gold"
                           >
                             <option value="1:1">1:1 Square</option>
                             <option value="16:9">16:9 Landscape</option>
@@ -1432,7 +1432,7 @@ export default function SocialManagerPage() {
                         <button
                           onClick={generateAiImage}
                           disabled={generatingAiImage || !aiImagePrompt.trim()}
-                          className="px-8 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
+                          className="px-8 py-2 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
                         >
                           {generatingAiImage ? '🍌 Generating...' : '🍌 Generate Image'}
                         </button>
@@ -1451,7 +1451,7 @@ export default function SocialManagerPage() {
                           <div
                             key={idx}
                             onClick={() => handleMediaSelect(image)}
-                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-yellow-500"
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-gold"
                           >
                             <div className="aspect-square">
                               <img src={image.url} alt={image.prompt} className="w-full h-full object-cover" />
@@ -1474,7 +1474,7 @@ export default function SocialManagerPage() {
                       <div className="bg-gradient-to-r from-red-900/30 to-gold-900/30 border border-red-500/30 rounded-lg p-4">
                         <h4 className="text-lg font-bold text-red-400 mb-2">Google Veo 3.1</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate 8-second AI videos with audio from text prompts. Cost: $0.75/second ($6 per video).</p>
-                        <p className="text-xs text-yellow-400">Video generation takes 2-5 minutes</p>
+                        <p className="text-xs text-gold-400">Video generation takes 2-5 minutes</p>
                       </div>
 
                       <textarea

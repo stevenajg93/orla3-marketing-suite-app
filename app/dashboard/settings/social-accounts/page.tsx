@@ -101,7 +101,7 @@ export default function SocialAccountsSettings() {
       name: 'LinkedIn',
       icon: '',
       description: 'Professional content for your network',
-      color: 'from-blue-600 to-blue-700',
+      color: 'from-cobalt to-cobalt-700',
       requirements: 'Personal or Company Page'
     },
     {
@@ -109,7 +109,7 @@ export default function SocialAccountsSettings() {
       name: 'Facebook',
       icon: '',
       description: 'Connect with friends and pages',
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-cobalt to-cobalt-600',
       requirements: 'Facebook Page access required'
     },
     {
@@ -141,7 +141,7 @@ export default function SocialAccountsSettings() {
       name: 'Reddit',
       icon: '',
       description: 'Engage with communities',
-      color: 'from-orange-500 to-red-500',
+      color: 'from-gold-intense to-red-500',
       requirements: 'Reddit account with verified email'
     },
     {
@@ -181,8 +181,7 @@ export default function SocialAccountsSettings() {
               onClick={() => setError(null)}
               className="float-right text-red-200 hover:text-white"
             >
-              ✕
-            </button>
+              </button>
           </div>
         )}
 
@@ -193,8 +192,7 @@ export default function SocialAccountsSettings() {
               onClick={() => setSuccess(null)}
               className="float-right text-green-200 hover:text-white"
             >
-              ✕
-            </button>
+              </button>
           </div>
         )}
 

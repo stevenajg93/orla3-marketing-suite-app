@@ -115,19 +115,19 @@ function PaymentSuccessContent() {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link
               href="/dashboard/brand-voice"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               Set up your brand voice →
             </Link>
             <Link
               href="/dashboard/social"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               Connect social accounts →
             </Link>
             <Link
               href="/dashboard/strategy"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               Generate content strategy →
             </Link>

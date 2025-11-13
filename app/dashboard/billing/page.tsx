@@ -162,13 +162,13 @@ export default function BillingPage() {
               <div>
                 <div className="flex justify-between items-end mb-2">
                   <p className="text-gray-400 text-sm">Remaining</p>
-                  <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
+                  <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cobalt-400">
                     {creditsRemaining.toLocaleString()}
                   </p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-blue-500 h-full rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-green-500 to-cobalt h-full rounded-full transition-all duration-500"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
@@ -207,7 +207,7 @@ export default function BillingPage() {
                 className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:border-cobalt-400/50 transition relative"
               >
                 {pack.bonus > 0 && (
-                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-3 py-1 rounded-full font-bold">
+                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-gold to-gold-intense text-white text-xs px-3 py-1 rounded-full font-bold">
                     +{pack.bonus} Bonus!
                   </div>
                 )}
@@ -302,7 +302,7 @@ export default function BillingPage() {
 
                 <div className="mb-6">
                   <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
-                    <p className="text-blue-300 font-bold text-center">
+                    <p className="text-cobalt-300 font-bold text-center">
                       {plan.credits.toLocaleString()} Credits/month
                     </p>
                   </div>
@@ -365,8 +365,8 @@ export default function BillingPage() {
         </div>
 
         {/* Credit Cost Reference */}
-        <div className="mt-8 bg-blue-900/30 border border-cobalt/50 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-blue-300 mb-4">ℹ️ Credit Costs</h3>
+        <div className="mt-8 bg-royal-900/30 border border-cobalt/50 rounded-lg p-6">
+          <h3 className="text-lg font-bold text-cobalt-300 mb-4">ℹ️ Credit Costs</h3>
           <div className="grid md:grid-cols-5 gap-4 text-center">
             {[
               { action: 'Social Caption', credits: 2, icon: '' },

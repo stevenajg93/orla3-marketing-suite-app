@@ -142,7 +142,7 @@ export default function CompetitorAnalysis() {
 
         <div className="flex gap-4 mb-8">
           <button onClick={() => setShowAddForm(!showAddForm)} className="px-6 py-3 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition">
-            {showAddForm ? '✕ Cancel' : '+ Add Competitor'}
+            {showAddForm ? 'Cancel' : '+ Add Competitor'}
           </button>
           {competitors.length > 0 && (
             <button onClick={loadInsights} disabled={loadingInsights} className="px-6 py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 rounded-lg text-white font-bold transition disabled:opacity-50">
@@ -161,7 +161,7 @@ export default function CompetitorAnalysis() {
             <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense mb-4" />
 
             <div className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-4 mb-4">
-              <p className="text-sm text-blue-300">
+              <p className="text-sm text-cobalt-300">
                 <span className="font-semibold">AI-Powered Research:</span> When you click "Analyze", Perplexity AI will automatically research this competitor's website and social media to provide accurate, real-time insights!
               </p>
             </div>
@@ -209,9 +209,9 @@ export default function CompetitorAnalysis() {
                 
                 <div className="flex flex-wrap gap-2 mb-4">
                   {comp.handles?.instagram && <span className="px-3 py-1 bg-gradient-to-r from-gold/20 to-cobalt/20 border border-gold-intense/30 rounded-full text-xs text-gold-300">{comp.handles.instagram}</span>}
-                  {comp.handles?.linkedin && <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/30 rounded-full text-xs text-blue-300">{comp.handles.linkedin}</span>}
+                  {comp.handles?.linkedin && <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/30 rounded-full text-xs text-cobalt-300">{comp.handles.linkedin}</span>}
                   {comp.handles?.x && <span className="px-3 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-xs text-gray-300">𝕏 {comp.handles.x}</span>}
-                  {comp.handles?.tiktok && <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300">{comp.handles.tiktok}</span>}
+                  {comp.handles?.tiktok && <span className="px-3 py-1 bg-cobalt/20 border border-cobalt/30 rounded-full text-xs text-cobalt-300">{comp.handles.tiktok}</span>}
                   {comp.handles?.youtube && <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-300">📺 {comp.handles.youtube}</span>}
                 </div>
 
@@ -222,7 +222,7 @@ export default function CompetitorAnalysis() {
                       <div className="flex items-center gap-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                           comp.analysis.threat_level === 'direct' ? 'bg-red-500/20 border border-red-500 text-red-300' :
-                          comp.analysis.threat_level === 'indirect' ? 'bg-yellow-500/20 border border-yellow-500 text-yellow-300' :
+                          comp.analysis.threat_level === 'indirect' ? 'bg-gold/20 border border-gold text-gold-300' :
                           'bg-green-500/20 border border-green-500 text-green-300'
                         }`}>
                           {comp.analysis.threat_level.toUpperCase()} THREAT
@@ -269,14 +269,14 @@ export default function CompetitorAnalysis() {
 
                         {/* Content Gaps */}
                         {comp.analysis.content_gaps && comp.analysis.content_gaps.length > 0 && (
-                          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-yellow-300 mb-3 flex items-center gap-2">
+                          <div className="bg-gold-900/20 border border-gold/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gold-300 mb-3 flex items-center gap-2">
                               <span></span> Content Gaps (Opportunities)
                             </h4>
                             <ul className="space-y-2">
                               {comp.analysis.content_gaps.map((gap, i) => (
                                 <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
-                                  <span className="text-yellow-400">•</span>
+                                  <span className="text-gold-400">•</span>
                                   <span>{gap}</span>
                                 </li>
                               ))}
@@ -286,8 +286,8 @@ export default function CompetitorAnalysis() {
 
                         {/* Positioning Messaging */}
                         {comp.analysis.positioning_messaging && (
-                          <div className="bg-blue-900/20 border border-cobalt/30 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2">
+                          <div className="bg-royal-900/20 border border-cobalt/30 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-cobalt-300 mb-2 flex items-center gap-2">
                               <span></span> Our Messaging Position
                             </h4>
                             <p className="text-sm text-gray-200">{comp.analysis.positioning_messaging}</p>
@@ -314,8 +314,8 @@ export default function CompetitorAnalysis() {
                     )}
                   </div>
                 ) : (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-yellow-300">No analysis yet - Click analyze to get marketing insights</p>
+                  <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-gold-300">No analysis yet - Click analyze to get marketing insights</p>
                   </div>
                 )}
                 

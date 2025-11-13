@@ -134,6 +134,72 @@ COLOR_REPLACEMENTS = [
     ('hover:border-pink-400', 'hover:border-gold-400'),
     ('focus:border-rose-500', 'focus:border-gold-intense'),
     ('focus:ring-purple-500', 'focus:ring-cobalt'),
+
+    # Replace all blue colors with cobalt
+    ('from-blue-400 to-blue-400', 'from-cobalt-400 to-cobalt-400'),
+    ('from-blue-500 to-blue-500', 'from-cobalt to-cobalt'),
+    ('from-blue-500 to-blue-600', 'from-cobalt to-cobalt-600'),
+    ('from-blue-600 to-blue-700', 'from-cobalt to-cobalt-700'),
+    ('from-blue-700 to-blue-800', 'from-cobalt-700 to-cobalt-800'),
+    ('from-blue-900/40', 'from-royal-900/40'),
+    ('bg-blue-900', 'bg-royal-900'),
+    ('text-blue-100', 'text-cobalt-100'),
+    ('text-blue-200', 'text-cobalt-200'),
+    ('text-blue-300', 'text-cobalt-300'),
+    ('text-blue-400', 'text-cobalt-400'),
+    ('hover:from-blue-600 hover:to-blue-700', 'hover:from-cobalt hover:to-cobalt-700'),
+
+    # Replace all cyan colors with cobalt
+    ('from-cyan-400 to-blue-400', 'from-cobalt to-cobalt-400'),
+    ('from-cyan-500 to-blue-500', 'from-cobalt to-cobalt'),
+    ('from-cyan-600 to-blue-600', 'from-cobalt-600 to-cobalt-600'),
+    ('hover:from-cyan-600 hover:to-blue-600', 'hover:from-cobalt-600 hover:to-cobalt-600'),
+    ('from-blue-500 to-cyan-500', 'from-cobalt to-cobalt'),
+    ('border-cyan-500', 'border-cobalt'),
+    ('bg-cyan-500/20', 'bg-cobalt/20'),
+    ('bg-cyan-500/10', 'bg-cobalt/10'),
+    ('hover:border-cyan-500/50', 'hover:border-cobalt/50'),
+    ('text-cyan-300', 'text-cobalt-300'),
+    ('border-cyan-500/30', 'border-cobalt/30'),
+
+    # Replace all yellow colors with gold
+    ('from-yellow-400 to-yellow-200', 'from-gold-400 to-gold-200'),
+    ('from-yellow-500 to-yellow-600', 'from-gold to-gold-600'),
+    ('from-yellow-600 to-orange-600', 'from-gold-600 to-gold-intense'),
+    ('from-yellow-500 to-orange-500', 'from-gold to-gold-intense'),
+    ('hover:from-yellow-600 hover:to-yellow-700', 'hover:from-gold-600 hover:to-gold-700'),
+    ('hover:from-yellow-600 hover:to-orange-600', 'hover:from-gold-600 hover:to-gold-intense'),
+    ('from-orange-500 to-yellow-600', 'from-gold-intense to-gold-600'),
+    ('bg-yellow-500/20', 'bg-gold/20'),
+    ('bg-yellow-500/10', 'bg-gold/10'),
+    ('bg-yellow-600', 'bg-gold-600'),
+    ('bg-yellow-600/80', 'bg-gold-600/80'),
+    ('bg-yellow-700', 'bg-gold-700'),
+    ('hover:bg-yellow-700', 'hover:bg-gold-700'),
+    ('bg-yellow-900/20', 'bg-gold-900/20'),
+    ('bg-yellow-900/40', 'bg-gold-900/40'),
+    ('border-yellow-400/30', 'border-gold-400/30'),
+    ('border-yellow-400', 'border-gold-400'),
+    ('hover:border-yellow-400', 'hover:border-gold-400'),
+    ('border-yellow-500', 'border-gold'),
+    ('border-yellow-500/30', 'border-gold/30'),
+    ('focus:ring-yellow-500', 'focus:ring-gold'),
+    ('text-yellow-200', 'text-gold-200'),
+    ('text-yellow-300', 'text-gold-300'),
+    ('text-yellow-400', 'text-gold-400'),
+
+    # Replace orange with gold-intense
+    ('from-orange-500 to-red-500', 'from-gold-intense to-red-500'),
+    ('from-yellow-500 to-orange-500', 'from-gold to-gold-intense'),
+    ('border-orange-500', 'border-gold-intense'),
+
+    # Replace cyan with cobalt
+    ('from-cyan-500 to-cyan-600', 'from-cobalt to-cobalt-600'),
+
+    # Keep green for success states, but unify blues to cobalt
+    ('from-green-400 to-blue-400', 'from-green-400 to-cobalt-400'),
+    ('from-green-500 to-blue-500', 'from-green-500 to-cobalt'),
+    ('from-blue-900 to-slate-900', 'from-royal-900 to-slate-900'),
 ]
 
 # Comprehensive emoji list
@@ -147,9 +213,21 @@ EMOJI_PATTERNS = [
     # Numbers
     r'1️⃣', r'2️⃣', r'3️⃣', r'4️⃣', r'5️⃣', r'6️⃣', r'7️⃣', r'8️⃣', r'9️⃣', r'🔟',
     # Checkmarks and symbols
-    r'☑️', r'✔️', r'❎', r'✖️', r'➕', r'➖', r'✏️', r'📌', r'🔔', r'🔕',
+    r'☑️', r'✔️', r'❎', r'✖️', r'➕', r'➖', r'✏️', r'📌', r'🔔', r'🔕', r'✕',
     # Social/communication
     r'💬', r'💭', r'🗨️', r'🗯️', r'💥', r'💫', r'⚡', r'🌈', r'🎁', r'🛠️',
+    # Sentiment emojis
+    r'😊', r'😕', r'😀', r'😃', r'😄', r'😁', r'😆', r'😅', r'🤣', r'😂',
+    r'🙂', r'🙃', r'😉', r'😇', r'🥰', r'😍', r'🤩', r'😘', r'😗', r'😚',
+    r'😙', r'😋', r'😛', r'😜', r'🤪', r'😝', r'🤑', r'🤗', r'🤭', r'🤫',
+    r'🤔', r'🤐', r'🤨', r'😐', r'😑', r'😶', r'😏', r'😒', r'🙄', r'😬',
+    r'🤥', r'😌', r'😔', r'😪', r'🤤', r'😴', r'😷', r'🤒', r'🤕', r'🤢',
+    r'🤮', r'🤧', r'🥵', r'🥶', r'😶‍🌫️', r'🥴', r'😵', r'😵‍💫', r'🤯', r'🤠',
+    r'🥳', r'😎', r'🤓', r'🧐', r'😟', r'🙁', r'☹️', r'😮', r'😯', r'😲',
+    r'😳', r'🥺', r'😦', r'😧', r'😨', r'😰', r'😥', r'😢', r'😭', r'😱',
+    r'😖', r'😣', r'😞', r'😓', r'😩', r'😫', r'🥱', r'😤', r'😡', r'😠',
+    # Additional symbols
+    r'⚙️', r'⚔️', r'⛔', r'🛑', r'❓', r'❔', r'❕', r'❗',
 ]
 
 def remove_emojis(text):

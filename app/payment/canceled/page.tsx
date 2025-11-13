@@ -10,7 +10,7 @@ export default function PaymentCanceledPage() {
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 text-center">
           {/* Canceled Icon */}
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gold-intense to-gold-600 rounded-full">
               <svg
                 className="w-12 h-12 text-white"
                 fill="none"
@@ -70,19 +70,19 @@ export default function PaymentCanceledPage() {
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <a
               href="mailto:support@orla3.com"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               Contact Support
             </a>
             <Link
               href="/#pricing"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               View Pricing Details
             </Link>
             <Link
               href="/login"
-              className="text-cobalt-300 hover:text-blue-300 transition"
+              className="text-cobalt-300 hover:text-cobalt-300 transition"
             >
               Sign In
             </Link>

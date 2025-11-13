@@ -90,7 +90,7 @@ export default function ResendVerificationPage() {
               <div className="mt-6 text-center">
                 <Link
                   href="/login"
-                  className="text-cobalt-300 hover:text-blue-300 font-semibold transition text-sm"
+                  className="text-cobalt-300 hover:text-cobalt-300 font-semibold transition text-sm"
                 >
                   Back to Login
                 </Link>

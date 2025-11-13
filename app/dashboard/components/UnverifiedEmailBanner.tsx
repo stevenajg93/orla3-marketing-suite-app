@@ -34,12 +34,12 @@ export default function UnverifiedEmailBanner({ userEmail }: UnverifiedEmailBann
   if (dismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-yellow-900/40 via-orange-900/40 to-yellow-900/40 backdrop-blur-lg border border-yellow-500/30 rounded-lg p-4 mb-6">
+    <div className="bg-gradient-to-r from-yellow-900/40 via-orange-900/40 to-yellow-900/40 backdrop-blur-lg border border-gold/30 rounded-lg p-4 mb-6">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3 flex-1">
           <div className="flex-shrink-0">
             <svg
-              className="w-6 h-6 text-yellow-400"
+              className="w-6 h-6 text-gold-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -61,7 +61,7 @@ export default function UnverifiedEmailBanner({ userEmail }: UnverifiedEmailBann
               <button
                 onClick={handleResendEmail}
                 disabled={loading}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gold-600 hover:bg-gold-700 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Resend Verification Email'}
               </button>
