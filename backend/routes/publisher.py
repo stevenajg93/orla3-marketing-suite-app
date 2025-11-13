@@ -1,11 +1,91 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict
 import os
 import httpx
 import json
 from datetime import datetime
 from requests_oauthlib import OAuth1Session
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.auth import decode_token
+from logger import setup_logger
+
+router = APIRouter()
+logger = setup_logger(__name__)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# ============================================================================
+# MULTI-TENANT AUTH HELPERS
+# ============================================================================
+
+def get_db_connection():
+    """Get database connection"""
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+
+def get_user_from_token(request: Request) -> str:
+    """Extract user_id from JWT token"""
+    auth_header = request.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing authorization token")
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload.get('sub')  # user_id
+
+
+def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Dict]:
+    """
+    Get user's OAuth credentials for a specific service from connected_services table
+
+    Args:
+        user_id: The user's UUID
+        service_type: Platform name (instagram, linkedin, twitter, etc.)
+
+    Returns:
+        Dict with access_token and other service metadata, or None if not connected
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT
+                access_token,
+                refresh_token,
+                token_expires_at,
+                service_id,
+                service_metadata,
+                is_active
+            FROM connected_services
+            WHERE user_id = %s AND service_type = %s AND is_active = true
+            ORDER BY connected_at DESC
+            LIMIT 1
+        """, (user_id, service_type))
+
+        result = cur.fetchone()
+
+        if not result:
+            logger.warning(f"No active {service_type} connection for user {user_id}")
+            return None
+
+        return dict(result)
+
+    except Exception as e:
+        logger.error(f"Error fetching service credentials for user {user_id}: {e}")
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
 
 router = APIRouter()
 
@@ -326,39 +406,56 @@ class TwitterPublisher:
 # ============================================================================
 
 @router.post("/publish", response_model=PublishResponse)
-async def publish_content(request: PublishRequest):
+async def publish_content(publish_request: PublishRequest, request: Request):
     """
     Universal publishing endpoint supporting all platforms
     Routes to appropriate platform publisher based on request
+
+    MULTI-TENANT: Requires JWT authentication, publishes to user's connected accounts only
     """
+
+    # Extract user_id from JWT token
+    user_id = get_user_from_token(request)
+    logger.info(f"Publishing to {publish_request.platform} for user {user_id}")
 
     result = {
         "success": False,
-        "platform": request.platform,
+        "platform": publish_request.platform,
         "published_at": datetime.utcnow().isoformat()
     }
 
     try:
         # Handle X/Twitter alias
-        platform = "twitter" if request.platform == "x" else request.platform
+        platform = "twitter" if publish_request.platform == "x" else publish_request.platform
+
+        # Get user's credentials for this platform
+        credentials = get_user_service_credentials(user_id, platform)
+
+        if not credentials:
+            return PublishResponse(
+                success=False,
+                platform=publish_request.platform,
+                error=f"No active {platform} connection found. Please connect your {platform} account in settings.",
+                published_at=result["published_at"]
+            )
 
         if platform == "instagram":
             publisher = InstagramPublisher()
 
-            if request.content_type == "carousel" and len(request.image_urls) > 1:
+            if publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
                 publish_result = await publisher.publish_carousel(
-                    caption=request.caption,
-                    image_urls=request.image_urls
+                    caption=publish_request.caption,
+                    image_urls=publish_request.image_urls
                 )
-            elif request.image_urls:
+            elif publish_request.image_urls:
                 publish_result = await publisher.publish_single_image(
-                    caption=request.caption,
-                    image_url=request.image_urls[0]
+                    caption=publish_request.caption,
+                    image_url=publish_request.image_urls[0]
                 )
             else:
                 return PublishResponse(
                     success=False,
-                    platform=request.platform,
+                    platform=publish_request.platform,
                     error="Instagram posts require at least one image",
                     published_at=result["published_at"]
                 )
@@ -367,19 +464,19 @@ async def publish_content(request: PublishRequest):
 
         elif platform == "linkedin":
             publisher = LinkedInPublisher()
-            publish_result = await publisher.publish_text(caption=request.caption)
+            publish_result = await publisher.publish_text(caption=publish_request.caption)
             result.update(publish_result)
 
         elif platform == "twitter":
             publisher = TwitterPublisher()
-            publish_result = await publisher.publish_tweet(caption=request.caption)
+            publish_result = await publisher.publish_tweet(caption=publish_request.caption)
             result.update(publish_result)
 
         elif platform == "facebook":
             publisher = FacebookPublisher()
-            image_url = request.image_urls[0] if request.image_urls else None
+            image_url = publish_request.image_urls[0] if publish_request.image_urls else None
             publish_result = await publisher.publish_post(
-                caption=request.caption,
+                caption=publish_request.caption,
                 image_url=image_url
             )
             result.update(publish_result)
@@ -395,22 +492,22 @@ async def publish_content(request: PublishRequest):
 
         elif platform == "tumblr":
             publisher = TumblrPublisher()
-            image_url = request.image_urls[0] if request.image_urls else None
+            image_url = publish_request.image_urls[0] if publish_request.image_urls else None
             publish_result = await publisher.publish_post(
-                caption=request.caption,
+                caption=publish_request.caption,
                 image_url=image_url
             )
             result.update(publish_result)
 
         elif platform == "wordpress":
             # Use provided title/content if available, otherwise extract from caption
-            title = request.title
+            title = publish_request.title
             if not title:
                 # Extract from caption first line if no title provided
-                lines = request.caption.split('\n')
+                lines = publish_request.caption.split('\n')
                 title = lines[0][:100] if lines else "Untitled Post"
 
-            content = request.content or request.caption
+            content = publish_request.content or publish_request.caption
 
             publisher = WordPressPublisher()
             publish_result = await publisher.publish_post(
@@ -420,22 +517,54 @@ async def publish_content(request: PublishRequest):
             result.update(publish_result)
 
         else:
-            result["error"] = f"Platform {request.platform} not supported"
+            result["error"] = f"Platform {publish_request.platform} not supported"
 
         return PublishResponse(**result)
 
     except Exception as e:
+        logger.error(f"Publishing error for user {user_id}: {e}")
         return PublishResponse(
             success=False,
-            platform=request.platform,
+            platform=publish_request.platform,
             error=str(e),
             published_at=result["published_at"]
         )
 
 @router.get("/status")
-async def check_publisher_status():
-    """Check which social platforms are configured and ready"""
-    
+async def check_publisher_status(request: Request):
+    """
+    Check which social platforms the user has connected
+
+    MULTI-TENANT: Returns only the authenticated user's connected platforms
+    """
+
+    # Extract user_id from JWT token
+    user_id = get_user_from_token(request)
+    logger.info(f"Checking publisher status for user {user_id}")
+
+    # List of platforms to check
+    platforms = ["instagram", "linkedin", "twitter", "facebook", "tiktok", "youtube", "reddit", "tumblr", "wordpress"]
+
+    status = {}
+
+    for platform in platforms:
+        credentials = get_user_service_credentials(user_id, platform)
+        status[platform] = {
+            "connected": credentials is not None,
+            "service_id": credentials.get('service_id') if credentials else None
+        }
+
+    return {
+        "user_id": user_id,
+        "platforms": status,
+        "total_connected": sum(1 for p in status.values() if p['connected'])
+    }
+
+
+@router.get("/status-legacy")
+async def check_publisher_status_legacy():
+    """Legacy status check using environment variables (deprecated)"""
+
     instagram = InstagramPublisher()
     linkedin = LinkedInPublisher()
     twitter = TwitterPublisher()
