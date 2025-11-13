@@ -543,16 +543,16 @@ This strategy is **automatically applied** to all content generation.
 
 **Platform Status:**
 - ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published)
-- ✅ **Facebook**: Complete multi-tenant architecture with Page management (requires Meta App Review for posting)
-  - Users can list their managed Pages
-  - Users can select which Page to post to
+- ✅ **Facebook**: Complete multi-tenant architecture with Page management + publishing (WORKING)
+  - Users can list their managed Pages (working)
+  - Users can select which Page to post to (working)
+  - Users can publish posts to selected Page (working)
   - Page credentials (page_access_token, selected_page_id) stored in service_metadata
-  - Publishing works once `pages_manage_posts` is approved by Meta
-- ✅ **Instagram/Facebook**: OAuth 2.0 connection working with Development Mode permissions
-- ⚠️ **Meta Limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
-  - Current Facebook permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
-  - Current Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list`
-  - Users can connect accounts but cannot publish until app goes through Meta review process
+  - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
+  - Added via "Manage everything on your page" use case in Meta console
+- ⚠️ **Instagram**: OAuth 2.0 connection working
+  - Current permissions: `public_profile`, `instagram_basic`, `pages_show_list`
+  - ⚠️ **Publishing blocked**: `instagram_content_publish` permission needs to be added in Meta console
 - 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
 
 **OAuth 2.0 Endpoints:**
@@ -676,22 +676,22 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Migration #007: Added social platforms to connected_services constraint
   - Migration #008: Added unique constraint on (user_id, service_type)
 
-- ✅ **Facebook Multi-Tenant Publishing Architecture** (Nov 13, 2025)
-  - GET /social-auth/facebook/pages - Fetches user's managed Facebook Pages
-  - POST /social-auth/facebook/select-page - Stores selected page credentials
+- ✅ **Facebook Multi-Tenant Publishing Architecture** (Nov 13, 2025) - COMPLETE & WORKING
+  - GET /social-auth/facebook/pages - Fetches user's managed Facebook Pages (working)
+  - POST /social-auth/facebook/select-page - Stores selected page credentials (working)
   - FacebookPublisher refactored to use per-user OAuth tokens (page_access_token, page_id)
   - Page credentials stored in connected_services.service_metadata (JSONB)
   - /publisher/publish endpoint retrieves page credentials from service_metadata per-user
-  - Added pages_manage_posts permission to Facebook OAuth scopes
-  - ⚠️ **Publishing works once Meta approves pages_manage_posts permission**
+  - Facebook permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
+  - ✅ **Publishing enabled**: pages_manage_posts added via "Manage everything on your page" use case
+  - End-to-end flow working: OAuth → List Pages → Select Page → Publish Post
 
-- ✅ **Instagram/Facebook OAuth 2.0** (connection working, publishing limited)
+- ✅ **Instagram OAuth 2.0** (connection working, publishing needs permission)
   - Instagram uses Facebook's OAuth system (unified Meta platform)
   - Both share same callback URL: `/callback/facebook`
-  - Facebook permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
-  - Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list`
-  - ⚠️ **Publishing limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
-  - Users can connect accounts but cannot publish posts until app review approval
+  - Instagram permissions: `public_profile`, `instagram_basic`, `pages_show_list` (working)
+  - ⚠️ **Publishing needs**: `instagram_content_publish` permission via Meta console use case
+  - Users can connect accounts, publishing works once permission is added in Meta console
 
 - ✅ **OAuth flow implementation**
   - Two-step flow: Frontend calls `/get-auth-url/{platform}` with JWT

@@ -52,10 +52,9 @@ AI-powered marketing automation platform for videographers and creative professi
 - **9 Platform Support**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
 - **OAuth 2.0 Multi-Tenant**: Users connect their own accounts securely
 - **Platform Status**:
-  - ✅ Twitter/X: Full OAuth 2.0 with PKCE + publishing (working)
-  - ✅ Facebook: Full multi-tenant architecture with Page management (requires Meta App Review for posting)
-  - ✅ Instagram/Facebook: OAuth 2.0 connection (limited permissions in Dev Mode)
-  - ⚠️ Meta Limitation: `pages_manage_posts` and `instagram_content_publish` require App Review
+  - ✅ Twitter/X: Full OAuth 2.0 with PKCE + publishing (WORKING)
+  - ✅ Facebook: Full multi-tenant architecture with Page management + publishing (WORKING)
+  - ⚠️ Instagram: OAuth 2.0 connection (publishing requires `instagram_content_publish` permission)
   - 🔄 LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress: OAuth 2.0 ready (redirect URIs needed)
 - **Database**: Per-user tokens stored encrypted in `connected_services` table
 - **PKCE Security**: Twitter OAuth 2.0 with SHA256 code challenge
@@ -335,9 +334,10 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 - ✅ **POST `/social-auth/facebook/select-page`** - Stores selected page credentials in service_metadata
 - ✅ **FacebookPublisher refactored** - Uses per-user OAuth tokens instead of global environment variables
 - ✅ **Multi-tenant publishing** - `/publisher/publish` fetches page credentials from service_metadata
-- ✅ **pages_manage_posts permission** - Added to Facebook OAuth scopes (requires Meta App Review)
 - ✅ **Page credentials storage** - service_metadata stores: selected_page_id, selected_page_name, page_access_token
-- ⚠️ **Meta App Review Required** - Posting will work once `pages_manage_posts` is approved by Meta
+- ✅ **All permissions active** - public_profile, pages_show_list, pages_read_engagement, pages_manage_posts
+- ✅ **Publishing enabled** - pages_manage_posts added via "Manage everything on your page" use case
+- ✅ **Ready to test** - Facebook OAuth connection and publishing fully configured
 
 **OAuth 2.0 Multi-Tenant Social Publishing (Nov 13, 2025)**
 - ✅ **Complete OAuth 2.0 implementation** for all 9 social platforms

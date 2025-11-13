@@ -78,7 +78,7 @@ PLATFORM_CONFIG = {
     "facebook": {
         "auth_url": "https://www.facebook.com/v18.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
-        # Note: pages_manage_posts requires Meta App Review for production use
+        # Permissions added via "Manage everything on your page" use case
         "scopes": ["public_profile", "pages_show_list", "pages_read_engagement", "pages_manage_posts"],
         "client_id": FACEBOOK_CLIENT_ID,
         "client_secret": FACEBOOK_CLIENT_SECRET,
