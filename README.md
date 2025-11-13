@@ -51,7 +51,11 @@ AI-powered marketing automation platform for videographers and creative professi
 ### 📢 Social Media Publishing
 - **9 Platform Support**: Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress
 - **OAuth 2.0 Multi-Tenant**: Users connect their own accounts securely
-- **Platform Status**: All 9 platforms support OAuth 2.0 user authentication
+- **Platform Status**:
+  - ✅ Twitter/X: Full OAuth 2.0 with PKCE (working)
+  - ✅ Instagram/Facebook: OAuth 2.0 connection (limited permissions in Dev Mode)
+  - ⚠️ Meta Limitation: `pages_manage_posts` and `instagram_content_publish` require App Review
+  - 🔄 LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress: OAuth 2.0 ready (redirect URIs needed)
 - **Database**: Per-user tokens stored encrypted in `connected_services` table
 - **PKCE Security**: Twitter OAuth 2.0 with SHA256 code challenge
 - **Universal API**: Single endpoint for all platforms
@@ -325,11 +329,15 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 **OAuth 2.0 Multi-Tenant Social Publishing (Nov 13, 2025)**
 - ✅ **Complete OAuth 2.0 implementation** for all 9 social platforms
-- ✅ **Twitter OAuth 2.0 with PKCE** - SHA256 code challenge for security
-- ✅ **Database schema updates** - Added `oauth_states` table with metadata column for PKCE
+- ✅ **Twitter OAuth 2.0 with PKCE** - SHA256 code challenge for security (WORKING)
+- ✅ **Instagram/Facebook OAuth 2.0** - Unified Meta OAuth system (WORKING with dev permissions)
+- ⚠️ **Meta App Review Required** - Advanced permissions (`pages_manage_posts`, `instagram_content_publish`) require Meta app review for publishing functionality
+- ✅ **Database schema updates** - 3 migrations (#006, #007, #008) for OAuth support
 - ✅ **Per-user social connections** - Users connect their own accounts via settings
 - ✅ **Platform redirect URIs** - Configured callback URLs for all platforms
-- ✅ **Migration #006** - Added metadata JSONB column to oauth_states table
+- ✅ **Migration #006** - Added metadata JSONB column to oauth_states table for PKCE
+- ✅ **Migration #007** - Added social platforms to connected_services constraint
+- ✅ **Migration #008** - Added unique constraint on (user_id, service_type)
 - ✅ **Frontend UI** - Social accounts settings page at /dashboard/settings/social-accounts
 - ✅ **Backend routes** - `/social-auth/get-auth-url/{platform}`, `/social-auth/callback/{platform}`
 

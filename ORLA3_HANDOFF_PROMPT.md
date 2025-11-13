@@ -541,6 +541,14 @@ This strategy is **automatically applied** to all content generation.
 - ✅ **PKCE Security**: Twitter OAuth 2.0 uses SHA256 code challenge (stored in `oauth_states.metadata`)
 - ✅ **CSRF Protection**: State tokens with 10-minute expiry in `oauth_states` table
 
+**Platform Status:**
+- ✅ **Twitter/X**: Full OAuth 2.0 with PKCE working (tweets can be published)
+- ✅ **Instagram/Facebook**: OAuth 2.0 connection working with Development Mode permissions
+- ⚠️ **Meta Limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
+  - Current permissions: `public_profile`, `instagram_basic`, `pages_show_list`, `pages_read_engagement`
+  - Users can connect accounts but cannot publish until app goes through Meta review process
+- 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
+
 **OAuth 2.0 Endpoints:**
 - `GET /social-auth/get-auth-url/{platform}` - Get OAuth URL (requires JWT auth)
 - `GET /social-auth/callback/{platform}` - Handle OAuth callback
@@ -557,8 +565,14 @@ Each platform requires whitelisting redirect URI in developer console:
 https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/{platform}
 ```
 
+**Important Notes:**
+- **Instagram uses Facebook's OAuth system** - Both share the same callback URL (`/callback/facebook`)
+- Instagram redirect URI should NOT be added separately to Meta Developer Console
+- Twitter requires PKCE (code_verifier stored in `oauth_states.metadata` JSONB column)
+- Twitter OAuth 2.0 uses Basic Authorization header (not request body credentials)
+
 **Database Tables:**
-- `oauth_states` - Temporary state tokens for CSRF protection (10min TTL)
+- `oauth_states` - Temporary state tokens for CSRF protection (10min TTL), includes metadata for PKCE
 - `connected_services` - Per-user OAuth tokens and refresh tokens
 
 ---
@@ -639,30 +653,41 @@ GET    /ai/video-status/{job_id}   # Check video generation status
   - Per-user account connections via /dashboard/settings/social-accounts
   - Secure token storage in `connected_services` table
 
-- ✅ **Twitter OAuth 2.0 with PKCE**
+- ✅ **Twitter OAuth 2.0 with PKCE** (fully working)
   - SHA256 code challenge/verifier implementation
   - PKCE code_verifier stored in `oauth_states.metadata` (JSONB column)
   - Proper OAuth 2.0 flow with state token CSRF protection
+  - Basic Authorization header for token exchange (OAuth 2.0 spec compliant)
   - Migration #006: Added metadata column to oauth_states table
+  - Migration #007: Added social platforms to connected_services constraint
+  - Migration #008: Added unique constraint on (user_id, service_type)
+
+- ✅ **Instagram/Facebook OAuth 2.0** (connection working, publishing limited)
+  - Instagram uses Facebook's OAuth system (unified Meta platform)
+  - Both share same callback URL: `/callback/facebook`
+  - Development Mode permissions: `public_profile`, `instagram_basic`, `pages_show_list`, `pages_read_engagement`
+  - ⚠️ **Publishing limitation**: `pages_manage_posts` and `instagram_content_publish` require Meta App Review
+  - Users can connect accounts but cannot publish posts until app review approval
 
 - ✅ **OAuth flow implementation**
   - Two-step flow: Frontend calls `/get-auth-url/{platform}` with JWT
   - Backend generates state token and PKCE challenge (Twitter only)
   - User redirects to platform for authorization
   - Callback exchanges code for access/refresh tokens
-  - Tokens stored per-user in database
+  - Tokens stored per-user in database with ON CONFLICT upsert
 
 - ✅ **Frontend social accounts page**
   - OAuth connection UI for all 9 platforms
-  - Platform-specific logos and branding
+  - Platform-specific logos and branding (Instagram gradient, X logo, etc.)
   - Connection status display
   - Disconnect functionality
 
-- ✅ **Backend routes** (`backend/routes/social_auth.py`)
+- ✅ **Backend routes** (`backend/routes/social_auth.py` - 505 lines)
   - GET /social-auth/get-auth-url/{platform} - Initiate OAuth (JWT required)
   - GET /social-auth/callback/{platform} - Handle OAuth callback
   - GET /social-auth/status - Check user's connected platforms
   - POST /social-auth/disconnect/{platform} - Remove platform connection
+  - Platform configurations for all 9 services (auth URLs, token URLs, scopes)
 
 **0. Payment & Credit Management System (Nov 12, 2025)**
 - ✅ **Complete Stripe integration**
