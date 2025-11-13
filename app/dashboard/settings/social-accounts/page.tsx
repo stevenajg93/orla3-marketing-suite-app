@@ -43,11 +43,21 @@ export default function SocialAccountsSettings() {
   const loadConnections = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await api.get('/social-auth/status');
       setConnections(response.connections || {});
     } catch (err: any) {
       console.error('Error loading connections:', err);
-      setError(err.message || 'Failed to load social account connections');
+      // Show a more helpful error message
+      if (err.status === 401) {
+        setError('Please log in to connect your social accounts');
+      } else if (err.status === 404 || err.status === 0) {
+        setError('Social authentication service is deploying. Please refresh in a moment.');
+      } else {
+        setError(err.message || 'Failed to load social account connections');
+      }
+      // Set empty connections so UI still renders
+      setConnections({});
     } finally {
       setLoading(false);
     }

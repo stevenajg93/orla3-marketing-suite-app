@@ -422,6 +422,125 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* SEO & AI Search Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-gradient-to-b from-transparent via-cobalt/5 to-transparent">
+        <div className="text-center mb-12">
+          <div className="inline-block mb-4 px-4 py-2 bg-gradient-to-r from-green-500/20 to-cobalt/20 rounded-full border border-green-500/30">
+            <span className="text-green-300 font-semibold">
+              Built for Discovery
+            </span>
+          </div>
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Optimized for SEO & AI Search
+          </h2>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Our blog posts aren't just well-written—they're engineered to rank on Google
+            and appear in AI search results like ChatGPT, Perplexity, and Claude.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* Traditional SEO */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-green-500/50 transition">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">Traditional Search Engines</h3>
+                <p className="text-green-300 font-semibold mb-4">Rank Higher on Google</p>
+              </div>
+            </div>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 mt-1">✓</span>
+                <span><strong className="text-white">SEO-optimized headlines</strong> with target keywords naturally integrated</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 mt-1">✓</span>
+                <span><strong className="text-white">Structured content</strong> with proper H1-H6 hierarchy for crawlers</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 mt-1">✓</span>
+                <span><strong className="text-white">Meta descriptions</strong> crafted to improve click-through rates</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 mt-1">✓</span>
+                <span><strong className="text-white">Internal linking</strong> suggestions to boost domain authority</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400 mt-1">✓</span>
+                <span><strong className="text-white">Long-form content</strong> (1500-3000 words) that ranks better</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* AI Search */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-cobalt/50 transition">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-cobalt to-royal rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">AI Search Engines</h3>
+                <p className="text-cobalt-300 font-semibold mb-4">Cited by ChatGPT, Perplexity & Claude</p>
+              </div>
+            </div>
+            <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-2">
+                <span className="text-cobalt-300 mt-1">✓</span>
+                <span><strong className="text-white">Authoritative tone</strong> that AI models recognize as credible sources</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-cobalt-300 mt-1">✓</span>
+                <span><strong className="text-white">Factual, well-researched</strong> content AI assistants trust to cite</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-cobalt-300 mt-1">✓</span>
+                <span><strong className="text-white">Clear answers</strong> to common questions in your niche</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-cobalt-300 mt-1">✓</span>
+                <span><strong className="text-white">Up-to-date information</strong> that stays relevant for AI training</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-cobalt-300 mt-1">✓</span>
+                <span><strong className="text-white">Your domain gets mentioned</strong> when users ask AI about your topics</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-green-500/10 to-emerald-600/10 backdrop-blur-lg rounded-xl p-6 border border-green-500/20 text-center">
+            <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-2">
+              2-3x
+            </div>
+            <p className="text-white font-semibold mb-1">Better Rankings</p>
+            <p className="text-gray-400 text-sm">SEO-optimized posts rank higher faster</p>
+          </div>
+          <div className="bg-gradient-to-br from-cobalt/10 to-royal/10 backdrop-blur-lg rounded-xl p-6 border border-cobalt/20 text-center">
+            <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-2">
+              100%
+            </div>
+            <p className="text-white font-semibold mb-1">AI-Ready Content</p>
+            <p className="text-gray-400 text-sm">Formatted for AI search engines to cite</p>
+          </div>
+          <div className="bg-gradient-to-br from-gold/10 to-gold-intense/10 backdrop-blur-lg rounded-xl p-6 border border-gold/20 text-center">
+            <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
+              24/7
+            </div>
+            <p className="text-white font-semibold mb-1">Discovery</p>
+            <p className="text-gray-400 text-sm">Your content works while you sleep</p>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20" id="pricing">
         <h2 className="text-4xl font-bold text-white text-center mb-4">
