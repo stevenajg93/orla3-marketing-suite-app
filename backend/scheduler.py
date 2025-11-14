@@ -40,6 +40,7 @@ def start_scheduler():
         try:
             # Import worker functions (avoid circular import)
             from workers.post_scheduler import check_scheduled_posts
+            from workers.comment_monitor import monitor_and_reply_to_comments
 
             # Add scheduled post checker (runs every minute)
             scheduler.add_job(
@@ -50,9 +51,19 @@ def start_scheduler():
                 replace_existing=True
             )
 
+            # Add comment monitor for auto-reply (runs every 15 minutes)
+            scheduler.add_job(
+                func=monitor_and_reply_to_comments,
+                trigger=IntervalTrigger(minutes=15),
+                id='monitor_comments',
+                name='Monitor comments and auto-reply',
+                replace_existing=True
+            )
+
             scheduler.start()
             logger.info("✅ APScheduler started successfully")
             logger.info("📅 Scheduled post checker: Every 1 minute")
+            logger.info("💬 Comment monitor: Every 15 minutes")
 
         except Exception as e:
             logger.error(f"❌ Failed to start scheduler: {e}")
