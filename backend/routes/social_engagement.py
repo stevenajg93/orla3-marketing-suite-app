@@ -10,10 +10,13 @@ import logging
 from datetime import datetime, timedelta
 from middleware.user_context import get_user_from_token
 import psycopg2
-from config import Config
+import os
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Get DATABASE_URL from environment
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 # ============================================================================
@@ -47,7 +50,11 @@ class CommentsResponse(BaseModel):
 def get_user_oauth_token(user_id: str, platform: str):
     """Get user's OAuth token for platform from database"""
     try:
-        conn = psycopg2.connect(Config.DATABASE_URL)
+        if not DATABASE_URL:
+            logger.error("DATABASE_URL not configured")
+            return None
+
+        conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
 
         cursor.execute("""

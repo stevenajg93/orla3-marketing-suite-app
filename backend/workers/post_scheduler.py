@@ -5,7 +5,7 @@ import psycopg2
 from datetime import datetime, timezone
 import logging
 import json
-from config import Config
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,12 @@ def check_scheduled_posts():
         logger.info("🔍 Checking for scheduled posts...")
 
         # Connect to database
-        conn = psycopg2.connect(Config.DATABASE_URL)
+        DATABASE_URL = os.getenv("DATABASE_URL")
+        if not DATABASE_URL:
+            logger.error("❌ DATABASE_URL not set")
+            return
+
+        conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
 
         # Find scheduled posts that are due (scheduled_date <= now AND status='scheduled')

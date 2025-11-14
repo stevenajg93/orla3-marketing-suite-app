@@ -4,15 +4,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    # Database
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+    # AI APIs
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")  # Deprecated, keeping for backwards compatibility
+
+    # Application URLs
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+    # Google Drive
     SHARED_DRIVE_ID = os.getenv("SHARED_DRIVE_ID", "0AM2nUL9uMdpsUk9PVA")
     SHARED_DRIVE_NAME = os.getenv("SHARED_DRIVE_NAME", "GECS Labs")
     MARKETING_FOLDER_NAME = os.getenv("MARKETING_FOLDER_NAME", "Marketing")
-    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
     # OAuth Credentials - Social Platforms
     INSTAGRAM_CLIENT_ID = os.getenv("INSTAGRAM_CLIENT_ID")
