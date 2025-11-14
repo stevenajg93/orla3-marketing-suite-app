@@ -35,7 +35,9 @@ export default function ContentCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+  const [publishingEventId, setPublishingEventId] = useState<string | null>(null);
+  const [publishingAll, setPublishingAll] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     content_type: 'text',
@@ -150,6 +152,70 @@ export default function ContentCalendar() {
     return platformConfig[platform as keyof typeof platformConfig]?.icon || '';
   };
 
+  const handlePublishEvent = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent calendar date click
+
+    if (publishingEventId) return; // Already publishing
+
+    if (!confirm('Publish this event immediately?')) return;
+
+    setPublishingEventId(eventId);
+    try {
+      const response = await api.post(`/calendar/events/${eventId}/publish`, {});
+
+      if (response.success) {
+        alert(`✅ ${response.message || 'Published successfully!'}\n${response.post_url || ''}`);
+        await loadEvents(); // Reload to get updated status
+      } else {
+        alert(`❌ Failed to publish: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Publish error:', err);
+      alert('❌ Failed to publish event');
+    } finally {
+      setPublishingEventId(null);
+    }
+  };
+
+  const handlePublishAllDue = async () => {
+    if (publishingAll) return; // Already publishing
+
+    const dueEvents = events.filter(e =>
+      e.status === 'scheduled' &&
+      new Date(e.scheduled_date) <= new Date()
+    );
+
+    if (dueEvents.length === 0) {
+      alert('No due events to publish');
+      return;
+    }
+
+    if (!confirm(`Publish ${dueEvents.length} due event(s) now?`)) return;
+
+    setPublishingAll(true);
+    try {
+      const response = await api.post('/calendar/publish-all-due', {});
+
+      if (response.success) {
+        const summary = response.summary;
+        alert(
+          `✅ Bulk Publish Complete!\n\n` +
+          `Published: ${summary.published}\n` +
+          `Failed: ${summary.failed}\n` +
+          `Total: ${summary.total}`
+        );
+        await loadEvents(); // Reload calendar
+      } else {
+        alert(`❌ Bulk publish failed: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Bulk publish error:', err);
+      alert('❌ Failed to publish events');
+    } finally {
+      setPublishingAll(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
       <div className="max-w-7xl mx-auto">
@@ -165,6 +231,13 @@ export default function ContentCalendar() {
             <p className="text-cobalt-300 mt-2">Plan and schedule your content across all platforms</p>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={handlePublishAllDue}
+              disabled={publishingAll}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-all flex items-center gap-2"
+            >
+              {publishingAll ? '⏳ Publishing...' : '🚀 Publish All Due'}
+            </button>
             <button
               onClick={() => router.push('/dashboard/social')}
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
@@ -239,12 +312,22 @@ export default function ContentCalendar() {
                         {dayEvents.slice(0, 3).map(event => (
                           <div
                             key={event.id}
-                            className={`text-xs p-1.5 rounded ${getStatusColor(event.status)} text-white truncate flex items-center gap-1`}
+                            className={`text-xs p-1.5 rounded ${getStatusColor(event.status)} text-white truncate flex items-center gap-1 group relative`}
                             title={`${event.title} - ${event.platform}`}
                           >
                             <span>{getPlatformIcon(event.platform)}</span>
                             <span>{getTypeIcon(event.content_type)}</span>
                             <span className="flex-1 truncate">{event.title}</span>
+                            {event.status === 'scheduled' && (
+                              <button
+                                onClick={(e) => handlePublishEvent(event.id, e)}
+                                disabled={publishingEventId === event.id}
+                                className="opacity-0 group-hover:opacity-100 bg-white/20 hover:bg-white/30 disabled:bg-gray-500/50 disabled:cursor-not-allowed px-1.5 py-0.5 rounded text-xs font-semibold transition-all"
+                                title="Publish now"
+                              >
+                                {publishingEventId === event.id ? '⏳' : '▶'}
+                              </button>
+                            )}
                           </div>
                         ))}
                         {dayEvents.length > 3 && (
