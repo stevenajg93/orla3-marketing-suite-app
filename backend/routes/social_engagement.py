@@ -8,7 +8,7 @@ from typing import List, Optional
 import httpx
 import logging
 from datetime import datetime, timedelta
-from middleware.user_context import get_user_from_token
+from middleware.user_context import get_user_id
 import psycopg2
 import os
 
@@ -114,7 +114,7 @@ async def get_instagram_comments(request: Request, post_id: Optional[str] = None
 
     Requires scope: instagram_manage_comments
     """
-    user_id = get_user_from_token(request)
+    user_id = str(get_user_id(request))
     logger.info(f"Fetching Instagram comments for user {user_id}")
 
     # Get user's Instagram OAuth token
@@ -266,7 +266,7 @@ async def get_facebook_comments(request: Request, post_id: Optional[str] = None,
 
     Requires scope: pages_manage_engagement
     """
-    user_id = get_user_from_token(request)
+    user_id = str(get_user_id(request))
     logger.info(f"Fetching Facebook comments for user {user_id}")
 
     # Get user's Facebook OAuth token
@@ -416,7 +416,7 @@ async def get_twitter_mentions(request: Request, limit: int = 50):
     Requires scope: tweet.read
     Note: Twitter v2 API doesn't have direct comment threading, so we fetch mentions
     """
-    user_id = get_user_from_token(request)
+    user_id = str(get_user_id(request))
     logger.info(f"Fetching Twitter mentions for user {user_id}")
 
     # Get user's Twitter OAuth token
@@ -532,7 +532,7 @@ async def get_all_comments(request: Request, limit: int = 50):
     Fetch recent comments from ALL connected platforms
     Returns aggregated list sorted by timestamp
     """
-    user_id = get_user_from_token(request)
+    user_id = str(get_user_id(request))
     logger.info(f"Fetching all comments for user {user_id}")
 
     all_comments = []
