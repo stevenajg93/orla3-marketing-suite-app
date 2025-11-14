@@ -675,16 +675,38 @@ export default function SocialManagerPage() {
   };
 
   const searchRelevantPosts = async () => {
+    if (!discoveryQuery.trim()) {
+      return;
+    }
+
     setSearchingPosts(true);
     setDiscoveryPosts([]);
 
     try {
-      // TODO: Phase 3 - Implement real discovery API
-      // For now, show message that this feature is coming
-      console.log('Post discovery will be implemented in Phase 3');
-      setDiscoveryPosts([]);
+      // Search across Twitter and Reddit
+      const response = await apiClient.post('/social/discover/all', {
+        query: discoveryQuery,
+        platforms: ['twitter', 'reddit'],
+        limit: 20
+      });
+
+      if (response.data) {
+        // Transform API response to match DiscoveryPost interface
+        const transformedPosts = response.data.map((p: any) => ({
+          id: p.id,
+          platform: p.platform as Platform,
+          author: p.author,
+          content: p.content,
+          hashtags: p.hashtags || [],
+          engagement: p.engagement || 0,
+          timestamp: formatTimestamp(p.timestamp)
+        }));
+        setDiscoveryPosts(transformedPosts);
+      }
     } catch (error) {
       console.error('Failed to search posts:', error);
+      // Show user-friendly message
+      setDiscoveryPosts([]);
     } finally {
       setSearchingPosts(false);
     }
