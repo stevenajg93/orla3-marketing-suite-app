@@ -64,9 +64,12 @@ export default function SocialManagerPage() {
   // Media library state
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
-  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'dropbox' | 'onedrive' | 'pexels-photos' | 'pexels-videos' | 'ai-images' | 'ai-videos'>('generated');
+  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'cloud' | 'pexels-photos' | 'pexels-videos' | 'ai-images' | 'ai-videos'>('generated');
+  const [cloudStorageProvider, setCloudStorageProvider] = useState<'google_drive' | 'dropbox' | 'onedrive' | null>(null);
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [driveAssets, setDriveAssets] = useState<any[]>([]);
   const [driveFolders, setDriveFolders] = useState<any[]>([]);
+  const [driveFolderId, setDriveFolderId] = useState<string>('');
   const [dropboxFiles, setDropboxFiles] = useState<any[]>([]);
   const [dropboxFolders, setDropboxFolders] = useState<any[]>([]);
   const [dropboxPath, setDropboxPath] = useState<string>('');
@@ -142,6 +145,14 @@ export default function SocialManagerPage() {
     }
   }, []);
 
+  // Load media library content and connected providers when modal opens
+  useEffect(() => {
+    if (showMediaLibrary) {
+      loadMediaLibrary();
+      loadConnectedProviders();
+    }
+  }, [showMediaLibrary]);
+
   const loadMediaLibrary = async () => {
     try {
       const data = await api.get('/library/content');
@@ -151,12 +162,57 @@ export default function SocialManagerPage() {
     }
   };
 
+  const loadConnectedProviders = async () => {
+    try {
+      const data = await api.get('/cloud-storage/connections');
+      if (data.success && data.connections) {
+        const providers = data.connections.map((conn: any) => conn.provider);
+        setConnectedProviders(providers);
+
+        // Set initial cloud storage provider to first connected one
+        if (providers.length > 0) {
+          const firstProvider = providers[0];
+          setCloudStorageProvider(firstProvider);
+
+          // Load files for the first provider
+          if (firstProvider === 'google_drive') {
+            loadDriveFiles('');
+          } else if (firstProvider === 'dropbox') {
+            loadDropboxFiles('');
+          } else if (firstProvider === 'onedrive') {
+            loadOnedriveFiles('');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load connected providers:', err);
+    }
+  };
+
   const loadDriveFolders = async () => {
     try {
       const data = await api.get('/media/folders');
       setDriveFolders(data.folders || []);
     } catch (err) {
       console.error('Failed to load Drive folders');
+    }
+  };
+
+  const loadDriveFiles = async (folder_id: string = '') => {
+    setMediaLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (folder_id) params.append('folder_id', folder_id);
+      const data = await api.get(`/cloud-storage/browse/google_drive?${params}`);
+      setDriveAssets(data.files || []);
+      setDriveFolders(data.folders || []);
+    } catch (err: any) {
+      console.error('Failed to load Google Drive files:', err);
+      if (err?.status === 404) {
+        alert('Google Drive not connected. Please connect Google Drive in Settings > Cloud Storage.');
+      }
+    } finally {
+      setMediaLoading(false);
     }
   };
 
@@ -1301,28 +1357,15 @@ export default function SocialManagerPage() {
                   Generated Content
                 </button>
                 <button
-                  onClick={() => setMediaLibraryTab('drive')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'drive' ? 'bg-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                >
-                   Google Drive
-                </button>
-                <button
                   onClick={() => {
-                    setMediaLibraryTab('dropbox');
-                    loadDropboxFiles('');
+                    setMediaLibraryTab('cloud');
+                    if (connectedProviders.length > 0 && !cloudStorageProvider) {
+                      setCloudStorageProvider(connectedProviders[0] as any);
+                    }
                   }}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'dropbox' ? 'bg-gradient-to-r from-royal to-royal-700 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'cloud' ? 'bg-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
-                   Dropbox
-                </button>
-                <button
-                  onClick={() => {
-                    setMediaLibraryTab('onedrive');
-                    loadOnedriveFiles('');
-                  }}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'onedrive' ? 'bg-gradient-to-r from-royal-600 to-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                >
-                   OneDrive
+                  Cloud Storage
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('pexels-photos')}
