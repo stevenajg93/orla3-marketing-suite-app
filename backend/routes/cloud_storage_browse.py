@@ -14,7 +14,7 @@ from typing import Optional, List
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
-from middleware import get_user_id_from_context
+from middleware import get_user_id
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -63,7 +63,7 @@ async def browse_dropbox_files(request: Request, path: Optional[str] = ""):
 
     PRIVACY: Only shows files from selected folders if user has set restrictions
     """
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
     connection = get_user_cloud_connection(user_id, 'dropbox')
 
     access_token = connection['access_token']
@@ -162,7 +162,7 @@ async def browse_dropbox_files(request: Request, path: Optional[str] = ""):
 @router.get("/cloud-storage/file/dropbox/{file_id}")
 async def get_dropbox_file_link(request: Request, file_id: str):
     """Get temporary download link for Dropbox file"""
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
     connection = get_user_cloud_connection(user_id, 'dropbox')
 
     access_token = connection['access_token']
@@ -207,7 +207,7 @@ async def browse_onedrive_files(request: Request, path: Optional[str] = ""):
 
     PRIVACY: Only shows files from selected folders if user has set restrictions
     """
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
     connection = get_user_cloud_connection(user_id, 'onedrive')
 
     access_token = connection['access_token']
@@ -310,7 +310,7 @@ async def browse_onedrive_files(request: Request, path: Optional[str] = ""):
 @router.get("/cloud-storage/file/onedrive/{item_id}")
 async def get_onedrive_file_link(request: Request, item_id: str):
     """Get download link for OneDrive file"""
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
     connection = get_user_cloud_connection(user_id, 'onedrive')
 
     access_token = connection['access_token']
@@ -398,7 +398,7 @@ async def save_folder_selection(request: Request, body: FolderSelectionRequest):
 
     Allows users to limit which folders the app can access
     """
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
 
     # Validate provider
     if body.provider not in ['dropbox', 'onedrive', 'google_drive']:
@@ -445,7 +445,7 @@ async def get_selected_folders(request: Request, provider: str):
     """
     Get user's selected folders for a provider
     """
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
 
     if provider not in ['dropbox', 'onedrive', 'google_drive']:
         raise HTTPException(status_code=400, detail="Invalid provider")
@@ -493,7 +493,7 @@ async def list_all_folders(request: Request, provider: str):
     This endpoint is used during initial setup to let users choose folders.
     It returns all folders regardless of selected_folders setting.
     """
-    user_id = get_user_id_from_context(request)
+    user_id = get_user_id(request)
     connection = get_user_cloud_connection(user_id, provider)
 
     access_token = connection['access_token']
