@@ -355,11 +355,18 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
 
     PRIVACY: Only shows files from selected folders if user has set restrictions
     """
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'google_drive')
+    try:
+        user_id = get_user_id(request)
+        connection = get_user_cloud_connection(user_id, 'google_drive')
 
-    access_token = connection['access_token']
-    selected_folders = connection.get('selected_folders', [])
+        access_token = connection['access_token']
+        selected_folders = connection.get('selected_folders', [])
+    except HTTPException as e:
+        logger.error(f"Failed to get user connection: {e.detail}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error getting connection: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to access Google Drive: {str(e)}")
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
