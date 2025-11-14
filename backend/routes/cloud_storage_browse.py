@@ -32,12 +32,15 @@ def get_user_cloud_connection(user_id: str, provider: str):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Convert user_id to string to avoid UUID adapter errors
+    user_id_str = str(user_id)
+
     cursor.execute("""
         SELECT access_token, refresh_token, token_expires_at, provider_email, selected_folders
         FROM user_cloud_storage_tokens
         WHERE user_id = %s AND provider = %s AND is_active = true
         LIMIT 1
-    """, (user_id, provider))
+    """, (user_id_str, provider))
 
     connection = cursor.fetchone()
     cursor.close()
