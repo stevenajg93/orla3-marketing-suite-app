@@ -55,8 +55,13 @@ AI-powered marketing automation platform for videographers and creative professi
   - ✅ **Twitter/X: WORKING** - Full OAuth 2.0 with PKCE + publishing
   - ✅ **Facebook: WORKING** - Full multi-tenant architecture with Page management + publishing
   - ✅ **Instagram: WORKING** - Full OAuth 2.0 + publishing for Business/Creator accounts
-  - 🔄 LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress: OAuth 2.0 ready (redirect URIs needed)
-- **3 Platforms Live**: Twitter, Facebook, Instagram all publishing successfully
+  - ✅ **LinkedIn: WORKING** - OpenID Connect OAuth 2.0 + publishing
+  - ✅ **Tumblr: WORKING** - OAuth 2.0 + publishing
+  - ✅ **YouTube: WORKING** - Google OAuth 2.0 + video uploads
+  - ✅ **Reddit: WORKING** - OAuth 2.0 + post submission
+  - ✅ **WordPress.com: WORKING** - OAuth 2.0 + blog publishing
+  - ⏳ **TikTok: IN REVIEW** - OAuth 2.0 configured, awaiting app approval (1-3 days)
+- **8/9 Platforms Live**: All platforms except TikTok fully operational
 - **AI Comment Replies**: Automatically generate brand-aligned responses to comments across all platforms
 - **Social Discovery**: Search non-follower posts by keywords and trends to engage with relevant conversations
 - **Trends Search**: Real-time trending topics discovery to inform content strategy and engagement timing
@@ -84,8 +89,8 @@ AI-powered marketing automation platform for videographers and creative professi
   - **Imagen 4 Ultra**: AI image generation (Vertex AI)
   - **Veo 3.1**: AI video generation (Vertex AI)
   - **GPT-4o-mini**: Simple analytical tasks
-- **APIs**: Google Drive API, Unsplash API, OAuth 2.0
-- **Publishing**: 9 social platforms (Instagram, LinkedIn, Twitter/X, Facebook, TikTok, YouTube, Reddit, Tumblr, WordPress)
+- **APIs**: Google Drive API, Unsplash API, Pexels API, OAuth 2.0
+- **Publishing**: 9 social platforms (8/9 live: Instagram, LinkedIn, Twitter/X, Facebook, YouTube, Reddit, Tumblr, WordPress; TikTok in review)
 - **Node**: v24.10.0, npm 11.6.0
 
 ### Clean Architecture
@@ -333,6 +338,17 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**All 8 Platforms Connected! 🎉 (Nov 14, 2025)**
+- ✅ **LinkedIn OAuth WORKING** - Migrated to OpenID Connect scopes (openid, profile, email, w_member_social)
+- ✅ **Tumblr OAuth WORKING** - OAuth 2.0 publishing enabled
+- ✅ **YouTube OAuth WORKING** - Google Cloud OAuth 2.0 with sensitive scopes (youtube, youtube.upload)
+- ✅ **Reddit OAuth WORKING** - OAuth 2.0 with identity, submit, and read scopes
+- ✅ **WordPress.com OAuth WORKING** - OAuth 2.0 blog publishing
+- ⏳ **TikTok IN REVIEW** - OAuth 2.0 configured with correct redirect URI, awaiting approval
+- 🎨 **Landing Page Optimized** - Removed repetitive AI infrastructure section, added Pexels API to clean list
+- ✨ **Premium Animations** - Implemented cubic-bezier easing [0.22, 1, 0.36, 1], reduced parallax intensity, subtle hover effects
+- 🧹 **Code Cleanup** - Deleted 7 backup JSON files (~66KB) from PostgreSQL migration
+
 **Instagram Publishing - WORKING! 🎉 (Nov 13, 2025)**
 - ✅ **Instagram OAuth WORKING** - Uses Facebook Login API (instagram_basic, instagram_content_publish, instagram_manage_messages)
 - ✅ **Publishing for Business/Creator accounts** - Full end-to-end publishing working
@@ -444,6 +460,6 @@ Built with love by the ORLA³ team. For questions or contributions, open an issu
 
 ---
 
-**Last Updated:** November 13, 2025
-**Version:** 0.4.0
-**Status:** Production-ready with Stripe payments, credit management, OAuth 2.0 multi-tenant social publishing (9 platforms), PKCE security, GCS storage, and brand asset extraction
+**Last Updated:** November 14, 2025
+**Version:** 0.5.0
+**Status:** Production-ready with 8/9 social platforms live (TikTok in review), Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, premium UI/UX, and zero technical debt

@@ -556,16 +556,41 @@ This strategy is **automatically applied** to all content generation.
   - Page credentials (page_access_token, selected_page_id) stored in service_metadata
   - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`
   - Added via "Manage everything on your page" use case in Meta console
-- ✅ **Instagram**: Full OAuth 2.0 + publishing for Business/Creator accounts 🎉 WORKING
+- ✅ **Instagram**: Full OAuth 2.0 + publishing for Business/Creator accounts ✅ WORKING
   - Uses Facebook Login API (NOT separate Instagram app)
   - Active permissions: `public_profile`, `pages_show_list`, `pages_read_engagement`, `business_management`, `instagram_basic`, `instagram_content_publish`, `instagram_manage_messages`
   - Requires Instagram Business or Creator account (not personal account)
   - Can publish posts and manage messages
   - Uses Facebook app credentials (App ID: 3637140849749643)
   - Permissions from "API setup with Facebook login" in Meta console
-- 🔄 **LinkedIn, TikTok, YouTube, Reddit, Tumblr, WordPress**: OAuth 2.0 ready (redirect URIs need whitelisting)
+- ✅ **LinkedIn**: OpenID Connect OAuth 2.0 + publishing ✅ WORKING
+  - Migrated scopes: `openid`, `profile`, `email`, `w_member_social`
+  - Replaces deprecated `r_liteprofile` and `r_emailaddress`
+  - Company page verification completed
+  - Redirect URI: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/linkedin`
+- ✅ **Tumblr**: OAuth 2.0 + publishing ✅ WORKING
+  - OAuth 2.0 (modern version, not OAuth 1.0a)
+  - Scopes: `basic`, `write`
+  - Redirect URI: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/tumblr`
+- ✅ **YouTube**: Google OAuth 2.0 + video uploads ✅ WORKING
+  - Web application OAuth client (not Desktop type)
+  - Sensitive scopes: `https://www.googleapis.com/auth/youtube`, `https://www.googleapis.com/auth/youtube.upload`
+  - Client ID: `[REDACTED - See Railway environment variables]`
+  - Redirect URI: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/youtube`
+- ✅ **Reddit**: OAuth 2.0 + post submission ✅ WORKING
+  - Scopes: `identity`, `submit`, `read`
+  - 1-hour token expiration (normal, handled by refresh tokens)
+  - Redirect URI: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/reddit`
+- ✅ **WordPress.com**: OAuth 2.0 + blog publishing ✅ WORKING
+  - Scopes: `posts`
+  - Client ID: `127672`
+  - Redirect URI: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/wordpress`
+- ⏳ **TikTok**: OAuth 2.0 configured, awaiting app approval (1-3 days) ⏳ IN REVIEW
+  - Redirect URI corrected to backend: `https://orla3-marketing-suite-app-production.up.railway.app/social-auth/callback/tiktok`
+  - Resubmitted for review after fixing redirect URI
+  - Client Key: `awpnl0i94s21sv96`
 
-**🎉 3 PLATFORMS LIVE: Twitter ✅ | Facebook ✅ | Instagram ✅**
+**🎉 8/9 PLATFORMS LIVE: Twitter ✅ | Facebook ✅ | Instagram ✅ | LinkedIn ✅ | Tumblr ✅ | YouTube ✅ | Reddit ✅ | WordPress.com ✅ | TikTok ⏳**
 
 **OAuth 2.0 Endpoints:**
 - `GET /social-auth/get-auth-url/{platform}` - Get OAuth URL (requires JWT auth)
@@ -672,6 +697,44 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 - **CORS protection** - Restricted to verified origins only
 
 ### Recent Updates (Nov 2025)
+
+**0. All 8 Platforms Connected! 🎉 (Nov 14, 2025)**
+- ✅ **LinkedIn OAuth WORKING** - Migrated to OpenID Connect scopes (openid, profile, email, w_member_social)
+  - Updated `backend/routes/social_auth.py` lines 73-84 with new scopes
+  - Replaces deprecated `r_liteprofile` and `r_emailaddress`
+  - Company page verification completed
+- ✅ **Tumblr OAuth WORKING** - OAuth 2.0 publishing enabled
+  - Clarified OAuth 2.0 vs 1.0a (using OAuth 2.0)
+  - Both callback fields configured in Tumblr app settings
+- ✅ **YouTube OAuth WORKING** - Google Cloud OAuth 2.0 with sensitive scopes (youtube, youtube.upload)
+  - Created new "Web application" OAuth client (replaced Desktop client)
+  - Added YouTube scopes in "Data access" tab of Google Cloud Console
+  - New credentials: Client ID `[REDACTED - See Railway environment variables]`
+- ✅ **Reddit OAuth WORKING** - OAuth 2.0 with identity, submit, and read scopes
+  - 1-hour token expiration handled by refresh tokens
+  - Permissions: Access posts/comments, submit links/comments, access username
+- ✅ **WordPress.com OAuth WORKING** - OAuth 2.0 blog publishing
+  - Client ID: `127672`
+  - Scopes: `posts`
+- ⏳ **TikTok IN REVIEW** - OAuth 2.0 configured with correct redirect URI, awaiting approval
+  - Fixed redirect URI from frontend (`https://orla3.com`) to backend Railway URL
+  - Withdrew and resubmitted app for review
+  - Expected approval: 1-3 business days
+- 🎨 **Landing Page Optimized**
+  - Removed repetitive "Built on World-Class AI Infrastructure" section with tiles
+  - Replaced with clean badge list of AI models and APIs
+  - Added Pexels API to list (stock video provider)
+  - File: `app/page.tsx` lines 202-224
+- ✨ **Premium Animations**
+  - Implemented cubic-bezier easing [0.22, 1, 0.36, 1] across all animations
+  - Reduced parallax intensity (50% → 20%)
+  - Changed viewport triggers (-100px → -50px)
+  - Replaced aggressive scale hovers (1.05) with subtle vertical lifts (-4px/-8px)
+  - Made all hover states consistent (300ms duration, ease-out)
+  - File: `app/page.tsx` throughout
+- 🧹 **Code Cleanup**
+  - Deleted 7 backup JSON files (~66KB) from PostgreSQL migration
+  - Files: `backend/routes/*_json_backup.py`
 
 **0. OAuth 2.0 Multi-Tenant Social Publishing (Nov 13, 2025)**
 - ✅ **Complete OAuth 2.0 implementation** for all 9 social platforms
@@ -1027,6 +1090,6 @@ For questions about this codebase:
 
 ---
 
-**Last Updated**: November 13, 2025
-**Architecture Version**: 4.0 (OAuth 2.0 Multi-Tenant Social Publishing + Payment & Credit System + GCS Storage + Brand Asset Extraction)
-**Status**: ✅ Production-ready with OAuth 2.0 for 9 platforms, PKCE security, Stripe payments, credit management, zero technical debt, fully secure
+**Last Updated**: November 14, 2025
+**Architecture Version**: 5.0 (8/9 Social Platforms Live + OAuth 2.0 Multi-Tenant + Payment & Credit System + Premium UI/UX)
+**Status**: ✅ Production-ready with 8/9 social platforms live (TikTok in review), Stripe payments, credit management, PKCE security, premium animations, zero technical debt
