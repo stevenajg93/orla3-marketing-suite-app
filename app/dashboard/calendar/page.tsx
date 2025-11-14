@@ -234,13 +234,13 @@ export default function ContentCalendar() {
             <button
               onClick={handlePublishAllDue}
               disabled={publishingAll}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-royal to-cobalt hover:from-royal-700 hover:to-cobalt-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-all flex items-center gap-2"
             >
-              {publishingAll ? '⏳ Publishing...' : '🚀 Publish All Due'}
+              {publishingAll ? 'Publishing...' : 'Publish All Due'}
             </button>
             <button
               onClick={() => router.push('/dashboard/social')}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+              className="bg-gradient-to-r from-cobalt to-royal-700 hover:from-cobalt-700 hover:to-royal text-white font-bold py-3 px-6 rounded-lg transition-all"
             >
               Create in Social Manager
             </button>

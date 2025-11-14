@@ -1311,7 +1311,7 @@ export default function SocialManagerPage() {
                     setMediaLibraryTab('dropbox');
                     loadDropboxFiles('');
                   }}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'dropbox' ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'dropbox' ? 'bg-gradient-to-r from-royal to-royal-700 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                    Dropbox
                 </button>
@@ -1320,7 +1320,7 @@ export default function SocialManagerPage() {
                     setMediaLibraryTab('onedrive');
                     loadOnedriveFiles('');
                   }}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'onedrive' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'onedrive' ? 'bg-gradient-to-r from-royal-600 to-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                    OneDrive
                 </button>
@@ -1529,9 +1529,9 @@ export default function SocialManagerPage() {
                               setDropboxPath(folder.path);
                               loadDropboxFiles(folder.path);
                             }}
-                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-500 transition cursor-pointer"
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-royal transition cursor-pointer"
                           >
-                            <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center">
+                            <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
                               <span className="text-6xl"></span>
                             </div>
                             <div className="p-3">
@@ -1544,7 +1544,7 @@ export default function SocialManagerPage() {
                         {dropboxFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-500 transition group"
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-royal transition group"
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
                               {file.type === 'image' ? (
@@ -1557,7 +1557,7 @@ export default function SocialManagerPage() {
                               <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
                                 <button
                                   onClick={() => handleMediaSelect({ ...file, source: 'dropbox' })}
-                                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-semibold transition"
+                                  className="w-full px-4 py-2 bg-royal hover:bg-royal-700 rounded-lg text-white text-sm font-semibold transition"
                                 >
                                   Select for Post
                                 </button>
@@ -1597,9 +1597,9 @@ export default function SocialManagerPage() {
                               setOnedrivePath(`items/${folder.id}`);
                               loadOnedriveFiles(`items/${folder.id}`);
                             }}
-                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-400 transition cursor-pointer"
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition cursor-pointer"
                           >
-                            <div className="aspect-square bg-gradient-to-br from-blue-800 to-slate-900 flex items-center justify-center">
+                            <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
                               <span className="text-6xl"></span>
                             </div>
                             <div className="p-3">
@@ -1612,7 +1612,7 @@ export default function SocialManagerPage() {
                         {onedriveFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-400 transition group"
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition group"
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
                               {file.type === 'image' ? (
@@ -1625,7 +1625,7 @@ export default function SocialManagerPage() {
                               <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
                                 <button
                                   onClick={() => handleMediaSelect({ ...file, source: 'onedrive', url: file.download_url })}
-                                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-semibold transition"
+                                  className="w-full px-4 py-2 bg-royal-600 hover:bg-cobalt rounded-lg text-white text-sm font-semibold transition"
                                 >
                                   Select for Post
                                 </button>

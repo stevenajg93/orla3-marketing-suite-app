@@ -89,7 +89,7 @@ export default function CarouselMakerPage() {
 
       const data = await res.json();
       setResult(data);
-      setCaption(`${formData.post_summary.split('.')[0]}.\n\nSwipe through to learn more! 👉\n\nWhich tip resonates most with you? Comment below! 👇`);
+      setCaption(`${formData.post_summary.split('.')[0]}.\n\nSwipe through to learn more!\n\nWhich tip resonates most with you? Comment below!`);
       setEditMode(true);
     } catch (e: any) {
       setError(e.message);
@@ -411,7 +411,6 @@ export default function CarouselMakerPage() {
             <button onClick={() => router.push("/dashboard")} className="text-2xl hover:scale-110 transition">
               ←
             </button>
-            <div className="text-4xl">🎠</div>
             <div>
               <h1 className="text-2xl font-bold text-white">Carousel Maker</h1>
               <p className="text-sm text-cobalt-300">
@@ -424,9 +423,9 @@ export default function CarouselMakerPage() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
+              className="px-6 py-2 bg-gradient-to-r from-royal to-cobalt hover:from-royal-700 hover:to-cobalt-700 rounded-lg text-white font-semibold transition disabled:opacity-50"
             >
-              {exporting ? "⏳ Exporting..." : "📥 Export Carousel"}
+              {exporting ? "Exporting..." : "Export Carousel"}
             </button>
           )}
         </div>
@@ -480,9 +479,9 @@ export default function CarouselMakerPage() {
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold disabled:opacity-50 transition"
+                className="w-full py-3 bg-gradient-to-r from-royal to-cobalt hover:from-royal-700 hover:to-cobalt-700 rounded-lg text-white font-semibold disabled:opacity-50 transition"
               >
-                {loading ? "⏳ Generating..." : "Generate Professional Carousel"}
+                {loading ? "Generating..." : "Generate Professional Carousel"}
               </button>
             </div>
           </div>
@@ -541,7 +540,7 @@ export default function CarouselMakerPage() {
                             className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white rounded-lg text-black opacity-0 group-hover:opacity-100 transition z-10 text-sm font-semibold"
                             title="Change image"
                           >
-                            🔄
+                            Regenerate
                           </button>
 
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
@@ -647,7 +646,7 @@ export default function CarouselMakerPage() {
                 className="flex-1 py-3 rounded-lg text-white font-semibold transition disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #C8A530 0%, #E8C14D 100%)' }}
               >
-                {exporting ? "⏳ Exporting..." : "📥 Export All Slides"}
+                {exporting ? "Exporting..." : "Export All Slides"}
               </button>
             </div>
           </div>
