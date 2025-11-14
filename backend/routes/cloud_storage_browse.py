@@ -361,14 +361,38 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
     access_token = connection['access_token']
     selected_folders = connection.get('selected_folders', [])
 
-    # Build query for Google Drive API
-    if folder_id:
-        query = f"'{folder_id}' in parents and trashed=false"
-    else:
-        query = "'root' in parents and trashed=false"
-
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            files_list = []
+            folders_list = []
+
+            # If browsing root, show shared drives as folders
+            if not folder_id:
+                # List shared drives
+                shared_drives_response = await client.get(
+                    "https://www.googleapis.com/drive/v3/drives",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                    params={"pageSize": 100}
+                )
+
+                if shared_drives_response.status_code == 200:
+                    shared_drives_data = shared_drives_response.json()
+                    for drive in shared_drives_data.get('drives', []):
+                        folders_list.append({
+                            "id": drive['id'],
+                            "name": f"📁 {drive['name']} (Shared Drive)",
+                            "type": "folder",
+                            "mime_type": "application/vnd.google-apps.folder",
+                            "size": 0,
+                            "source": "google_drive"
+                        })
+
+            # Build query for regular files/folders
+            if folder_id:
+                query = f"'{folder_id}' in parents and trashed=false"
+            else:
+                query = "'root' in parents and trashed=false"
+
             # List files and folders
             response = await client.get(
                 "https://www.googleapis.com/drive/v3/files",
@@ -377,7 +401,9 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
                     "q": query,
                     "fields": "files(id, name, mimeType, size, thumbnailLink, webViewLink, modifiedTime)",
                     "pageSize": 1000,
-                    "orderBy": "folder,name"
+                    "orderBy": "folder,name",
+                    "supportsAllDrives": "true",
+                    "includeItemsFromAllDrives": "true"
                 }
             )
 
@@ -385,8 +411,6 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
                 raise HTTPException(status_code=response.status_code, detail=f"Google Drive API error: {response.text}")
 
             data = response.json()
-            files_list = []
-            folders_list = []
 
             for item in data.get('files', []):
                 # Check if it's a folder
