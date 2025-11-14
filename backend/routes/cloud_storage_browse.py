@@ -35,12 +35,28 @@ def get_user_cloud_connection(user_id: str, provider: str):
     # Convert user_id to string to avoid UUID adapter errors
     user_id_str = str(user_id)
 
+    # Check if selected_folders column exists (may not be in production yet)
     cursor.execute("""
-        SELECT access_token, refresh_token, token_expires_at, provider_email, selected_folders
-        FROM user_cloud_storage_tokens
-        WHERE user_id = %s AND provider = %s AND is_active = true
-        LIMIT 1
-    """, (user_id_str, provider))
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'user_cloud_storage_tokens' AND column_name = 'selected_folders'
+    """)
+    has_folder_column = cursor.fetchone() is not None
+
+    if has_folder_column:
+        cursor.execute("""
+            SELECT access_token, refresh_token, token_expires_at, provider_email, selected_folders
+            FROM user_cloud_storage_tokens
+            WHERE user_id = %s AND provider = %s AND is_active = true
+            LIMIT 1
+        """, (user_id_str, provider))
+    else:
+        cursor.execute("""
+            SELECT access_token, refresh_token, token_expires_at, provider_email
+            FROM user_cloud_storage_tokens
+            WHERE user_id = %s AND provider = %s AND is_active = true
+            LIMIT 1
+        """, (user_id_str, provider))
 
     connection = cursor.fetchone()
     cursor.close()
@@ -48,6 +64,10 @@ def get_user_cloud_connection(user_id: str, provider: str):
 
     if not connection:
         raise HTTPException(status_code=404, detail=f"No active {provider} connection found. Please connect {provider} first.")
+
+    # Add empty selected_folders if column doesn't exist
+    if not has_folder_column and connection:
+        connection['selected_folders'] = []
 
     return connection
 
