@@ -67,8 +67,14 @@ def get_user_cloud_connection(user_id: str, provider: str):
 
     # Add empty selected_folders if column doesn't exist
     if not has_folder_column and connection:
+        # Convert to dict if needed and add selected_folders
+        connection = dict(connection)
         connection['selected_folders'] = []
+    elif connection:
+        # Ensure it's a dict
+        connection = dict(connection)
 
+    logger.info(f"Cloud connection loaded for {provider}: user={user_id_str}, has_folders_column={has_folder_column}")
     return connection
 
 
@@ -482,11 +488,12 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
             }
 
     except httpx.HTTPError as e:
-        logger.error(f"HTTP error browsing Google Drive: {str(e)}")
+        logger.error(f"HTTP error browsing Google Drive: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to browse Google Drive: {str(e)}")
     except Exception as e:
-        logger.error(f"Error browsing Google Drive: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error browsing Google Drive: {str(e)}")
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        logger.error(f"Error browsing Google Drive: {error_msg}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error browsing Google Drive: {error_msg}")
 
 
 @router.get("/cloud-storage/file/google_drive/{file_id}")
