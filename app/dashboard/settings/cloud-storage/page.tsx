@@ -42,19 +42,58 @@ export default function CloudStorageSettings() {
   const loadConnections = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const response = await api.get('/cloud-storage/connections');
-      setConnections(response.connections || []);
-    } catch (err) {
+
+      if (response.success) {
+        setConnections(response.connections || []);
+      } else {
+        setError('Failed to load cloud storage connections');
+      }
+    } catch (err: any) {
       console.error('Error loading connections:', err);
-      setError('Failed to load cloud storage connections');
+
+      // Show specific error message
+      const errorMessage = err?.message || 'Failed to load cloud storage connections';
+
+      // If not authenticated, show helpful message
+      if (err?.status === 401 || errorMessage.includes('authorization')) {
+        setError('Please log in to view cloud storage connections');
+
+        // Redirect to login after a delay
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const connectProvider = (provider: string) => {
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${config.apiUrl}/cloud-storage/connect/${provider}`;
+  const connectProvider = async (provider: string) => {
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('access_token');
+
+      if (!token) {
+        setError('You must be logged in to connect cloud storage');
+        return;
+      }
+
+      // Make authenticated request to get OAuth URL
+      // The backend will create state token and redirect to OAuth provider
+      const url = `${config.apiUrl}/cloud-storage/connect/${provider}`;
+
+      // Redirect to backend OAuth endpoint with token in URL
+      // Backend will validate token and initiate OAuth flow
+      window.location.href = `${url}?token=${encodeURIComponent(token)}`;
+    } catch (err) {
+      setError(`Failed to initiate ${provider} connection`);
+      console.error(err);
+    }
   };
 
   const disconnectProvider = async (provider: string) => {
@@ -63,7 +102,7 @@ export default function CloudStorageSettings() {
     }
 
     try {
-      await api.post(`/cloud-storage/disconnect/${provider}`);
+      await api.delete(`/cloud-storage/disconnect/${provider}`);
       setSuccess(`Disconnected from ${provider.replace('_', ' ')}`);
       loadConnections();
     } catch (err) {

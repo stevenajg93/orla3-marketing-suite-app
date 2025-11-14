@@ -76,13 +76,28 @@ def get_user_from_token(request: Request):
 # ============================================================================
 
 @router.get("/cloud-storage/connect/google_drive")
-async def connect_google_drive(request: Request):
+async def connect_google_drive(request: Request, token: str = None):
     """
     Initiate Google Drive OAuth flow
 
     Redirects user to Google consent screen
+    Accepts token as URL parameter for browser redirects
     """
-    user_id = get_user_from_token(request)
+    # Try to get user_id from token parameter (for browser redirects) or auth header
+    user_id = None
+
+    if token:
+        # Validate token from URL parameter
+        payload = decode_token(token)
+        if payload:
+            user_id = payload.get('sub')
+
+    if not user_id:
+        # Try to get from Authorization header
+        try:
+            user_id = get_user_from_token(request)
+        except HTTPException:
+            raise HTTPException(status_code=401, detail="Missing or invalid authentication token")
 
     # Generate state token for CSRF protection
     state = secrets.token_urlsafe(32)
@@ -216,9 +231,21 @@ async def google_drive_callback(code: str, state: str):
 # ============================================================================
 
 @router.get("/cloud-storage/connect/onedrive")
-async def connect_onedrive(request: Request):
-    """Initiate OneDrive OAuth flow"""
-    user_id = get_user_from_token(request)
+async def connect_onedrive(request: Request, token: str = None):
+    """Initiate OneDrive OAuth flow - accepts token as URL parameter"""
+    # Try to get user_id from token parameter or auth header
+    user_id = None
+
+    if token:
+        payload = decode_token(token)
+        if payload:
+            user_id = payload.get('sub')
+
+    if not user_id:
+        try:
+            user_id = get_user_from_token(request)
+        except HTTPException:
+            raise HTTPException(status_code=401, detail="Missing or invalid authentication token")
 
     state = secrets.token_urlsafe(32)
 
@@ -331,9 +358,21 @@ async def onedrive_callback(code: str, state: str):
 # ============================================================================
 
 @router.get("/cloud-storage/connect/dropbox")
-async def connect_dropbox(request: Request):
-    """Initiate Dropbox OAuth flow"""
-    user_id = get_user_from_token(request)
+async def connect_dropbox(request: Request, token: str = None):
+    """Initiate Dropbox OAuth flow - accepts token as URL parameter"""
+    # Try to get user_id from token parameter or auth header
+    user_id = None
+
+    if token:
+        payload = decode_token(token)
+        if payload:
+            user_id = payload.get('sub')
+
+    if not user_id:
+        try:
+            user_id = get_user_from_token(request)
+        except HTTPException:
+            raise HTTPException(status_code=401, detail="Missing or invalid authentication token")
 
     state = secrets.token_urlsafe(32)
 
