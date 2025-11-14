@@ -418,6 +418,22 @@ async def publish_content(publish_request: PublishRequest, request: Request):
     user_id = get_user_from_token(request)
     logger.info(f"Publishing to {publish_request.platform} for user {user_id}")
 
+    # Validate character limits BEFORE attempting to publish
+    from utils.validators import ContentValidator
+
+    is_valid, error_message = ContentValidator.validate_character_limit(
+        publish_request.caption or "",
+        publish_request.platform
+    )
+
+    if not is_valid:
+        return PublishResponse(
+            success=False,
+            platform=publish_request.platform,
+            error=error_message,
+            published_at=datetime.utcnow().isoformat()
+        )
+
     result = {
         "success": False,
         "platform": publish_request.platform,

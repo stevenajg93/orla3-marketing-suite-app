@@ -63,13 +63,40 @@ async def startup_event():
     logger.info(f"✅ Unsplash API: {'Configured' if Config.UNSPLASH_ACCESS_KEY else 'Missing'}")
     logger.info(f"✅ Google Drive: {Config.SHARED_DRIVE_NAME}")
 
+    # Start background scheduler for scheduled posts
+    try:
+        from scheduler import start_scheduler
+        start_scheduler()
+        logger.info("✅ Background scheduler initialized")
+    except Exception as e:
+        logger.error(f"❌ Failed to start scheduler: {e}")
+
 @app.get("/")
 def read_root():
     return {"message": "Orla3 Marketing Automation API", "version": "1.0.0", "status": "running"}
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("🛑 Orla3 Marketing Automation API shutting down...")
+    try:
+        from scheduler import stop_scheduler
+        stop_scheduler()
+        logger.info("✅ Background scheduler stopped")
+    except Exception as e:
+        logger.error(f"❌ Error stopping scheduler: {e}")
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "services": {"openai": bool(Config.OPENAI_API_KEY), "anthropic": bool(Config.ANTHROPIC_API_KEY), "unsplash": bool(Config.UNSPLASH_ACCESS_KEY)}}
+
+@app.get("/scheduler/status")
+def scheduler_status():
+    """Get current scheduler status and active jobs"""
+    try:
+        from scheduler import get_scheduler_status
+        return get_scheduler_status()
+    except Exception as e:
+        return {"error": str(e), "running": False}
 
 if __name__ == "__main__":
     import uvicorn
