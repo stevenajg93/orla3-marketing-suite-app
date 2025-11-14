@@ -98,8 +98,11 @@ class PublishRequest(BaseModel):
     content_type: Literal["text", "image", "video", "carousel"]
     caption: str
     image_urls: Optional[List[str]] = []
+    video_url: Optional[str] = None  # For TikTok, YouTube video publishing
+    link_url: Optional[str] = None  # For Reddit link posts
+    subreddit: Optional[str] = None  # For Reddit - subreddit name (without r/ prefix)
     account_id: Optional[str] = None  # For multi-account support later
-    title: Optional[str] = None  # For WordPress blog posts
+    title: Optional[str] = None  # For WordPress blog posts and Reddit titles
     content: Optional[str] = None  # For WordPress full content (if different from caption)
 
 class PublishResponse(BaseModel):
@@ -108,6 +111,7 @@ class PublishResponse(BaseModel):
     post_id: Optional[str] = None
     post_url: Optional[str] = None
     error: Optional[str] = None
+    message: Optional[str] = None  # Success message from publisher
     published_at: str
 
 # ============================================================================
@@ -270,24 +274,25 @@ class LinkedInPublisher:
     """
     LinkedIn API publisher
     Requires: LinkedIn Access Token, LinkedIn Person/Organization URN
+    Supports: Text posts, image posts (single image)
     """
-    
-    def __init__(self):
-        self.access_token = os.getenv("LINKEDIN_ACCESS_TOKEN")
-        self.person_urn = os.getenv("LINKEDIN_PERSON_URN")  # e.g., urn:li:person:ABC123
+
+    def __init__(self, access_token: str, person_urn: str):
+        self.access_token = access_token
+        self.person_urn = person_urn  # e.g., urn:li:person:ABC123
         self.api_version = "202410"
         self.base_url = "https://api.linkedin.com/rest"
-    
+
     async def publish_text(self, caption: str) -> dict:
         """Publish text-only post to LinkedIn"""
         if not self.access_token or not self.person_urn:
             return {
                 "success": False,
-                "error": "LinkedIn credentials not configured. Add LINKEDIN_ACCESS_TOKEN and LINKEDIN_PERSON_URN to .env.local"
+                "error": "LinkedIn not connected. Please connect your LinkedIn account."
             }
-        
+
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.base_url}/posts",
                     headers={
@@ -298,7 +303,7 @@ class LinkedInPublisher:
                     },
                     json={
                         "author": self.person_urn,
-                        "commentary": caption,
+                        "commentary": caption[:3000],  # LinkedIn max 3000 chars
                         "visibility": "PUBLIC",
                         "distribution": {
                             "feedDistribution": "MAIN_FEED",
@@ -308,36 +313,167 @@ class LinkedInPublisher:
                         "lifecycleState": "PUBLISHED"
                     }
                 )
-                
+
                 if response.status_code not in [200, 201]:
+                    logger.error(f"LinkedIn API error: {response.status_code} - {response.text}")
                     return {
                         "success": False,
-                        "error": f"LinkedIn API error: {response.text}"
+                        "error": f"LinkedIn API error: {response.status_code}"
                     }
-                
+
                 post_data = response.json()
                 post_id = post_data.get("id", "")
-                
+
                 return {
                     "success": True,
                     "post_id": post_id,
                     "post_url": f"https://www.linkedin.com/feed/update/{post_id}"
                 }
-                
+
         except Exception as e:
+            logger.error(f"LinkedIn publish error: {e}")
             return {
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def publish_image(self, caption: str, image_url: str) -> dict:
-        """Publish image post to LinkedIn"""
-        # LinkedIn image publishing is more complex (requires asset registration)
-        # For MVP, we'll implement text-only and document image flow
-        return {
-            "success": False,
-            "error": "LinkedIn image publishing coming soon - use text posts for now"
-        }
+        """
+        Publish image post to LinkedIn using asset registration
+
+        Args:
+            caption: Post caption/commentary (max 3000 chars)
+            image_url: Public URL to image file
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.person_urn:
+            return {
+                "success": False,
+                "error": "LinkedIn not connected. Please connect your LinkedIn account."
+            }
+
+        try:
+            from utils.media_upload import download_url_to_file, validate_media_file
+            import tempfile
+
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                # Download image to temp file for validation and upload
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+                    tmp_path = tmp_file.name
+
+                # Download image
+                await download_url_to_file(image_url, tmp_path)
+
+                # Validate image
+                validate_media_file(tmp_path, "linkedin", "image")
+
+                # Step 1: Register upload
+                register_payload = {
+                    "registerUploadRequest": {
+                        "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+                        "owner": self.person_urn,
+                        "serviceRelationships": [
+                            {
+                                "relationshipType": "OWNER",
+                                "identifier": "urn:li:userGeneratedContent"
+                            }
+                        ]
+                    }
+                }
+
+                register_response = await client.post(
+                    "https://api.linkedin.com/v2/assets?action=registerUpload",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json"
+                    },
+                    json=register_payload
+                )
+
+                if register_response.status_code != 200:
+                    logger.error(f"LinkedIn asset registration failed: {register_response.status_code} - {register_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"LinkedIn asset registration failed: {register_response.status_code}"
+                    }
+
+                register_data = register_response.json()
+                upload_url = register_data['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
+                asset_urn = register_data['value']['asset']
+
+                # Step 2: Upload image binary
+                with open(tmp_path, 'rb') as f:
+                    upload_response = await client.put(
+                        upload_url,
+                        headers={
+                            "Authorization": f"Bearer {self.access_token}"
+                        },
+                        content=f.read()
+                    )
+
+                    if upload_response.status_code != 201:
+                        logger.error(f"LinkedIn image upload failed: {upload_response.status_code} - {upload_response.text}")
+                        return {
+                            "success": False,
+                            "error": f"LinkedIn image upload failed: {upload_response.status_code}"
+                        }
+
+                # Step 3: Create post with image
+                post_response = await client.post(
+                    f"{self.base_url}/posts",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json",
+                        "X-Restli-Protocol-Version": "2.0.0",
+                        "LinkedIn-Version": self.api_version
+                    },
+                    json={
+                        "author": self.person_urn,
+                        "commentary": caption[:3000],
+                        "visibility": "PUBLIC",
+                        "distribution": {
+                            "feedDistribution": "MAIN_FEED",
+                            "targetEntities": [],
+                            "thirdPartyDistributionChannels": []
+                        },
+                        "content": {
+                            "media": {
+                                "title": "Image",
+                                "id": asset_urn
+                            }
+                        },
+                        "lifecycleState": "PUBLISHED"
+                    }
+                )
+
+                if post_response.status_code not in [200, 201]:
+                    logger.error(f"LinkedIn post creation failed: {post_response.status_code} - {post_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"LinkedIn post creation failed: {post_response.status_code}"
+                    }
+
+                post_data = post_response.json()
+                post_id = post_data.get("id", "")
+
+                # Cleanup temp file
+                os.unlink(tmp_path)
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.linkedin.com/feed/update/{post_id}",
+                    "message": "Image post published to LinkedIn"
+                }
+
+        except Exception as e:
+            logger.error(f"LinkedIn image publish error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 # ============================================================================
 # TWITTER/X PUBLISHER
@@ -346,22 +482,33 @@ class LinkedInPublisher:
 class TwitterPublisher:
     """
     Twitter/X API v2 publisher
-    Requires: Twitter API Key, API Secret, Access Token, Access Token Secret
+    Requires: Twitter OAuth 1.0a credentials
+    Supports: Text tweets, tweets with images (up to 4)
     """
-    
-    def __init__(self):
-        self.api_key = os.getenv("TWITTER_API_KEY")
-        self.api_secret = os.getenv("TWITTER_API_SECRET")
-        self.access_token = os.getenv("TWITTER_ACCESS_TOKEN")
-        self.access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+
+    def __init__(self, api_key: str, api_secret: str, access_token: str, access_token_secret: str):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.access_token = access_token
+        self.access_token_secret = access_token_secret
         self.base_url = "https://api.twitter.com/2"
-    
-    async def publish_tweet(self, caption: str) -> dict:
-        """Publish tweet to Twitter/X using OAuth 1.0a"""
+        self.upload_url = "https://upload.twitter.com/1.1"
+
+    async def publish_tweet(self, caption: str, image_urls: Optional[List[str]] = None) -> dict:
+        """
+        Publish tweet to Twitter/X using OAuth 1.0a
+
+        Args:
+            caption: Tweet text (max 280 chars)
+            image_urls: List of image URLs (max 4 images)
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
         if not all([self.api_key, self.api_secret, self.access_token, self.access_token_secret]):
             return {
                 "success": False,
-                "error": "Twitter credentials not configured. Add TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET to .env"
+                "error": "Twitter not connected. Please connect your Twitter account."
             }
 
         try:
@@ -373,14 +520,64 @@ class TwitterPublisher:
                 resource_owner_secret=self.access_token_secret
             )
 
+            media_ids = []
+
+            # Upload images if provided (max 4)
+            if image_urls:
+                if len(image_urls) > 4:
+                    return {
+                        "success": False,
+                        "error": "Twitter supports maximum 4 images per tweet"
+                    }
+
+                from utils.media_upload import download_url_to_file, validate_media_file
+                import tempfile
+
+                for image_url in image_urls:
+                    # Download image to temp file
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+                        tmp_path = tmp_file.name
+
+                    # Download and validate
+                    await download_url_to_file(image_url, tmp_path)
+                    validate_media_file(tmp_path, "twitter", "image")
+
+                    # Upload to Twitter
+                    with open(tmp_path, 'rb') as f:
+                        files = {'media': f}
+                        media_response = oauth.post(
+                            f"{self.upload_url}/media/upload.json",
+                            files=files
+                        )
+
+                        if media_response.status_code != 200:
+                            logger.error(f"Twitter media upload failed: {media_response.status_code} - {media_response.text}")
+                            os.unlink(tmp_path)
+                            return {
+                                "success": False,
+                                "error": f"Twitter media upload failed: {media_response.status_code}"
+                            }
+
+                        media_data = media_response.json()
+                        media_ids.append(media_data['media_id_string'])
+
+                    # Cleanup temp file
+                    os.unlink(tmp_path)
+
             # Post tweet using OAuth 1.0a
             payload = {"text": caption}
+
+            # Add media IDs if images were uploaded
+            if media_ids:
+                payload["media"] = {"media_ids": media_ids}
+
             response = oauth.post(
                 f"{self.base_url}/tweets",
                 json=payload
             )
 
             if response.status_code not in [200, 201]:
+                logger.error(f"Twitter API error: {response.status_code} - {response.text}")
                 return {
                     "success": False,
                     "error": f"Twitter API error ({response.status_code}): {response.text}"
@@ -392,10 +589,12 @@ class TwitterPublisher:
             return {
                 "success": True,
                 "post_id": tweet_id,
-                "post_url": f"https://twitter.com/i/web/status/{tweet_id}"
+                "post_url": f"https://twitter.com/i/web/status/{tweet_id}",
+                "message": f"Tweet published{' with ' + str(len(media_ids)) + ' image(s)' if media_ids else ''}"
             }
 
         except Exception as e:
+            logger.error(f"Twitter publish error: {e}")
             return {
                 "success": False,
                 "error": f"Twitter publish exception: {str(e)}"
@@ -479,14 +678,86 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             result.update(publish_result)
 
         elif platform == "linkedin":
-            publisher = LinkedInPublisher()
-            publish_result = await publisher.publish_text(caption=publish_request.caption)
-            result.update(publish_result)
+            # Get LinkedIn person URN from metadata
+            import json
+            try:
+                metadata = credentials.get('service_metadata', {})
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                person_urn = meta_dict.get('person_urn', '')
+
+                if not person_urn:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="LinkedIn person URN not found. Please reconnect your LinkedIn account.",
+                        published_at=result["published_at"]
+                    )
+
+                publisher = LinkedInPublisher(
+                    access_token=credentials['access_token'],
+                    person_urn=person_urn
+                )
+
+                # Publish with image if provided
+                if publish_request.image_urls and len(publish_request.image_urls) > 0:
+                    publish_result = await publisher.publish_image(
+                        caption=publish_request.caption,
+                        image_url=publish_request.image_urls[0]
+                    )
+                else:
+                    publish_result = await publisher.publish_text(caption=publish_request.caption)
+
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"LinkedIn publish error: {e}")
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error=f"LinkedIn error: {str(e)}",
+                    published_at=result["published_at"]
+                )
 
         elif platform == "twitter":
-            publisher = TwitterPublisher()
-            publish_result = await publisher.publish_tweet(caption=publish_request.caption)
-            result.update(publish_result)
+            # Get Twitter OAuth 1.0a credentials from metadata
+            import json
+            try:
+                metadata = credentials.get('service_metadata', {})
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+
+                api_key = meta_dict.get('api_key', '')
+                api_secret = meta_dict.get('api_secret', '')
+                access_token_secret = meta_dict.get('access_token_secret', '')
+
+                if not all([api_key, api_secret, access_token_secret]):
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="Twitter OAuth credentials incomplete. Please reconnect your Twitter account.",
+                        published_at=result["published_at"]
+                    )
+
+                publisher = TwitterPublisher(
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    access_token=credentials['access_token'],
+                    access_token_secret=access_token_secret
+                )
+
+                publish_result = await publisher.publish_tweet(
+                    caption=publish_request.caption,
+                    image_urls=publish_request.image_urls if publish_request.image_urls else None
+                )
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"Twitter publish error: {e}")
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error=f"Twitter error: {str(e)}",
+                    published_at=result["published_at"]
+                )
 
         elif platform == "facebook":
             # Get Facebook Page credentials from service_metadata
@@ -534,13 +805,84 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                 )
 
         elif platform == "tiktok":
-            result["error"] = "TikTok requires video upload - not supported for text/image posts"
+            # TikTok requires video URL
+            if not publish_request.video_url:
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="TikTok requires a video URL",
+                    published_at=result["published_at"]
+                )
+
+            publisher = TikTokPublisher(access_token=credentials['access_token'])
+            publish_result = await publisher.publish_video(
+                caption=publish_request.caption,
+                video_url=publish_request.video_url
+            )
+            result.update(publish_result)
 
         elif platform == "youtube":
-            result["error"] = "YouTube requires video upload - coming soon"
+            # YouTube requires video URL
+            if not publish_request.video_url:
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="YouTube requires a video URL",
+                    published_at=result["published_at"]
+                )
+
+            publisher = YouTubePublisher(access_token=credentials['access_token'])
+            publish_result = await publisher.publish_video(
+                title=publish_request.caption[:100] if publish_request.caption else "Video",
+                description=publish_request.caption or "",
+                video_url=publish_request.video_url,
+                privacy="private"  # Default to private for safety
+            )
+            result.update(publish_result)
 
         elif platform == "reddit":
-            result["error"] = "Reddit publishing requires subreddit selection - coming soon"
+            # Reddit requires subreddit
+            if not publish_request.subreddit:
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="Reddit requires a subreddit name",
+                    published_at=result["published_at"]
+                )
+
+            # Reddit requires title
+            if not publish_request.title:
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error="Reddit requires a post title",
+                    published_at=result["published_at"]
+                )
+
+            publisher = RedditPublisher(access_token=credentials['access_token'])
+
+            # Determine post type
+            if publish_request.video_url:
+                post_type = "video"
+                url = publish_request.video_url
+            elif publish_request.image_urls and len(publish_request.image_urls) > 0:
+                post_type = "image"
+                url = publish_request.image_urls[0]
+            elif publish_request.link_url:
+                post_type = "link"
+                url = publish_request.link_url
+            else:
+                post_type = "text"
+                url = None
+
+            publish_result = await publisher.publish_post(
+                subreddit=publish_request.subreddit,
+                title=publish_request.title,
+                text=publish_request.caption if post_type == "text" else None,
+                url=url,
+                post_type=post_type
+            )
+            result.update(publish_result)
 
         elif platform == "tumblr":
             publisher = TumblrPublisher()
@@ -707,27 +1049,95 @@ class FacebookPublisher:
 
 class TikTokPublisher:
     """
-    TikTok API publisher
-    Requires: TikTok Access Token
-    Note: TikTok API is video-only, no text posts
+    TikTok Direct Post API publisher
+    Requires: TikTok Access Token (OAuth 2.0)
+    Note: TikTok is video-only platform
     """
-    
-    def __init__(self):
-        self.access_token = os.getenv("TIKTOK_ACCESS_TOKEN")
-        self.base_url = "https://open-api.tiktok.com"
-    
+
+    def __init__(self, access_token: str):
+        self.access_token = access_token
+        self.base_url = "https://open.tiktokapis.com"
+
     async def publish_video(self, caption: str, video_url: str) -> dict:
-        """Publish video to TikTok"""
+        """
+        Publish video to TikTok using Direct Post API
+
+        Args:
+            caption: Video caption (max 2200 chars)
+            video_url: Public URL to video file
+
+        Returns:
+            dict: {success: bool, post_id: str, error: str}
+        """
         if not self.access_token:
             return {
                 "success": False,
-                "error": "TikTok credentials not configured. Add TIKTOK_ACCESS_TOKEN to .env.local"
+                "error": "TikTok not connected. Please connect your TikTok account."
             }
-        
-        return {
-            "success": False,
-            "error": "TikTok video publishing requires video upload flow - text/image posts not supported on TikTok"
-        }
+
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                # Step 1: Initialize video upload
+                init_response = await client.post(
+                    f"{self.base_url}/v2/post/publish/video/init/",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "post_info": {
+                            "title": caption[:2200],  # Max 2200 chars
+                            "privacy_level": "SELF_ONLY",  # Options: PUBLIC_TO_EVERYONE, SELF_ONLY, MUTUAL_FOLLOW_FRIENDS
+                            "disable_duet": False,
+                            "disable_comment": False,
+                            "disable_stitch": False,
+                            "video_cover_timestamp_ms": 1000
+                        },
+                        "source_info": {
+                            "source": "PULL_FROM_URL",
+                            "video_url": video_url
+                        }
+                    }
+                )
+
+                if init_response.status_code != 200:
+                    logger.error(f"TikTok init failed: {init_response.status_code} - {init_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"TikTok upload init failed: {init_response.status_code}"
+                    }
+
+                init_data = init_response.json()
+                publish_id = init_data.get('data', {}).get('publish_id')
+
+                if not publish_id:
+                    return {
+                        "success": False,
+                        "error": "Failed to get publish_id from TikTok"
+                    }
+
+                # Step 2: Check publish status (TikTok processes video asynchronously)
+                # In production, you'd poll this endpoint until status is PUBLISH_COMPLETE
+                # For now, we return the publish_id
+
+                return {
+                    "success": True,
+                    "post_id": publish_id,
+                    "post_url": f"https://www.tiktok.com/",
+                    "message": "Video is being processed by TikTok. Check your TikTok profile in a few minutes."
+                }
+
+        except httpx.TimeoutException:
+            return {
+                "success": False,
+                "error": "TikTok API timeout - video upload may take several minutes"
+            }
+        except Exception as e:
+            logger.error(f"TikTok publish error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 # ============================================================================
 # YOUTUBE PUBLISHER
@@ -736,26 +1146,144 @@ class TikTokPublisher:
 class YouTubePublisher:
     """
     YouTube Data API v3 publisher
-    Requires: YouTube API credentials, video upload
+    Requires: YouTube OAuth 2.0 access token
     Note: YouTube is video-only platform
     """
-    
-    def __init__(self):
-        self.api_key = os.getenv("YOUTUBE_API_KEY")
-        self.access_token = os.getenv("YOUTUBE_ACCESS_TOKEN")
-    
-    async def publish_video(self, title: str, description: str, video_url: str) -> dict:
-        """Upload video to YouTube"""
+
+    def __init__(self, access_token: str):
+        self.access_token = access_token
+        self.base_url = "https://www.googleapis.com/upload/youtube/v3"
+
+    async def publish_video(self, title: str, description: str, video_url: str, privacy: str = "private") -> dict:
+        """
+        Upload video to YouTube using resumable upload
+
+        Args:
+            title: Video title
+            description: Video description
+            video_url: Public URL to video file
+            privacy: "public", "private", or "unlisted"
+
+        Returns:
+            dict: {success: bool, post_id: str (video_id), post_url: str}
+        """
         if not self.access_token:
             return {
                 "success": False,
-                "error": "YouTube credentials not configured. Add YOUTUBE_ACCESS_TOKEN to .env.local"
+                "error": "YouTube not connected. Please connect your YouTube account."
             }
-        
-        return {
-            "success": False,
-            "error": "YouTube video publishing requires video upload flow - coming soon"
-        }
+
+        try:
+            # Note: For production with large files, implement proper resumable upload
+            # For now, we'll use simple upload for videos < 100MB
+
+            async with httpx.AsyncClient(timeout=600.0) as client:  # 10 minute timeout for video upload
+                # Download video from URL first (in production, stream directly)
+                video_response = await client.get(video_url)
+                if video_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Failed to fetch video from URL: {video_response.status_code}"
+                    }
+
+                video_data = video_response.content
+
+                # Step 1: Create video resource
+                metadata = {
+                    "snippet": {
+                        "title": title[:100],  # YouTube max title 100 chars
+                        "description": description[:5000],  # YouTube max description 5000 chars
+                        "categoryId": "22"  # 22 = People & Blogs (default category)
+                    },
+                    "status": {
+                        "privacyStatus": privacy,  # public, private, or unlisted
+                        "selfDeclaredMadeForKids": False
+                    }
+                }
+
+                # Step 2: Upload video
+                upload_response = await client.post(
+                    f"{self.base_url}/videos",
+                    params={
+                        "part": "snippet,status",
+                        "uploadType": "media"
+                    },
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json"
+                    },
+                    json=metadata
+                )
+
+                # Then upload the actual video binary
+                # (This is simplified - production should use resumable upload for files > 5MB)
+                upload_url_response = await client.post(
+                    f"{self.base_url}/videos",
+                    params={
+                        "part": "snippet,status",
+                        "uploadType": "resumable"
+                    },
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json",
+                        "X-Upload-Content-Type": "video/*"
+                    },
+                    json=metadata
+                )
+
+                if upload_url_response.status_code != 200:
+                    logger.error(f"YouTube upload init failed: {upload_url_response.status_code} - {upload_url_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"YouTube upload failed: {upload_url_response.status_code}"
+                    }
+
+                # Get upload URL from Location header
+                upload_url = upload_url_response.headers.get('Location')
+
+                if not upload_url:
+                    return {
+                        "success": False,
+                        "error": "Failed to get YouTube upload URL"
+                    }
+
+                # Upload video binary
+                video_upload_response = await client.put(
+                    upload_url,
+                    content=video_data,
+                    headers={
+                        "Content-Type": "video/*"
+                    }
+                )
+
+                if video_upload_response.status_code not in [200, 201]:
+                    logger.error(f"YouTube video upload failed: {video_upload_response.status_code} - {video_upload_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"YouTube video upload failed: {video_upload_response.status_code}"
+                    }
+
+                video_data_response = video_upload_response.json()
+                video_id = video_data_response.get('id')
+
+                return {
+                    "success": True,
+                    "post_id": video_id,
+                    "post_url": f"https://www.youtube.com/watch?v={video_id}",
+                    "message": f"Video uploaded successfully as {privacy}"
+                }
+
+        except httpx.TimeoutException:
+            return {
+                "success": False,
+                "error": "YouTube upload timeout - large videos may take 10+ minutes"
+            }
+        except Exception as e:
+            logger.error(f"YouTube publish error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 # ============================================================================
 # REDDIT PUBLISHER
@@ -764,55 +1292,116 @@ class YouTubePublisher:
 class RedditPublisher:
     """
     Reddit API publisher
-    Requires: Reddit Client ID, Client Secret, Access Token
+    Requires: Reddit OAuth 2.0 access token
+    Supports: Text posts, link posts, image posts, video posts
     """
-    
-    def __init__(self):
-        self.client_id = os.getenv("REDDIT_CLIENT_ID")
-        self.client_secret = os.getenv("REDDIT_CLIENT_SECRET")
-        self.access_token = os.getenv("REDDIT_ACCESS_TOKEN")
-        self.username = os.getenv("REDDIT_USERNAME")
+
+    def __init__(self, access_token: str):
+        self.access_token = access_token
         self.base_url = "https://oauth.reddit.com"
-    
-    async def publish_post(self, subreddit: str, title: str, text: str) -> dict:
-        """Publish text post to Reddit"""
-        if not all([self.client_id, self.client_secret, self.access_token]):
+
+    async def publish_post(self, subreddit: str, title: str, text: Optional[str] = None,
+                          url: Optional[str] = None, post_type: str = "text") -> dict:
+        """
+        Publish post to Reddit subreddit
+
+        Args:
+            subreddit: Subreddit name (without r/ prefix)
+            title: Post title (max 300 chars)
+            text: Post text/selftext for text posts
+            url: URL for link posts or image/video URL
+            post_type: "text", "link", "image", or "video"
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token:
             return {
                 "success": False,
-                "error": "Reddit credentials not configured. Add REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_ACCESS_TOKEN to .env.local"
+                "error": "Reddit not connected. Please connect your Reddit account."
             }
-        
+
         try:
-            async with httpx.AsyncClient() as client:
+            # Validate title length
+            if len(title) > 300:
+                return {
+                    "success": False,
+                    "error": f"Reddit titles must be under 300 characters (current: {len(title)})"
+                }
+
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                # Determine kind based on post_type
+                kind_map = {
+                    "text": "self",
+                    "link": "link",
+                    "image": "image",
+                    "video": "video"
+                }
+                kind = kind_map.get(post_type, "self")
+
+                # Build submission data
+                submit_data = {
+                    "sr": subreddit,
+                    "kind": kind,
+                    "title": title
+                }
+
+                # Add content based on post type
+                if post_type == "text":
+                    submit_data["text"] = text or ""
+                elif post_type in ["link", "image", "video"]:
+                    if not url:
+                        return {
+                            "success": False,
+                            "error": f"URL required for {post_type} posts"
+                        }
+                    submit_data["url"] = url
+
+                # Submit post
                 response = await client.post(
                     f"{self.base_url}/api/submit",
                     headers={
                         "Authorization": f"Bearer {self.access_token}",
-                        "User-Agent": "Orla3MarketingSuite/1.0"
+                        "User-Agent": "ORLA3-Marketing-Suite/1.0"
                     },
-                    data={
-                        "sr": subreddit,
-                        "kind": "self",
-                        "title": title,
-                        "text": text
-                    }
+                    data=submit_data
                 )
-                
+
                 if response.status_code != 200:
+                    logger.error(f"Reddit API error: {response.status_code} - {response.text}")
                     return {
                         "success": False,
-                        "error": f"Reddit API error: {response.text}"
+                        "error": f"Reddit API error: {response.status_code}"
                     }
-                
+
                 result = response.json()
-                post_url = result["json"]["data"]["url"]
-                
+
+                # Check for errors in response
+                if result.get("json", {}).get("errors"):
+                    errors = result["json"]["errors"]
+                    return {
+                        "success": False,
+                        "error": f"Reddit error: {errors[0][1] if errors else 'Unknown error'}"
+                    }
+
+                post_data = result.get("json", {}).get("data", {})
+                post_url = post_data.get("url", "")
+                post_id = post_data.get("name", "")  # Format: t3_xxxxx
+
                 return {
                     "success": True,
-                    "post_url": post_url
+                    "post_id": post_id,
+                    "post_url": post_url,
+                    "message": f"Posted to r/{subreddit}"
                 }
-                
+
+        except httpx.TimeoutException:
+            return {
+                "success": False,
+                "error": "Reddit API timeout"
+            }
         except Exception as e:
+            logger.error(f"Reddit publish error: {e}")
             return {
                 "success": False,
                 "error": str(e)
