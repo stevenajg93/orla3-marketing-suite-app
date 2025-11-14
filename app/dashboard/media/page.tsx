@@ -91,28 +91,35 @@ export default function MediaLibrary() {
 
   const loadConnectedProviders = async () => {
     try {
+      console.log('☁️ Loading connected providers...');
       const data = await api.get('/cloud-storage/connections');
+      console.log('☁️ Connected providers response:', data);
       if (data.success && data.connections) {
         const providers = data.connections.map((conn: any) => conn.provider);
+        console.log('☁️ Found providers:', providers);
         setConnectedProviders(providers);
 
         // Set initial cloud storage provider to first connected one
         if (providers.length > 0) {
           const firstProvider = providers[0];
+          console.log('☁️ Setting initial provider to:', firstProvider);
           setCloudStorageProvider(firstProvider);
 
           // Load files for the first provider
           if (firstProvider === 'google_drive') {
+            console.log('☁️ Loading Google Drive files...');
             loadDriveFiles('');
           } else if (firstProvider === 'dropbox') {
+            console.log('☁️ Loading Dropbox files...');
             loadDropboxFiles('');
           } else if (firstProvider === 'onedrive') {
+            console.log('☁️ Loading OneDrive files...');
             loadOnedriveFiles('');
           }
         }
       }
     } catch (err) {
-      console.error('Failed to load connected providers:', err);
+      console.error('❌ Failed to load connected providers:', err);
     }
   };
 
@@ -138,7 +145,9 @@ export default function MediaLibrary() {
 
   const loadGeneratedContent = async () => {
     try {
+      console.log('📚 Loading generated content...');
       const data = await api.get('/library/content');
+      console.log('📚 Loaded generated content:', data.items?.length || 0, 'items');
       setGeneratedContent(data.items || []);
 
       // Resume polling for any videos still generating
@@ -159,7 +168,7 @@ export default function MediaLibrary() {
         }
       });
     } catch (err) {
-      console.error('Failed to load generated content');
+      console.error('❌ Failed to load generated content:', err);
     }
   };
 
