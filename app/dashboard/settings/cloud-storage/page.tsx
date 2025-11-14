@@ -9,6 +9,7 @@ interface CloudConnection {
   connected: boolean;
   provider_email?: string;
   connected_at?: string;
+  is_active?: boolean;
 }
 
 export default function CloudStorageSettings() {
@@ -47,7 +48,16 @@ export default function CloudStorageSettings() {
       const response = await api.get('/cloud-storage/connections');
 
       if (response.success) {
-        setConnections(response.connections || []);
+        // Transform backend connections to include 'connected: true' field
+        const transformedConnections = (response.connections || []).map((conn: any) => ({
+          provider: conn.provider,
+          connected: true, // Backend only returns active connections
+          provider_email: conn.provider_email,
+          connected_at: conn.connected_at,
+          is_active: conn.is_active
+        }));
+
+        setConnections(transformedConnections);
       } else {
         setError('Failed to load cloud storage connections');
       }
@@ -188,47 +198,63 @@ export default function CloudStorageSettings() {
               return (
                 <div
                   key={provider.id}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-white/40 transition"
+                  className={`bg-white/10 backdrop-blur-lg rounded-2xl p-6 border-2 transition ${
+                    isConnected
+                      ? 'border-green-500/50 bg-green-500/5'
+                      : 'border-white/20 hover:border-white/40'
+                  }`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className={`text-5xl p-4 rounded-xl bg-gradient-to-br ${provider.color}`}>
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className={`text-5xl p-4 rounded-xl bg-gradient-to-br ${provider.color} relative`}>
                         {provider.icon}
+                        {isConnected && (
+                          <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold shadow-lg">
+                            ✓
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-white mb-1">
-                          {provider.name}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="text-2xl font-bold text-white">
+                            {provider.name}
+                          </h3>
+                          {isConnected && (
+                            <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full uppercase tracking-wide">
+                              ✓ Connected
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-400 mb-2">
                           {provider.description}
                         </p>
                         {isConnected && connection?.provider_email && (
-                          <div className="flex items-center gap-2 text-green-400 text-sm">
-                            <span className="inline-block w-2 h-2 bg-green-400 rounded-full"></span>
+                          <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                            <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                             Connected as {connection.provider_email}
                           </div>
                         )}
                         {isConnected && connection?.connected_at && (
                           <p className="text-gray-500 text-sm mt-1">
-                            Connected {new Date(connection.connected_at).toLocaleDateString()}
+                            Connected on {new Date(connection.connected_at).toLocaleDateString()}
                           </p>
                         )}
                       </div>
                     </div>
 
                     {/* Action Button */}
-                    <div>
+                    <div className="ml-4">
                       {isConnected ? (
                         <button
                           onClick={() => disconnectProvider(provider.id)}
-                          className="px-6 py-2 border-2 border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 rounded-lg font-semibold transition"
+                          className="px-6 py-3 border-2 border-red-500/50 hover:border-red-500 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg font-semibold transition"
                         >
                           Disconnect
                         </button>
                       ) : (
                         <button
                           onClick={() => connectProvider(provider.id)}
-                          className={`px-6 py-2 bg-gradient-to-r ${provider.color} hover:opacity-90 text-white rounded-lg font-semibold transition shadow-lg`}
+                          className={`px-6 py-3 bg-gradient-to-r ${provider.color} hover:opacity-90 text-white rounded-lg font-semibold transition shadow-lg`}
                         >
                           Connect
                         </button>

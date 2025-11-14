@@ -64,9 +64,15 @@ export default function SocialManagerPage() {
   // Media library state
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any[]>([]);
-  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'pexels-photos' | 'pexels-videos' | 'ai-images' | 'ai-videos'>('generated');
+  const [mediaLibraryTab, setMediaLibraryTab] = useState<'generated' | 'drive' | 'dropbox' | 'onedrive' | 'pexels-photos' | 'pexels-videos' | 'ai-images' | 'ai-videos'>('generated');
   const [driveAssets, setDriveAssets] = useState<any[]>([]);
   const [driveFolders, setDriveFolders] = useState<any[]>([]);
+  const [dropboxFiles, setDropboxFiles] = useState<any[]>([]);
+  const [dropboxFolders, setDropboxFolders] = useState<any[]>([]);
+  const [dropboxPath, setDropboxPath] = useState<string>('');
+  const [onedriveFiles, setOnedriveFiles] = useState<any[]>([]);
+  const [onedriveFolders, setOnedriveFolders] = useState<any[]>([]);
+  const [onedrivePath, setOnedrivePath] = useState<string>('');
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [pexelsPhotos, setPexelsPhotos] = useState<any[]>([]);
   const [pexelsVideos, setPexelsVideos] = useState<any[]>([]);
@@ -163,6 +169,42 @@ export default function SocialManagerPage() {
       setDriveAssets(data.assets || []);
     } catch (err) {
       console.error('Failed to load Drive assets');
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const loadDropboxFiles = async (path: string = '') => {
+    setMediaLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (path) params.append('path', path);
+      const data = await api.get(`/cloud-storage/browse/dropbox?${params}`);
+      setDropboxFiles(data.files || []);
+      setDropboxFolders(data.folders || []);
+    } catch (err: any) {
+      console.error('Failed to load Dropbox files:', err);
+      if (err?.status === 404) {
+        alert('Dropbox not connected. Please connect Dropbox in Settings > Cloud Storage.');
+      }
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const loadOnedriveFiles = async (path: string = '') => {
+    setMediaLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (path) params.append('path', path);
+      const data = await api.get(`/cloud-storage/browse/onedrive?${params}`);
+      setOnedriveFiles(data.files || []);
+      setOnedriveFolders(data.folders || []);
+    } catch (err: any) {
+      console.error('Failed to load OneDrive files:', err);
+      if (err?.status === 404) {
+        alert('OneDrive not connected. Please connect OneDrive in Settings > Cloud Storage.');
+      }
     } finally {
       setMediaLoading(false);
     }
@@ -442,6 +484,67 @@ export default function SocialManagerPage() {
       } catch (err) {
         console.error('Error fetching Drive file:', err);
         alert('Failed to load Drive file');
+      }
+    }
+    // Handle Dropbox files - fetch temporary download link
+    else if (item.source === 'dropbox') {
+      console.log('Dropbox file selected, fetching download link...');
+      try {
+        const data = await api.get(`/cloud-storage/file/dropbox/${encodeURIComponent(item.id)}`);
+
+        if (data.success && data.link) {
+          const mediaItem = {
+            url: data.link,
+            type: item.type || 'file',
+            name: item.name || 'Dropbox File',
+            source: 'dropbox'
+          };
+          console.log('Dropbox file selected:', mediaItem);
+          setSelectedMedia([...selectedMedia, mediaItem]);
+        } else {
+          console.error('Failed to get Dropbox file link');
+          alert('Could not load Dropbox file.');
+        }
+      } catch (err) {
+        console.error('Error fetching Dropbox file:', err);
+        alert('Failed to load Dropbox file');
+      }
+    }
+    // Handle OneDrive files - use download URL from API
+    else if (item.source === 'onedrive') {
+      console.log('OneDrive file selected');
+      // OneDrive API returns download_url directly
+      if (item.url || item.download_url) {
+        const mediaItem = {
+          url: item.url || item.download_url,
+          type: item.type || 'file',
+          name: item.name || 'OneDrive File',
+          source: 'onedrive'
+        };
+        console.log('OneDrive file selected:', mediaItem);
+        setSelectedMedia([...selectedMedia, mediaItem]);
+      } else {
+        // Fetch download URL if not provided
+        try {
+          const data = await api.get(`/cloud-storage/file/onedrive/${item.id}`);
+
+          if (data.success && data.download_url) {
+            const mediaItem = {
+              url: data.download_url,
+              type: item.type || 'file',
+              name: data.name || item.name || 'OneDrive File',
+              source: 'onedrive'
+            };
+            console.log('OneDrive file selected:', mediaItem);
+            setSelectedMedia([...selectedMedia, mediaItem]);
+          } else {
+            console.error('Failed to get OneDrive file URL');
+            alert('Could not load OneDrive file.');
+          }
+        } catch (err) {
+          console.error('Error fetching OneDrive file:', err);
+          alert('Failed to load OneDrive file');
+        }
       }
     }
     // Handle Pexels photos and videos
@@ -1201,7 +1304,25 @@ export default function SocialManagerPage() {
                   onClick={() => setMediaLibraryTab('drive')}
                   className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'drive' ? 'bg-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
-                  Google Drive
+                   Google Drive
+                </button>
+                <button
+                  onClick={() => {
+                    setMediaLibraryTab('dropbox');
+                    loadDropboxFiles('');
+                  }}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'dropbox' ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                   Dropbox
+                </button>
+                <button
+                  onClick={() => {
+                    setMediaLibraryTab('onedrive');
+                    loadOnedriveFiles('');
+                  }}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'onedrive' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                >
+                   OneDrive
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('pexels-photos')}
@@ -1384,7 +1505,143 @@ export default function SocialManagerPage() {
                     )}
                   </div>
                 )}
-                
+
+                {/* Dropbox Tab */}
+                {mediaLibraryTab === 'dropbox' && (
+                  <div>
+                    {mediaLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400">Loading Dropbox files...</p>
+                      </div>
+                    ) : dropboxFiles.length === 0 && dropboxFolders.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4"></div>
+                        <h3 className="text-xl font-bold text-white mb-2">Dropbox Connected</h3>
+                        <p className="text-gray-400">No files found in this folder.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Folders */}
+                        {dropboxFolders.map((folder: any) => (
+                          <div
+                            key={folder.id}
+                            onClick={() => {
+                              setDropboxPath(folder.path);
+                              loadDropboxFiles(folder.path);
+                            }}
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-500 transition cursor-pointer"
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center">
+                              <span className="text-6xl"></span>
+                            </div>
+                            <div className="p-3">
+                              <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                              <p className="text-xs text-gray-400 capitalize">Folder</p>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Files */}
+                        {dropboxFiles.map((file: any) => (
+                          <div
+                            key={file.id}
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-500 transition group"
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
+                              {file.type === 'image' ? (
+                                <span className="text-6xl"></span>
+                              ) : file.type === 'video' ? (
+                                <span className="text-6xl"></span>
+                              ) : (
+                                <span className="text-6xl"></span>
+                              )}
+                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                                <button
+                                  onClick={() => handleMediaSelect({ ...file, source: 'dropbox' })}
+                                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-semibold transition"
+                                >
+                                  Select for Post
+                                </button>
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                              <p className="text-xs text-gray-400 capitalize">{file.type}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* OneDrive Tab */}
+                {mediaLibraryTab === 'onedrive' && (
+                  <div>
+                    {mediaLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400">Loading OneDrive files...</p>
+                      </div>
+                    ) : onedriveFiles.length === 0 && onedriveFolders.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4"></div>
+                        <h3 className="text-xl font-bold text-white mb-2">OneDrive Connected</h3>
+                        <p className="text-gray-400">No files found in this folder.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Folders */}
+                        {onedriveFolders.map((folder: any) => (
+                          <div
+                            key={folder.id}
+                            onClick={() => {
+                              setOnedrivePath(`items/${folder.id}`);
+                              loadOnedriveFiles(`items/${folder.id}`);
+                            }}
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-400 transition cursor-pointer"
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-blue-800 to-slate-900 flex items-center justify-center">
+                              <span className="text-6xl"></span>
+                            </div>
+                            <div className="p-3">
+                              <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                              <p className="text-xs text-gray-400 capitalize">Folder • {folder.item_count || 0} items</p>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Files */}
+                        {onedriveFiles.map((file: any) => (
+                          <div
+                            key={file.id}
+                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-blue-400 transition group"
+                          >
+                            <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
+                              {file.type === 'image' ? (
+                                <span className="text-6xl"></span>
+                              ) : file.type === 'video' ? (
+                                <span className="text-6xl"></span>
+                              ) : (
+                                <span className="text-6xl"></span>
+                              )}
+                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                                <button
+                                  onClick={() => handleMediaSelect({ ...file, source: 'onedrive', url: file.download_url })}
+                                  className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-semibold transition"
+                                >
+                                  Select for Post
+                                </button>
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                              <p className="text-xs text-gray-400 capitalize">{file.type}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Pexels Photos Tab */}
                 {mediaLibraryTab === 'pexels-photos' && (
                   <div>

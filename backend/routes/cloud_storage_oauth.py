@@ -547,3 +547,51 @@ async def list_cloud_connections(request: Request):
     finally:
         cur.close()
         conn.close()
+
+
+@router.delete("/cloud-storage/disconnect/{provider}")
+async def disconnect_cloud_storage(request: Request, provider: str):
+    """
+    Disconnect a cloud storage provider
+
+    Soft-delete: Sets is_active = false
+    """
+    user_id = get_user_from_token(request)
+
+    # Validate provider
+    if provider not in ['google_drive', 'onedrive', 'dropbox']:
+        raise HTTPException(status_code=400, detail="Invalid provider")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Soft delete - set is_active to false
+        cur.execute("""
+            UPDATE user_cloud_storage_tokens
+            SET is_active = false, updated_at = NOW()
+            WHERE user_id = %s AND provider = %s
+        """, (user_id, provider))
+
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail=f"{provider} not connected")
+
+        conn.commit()
+
+        logger.info(f"🔌 {provider} disconnected for user {user_id}")
+
+        return {
+            "success": True,
+            "message": f"Disconnected from {provider}",
+            "provider": provider
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error disconnecting {provider}: {e}")
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
