@@ -35,11 +35,13 @@ def get_db_connection():
 def get_library_content(request: Request):
     try:
         user_id = get_user_id(request)
+        # Convert UUID to string for PostgreSQL compatibility
+        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
             "SELECT * FROM content_library WHERE user_id = %s ORDER BY created_at DESC",
-            (str(user_id),)
+            (user_id_str,)
         )
         items = cur.fetchall()
         cur.close()
@@ -47,13 +49,15 @@ def get_library_content(request: Request):
         logger.info(f"Loaded {len(items)} library items for user {user_id}")
         return {"items": items}
     except Exception as e:
-        logger.error(f"Error loading library: {e}")
-        return {"items": []}
+        logger.error(f"Error loading library: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to load content: {str(e)}")
 
 @router.post("/content")
 def save_content(item: ContentItem, request: Request):
     try:
         user_id = get_user_id(request)
+        # Convert UUID to string for PostgreSQL compatibility
+        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -62,7 +66,7 @@ def save_content(item: ContentItem, request: Request):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
         """, (
-            str(user_id),
+            user_id_str,
             item.title,
             item.content_type,
             item.content,
@@ -88,6 +92,8 @@ def save_content(item: ContentItem, request: Request):
 def update_content(item_id: str, item: ContentItem, request: Request):
     try:
         user_id = get_user_id(request)
+        # Convert UUID to string for PostgreSQL compatibility
+        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -106,7 +112,7 @@ def update_content(item_id: str, item: ContentItem, request: Request):
             item.tags or [],
             item.media_url,
             item_id,
-            str(user_id)
+            user_id_str
         ))
 
         updated_item = cur.fetchone()
@@ -130,12 +136,14 @@ def update_content(item_id: str, item: ContentItem, request: Request):
 def delete_content(item_id: str, request: Request):
     try:
         user_id = get_user_id(request)
+        # Convert UUID to string for PostgreSQL compatibility
+        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
         cur.execute(
             "DELETE FROM content_library WHERE id = %s AND user_id = %s RETURNING id",
-            (item_id, str(user_id))
+            (item_id, user_id_str)
         )
 
         deleted_item = cur.fetchone()
