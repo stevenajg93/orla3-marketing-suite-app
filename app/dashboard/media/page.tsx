@@ -51,6 +51,9 @@ export default function MediaLibrary() {
   const [onedriveFiles, setOnedriveFiles] = useState<MediaAsset[]>([]);
   const [onedriveFolders, setOnedriveFolders] = useState<MediaAsset[]>([]);
   const [onedrivePath, setOnedrivePath] = useState<string>('');
+  const [driveFiles, setDriveFiles] = useState<MediaAsset[]>([]);
+  const [driveFolders, setDriveFolders] = useState<MediaAsset[]>([]);
+  const [driveFolderId, setDriveFolderId] = useState<string>('');
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<any>(null);
@@ -218,6 +221,24 @@ export default function MediaLibrary() {
       console.error('Failed to load OneDrive files:', err);
       if (err?.status === 404) {
         alert('OneDrive not connected. Please connect OneDrive in Settings > Cloud Storage.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDriveFiles = async (folder_id: string = '') => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (folder_id) params.append('folder_id', folder_id);
+      const data = await api.get(`/cloud-storage/browse/google_drive?${params}`);
+      setDriveFiles(data.files || []);
+      setDriveFolders(data.folders || []);
+    } catch (err: any) {
+      console.error('Failed to load Google Drive files:', err);
+      if (err?.status === 404) {
+        alert('Google Drive not connected. Please connect Google Drive in Settings > Cloud Storage.');
       }
     } finally {
       setLoading(false);
@@ -546,7 +567,10 @@ export default function MediaLibrary() {
 
         <div className="flex gap-4 mb-6">
           <button
-            onClick={() => setActiveTab('drive')}
+            onClick={() => {
+              setActiveTab('drive');
+              loadDriveFiles('');
+            }}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'drive'
                 ? 'bg-gradient-to-r from-cobalt to-cobalt-700 text-white'
@@ -637,47 +661,10 @@ export default function MediaLibrary() {
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             {activeTab === 'drive' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Filters</h2>
-
-                <div className="mb-6">
-                  <label className="block text-white font-bold mb-2 text-sm">Type</label>
-                  <select
-                    value={mediaType}
-                    onChange={(e) => setMediaType(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold"
-                  >
-                    <option value="all">All Types</option>
-                    <option value="video">Videos</option>
-                    <option value="image">Images</option>
-                    <option value="document">Documents</option>
-                  </select>
+                <h2 className="text-xl font-bold text-white mb-4">Google Drive Files</h2>
+                <div className="bg-gradient-to-r from-cobalt/30 to-cobalt-700/30 border border-cobalt/30 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-300">Browse your Google Drive files</p>
                 </div>
-
-                <h3 className="text-lg font-bold text-white mb-3">Folders</h3>
-                <button
-                  onClick={handleAllFilesClick}
-                  className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
-                    selectedFolder === ''
-                      ? 'bg-gold-600 text-white'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                  }`}
-                >
-                  All Files
-                </button>
-
-                {folders.map((folder) => (
-                  <button
-                    key={folder.id}
-                    onClick={() => handleFolderClick(folder.id, folder.name)}
-                    className={`w-full text-left p-3 rounded-lg mb-2 transition-all ${
-                      selectedFolder === folder.id
-                        ? 'bg-gold-600 text-white'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                    }`}
-                  >
-                    <div className="font-bold text-sm truncate">{folder.name}</div>
-                  </button>
-                ))}
               </>
             ) : activeTab === 'dropbox' ? (
               <>
@@ -1019,6 +1006,40 @@ export default function MediaLibrary() {
                           </button>
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : activeTab === 'drive' ? (
+              loading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-400">Loading Google Drive files...</p>
+                </div>
+              ) : driveFiles.length === 0 && driveFolders.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4"></div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                  <p className="text-gray-400">This folder is empty or Google Drive is not connected.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {driveFolders.map((folder: any) => (
+                    <div
+                      key={folder.id}
+                      onClick={() => {
+                        setDriveFolderId(folder.id);
+                        loadDriveFiles(folder.id);
+                      }}
+                      className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
+                    >
+                      <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                      <p className="text-xs text-gray-400">Folder</p>
+                    </div>
+                  ))}
+                  {driveFiles.map((file: any) => (
+                    <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
+                      <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                      <p className="text-xs text-gray-400 capitalize">{file.type}</p>
                     </div>
                   ))}
                 </div>

@@ -342,19 +342,146 @@ async def get_onedrive_file_link(request: Request, item_id: str):
 
 
 # ============================================================================
-# GOOGLE DRIVE FILE BROWSING (delegate to existing /media routes)
+# GOOGLE DRIVE FILE BROWSING
 # ============================================================================
 
 @router.get("/cloud-storage/browse/google_drive")
 async def browse_google_drive_files(request: Request, folder_id: Optional[str] = None):
     """
-    Browse Google Drive files - delegates to existing /media/library endpoint
+    Browse Google Drive files and folders
+
+    Query params:
+    - folder_id: Folder ID to browse (default: root)
+
+    PRIVACY: Only shows files from selected folders if user has set restrictions
     """
-    return {
-        "success": True,
-        "message": "Use /media/library endpoint for Google Drive browsing",
-        "provider": "google_drive"
-    }
+    user_id = get_user_id(request)
+    connection = get_user_cloud_connection(user_id, 'google_drive')
+
+    access_token = connection['access_token']
+    selected_folders = connection.get('selected_folders', [])
+
+    # Build query for Google Drive API
+    if folder_id:
+        query = f"'{folder_id}' in parents and trashed=false"
+    else:
+        query = "'root' in parents and trashed=false"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # List files and folders
+            response = await client.get(
+                "https://www.googleapis.com/drive/v3/files",
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={
+                    "q": query,
+                    "fields": "files(id, name, mimeType, size, thumbnailLink, webViewLink, modifiedTime)",
+                    "pageSize": 1000,
+                    "orderBy": "folder,name"
+                }
+            )
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Google Drive API error: {response.text}")
+
+            data = response.json()
+            files_list = []
+            folders_list = []
+
+            for item in data.get('files', []):
+                # Check if it's a folder
+                is_folder = item['mimeType'] == 'application/vnd.google-apps.folder'
+
+                # Privacy filtering: if user has selected folders, only show those
+                if selected_folders and len(selected_folders) > 0:
+                    is_allowed = any(
+                        item['id'] == folder.get('id') or
+                        folder_id == folder.get('id')  # Allow browsing inside selected folders
+                        for folder in selected_folders
+                    )
+                    if not is_allowed and is_folder:
+                        continue  # Skip folders not in selected list
+
+                file_obj = {
+                    "id": item['id'],
+                    "name": item['name'],
+                    "type": "folder" if is_folder else get_file_type(item['name']),
+                    "mime_type": item['mimeType'],
+                    "size": item.get('size', 0),
+                    "thumbnail": item.get('thumbnailLink'),
+                    "web_link": item.get('webViewLink'),
+                    "modified": item.get('modifiedTime'),
+                    "source": "google_drive"
+                }
+
+                if is_folder:
+                    folders_list.append(file_obj)
+                else:
+                    files_list.append(file_obj)
+
+            return {
+                "success": True,
+                "provider": "google_drive",
+                "current_folder_id": folder_id or "root",
+                "files": files_list,
+                "folders": folders_list
+            }
+
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error browsing Google Drive: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to browse Google Drive: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error browsing Google Drive: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error browsing Google Drive: {str(e)}")
+
+
+@router.get("/cloud-storage/file/google_drive/{file_id}")
+async def get_google_drive_file_link(request: Request, file_id: str):
+    """Get download link for Google Drive file"""
+    user_id = get_user_id(request)
+    connection = get_user_cloud_connection(user_id, 'google_drive')
+
+    access_token = connection['access_token']
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Get file metadata including download link
+            response = await client.get(
+                f"https://www.googleapis.com/drive/v3/files/{file_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={"fields": "id,name,mimeType,size,webContentLink,thumbnailLink"}
+            )
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Failed to get file: {response.text}")
+
+            data = response.json()
+
+            # Google Drive files have webContentLink for download
+            download_link = data.get('webContentLink')
+
+            if not download_link:
+                # For Google Docs/Sheets/Slides, we need to export them
+                if 'google-apps' in data.get('mimeType', ''):
+                    raise HTTPException(status_code=400, detail="Google Docs/Sheets/Slides export not yet supported. Please download as PDF from Google Drive first.")
+
+            return {
+                "success": True,
+                "link": download_link,
+                "metadata": {
+                    "id": data.get('id'),
+                    "name": data.get('name'),
+                    "mime_type": data.get('mimeType'),
+                    "size": data.get('size'),
+                    "thumbnail": data.get('thumbnailLink')
+                }
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting Google Drive file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
