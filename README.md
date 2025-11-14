@@ -41,8 +41,12 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Email Verification**: Pay-to-access model with email verification gate
 - **Customer Portal**: Self-service billing management via Stripe
 
-### 📁 Media Management
-- **Google Drive integration**: Import assets directly
+### 📁 Media Management & Cloud Storage
+- **Multi-Cloud Integration**: Google Drive, Dropbox, OneDrive
+- **OAuth 2.0 Authentication**: Secure per-user cloud storage connections
+- **Folder-Level Privacy**: Users can limit access to specific folders (e.g., company drive only)
+- **Secure Token Revocation**: OAuth tokens properly revoked on disconnect
+- **File Browsing**: Browse and import files from all connected cloud providers
 - **AI Image Generation**: Google Imagen 4 Ultra (20 credits per image)
 - **AI Video Generation**: Google Veo 3.1 (200 credits per 8s video with audio)
 - **Content library**: Filter by type, status, tags
@@ -164,9 +168,14 @@ PERPLEXITY_API_KEY=pplx-...
 # Media
 UNSPLASH_ACCESS_KEY=...
 
-# Google Drive OAuth
+# Cloud Storage OAuth 2.0 (Multi-Tenant - Per-User Connections)
+# Users connect their own cloud storage via /dashboard/settings/cloud-storage
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
+DROPBOX_APP_KEY=...
+DROPBOX_APP_SECRET=...
+ONEDRIVE_CLIENT_ID=...
+ONEDRIVE_CLIENT_SECRET=...
 
 # Social Media OAuth 2.0 (Multi-Tenant - Per-User Connections)
 # Users connect their own accounts via /dashboard/settings/social-accounts
@@ -338,6 +347,31 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**Cloud Storage Integration & Brand Compliance! 🎉 (Nov 14, 2025)**
+- ✅ **Multi-Cloud Storage Support** - Google Drive, Dropbox, and OneDrive integration
+- ✅ **OAuth 2.0 Authentication** - Secure per-user cloud storage connections with token-in-URL pattern for browser redirects
+- ✅ **Folder-Level Privacy Controls** - Users can select specific folders to share (e.g., company drive only, not personal files)
+  - Database migration: `selected_folders` JSONB column in `user_cloud_storage_tokens` table
+  - API endpoints for folder selection and retrieval
+  - Privacy filtering enforced in browse endpoints (HTTP 403 if unauthorized path)
+- ✅ **Secure Token Revocation** - OAuth tokens properly revoked when disconnecting
+  - Google Drive: POST to oauth2.googleapis.com/revoke
+  - Dropbox: POST to api.dropboxapi.com/2/auth/token/revoke
+  - OneDrive: 1-hour token expiry (no direct revocation API)
+- ✅ **Cloud Storage Browse API** - New routes for file/folder browsing
+  - GET `/cloud-storage/browse/dropbox` - Browse Dropbox files with privacy filtering
+  - GET `/cloud-storage/browse/onedrive` - Browse OneDrive files with privacy filtering
+  - GET `/cloud-storage/file/{provider}/{file_id}` - Get temporary download links
+  - POST `/cloud-storage/folders/select` - Save folder selections
+- ✅ **Media Library Updates** - Dropbox and OneDrive tabs added to Media Library and Social Manager
+- ✅ **Brand Guideline Compliance** - Enforced Royal (#1e3a8a), Cobalt (#0047AB), Gold (#FFD700) colors throughout
+  - Removed all emojis from Content Calendar and Carousel Maker
+  - Updated all cloud storage UI colors from blue to royal/cobalt gradients
+  - Fixed button colors in Calendar, Carousel, Social Manager, and Media Library
+- ✅ **Environment Variables** - Added DROPBOX_APP_KEY, DROPBOX_APP_SECRET, ONEDRIVE_CLIENT_ID, ONEDRIVE_CLIENT_SECRET
+- ✅ **Backend Routes** - New files: `cloud_storage_oauth.py`, `cloud_storage_browse.py`
+- ✅ **Database Migration** - Migration #006: `add_folder_selection.sql`
+
 **All 8 Platforms Connected! 🎉 (Nov 14, 2025)**
 - ✅ **LinkedIn OAuth WORKING** - Migrated to OpenID Connect scopes (openid, profile, email, w_member_social)
 - ✅ **Tumblr OAuth WORKING** - OAuth 2.0 publishing enabled
@@ -461,5 +495,5 @@ Built with love by the ORLA³ team. For questions or contributions, open an issu
 ---
 
 **Last Updated:** November 14, 2025
-**Version:** 0.5.0
-**Status:** Production-ready with 8/9 social platforms live (TikTok in review), Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, premium UI/UX, and zero technical debt
+**Version:** 0.6.0
+**Status:** Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage (Google Drive, Dropbox, OneDrive) with folder-level privacy, Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, brand guideline compliance, and zero technical debt

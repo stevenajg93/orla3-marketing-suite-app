@@ -515,11 +515,36 @@ This strategy is **automatically applied** to all content generation.
 - Market-based threat assessment (not just marketing similarity)
 - Feeds into brand strategy automatically
 
-### 4. Media Management
-**Files**: `backend/routes/media.py`, `backend/routes/ai_generation.py`
+### 4. Media Management & Cloud Storage
+**Files**: `backend/routes/media.py`, `backend/routes/ai_generation.py`, `backend/routes/cloud_storage_oauth.py`, `backend/routes/cloud_storage_browse.py`
 
-- Google Drive OAuth integration
-- Browse folders and import assets
+**Multi-Cloud Storage Integration:**
+- ✅ **3 Cloud Providers**: Google Drive, Dropbox, OneDrive
+- ✅ **OAuth 2.0 Per-User Authentication**: Secure cloud storage connections with token-in-URL pattern for browser redirects
+- ✅ **Folder-Level Privacy Controls**: Users can limit access to specific folders (e.g., company drive only, not personal files)
+  - Database: `selected_folders` JSONB column in `user_cloud_storage_tokens` table
+  - API: POST `/cloud-storage/folders/select`, GET `/cloud-storage/folders/selected`
+  - Enforcement: Privacy filtering in browse endpoints (HTTP 403 if unauthorized path)
+- ✅ **Secure Token Revocation**: OAuth tokens properly revoked on disconnect
+  - Google Drive: POST to `oauth2.googleapis.com/revoke`
+  - Dropbox: POST to `api.dropboxapi.com/2/auth/token/revoke`
+  - OneDrive: 1-hour token expiry (no direct revocation API)
+- ✅ **File Browsing & Import**: Browse files/folders from all connected providers
+  - GET `/cloud-storage/browse/dropbox` - Browse Dropbox with privacy filtering
+  - GET `/cloud-storage/browse/onedrive` - Browse OneDrive with privacy filtering
+  - GET `/cloud-storage/file/{provider}/{file_id}` - Get temporary download links
+- ✅ **UI Integration**: Cloud storage tabs in Media Library (`app/dashboard/media/page.tsx`) and Social Manager (`app/dashboard/social/page.tsx`)
+
+**Database Schema:**
+```sql
+user_cloud_storage_tokens table:
+- user_id, provider (google_drive/dropbox/onedrive)
+- access_token, refresh_token, token_expires_at
+- selected_folders (JSONB) - Array of folder IDs/paths user granted access to
+- is_active, created_at, updated_at
+```
+
+**AI Generation:**
 - **AI Image Generation** (Google Imagen 4 Ultra)
   - Text-to-image with aspect ratio options (1:1, 16:9, 9:16, 4:3, 3:4)
   - $0.03 per image
@@ -684,6 +709,26 @@ POST   /ai/generate-video          # Generate video (Veo 3.1)
 GET    /ai/video-status/{job_id}   # Check video generation status
 ```
 
+### Cloud Storage
+```
+# OAuth 2.0 Authentication
+GET    /cloud-storage/connect/google_drive     # Initiate Google Drive OAuth
+GET    /cloud-storage/connect/dropbox          # Initiate Dropbox OAuth
+GET    /cloud-storage/connect/onedrive         # Initiate OneDrive OAuth
+GET    /cloud-storage/callback/{provider}      # OAuth callback handler
+DELETE /cloud-storage/disconnect/{provider}    # Disconnect and revoke tokens
+GET    /cloud-storage/connections              # Get user's connected providers
+
+# File Browsing
+GET    /cloud-storage/browse/dropbox           # Browse Dropbox files (with privacy filtering)
+GET    /cloud-storage/browse/onedrive          # Browse OneDrive files (with privacy filtering)
+GET    /cloud-storage/file/{provider}/{file_id} # Get temporary download link
+
+# Folder Privacy Controls
+POST   /cloud-storage/folders/select           # Save folder selection preferences
+GET    /cloud-storage/folders/selected         # Get selected folders
+```
+
 ---
 
 ## 🔒 SECURITY & BEST PRACTICES
@@ -697,6 +742,51 @@ GET    /ai/video-status/{job_id}   # Check video generation status
 - **CORS protection** - Restricted to verified origins only
 
 ### Recent Updates (Nov 2025)
+
+**0. Cloud Storage Integration & Brand Compliance! 🎉 (Nov 14, 2025)**
+- ✅ **Multi-Cloud Storage Support** - Integrated Google Drive, Dropbox, and OneDrive
+  - OAuth 2.0 per-user authentication with token-in-URL pattern for browser redirects
+  - New backend routes: `cloud_storage_oauth.py` (OAuth flows), `cloud_storage_browse.py` (file browsing)
+  - Database migration #006: Added `selected_folders` JSONB column to `user_cloud_storage_tokens`
+
+- ✅ **Folder-Level Privacy Controls** - Users can select specific folders to share
+  - Database: `selected_folders` JSONB array stores allowed folder IDs/paths
+  - API endpoints: POST `/cloud-storage/folders/select`, GET `/cloud-storage/folders/selected`
+  - Privacy enforcement: Browse endpoints return HTTP 403 if accessing unauthorized paths
+  - Use case: Share company drive folder only, keep personal files private
+
+- ✅ **Secure Token Revocation** - OAuth tokens properly revoked on disconnect
+  - Google Drive: POST to `oauth2.googleapis.com/revoke` with access_token
+  - Dropbox: POST to `api.dropboxapi.com/2/auth/token/revoke` with Bearer token
+  - OneDrive: Automatic 1-hour token expiry (no direct revocation API)
+
+- ✅ **Cloud Storage Browse API** - File/folder browsing with privacy filtering
+  - GET `/cloud-storage/browse/dropbox?path={path}` - Dropbox files with folder privacy
+  - GET `/cloud-storage/browse/onedrive?path={path}` - OneDrive files with folder privacy
+  - GET `/cloud-storage/file/{provider}/{file_id}` - Temporary download links
+  - Supports pagination and breadcrumb navigation
+
+- ✅ **UI Integration** - Cloud storage tabs in Media Library and Social Manager
+  - `app/dashboard/media/page.tsx` - Standalone Media Library with Dropbox/OneDrive tabs
+  - `app/dashboard/social/page.tsx` - Social Manager media modal with cloud storage options
+  - `app/dashboard/settings/cloud-storage/page.tsx` - Cloud storage connection management
+
+- ✅ **Brand Guideline Compliance** - Enforced Royal, Cobalt, Gold color palette
+  - Removed ALL emojis from Content Calendar and Carousel Maker
+  - Updated cloud storage UI from blue gradients to royal/cobalt brand colors
+  - Fixed button colors across Calendar, Carousel, Social Manager, and Media Library
+  - Files updated: `calendar/page.tsx`, `carousel/page.tsx`, `social/page.tsx`, `media/page.tsx`
+
+- ✅ **Google Drive OAuth Fix** - Updated to web application OAuth client
+  - Changed from desktop client ([REDACTED]...) to web application client (388364497109...)
+  - Client ID: `[REDACTED - See Railway environment variables]`
+  - Client Secret: `[REDACTED - See Railway environment variables]`
+  - Redirect URI properly configured: `{BACKEND_URL}/cloud-storage/callback/google_drive`
+
+- ✅ **Environment Variables** - Added cloud storage OAuth credentials
+  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (web application client)
+  - `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`
+  - `ONEDRIVE_CLIENT_ID`, `ONEDRIVE_CLIENT_SECRET`
 
 **0. All 8 Platforms Connected! 🎉 (Nov 14, 2025)**
 - ✅ **LinkedIn OAuth WORKING** - Migrated to OpenID Connect scopes (openid, profile, email, w_member_social)
@@ -1091,5 +1181,5 @@ For questions about this codebase:
 ---
 
 **Last Updated**: November 14, 2025
-**Architecture Version**: 5.0 (8/9 Social Platforms Live + OAuth 2.0 Multi-Tenant + Payment & Credit System + Premium UI/UX)
-**Status**: ✅ Production-ready with 8/9 social platforms live (TikTok in review), Stripe payments, credit management, PKCE security, premium animations, zero technical debt
+**Architecture Version**: 6.0 (8/9 Social Platforms + 3-Provider Cloud Storage + OAuth 2.0 Multi-Tenant + Payment & Credit System + Brand Compliance)
+**Status**: ✅ Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage (Google Drive, Dropbox, OneDrive) with folder-level privacy, Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, brand guideline compliance, and zero technical debt
