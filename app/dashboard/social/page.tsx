@@ -98,18 +98,9 @@ export default function SocialManagerPage() {
     { id: "wordpress" as Platform, name: "WordPress", icon: "", color: "from-gray-700 to-gray-900", discovery: false, autoReply: false },
   ];
 
-  const mockComments: Comment[] = [
-    { id: "1", platform: "instagram", postTitle: "UK Videographer Guide", author: "@sarah_designs", content: "This is so helpful! Do you have recommendations for London specifically?", timestamp: "2 hours ago", sentiment: "question" },
-    { id: "2", platform: "linkedin", postTitle: "Corporate Video Tips", author: "John Marketing", content: "Great insights! We just hired a videographer and wish we'd seen this first.", timestamp: "5 hours ago", sentiment: "positive" },
-    { id: "3", platform: "x", postTitle: "Video Production Costs", author: "@tech_startup", content: "These prices seem way too high for small businesses", timestamp: "1 day ago", sentiment: "negative" },
-    { id: "4", platform: "tiktok", postTitle: "Behind the Scenes", author: "CreativeStudio22", content: "Love this content! Following for more", timestamp: "3 hours ago", sentiment: "positive" },
-  ];
-
-  const mockDiscoveryPosts: DiscoveryPost[] = [
-    { id: "1", platform: "instagram", author: "@startup_tales", content: "Looking for a corporate videographer in Manchester. Any recommendations?", hashtags: ["videography", "manchester", "business"], engagement: 24, timestamp: "3 hours ago" },
-    { id: "2", platform: "x", author: "@ukbusiness", content: "Just wrapped our first brand video. The difference between cheap and quality videography is night and day!", hashtags: ["branding", "videoproduction"], engagement: 156, timestamp: "5 hours ago" },
-    { id: "3", platform: "linkedin", author: "Marketing Director", content: "We're hiring a videographer for our product launch. What should we look for in their portfolio?", hashtags: ["hiring", "videography", "productlaunch"], engagement: 89, timestamp: "1 day ago" },
-  ];
+  // Real comments from API (no more mocks!)
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
   const togglePlatform = (platform: Platform) => {
     if (selectedPlatforms.includes(platform)) {
@@ -612,30 +603,99 @@ export default function SocialManagerPage() {
     
     setPublishing(false);
   };
+  // Load real comments from all connected platforms
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const response = await apiClient.get('/social/comments/all?limit=50');
+      if (response.data) {
+        // Transform API response to match Comment interface
+        const transformedComments = response.data.map((c: any) => ({
+          id: c.id,
+          platform: c.platform as Platform,
+          postTitle: c.post_id,  // Use post_id as title for now
+          author: c.author,
+          content: c.text,
+          timestamp: formatTimestamp(c.timestamp),
+          sentiment: c.sentiment || 'neutral'
+        }));
+        setComments(transformedComments);
+      }
+    } catch (error) {
+      console.error('Failed to load comments:', error);
+      // Don't show error to user, just keep comments empty
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // Format ISO timestamp to relative time
+  const formatTimestamp = (isoTimestamp: string): string => {
+    try {
+      const date = new Date(isoTimestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 60) return `${diffMins} minutes ago`;
+      if (diffHours < 24) return `${diffHours} hours ago`;
+      return `${diffDays} days ago`;
+    } catch {
+      return 'recently';
+    }
+  };
+
+  // Generate AI replies using backend /comments/reply endpoint
   const generateAIReplies = async (comment: Comment) => {
     setSelectedComment(comment);
     setGeneratingReplies(true);
     setAiReplies([]);
-    
-    setTimeout(() => {
-      setAiReplies([
-        "Thanks for asking! We have a great list of London-based videographers. DM us and we'll send you some recommendations!",
-        "Great question! London has some amazing talent. Check out our directory at orla3.com/london for vetted professionals in your area!",
-        "Absolutely! We work with several excellent videographers in London. What's your budget and project type? Happy to point you in the right direction!"
-      ]);
+
+    try {
+      const response = await apiClient.post('/comments/reply', {
+        comment_text: comment.content,
+        platform: comment.platform,
+        author: comment.author
+      });
+
+      if (response.data && response.data.replies) {
+        setAiReplies(response.data.replies);
+      } else if (response.data && response.data.reply) {
+        // Single reply format
+        setAiReplies([response.data.reply]);
+      }
+    } catch (error) {
+      console.error('Failed to generate AI replies:', error);
+      setAiReplies(['Failed to generate replies. Please try again.']);
+    } finally {
       setGeneratingReplies(false);
-    }, 2000);
+    }
   };
 
   const searchRelevantPosts = async () => {
     setSearchingPosts(true);
     setDiscoveryPosts([]);
-    
-    setTimeout(() => {
-      setDiscoveryPosts(mockDiscoveryPosts);
+
+    try {
+      // TODO: Phase 3 - Implement real discovery API
+      // For now, show message that this feature is coming
+      console.log('Post discovery will be implemented in Phase 3');
+      setDiscoveryPosts([]);
+    } catch (error) {
+      console.error('Failed to search posts:', error);
+    } finally {
       setSearchingPosts(false);
-    }, 2000);
+    }
   };
+
+  // Load comments when Engage tab is selected
+  useEffect(() => {
+    if (activeTab === 'engage' && engageSubTab === 'inbox' && comments.length === 0) {
+      loadComments();
+    }
+  }, [activeTab, engageSubTab]);
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -928,7 +988,7 @@ export default function SocialManagerPage() {
           <>
             <div className="flex gap-3 mb-6">
               <button onClick={() => setEngageSubTab("inbox")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "inbox" ? "bg-cobalt text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
-                Inbox ({mockComments.length})
+                Inbox ({comments.length})
               </button>
               <button onClick={() => setEngageSubTab("discovery")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "discovery" ? "bg-cobalt text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
                 Discovery
@@ -943,7 +1003,22 @@ export default function SocialManagerPage() {
                 <div className="lg:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
                   <h2 className="text-2xl font-bold text-white mb-6">Comments Inbox</h2>
                   <div className="space-y-4">
-                    {mockComments.map((comment) => (
+                    {loadingComments ? (
+                      <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cobalt mx-auto mb-4"></div>
+                        <p className="text-gray-400">Loading comments from connected platforms...</p>
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400 mb-4">No comments yet from your connected platforms.</p>
+                        <button
+                          onClick={loadComments}
+                          className="text-cobalt hover:text-royal transition-colors"
+                        >
+                          Refresh
+                        </button>
+                      </div>
+                    ) : comments.map((comment) => (
                       <div key={comment.id} className="bg-white/5 border border-white/10 rounded-lg p-4 hover:border-cobalt/50 transition cursor-pointer" onClick={() => generateAIReplies(comment)}>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
