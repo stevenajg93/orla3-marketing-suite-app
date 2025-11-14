@@ -123,9 +123,11 @@ class InstagramPublisher:
     Instagram Graph API publisher
     Requires: Instagram Business Account, Facebook Page Access Token
     """
-    
-    def __init__(self):
-        self.access_token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
+
+    def __init__(self, access_token: str = None):
+        # Accept access_token parameter for worker compatibility
+        # Falls back to environment variable if not provided
+        self.access_token = access_token or os.getenv("INSTAGRAM_ACCESS_TOKEN")
         self.business_account_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
         self.api_version = "v21.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"

@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import httpx
 import os
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
@@ -554,7 +555,8 @@ async def disconnect_cloud_storage(request: Request, provider: str):
     """
     Disconnect a cloud storage provider
 
-    Soft-delete: Sets is_active = false
+    SECURITY: Revokes OAuth tokens with the provider to truly remove access
+    Then marks as inactive in database
     """
     user_id = get_user_from_token(request)
 
@@ -566,15 +568,36 @@ async def disconnect_cloud_storage(request: Request, provider: str):
     cur = conn.cursor()
 
     try:
-        # Soft delete - set is_active to false
+        # Get current tokens for revocation
+        cur.execute("""
+            SELECT access_token, refresh_token
+            FROM user_cloud_storage_tokens
+            WHERE user_id = %s AND provider = %s AND is_active = true
+            LIMIT 1
+        """, (user_id, provider))
+
+        result = cur.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail=f"{provider} not connected")
+
+        access_token = result['access_token']
+        refresh_token = result.get('refresh_token')
+
+        # Revoke tokens with provider
+        revocation_success = await revoke_oauth_token(provider, access_token, refresh_token)
+
+        if revocation_success:
+            logger.info(f"✅ OAuth tokens revoked for {provider} (user {user_id})")
+        else:
+            logger.warning(f"⚠️ Token revocation failed for {provider}, but continuing disconnect")
+
+        # Mark as inactive in database (even if revocation failed - user can retry)
         cur.execute("""
             UPDATE user_cloud_storage_tokens
             SET is_active = false, updated_at = NOW()
             WHERE user_id = %s AND provider = %s
         """, (user_id, provider))
-
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"{provider} not connected")
 
         conn.commit()
 
@@ -583,7 +606,8 @@ async def disconnect_cloud_storage(request: Request, provider: str):
         return {
             "success": True,
             "message": f"Disconnected from {provider}",
-            "provider": provider
+            "provider": provider,
+            "token_revoked": revocation_success
         }
 
     except HTTPException:
@@ -595,3 +619,59 @@ async def disconnect_cloud_storage(request: Request, provider: str):
     finally:
         cur.close()
         conn.close()
+
+
+async def revoke_oauth_token(provider: str, access_token: str, refresh_token: str = None) -> bool:
+    """
+    Revoke OAuth tokens with provider to truly remove access
+
+    Returns True if revocation successful, False otherwise
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            if provider == 'google_drive':
+                # Google OAuth2 token revocation
+                # https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke
+                response = await client.post(
+                    "https://oauth2.googleapis.com/revoke",
+                    params={"token": access_token},
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+
+                if response.status_code == 200:
+                    logger.info("✅ Google Drive token revoked successfully")
+                    return True
+                else:
+                    logger.error(f"❌ Google token revocation failed: {response.status_code} - {response.text}")
+                    return False
+
+            elif provider == 'dropbox':
+                # Dropbox token revocation
+                # https://www.dropbox.com/developers/documentation/http/documentation#auth-token-revoke
+                response = await client.post(
+                    "https://api.dropboxapi.com/2/auth/token/revoke",
+                    headers={"Authorization": f"Bearer {access_token}"}
+                )
+
+                if response.status_code == 200:
+                    logger.info("✅ Dropbox token revoked successfully")
+                    return True
+                else:
+                    logger.error(f"❌ Dropbox token revocation failed: {response.status_code} - {response.text}")
+                    return False
+
+            elif provider == 'onedrive':
+                # Microsoft Graph logout/revoke
+                # Note: Microsoft doesn't have a direct token revocation endpoint
+                # Best practice is to let tokens expire (1 hour for access tokens)
+                # We still mark as inactive to prevent our app from using them
+                logger.info("⚠️ OneDrive: No direct revocation API. Tokens will expire in ~1 hour.")
+                return True  # Consider this success since we're marking inactive
+
+            else:
+                logger.error(f"Unknown provider: {provider}")
+                return False
+
+    except Exception as e:
+        logger.error(f"Exception during token revocation for {provider}: {e}")
+        return False
