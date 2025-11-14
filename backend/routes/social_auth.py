@@ -73,7 +73,12 @@ PLATFORM_CONFIG = {
     "linkedin": {
         "auth_url": "https://www.linkedin.com/oauth/v2/authorization",
         "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
-        "scopes": ["w_member_social", "r_liteprofile", "r_emailaddress"],
+        # OpenID Connect scopes (new format as of 2024)
+        # openid: Required for OIDC authentication
+        # profile: Replaces r_liteprofile (name, profile picture)
+        # email: Replaces r_emailaddress
+        # w_member_social: Post on behalf of user (unchanged)
+        "scopes": ["openid", "profile", "email", "w_member_social"],
         "client_id": LINKEDIN_CLIENT_ID,
         "client_secret": LINKEDIN_CLIENT_SECRET,
     },
