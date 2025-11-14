@@ -35,7 +35,9 @@ type GeneratedContent = {
 };
 
 export default function MediaLibrary() {
-  const [activeTab, setActiveTab] = useState<'drive' | 'dropbox' | 'onedrive' | 'pexels-photos' | 'pexels-videos' | 'generated' | 'ai-images' | 'ai-videos'>('drive');
+  const [activeTab, setActiveTab] = useState<'cloud' | 'pexels-photos' | 'pexels-videos' | 'generated' | 'ai-images' | 'ai-videos'>('cloud');
+  const [cloudStorageProvider, setCloudStorageProvider] = useState<'google_drive' | 'dropbox' | 'onedrive' | null>(null);
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>('');
@@ -84,10 +86,35 @@ export default function MediaLibrary() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'drive' && selectedFolder) {
-      loadAssets();
+    loadConnectedProviders();
+  }, []);
+
+  const loadConnectedProviders = async () => {
+    try {
+      const data = await api.get('/cloud-storage/connections');
+      if (data.success && data.connections) {
+        const providers = data.connections.map((conn: any) => conn.provider);
+        setConnectedProviders(providers);
+
+        // Set initial cloud storage provider to first connected one
+        if (providers.length > 0) {
+          const firstProvider = providers[0];
+          setCloudStorageProvider(firstProvider);
+
+          // Load files for the first provider
+          if (firstProvider === 'google_drive') {
+            loadDriveFiles('');
+          } else if (firstProvider === 'dropbox') {
+            loadDropboxFiles('');
+          } else if (firstProvider === 'onedrive') {
+            loadOnedriveFiles('');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load connected providers:', err);
     }
-  }, [selectedFolder, mediaType, activeTab]);
+  };
 
   const loadStatus = async () => {
     try {
@@ -567,43 +594,14 @@ export default function MediaLibrary() {
 
         <div className="flex gap-4 mb-6">
           <button
-            onClick={() => {
-              setActiveTab('drive');
-              loadDriveFiles('');
-            }}
+            onClick={() => setActiveTab('cloud')}
             className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
-              activeTab === 'drive'
+              activeTab === 'cloud'
                 ? 'bg-gradient-to-r from-cobalt to-cobalt-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-             Google Drive
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('dropbox');
-              loadDropboxFiles('');
-            }}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
-              activeTab === 'dropbox'
-                ? 'bg-gradient-to-r from-royal to-royal-700 text-white'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10'
-            }`}
-          >
-            Dropbox
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('onedrive');
-              loadOnedriveFiles('');
-            }}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
-              activeTab === 'onedrive'
-                ? 'bg-gradient-to-r from-royal-600 to-cobalt text-white'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10'
-            }`}
-          >
-            OneDrive
+            Cloud Storage
           </button>
           <button
             onClick={() => setActiveTab('pexels-photos')}
@@ -659,26 +657,66 @@ export default function MediaLibrary() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-            {activeTab === 'drive' ? (
+            {activeTab === 'cloud' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Google Drive Files</h2>
-                <div className="bg-gradient-to-r from-cobalt/30 to-cobalt-700/30 border border-cobalt/30 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-300">Browse your Google Drive files</p>
-                </div>
-              </>
-            ) : activeTab === 'dropbox' ? (
-              <>
-                <h2 className="text-xl font-bold text-white mb-4">Dropbox Files</h2>
-                <div className="bg-gradient-to-r from-royal-900/30 to-royal-700/30 border border-royal/30 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-300">Browse your Dropbox files</p>
-                </div>
-              </>
-            ) : activeTab === 'onedrive' ? (
-              <>
-                <h2 className="text-xl font-bold text-white mb-4">OneDrive Files</h2>
-                <div className="bg-gradient-to-r from-royal-900/30 to-cobalt/30 border border-cobalt/30 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-300">Browse your OneDrive files</p>
-                </div>
+                <h2 className="text-xl font-bold text-white mb-4">Cloud Storage</h2>
+                {connectedProviders.length === 0 ? (
+                  <div className="bg-royal/20 border border-royal/30 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-300 mb-2">No cloud storage connected</p>
+                    <p className="text-xs text-gray-400">Connect a provider in Settings → Cloud Storage</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Sub-tabs for connected providers */}
+                    <div className="flex flex-col gap-2 mb-4">
+                      {connectedProviders.includes('google_drive') && (
+                        <button
+                          onClick={() => {
+                            setCloudStorageProvider('google_drive');
+                            loadDriveFiles('');
+                          }}
+                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                            cloudStorageProvider === 'google_drive'
+                              ? 'bg-cobalt text-white font-bold'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                        >
+                          Google Drive
+                        </button>
+                      )}
+                      {connectedProviders.includes('dropbox') && (
+                        <button
+                          onClick={() => {
+                            setCloudStorageProvider('dropbox');
+                            loadDropboxFiles('');
+                          }}
+                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                            cloudStorageProvider === 'dropbox'
+                              ? 'bg-royal text-white font-bold'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                        >
+                          Dropbox
+                        </button>
+                      )}
+                      {connectedProviders.includes('onedrive') && (
+                        <button
+                          onClick={() => {
+                            setCloudStorageProvider('onedrive');
+                            loadOnedriveFiles('');
+                          }}
+                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                            cloudStorageProvider === 'onedrive'
+                              ? 'bg-royal-600 text-white font-bold'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                        >
+                          OneDrive
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </>
             ) : activeTab === 'pexels-photos' ? (
               <>
@@ -876,24 +914,14 @@ export default function MediaLibrary() {
           <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {activeTab === 'drive' ? 'Your Drive Assets' : activeTab === 'dropbox' ? 'Dropbox Files' : activeTab === 'onedrive' ? 'OneDrive Files' : activeTab === 'unsplash' ? 'Unsplash Images' : activeTab === 'ai-images' ? 'AI Generated Images' : activeTab === 'ai-videos' ? 'AI Generated Videos' : 'Generated Content'}
+                {activeTab === 'cloud'
+                  ? `Cloud Storage ${cloudStorageProvider === 'google_drive' ? '- Google Drive' : cloudStorageProvider === 'dropbox' ? '- Dropbox' : cloudStorageProvider === 'onedrive' ? '- OneDrive' : ''}`
+                  : activeTab === 'pexels-photos' ? 'Pexels Photos'
+                  : activeTab === 'pexels-videos' ? 'Pexels Videos'
+                  : activeTab === 'ai-images' ? 'AI Generated Images'
+                  : activeTab === 'ai-videos' ? 'AI Generated Videos'
+                  : 'Generated Content'}
               </h2>
-              {activeTab === 'drive' && breadcrumbs.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
-                  <span className="cursor-pointer hover:text-gold-400" onClick={handleAllFilesClick}>Marketing</span>
-                  {breadcrumbs.map((crumb, index) => (
-                    <span key={`breadcrumb-${index}-${crumb.id}`} className="flex items-center gap-2">
-                      <span>/</span>
-                      <span 
-                        className="cursor-pointer hover:text-gold-400"
-                        onClick={() => handleBreadcrumbClick(index)}
-                      >
-                        {crumb.name}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {activeTab === 'ai-images' ? (
@@ -1010,108 +1038,119 @@ export default function MediaLibrary() {
                   ))}
                 </div>
               )
-            ) : activeTab === 'drive' ? (
-              loading ? (
+            ) : activeTab === 'cloud' ? (
+              connectedProviders.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">Loading Google Drive files...</p>
+                  <div className="text-6xl mb-4">☁️</div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Cloud Storage Connected</h3>
+                  <p className="text-gray-400 mb-4">Connect Google Drive, Dropbox, or OneDrive to browse your files here.</p>
+                  <button
+                    onClick={() => window.location.href = '/dashboard/settings/cloud-storage'}
+                    className="bg-cobalt hover:bg-cobalt-700 text-white font-bold py-2 px-6 rounded-lg transition"
+                  >
+                    Go to Cloud Storage Settings
+                  </button>
                 </div>
-              ) : driveFiles.length === 0 && driveFolders.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
-                  <p className="text-gray-400">This folder is empty or Google Drive is not connected.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {driveFolders.map((folder: any) => (
-                    <div
-                      key={folder.id}
-                      onClick={() => {
-                        setDriveFolderId(folder.id);
-                        loadDriveFiles(folder.id);
-                      }}
-                      className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
-                    >
-                      <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
-                      <p className="text-xs text-gray-400">Folder</p>
-                    </div>
-                  ))}
-                  {driveFiles.map((file: any) => (
-                    <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
-                      <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
-                      <p className="text-xs text-gray-400 capitalize">{file.type}</p>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : activeTab === 'dropbox' ? (
-              loading ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-400">Loading Dropbox files...</p>
-                </div>
-              ) : dropboxFiles.length === 0 && dropboxFolders.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
-                  <p className="text-gray-400">This folder is empty or Dropbox is not connected.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {dropboxFolders.map((folder: any) => (
-                    <div
-                      key={folder.id}
-                      onClick={() => {
-                        setDropboxPath(folder.path);
-                        loadDropboxFiles(folder.path);
-                      }}
-                      className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition cursor-pointer"
-                    >
-                      <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
-                      <p className="text-xs text-gray-400">Folder</p>
-                    </div>
-                  ))}
-                  {dropboxFiles.map((file: any) => (
-                    <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition">
-                      <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
-                      <p className="text-xs text-gray-400 capitalize">{file.type}</p>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : activeTab === 'onedrive' ? (
-              loading ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-400">Loading OneDrive files...</p>
-                </div>
-              ) : onedriveFiles.length === 0 && onedriveFolders.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
-                  <p className="text-gray-400">This folder is empty or OneDrive is not connected.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {onedriveFolders.map((folder: any) => (
-                    <div
-                      key={folder.id}
-                      onClick={() => {
-                        setOnedrivePath(`items/${folder.id}`);
-                        loadOnedriveFiles(`items/${folder.id}`);
-                      }}
-                      className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
-                    >
-                      <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
-                      <p className="text-xs text-gray-400">Folder • {folder.item_count || 0} items</p>
-                    </div>
-                  ))}
-                  {onedriveFiles.map((file: any) => (
-                    <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
-                      <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
-                      <p className="text-xs text-gray-400 capitalize">{file.type}</p>
-                    </div>
-                  ))}
-                </div>
-              )
+              ) : cloudStorageProvider === 'google_drive' ? (
+                loading ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-400">Loading Google Drive files...</p>
+                  </div>
+                ) : driveFiles.length === 0 && driveFolders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <p className="text-gray-400">This folder is empty.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {driveFolders.map((folder: any) => (
+                      <div
+                        key={folder.id}
+                        onClick={() => {
+                          setDriveFolderId(folder.id);
+                          loadDriveFiles(folder.id);
+                        }}
+                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
+                      >
+                        <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                        <p className="text-xs text-gray-400">Folder</p>
+                      </div>
+                    ))}
+                    {driveFiles.map((file: any) => (
+                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
+                        <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                        <p className="text-xs text-gray-400 capitalize">{file.type}</p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : cloudStorageProvider === 'dropbox' ? (
+                loading ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-400">Loading Dropbox files...</p>
+                  </div>
+                ) : dropboxFiles.length === 0 && dropboxFolders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <p className="text-gray-400">This folder is empty.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {dropboxFolders.map((folder: any) => (
+                      <div
+                        key={folder.id}
+                        onClick={() => {
+                          setDropboxPath(folder.path);
+                          loadDropboxFiles(folder.path);
+                        }}
+                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition cursor-pointer"
+                      >
+                        <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                        <p className="text-xs text-gray-400">Folder</p>
+                      </div>
+                    ))}
+                    {dropboxFiles.map((file: any) => (
+                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition">
+                        <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                        <p className="text-xs text-gray-400 capitalize">{file.type}</p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : cloudStorageProvider === 'onedrive' ? (
+                loading ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-400">Loading OneDrive files...</p>
+                  </div>
+                ) : onedriveFiles.length === 0 && onedriveFolders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <p className="text-gray-400">This folder is empty.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {onedriveFolders.map((folder: any) => (
+                      <div
+                        key={folder.id}
+                        onClick={() => {
+                          setOnedrivePath(`items/${folder.id}`);
+                          loadOnedriveFiles(`items/${folder.id}`);
+                        }}
+                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
+                      >
+                        <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
+                        <p className="text-xs text-gray-400">Folder • {folder.item_count || 0} items</p>
+                      </div>
+                    ))}
+                    {onedriveFiles.map((file: any) => (
+                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
+                        <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
+                        <p className="text-xs text-gray-400 capitalize">{file.type}</p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : null
             ) : activeTab === 'generated' ? (
               (() => {
                 // Apply filters
