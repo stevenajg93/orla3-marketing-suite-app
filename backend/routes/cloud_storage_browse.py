@@ -54,7 +54,7 @@ def get_organization_cloud_connection(organization_id: str, provider: str):
             WHERE organization_id = %s
               AND provider = %s
               AND is_active = true
-            ORDER BY created_at DESC
+            ORDER BY connected_at DESC
             LIMIT 1
         """, (org_id_str, provider))
 
