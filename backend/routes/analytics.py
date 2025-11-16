@@ -1,11 +1,17 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Literal
+from typing import List, Literal, Optional
 from anthropic import Anthropic
 import os, json, re
 from openai import OpenAI
+from datetime import datetime, timedelta
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 router = APIRouter()
+
+# Import auth dependency
+from .auth import get_current_user
 
 class GSCRow(BaseModel):
     url: str
@@ -112,3 +118,84 @@ Return ONLY this JSON:
         return content
     except json.JSONDecodeError as e:
         return {"error": f"Invalid JSON: {str(e)}", "raw": raw_text[:500]}
+
+
+# ============================================================================
+# POST PERFORMANCE ANALYTICS
+# ============================================================================
+
+@router.get("/analytics/posts")
+def get_post_analytics(
+    range: str = "30d",
+    user_data: dict = Depends(get_current_user)
+):
+    """
+    Get published post performance analytics for the current user
+    Query params:
+    - range: "7d", "30d", or "90d"
+    """
+    user_id = user_data["user_id"]
+
+    # Calculate date range
+    days_map = {"7d": 7, "30d": 30, "90d": 90}
+    days = days_map.get(range, 30)
+    start_date = datetime.now() - timedelta(days=days)
+
+    # Connect to database
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise HTTPException(status_code=500, detail="Database not configured")
+
+    try:
+        conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+
+        # Fetch published posts with engagement data
+        cursor.execute("""
+            SELECT
+                id,
+                title,
+                content_type,
+                platform,
+                caption,
+                published_at,
+                engagement_data,
+                post_url
+            FROM published_posts
+            WHERE user_id = %s
+                AND published_at >= %s
+            ORDER BY published_at DESC
+            LIMIT 50
+        """, (user_id, start_date))
+
+        posts = cursor.fetchall()
+
+        # Transform posts for frontend
+        transformed_posts = []
+        for post in posts:
+            engagement = post.get('engagement_data', {}) or {}
+
+            transformed_posts.append({
+                "id": str(post['id']),
+                "title": post['title'] or post['caption'][:50] if post['caption'] else 'Untitled Post',
+                "platform": post['platform'],
+                "date": post['published_at'].isoformat() if post['published_at'] else None,
+                "type": post['content_type'] or 'Text',
+                "views": engagement.get('views', 0),
+                "likes": engagement.get('likes', 0),
+                "comments": engagement.get('comments', 0),
+                "shares": engagement.get('shares', 0),
+                "engagement": engagement.get('engagement',
+                                           engagement.get('likes', 0) +
+                                           engagement.get('comments', 0) +
+                                           engagement.get('shares', 0)),
+                "post_url": post['post_url']
+            })
+
+        cursor.close()
+        conn.close()
+
+        return {"posts": transformed_posts}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

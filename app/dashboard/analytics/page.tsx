@@ -16,10 +16,35 @@ export default function AnalyticsPage() {
     setLoading(true);
     try {
       const api = createApiClient();
-      // Placeholder - will need backend endpoint
-      // const data = await api.get(`/analytics?range=${timeRange}`);
 
-      // Mock data for now
+      // Fetch real post analytics
+      const postsResponse = await api.get(`/analytics/posts?range=${timeRange}`);
+      const recentPosts = postsResponse.posts || [];
+
+      // Calculate aggregates from real data
+      const totalPosts = recentPosts.length;
+      const totalViews = recentPosts.reduce((sum: number, p: any) => sum + (p.views || 0), 0);
+      const totalLikes = recentPosts.reduce((sum: number, p: any) => sum + (p.likes || 0), 0);
+      const totalComments = recentPosts.reduce((sum: number, p: any) => sum + (p.comments || 0), 0);
+      const totalShares = recentPosts.reduce((sum: number, p: any) => sum + (p.shares || 0), 0);
+      const totalEngagement = totalLikes + totalComments + totalShares;
+
+      // Platform aggregation
+      const platformStats: { [key: string]: { posts: number; engagement: number } } = {};
+      recentPosts.forEach((post: any) => {
+        if (!platformStats[post.platform]) {
+          platformStats[post.platform] = { posts: 0, engagement: 0 };
+        }
+        platformStats[post.platform].posts++;
+        platformStats[post.platform].engagement += post.engagement || 0;
+      });
+
+      const topPlatforms = Object.entries(platformStats)
+        .map(([name, stats]) => ({ name, ...stats }))
+        .sort((a, b) => b.engagement - a.engagement)
+        .slice(0, 3);
+
+      // Mock credit data (until we have real credit tracking)
       setStats({
         credits: {
           used: 1247,
@@ -27,84 +52,21 @@ export default function AnalyticsPage() {
           percentage: 62
         },
         content: {
-          blogs: 24,
-          captions: 156,
-          images: 45,
-          videos: 3
+          blogs: recentPosts.filter((p: any) => p.type === 'Blog Post').length,
+          captions: recentPosts.filter((p: any) => p.type === 'Text').length,
+          images: recentPosts.filter((p: any) => p.type === 'Image').length,
+          videos: recentPosts.filter((p: any) => p.type === 'Video').length
         },
         social: {
-          posts: 89,
-          engagement: 12453,
-          reach: 45678,
-          clicks: 2341
+          posts: totalPosts,
+          engagement: totalEngagement,
+          reach: totalViews,
+          clicks: totalShares // Using shares as proxy for clicks
         },
-        topPlatforms: [
-          { name: 'Instagram', posts: 34, engagement: 5234 },
-          { name: 'LinkedIn', posts: 28, engagement: 4123 },
-          { name: 'Twitter', posts: 27, engagement: 3096 }
+        topPlatforms: topPlatforms.length > 0 ? topPlatforms : [
+          { name: 'No data', posts: 0, engagement: 0 }
         ],
-        recentPosts: [
-          {
-            id: 1,
-            title: 'Summer Marketing Campaign Tips',
-            platform: 'LinkedIn',
-            date: '2025-11-15',
-            type: 'Blog Post',
-            views: 2453,
-            likes: 156,
-            comments: 23,
-            shares: 12,
-            engagement: 191
-          },
-          {
-            id: 2,
-            title: 'New Product Launch Announcement',
-            platform: 'Instagram',
-            date: '2025-11-14',
-            type: 'Image',
-            views: 5821,
-            likes: 432,
-            comments: 67,
-            shares: 34,
-            engagement: 533
-          },
-          {
-            id: 3,
-            title: 'Behind the Scenes: Our Team',
-            platform: 'Facebook',
-            date: '2025-11-13',
-            type: 'Video',
-            views: 8234,
-            likes: 621,
-            comments: 89,
-            shares: 156,
-            engagement: 866
-          },
-          {
-            id: 4,
-            title: 'Quick Marketing Tip of the Day',
-            platform: 'Twitter',
-            date: '2025-11-12',
-            type: 'Text',
-            views: 1823,
-            likes: 234,
-            comments: 45,
-            shares: 78,
-            engagement: 357
-          },
-          {
-            id: 5,
-            title: 'Client Success Story Feature',
-            platform: 'LinkedIn',
-            date: '2025-11-11',
-            type: 'Carousel',
-            views: 3456,
-            likes: 289,
-            comments: 34,
-            shares: 23,
-            engagement: 346
-          }
-        ]
+        recentPosts: recentPosts.slice(0, 5)
       });
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -342,7 +304,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <p className="text-gray-400 text-xs sm:text-sm mt-3">
-                Note: Performance data shown is mock data. Real-time analytics require social platform API integration.
+                Showing your published posts from ORLA³. Engagement metrics will update automatically once social platform API integration is enabled.
               </p>
             </div>
 
