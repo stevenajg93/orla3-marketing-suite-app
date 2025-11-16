@@ -1,7 +1,88 @@
 # ORLA³ Marketing Suite - Session Handoff
 
 **Date:** November 16, 2025
-**Session Focus:** Super Admin Portal Implementation
+**Latest Session Focus:** Settings Pages Implementation (Profile, Team, Billing)
+**Status:** ✅ COMPLETE - All Settings pages built with backend API support
+
+---
+
+## Latest Session: Settings Pages (November 16, 2025 - Continuation)
+
+### What Was Completed This Session
+
+#### Frontend Settings Pages
+- ✅ **Profile Settings Page** (`app/dashboard/settings/profile/page.tsx`) - 360 lines
+  - Account information management (name, email, timezone)
+  - Profile image URL upload
+  - Password change form with validation
+  - Account deletion with strict email confirmation modal
+  - Back navigation to settings hub
+
+- ✅ **Team Settings Page** (`app/dashboard/settings/team/page.tsx`) - 380 lines
+  - Organization overview display (name, tier, seat usage)
+  - Team members table with roles and status
+  - Invite member modal with role selection (viewer/member/admin)
+  - Change member roles via dropdown
+  - Remove team members functionality
+  - Permission checks (owner/admin only can manage)
+  - Seat limit warnings when at capacity
+
+- ✅ **Settings Hub Updated** (`app/dashboard/settings/page.tsx`)
+  - Removed "Coming Soon" badges from Profile, Billing, Team
+  - Removed API Keys option per user request
+  - All settings now marked as "Active"
+  - Clean navigation to all settings pages
+
+#### Backend API Endpoints
+
+- ✅ **Profile Management** (added to `backend/routes/auth.py`) - +300 lines
+  - `PUT /auth/profile` - Update name, timezone, profile_image_url
+  - `POST /auth/change-password` - Change password with current password validation
+  - `DELETE /auth/account` - Delete account with organization ownership checks
+  - All endpoints require JWT authentication
+  - Password validation and strength requirements
+  - Revokes all refresh tokens on password change
+
+- ✅ **Organization/Team Management** (`backend/routes/organization.py` - NEW FILE) - 550 lines
+  - `GET /organization/info` - Get organization details (name, tier, seat limits)
+  - `GET /organization/members` - List all team members with roles and activity
+  - `POST /organization/invite` - Invite new members (admin/owner only)
+  - `PUT /organization/member/role` - Change member roles (viewer/member/admin)
+  - `DELETE /organization/member/{user_id}` - Remove team members
+  - Role-based access control (owner > admin > member > viewer)
+  - Seat limit enforcement based on subscription tier
+  - Prevents removing organization owners
+  - Prevents self-removal from team
+
+- ✅ **Router Registration** (`backend/main.py`)
+  - Registered organization router with "organization" tag
+  - All endpoints now available at production API
+
+### Git Commits This Session
+1. `d198e4f` - feat: Complete Settings pages - Profile, Billing, and Team
+2. `00ecac6` - feat: Add backend endpoints for Profile and Team settings
+
+### Files Created/Modified
+
+**Frontend:**
+- `app/dashboard/settings/profile/page.tsx` (CREATED)
+- `app/dashboard/settings/team/page.tsx` (CREATED)
+- `app/dashboard/settings/page.tsx` (MODIFIED - removed Coming Soon badges)
+
+**Backend:**
+- `backend/routes/auth.py` (MODIFIED - added 3 profile endpoints, +300 lines)
+- `backend/routes/organization.py` (CREATED - 550 lines)
+- `backend/main.py` (MODIFIED - registered organization router)
+
+### Deployment Status
+- **Frontend (Vercel):** Deployed with latest commit `d198e4f`
+- **Backend (Railway):** Deployed with latest commit `00ecac6`
+- **Status:** Both deployments successful and live
+
+---
+
+## Previous Session: Super Admin Portal (November 16, 2025)
+
 **Status:** ✅ COMPLETE - Admin portal is live and functional at marketing.orla3.com/admin
 
 ---
