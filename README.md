@@ -347,6 +347,22 @@ All generated content, brand strategies, and competitor analyses are scoped to t
 
 ### Recent Updates (Nov 2025)
 
+**Organization Multi-Tenancy & Team Collaboration! 🎉 (Nov 16, 2025)**
+- ✅ **Organization Architecture** - Full team collaboration with role-based access control
+- ✅ **Migration 011 Completed** - All users migrated to organization structure
+- ✅ **Team Roles** - Owner, Admin, Member, Viewer permissions (owner > admin > member > viewer)
+- ✅ **User Limits by Tier** - Starter (1), Professional (3), Business (10), Enterprise (25+)
+- ✅ **Organization Tables** - organizations, organization_members, organization_files
+- ✅ **Shared Drive Support** - Google Shared Drives, OneDrive SharePoint, Dropbox Teams integration
+- ✅ **ORLA³ Native Storage** - Fallback cloud storage with per-tier quotas (5GB-100GB)
+- ✅ **Database Column Fixes** - Fixed `selected_folders` (now in metadata jsonb), `created_at` → `connected_at`
+- ✅ **Cloud Storage Working** - Google Drive files loading correctly for all users
+- ✅ **Context Middleware** - All API requests now include organization_id, user_id, role
+- ✅ **Permission Functions** - `user_has_org_permission()` for role-based access control
+- ✅ **Auto User Counting** - Database triggers maintain `current_user_count` automatically
+- ✅ **Super Admin Ready** - Architecture prepared for platform-wide admin portal
+- 📖 **Documentation** - Complete architecture docs in ORGANIZATION_ARCHITECTURE.md
+
 **Cloud Storage Integration & Brand Compliance! 🎉 (Nov 14, 2025)**
 - ✅ **Multi-Cloud Storage Support** - Google Drive, Dropbox, and OneDrive integration
 - ✅ **OAuth 2.0 Authentication** - Secure per-user cloud storage connections with token-in-URL pattern for browser redirects
@@ -494,6 +510,6 @@ Built with love by the ORLA³ team. For questions or contributions, open an issu
 
 ---
 
-**Last Updated:** November 14, 2025
-**Version:** 0.6.0
-**Status:** Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage (Google Drive, Dropbox, OneDrive) with folder-level privacy, Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, brand guideline compliance, and zero technical debt
+**Last Updated:** November 16, 2025
+**Version:** 0.7.0
+**Status:** Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage (Google Drive, Dropbox, OneDrive), organization multi-tenancy with team collaboration, Stripe payments, credit management, OAuth 2.0 architecture, PKCE security, brand guideline compliance, and super admin portal
