@@ -724,6 +724,13 @@ async def delete_user(
             })
         ))
 
+        # Remove user references from audit logs (preserve the logs, just null the reference)
+        cursor.execute("""
+            UPDATE admin_audit_log
+            SET target_user_id = NULL
+            WHERE target_user_id = %s
+        """, (user_id,))
+
         # Delete user (CASCADE will handle related records)
         cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
 
