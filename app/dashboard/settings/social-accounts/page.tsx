@@ -182,11 +182,11 @@ export default function SocialAccountsSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Social Accounts</h1>
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-bold text-white mb-2">Social Accounts</h1>
           <p className="text-gray-400">
             Connect your social media accounts to publish content directly from ORLA³
           </p>
@@ -194,7 +194,7 @@ export default function SocialAccountsSettings() {
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-500/20 border border-red-500 text-red-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {error}
             <button
               onClick={() => setError(null)}
@@ -205,7 +205,7 @@ export default function SocialAccountsSettings() {
         )}
 
         {success && (
-          <div className="bg-green-500/20 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-green-500/20 border border-green-500 text-green-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {success}
             <button
               onClick={() => setSuccess(null)}
@@ -217,7 +217,7 @@ export default function SocialAccountsSettings() {
 
         {/* Stats Card */}
         {!loading && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-8">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/20 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-white mb-1">Connected Accounts</h3>
@@ -225,7 +225,7 @@ export default function SocialAccountsSettings() {
                   {Object.values(connections).filter(c => c.connected).length} of {platforms.length} platforms connected
                 </p>
               </div>
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+              <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
                 {Object.values(connections).filter(c => c.connected).length}
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function SocialAccountsSettings() {
           </div>
         ) : (
           /* Social Platform Cards */
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {platforms.map((platform) => {
               const connection = connections[platform.id];
               const isConnected = connection?.connected;
@@ -256,15 +256,15 @@ export default function SocialAccountsSettings() {
               return (
                 <div
                   key={platform.id}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-white/40 transition"
+                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 hover:border-white/40 transition"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-2 sm:gap-3 md:gap-4">
                       <div className={`w-14 h-14 flex items-center justify-center rounded-xl ${platform.iconBg} text-white font-bold text-lg`}>
                         {platform.icon}
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-white mb-1">
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1">
                           {platform.name}
                         </h3>
                         <p className="text-gray-400 text-sm mb-2">
@@ -290,14 +290,14 @@ export default function SocialAccountsSettings() {
                     {isConnected ? (
                       <button
                         onClick={() => disconnectPlatform(platform.id)}
-                        className="px-4 py-2 border-2 border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 rounded-lg font-semibold transition text-sm"
+                        className="px-3 sm:px-4 py-2 border-2 border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 rounded-lg font-semibold transition text-sm"
                       >
                         Disconnect
                       </button>
                     ) : (
                       <button
                         onClick={() => connectPlatform(platform.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white rounded-lg font-semibold transition shadow-lg text-sm"
+                        className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white rounded-lg font-semibold transition shadow-lg text-sm"
                       >
                         Connect Account
                       </button>
@@ -310,9 +310,9 @@ export default function SocialAccountsSettings() {
         )}
 
         {/* Info Boxes */}
-        <div className="mt-8 grid md:grid-cols-2 gap-6">
+        <div className="mt-4 sm:mt-6 md:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
           {/* How it Works */}
-          <div className="bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
+          <div className="bg-cobalt/10 border border-cobalt/30 rounded-xl p-4 sm:p-6">
             <h4 className="text-lg font-semibold text-cobalt-300 mb-3">
               How It Works
             </h4>
@@ -325,7 +325,7 @@ export default function SocialAccountsSettings() {
           </div>
 
           {/* Privacy & Security */}
-          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 sm:p-6">
             <h4 className="text-lg font-semibold text-green-400 mb-3">
               Privacy & Security
             </h4>
@@ -339,7 +339,7 @@ export default function SocialAccountsSettings() {
         </div>
 
         {/* Platform Support */}
-        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-3">
             <h4 className="text-lg font-semibold text-gold">
               Full OAuth Support

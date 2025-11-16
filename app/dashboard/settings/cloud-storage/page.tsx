@@ -149,11 +149,11 @@ export default function CloudStorageSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Cloud Storage</h1>
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-bold text-white mb-2">Cloud Storage</h1>
           <p className="text-gray-400">
             Connect your cloud storage accounts to import brand assets and files
           </p>
@@ -161,7 +161,7 @@ export default function CloudStorageSettings() {
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-500/20 border border-red-500 text-red-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {error}
             <button
               onClick={() => setError(null)}
@@ -172,7 +172,7 @@ export default function CloudStorageSettings() {
         )}
 
         {success && (
-          <div className="bg-green-500/20 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-green-500/20 border border-green-500 text-green-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {success}
             <button
               onClick={() => setSuccess(null)}
@@ -190,7 +190,7 @@ export default function CloudStorageSettings() {
           </div>
         ) : (
           /* Cloud Storage Cards */
-          <div className="grid gap-6">
+          <div className="grid gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {providers.map((provider) => {
               const connection = getConnection(provider.id);
               const isConnected = connection?.connected;
@@ -198,25 +198,25 @@ export default function CloudStorageSettings() {
               return (
                 <div
                   key={provider.id}
-                  className={`bg-white/10 backdrop-blur-lg rounded-2xl p-6 border-2 transition ${
+                  className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border-2 transition ${
                     isConnected
                       ? 'border-green-500/50 bg-green-500/5'
                       : 'border-white/20 hover:border-white/40'
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`text-5xl p-4 rounded-xl bg-gradient-to-br ${provider.color} relative`}>
+                    <div className="flex items-start gap-2 sm:gap-3 md:gap-4 flex-1">
+                      <div className={`text-3xl sm:text-2xl sm:text-xl sm:text-base sm:text-lg md:text-xl lg:text-2xl md:text-3xl md:text-4xl md:text-5xl p-3 sm:p-4 rounded-xl bg-gradient-to-br ${provider.color} relative`}>
                         {provider.icon}
                         {isConnected && (
-                          <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold shadow-lg">
+                          <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-base sm:text-lg md:text-xl font-bold shadow-lg">
                             ✓
                           </div>
                         )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-2xl font-bold text-white">
+                          <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">
                             {provider.name}
                           </h3>
                           {isConnected && (
@@ -268,7 +268,7 @@ export default function CloudStorageSettings() {
         )}
 
         {/* Info Box */}
-        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-4 sm:p-6">
           <h4 className="text-lg font-semibold text-cobalt-300 mb-2">
             Privacy & Security
           </h4>

@@ -217,15 +217,15 @@ export default function ContentCalendar() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div>
             <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-2 inline-block text-sm">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+            <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
               Content Calendar
             </h1>
             <p className="text-cobalt-300 mt-2">Plan and schedule your content across all platforms</p>
@@ -257,20 +257,20 @@ export default function ContentCalendar() {
         </div>
 
         {/* Calendar */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 mb-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/10 mb-3 sm:mb-4 md:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
             <button
               onClick={previousMonth}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition-all"
             >
               ← Previous
             </button>
-            <h2 className="text-3xl font-bold text-white">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </h2>
             <button
               onClick={nextMonth}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition-all"
             >
               Next →
             </button>
@@ -345,28 +345,28 @@ export default function ContentCalendar() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+          <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Published</h3>
-            <p className="text-3xl font-black text-green-400">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-green-400">
               {events.filter(e => e.status === 'published').length}
             </p>
           </div>
-          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-4">
+          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Scheduled</h3>
-            <p className="text-3xl font-black text-cobalt-300">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-cobalt-300">
               {events.filter(e => e.status === 'scheduled').length}
             </p>
           </div>
-          <div className="bg-gold-900/40 border border-gold-400/30 rounded-xl p-4">
+          <div className="bg-gold-900/40 border border-gold-400/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Drafts</h3>
-            <p className="text-3xl font-black text-gold-400">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-gold-400">
               {events.filter(e => e.status === 'draft').length}
             </p>
           </div>
-          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-4">
+          <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Total</h3>
-            <p className="text-3xl font-black text-gold">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-gold">
               {events.length}
             </p>
           </div>
@@ -375,33 +375,33 @@ export default function ContentCalendar() {
 
       {/* Add Event Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-8" onClick={() => setShowAddModal(false)}>
-          <div className="bg-slate-900 rounded-2xl border border-white/20 max-w-2xl w-full p-8" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold text-white mb-6">Quick Add to Calendar</h3>
-            <p className="text-gray-400 mb-6">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8" onClick={() => setShowAddModal(false)}>
+          <div className="bg-slate-900 rounded-2xl border border-white/20 max-w-2xl w-full p-4 sm:p-6 md:p-8" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Quick Add to Calendar</h3>
+            <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6">
               {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3 md:space-y-4">
               <div>
                 <label className="block text-white font-bold mb-2">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   placeholder="e.g., Morning motivation post"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <div>
                   <label className="block text-white font-bold mb-2">Content Type</label>
                   <select
                     value={formData.content_type}
                     onChange={(e) => setFormData({...formData, content_type: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   >
                     <option value="text">Text Post</option>
                     <option value="video">Video</option>
@@ -415,7 +415,7 @@ export default function ContentCalendar() {
                   <select
                     value={formData.platform}
                     onChange={(e) => setFormData({...formData, platform: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                   >
                     <option value="instagram">Instagram</option>
                     <option value="linkedin">LinkedIn</option>
@@ -434,7 +434,7 @@ export default function ContentCalendar() {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt"
                 >
                   <option value="draft">Draft</option>
                   <option value="scheduled">Scheduled</option>
@@ -447,12 +447,12 @@ export default function ContentCalendar() {
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt h-32 resize-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cobalt h-32 resize-none"
                   placeholder="Add your caption or content here..."
                 />
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-2 sm:gap-3 md:gap-4">
                 <button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-600 hover:to-gold-600 text-white font-bold py-3 px-6 rounded-lg transition-all"

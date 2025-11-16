@@ -126,10 +126,10 @@ export default function ProfileSettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8 flex items-center gap-2 sm:gap-3 md:gap-4">
           <Link
             href="/dashboard/settings"
             className="text-gray-400 hover:text-white transition"
@@ -138,23 +138,23 @@ export default function ProfileSettingsPage() {
           </Link>
         </div>
 
-        <h1 className="text-4xl font-bold text-white mb-2">Profile Settings</h1>
-        <p className="text-gray-400 mb-8">
+        <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-bold text-white mb-2">Profile Settings</h1>
+        <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           Manage your account details and preferences
         </p>
 
         {/* Profile Information */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Account Information</h2>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 mb-3 sm:mb-4 md:mb-6">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Account Information</h2>
 
-          <form onSubmit={handleUpdateProfile} className="space-y-6">
+          <form onSubmit={handleUpdateProfile} className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
             {/* Profile Image */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Profile Image
               </label>
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-cobalt to-gold rounded-full flex items-center justify-center text-white text-3xl font-bold">
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-cobalt to-gold rounded-full flex items-center justify-center text-white text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold">
                   {name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div className="flex-1">
@@ -163,7 +163,7 @@ export default function ProfileSettingsPage() {
                     value={profileImageUrl}
                     onChange={(e) => setProfileImageUrl(e.target.value)}
                     placeholder="https://example.com/image.jpg"
-                    className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Enter a URL to your profile image
@@ -182,7 +182,7 @@ export default function ProfileSettingsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
               />
             </div>
 
@@ -195,7 +195,7 @@ export default function ProfileSettingsPage() {
                 type="email"
                 value={email}
                 disabled
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 cursor-not-allowed"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Email cannot be changed. Contact support if you need to update it.
@@ -210,7 +210,7 @@ export default function ProfileSettingsPage() {
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
               >
                 {timezones.map((tz) => (
                   <option key={tz} value={tz} className="bg-slate-800">
@@ -231,10 +231,10 @@ export default function ProfileSettingsPage() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 mb-3 sm:mb-4 md:mb-6">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Change Password</h2>
 
-          <form onSubmit={handleChangePassword} className="space-y-6">
+          <form onSubmit={handleChangePassword} className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Current Password
@@ -244,7 +244,7 @@ export default function ProfileSettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
               />
             </div>
 
@@ -258,7 +258,7 @@ export default function ProfileSettingsPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Must be at least 8 characters
@@ -275,7 +275,7 @@ export default function ProfileSettingsPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
               />
             </div>
 
@@ -290,8 +290,8 @@ export default function ProfileSettingsPage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-red-900/20 backdrop-blur-lg rounded-2xl p-6 border border-red-500/30">
-          <h2 className="text-2xl font-bold text-red-300 mb-4">Danger Zone</h2>
+        <div className="bg-red-900/20 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-red-500/30">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-red-300 mb-4">Danger Zone</h2>
           <p className="text-gray-400 mb-4">
             Once you delete your account, there is no going back. All your data will be permanently deleted.
           </p>
@@ -307,11 +307,11 @@ export default function ProfileSettingsPage() {
 
       {/* Delete Account Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full border border-red-500/30">
-            <h2 className="text-2xl font-bold text-white mb-4">Delete Account</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full border border-red-500/30">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Delete Account</h2>
 
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 md:mb-6">
               <p className="text-red-300 text-sm font-semibold mb-2">WARNING</p>
               <ul className="text-gray-300 text-sm space-y-1">
                 <li>• All your content will be deleted</li>
@@ -321,7 +321,7 @@ export default function ProfileSettingsPage() {
               </ul>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-3 sm:mb-4 md:mb-6">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Type your email to confirm: <span className="text-white font-mono">{email}</span>
               </label>
@@ -330,7 +330,7 @@ export default function ProfileSettingsPage() {
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
                 placeholder={email}
-                className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+                className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
               />
             </div>
 

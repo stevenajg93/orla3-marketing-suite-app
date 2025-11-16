@@ -142,7 +142,7 @@ export default function UserDetailPage() {
   if (loading || !userDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
-        <div className="text-white text-xl">Loading user details...</div>
+        <div className="text-white text-base sm:text-lg md:text-xl">Loading user details...</div>
       </div>
     );
   }
@@ -150,12 +150,12 @@ export default function UserDetailPage() {
   const { user: u, credit_history, content_stats, social_connections, cloud_storage } = userDetails;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <Link
           href="/admin"
-          className="inline-flex items-center gap-2 text-gray-300 hover:text-white mb-6"
+          className="inline-flex items-center gap-2 text-gray-300 hover:text-white mb-3 sm:mb-4 md:mb-6"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -164,10 +164,10 @@ export default function UserDetailPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
+              <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
                 {u.name}
               </h1>
               <p className="text-gray-300 text-lg">{u.email}</p>
@@ -180,14 +180,14 @@ export default function UserDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowGrantModal(true)}
-                className="px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90"
+                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90"
               >
                 Gift Credits
               </button>
               {!u.is_super_admin && (
                 <button
                   onClick={handleSuspendUser}
-                  className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-white font-semibold ${
                     u.account_status === 'suspended'
                       ? 'bg-green-500 hover:bg-green-600'
                       : 'bg-red-500 hover:bg-red-600'
@@ -201,7 +201,7 @@ export default function UserDetailPage() {
         </div>
 
         {/* Account Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <InfoCard title="Account Status" value={u.account_status} color={
             u.account_status === 'active' ? 'text-green-400' :
             u.account_status === 'trial' ? 'text-blue-400' :
@@ -222,9 +222,9 @@ export default function UserDetailPage() {
         </div>
 
         {/* Organization & Stripe Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Organization</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Organization</h2>
             <div className="space-y-3">
               <div>
                 <div className="text-gray-400 text-sm">Organization Name</div>
@@ -241,8 +241,8 @@ export default function UserDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Stripe Integration</h2>
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Stripe Integration</h2>
             <div className="space-y-3">
               <div>
                 <div className="text-gray-400 text-sm">Customer ID</div>
@@ -267,16 +267,16 @@ export default function UserDetailPage() {
         </div>
 
         {/* Content Generation Stats */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-4">Content Generation Stats</h2>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Content Generation Stats</h2>
           {content_stats.length === 0 ? (
             <p className="text-gray-400">No content generated yet</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               {content_stats.map((stat) => (
-                <div key={stat.content_type} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <div key={stat.content_type} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
                   <div className="text-gray-400 text-sm capitalize">{stat.content_type}</div>
-                  <div className="text-white text-2xl font-bold">{stat.count}</div>
+                  <div className="text-white text-base sm:text-lg md:text-xl lg:text-2xl font-bold">{stat.count}</div>
                   <div className="text-gray-500 text-xs">
                     Last: {new Date(stat.last_generated).toLocaleDateString()}
                   </div>
@@ -287,9 +287,9 @@ export default function UserDetailPage() {
         </div>
 
         {/* Connections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Social Media Connections</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Social Media Connections</h2>
             {social_connections.length === 0 ? (
               <p className="text-gray-400">No social accounts connected</p>
             ) : (
@@ -313,8 +313,8 @@ export default function UserDetailPage() {
             )}
           </div>
 
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Cloud Storage</h2>
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Cloud Storage</h2>
             {cloud_storage.length === 0 ? (
               <p className="text-gray-400">No cloud storage connected</p>
             ) : (
@@ -341,8 +341,8 @@ export default function UserDetailPage() {
         </div>
 
         {/* Credit History */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-          <h2 className="text-xl font-bold text-white mb-4">Credit Transaction History</h2>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Credit Transaction History</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -356,7 +356,7 @@ export default function UserDetailPage() {
               <tbody>
                 {credit_history.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 text-gray-400">
+                    <td colSpan={4} className="text-center py-4 sm:py-6 md:py-8 text-gray-400">
                       No credit transactions
                     </td>
                   </tr>
@@ -393,10 +393,10 @@ export default function UserDetailPage() {
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setShowGrantModal(false)} />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
-            <div className="bg-slate-800 rounded-2xl border border-white/20 p-6">
-              <h3 className="text-2xl font-bold text-white mb-4">Gift Credits</h3>
+            <div className="bg-slate-800 rounded-2xl border border-white/20 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Gift Credits</h3>
 
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
                   <label className="block text-gray-300 text-sm mb-2">Credits Amount</label>
                   <input
@@ -404,7 +404,7 @@ export default function UserDetailPage() {
                     value={grantAmount}
                     onChange={(e) => setGrantAmount(e.target.value)}
                     placeholder="e.g., 1000"
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                 </div>
 
@@ -415,7 +415,7 @@ export default function UserDetailPage() {
                     onChange={(e) => setGrantReason(e.target.value)}
                     placeholder="e.g., Promotional gift, Compensation for issue, etc."
                     rows={3}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                 </div>
 
@@ -423,13 +423,13 @@ export default function UserDetailPage() {
                   <button
                     onClick={handleGrantCredits}
                     disabled={grantLoading}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50"
                   >
                     {grantLoading ? 'Granting...' : 'Grant Credits'}
                   </button>
                   <button
                     onClick={() => setShowGrantModal(false)}
-                    className="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
                   >
                     Cancel
                   </button>
@@ -445,9 +445,9 @@ export default function UserDetailPage() {
 
 function InfoCard({ title, value, color }: { title: string; value: string | number; color: string }) {
   return (
-    <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
+    <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
       <div className="text-gray-400 text-sm mb-1">{title}</div>
-      <div className={`text-2xl font-bold capitalize ${color}`}>{value}</div>
+      <div className={`text-base sm:text-lg md:text-xl lg:text-2xl font-bold capitalize ${color}`}>{value}</div>
     </div>
   );
 }

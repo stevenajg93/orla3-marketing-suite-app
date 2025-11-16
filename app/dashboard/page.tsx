@@ -39,9 +39,9 @@ const ToolCard = ({ tool }: { tool: any }) => {
       }`}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
-      <div className="relative p-6 bg-white/5 backdrop-blur-lg">
+      <div className="relative p-4 sm:p-6 bg-white/5 backdrop-blur-lg">
         <div className="flex items-start justify-between">
-          <div className="text-5xl mb-4">{tool.icon}</div>
+          <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{tool.icon}</div>
           {tool.isNew && (
             <span className="px-2 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 text-xs font-bold animate-pulse">
               NEW
@@ -51,10 +51,10 @@ const ToolCard = ({ tool }: { tool: any }) => {
             <span className="text-gray-400 text-xs">↗</span>
           )}
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">{tool.name}</h3>
-        <p className="text-gray-400">{tool.description}</p>
+        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2">{tool.name}</h3>
+        <p className="text-sm sm:text-base text-gray-400">{tool.description}</p>
         {tool.disabled && (
-          <span className="inline-block mt-3 px-3 py-1 bg-gold-600/30 text-gold-400 text-xs font-bold rounded-full">
+          <span className="inline-block mt-2 sm:mt-3 px-3 py-1 bg-gold-600/30 text-gold-400 text-xs font-bold rounded-full">
             Coming Soon
           </span>
         )}
@@ -67,49 +67,49 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Unverified Email Banner */}
         {user && !user.email_verified && (
           <UnverifiedEmailBanner userEmail={user.email} />
         )}
 
-        <div className="mb-12">
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-4">
+        <div className="mb-6 sm:mb-8 md:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2 sm:mb-4">
             Orla³ Marketing Suite
           </h1>
-          <p className="text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
+          <p className="text-base sm:text-lg md:text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
         </div>
 
         {/* TIER 1: Content Creation */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl"></span>
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl"></span>
             Content Creation
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {contentCreation.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
           </div>
         </div>
 
         {/* TIER 2: Social Management */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl"></span>
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl"></span>
             Social Management
           </h2>
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6">
             {socialManagement.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
           </div>
         </div>
 
         {/* TIER 3: Planning & Intelligence */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="text-3xl"></span>
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl"></span>
             Planning & Intelligence
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {planningAnalysis.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
           </div>
         </div>

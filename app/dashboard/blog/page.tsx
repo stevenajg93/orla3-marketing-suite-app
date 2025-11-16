@@ -185,39 +185,39 @@ export default function BlogWriter() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div>
             <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
+            <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
               Blog Writer
             </h1>
             <p className="text-gray-400 mt-2">AI-powered SEO content engine with live market research</p>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 border border-green-400/30 mb-6">
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-4 sm:p-6 border border-green-400/30 mb-3 sm:mb-4 md:mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">Autonomous Mode</h3>
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">Autonomous Mode</h3>
               <p className="text-green-100">Strategic keyword + market research + blog generation</p>
             </div>
             <button
               onClick={autoGenerate}
               disabled={loading}
-              className="bg-white hover:bg-green-50 text-green-700 font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="bg-white hover:bg-green-50 text-green-700 font-bold py-3 sm:py-4 px-4 sm:px-6 md:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {researching ? 'Researching Market...' : loading ? 'Generating...' : 'Auto-Generate'}
             </button>
           </div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-6">
-          <h3 className="text-xl font-bold text-white mb-4">Manual Mode (Optional)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10 mb-3 sm:mb-4 md:mb-6">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Manual Mode (Optional)</h3>
+          <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6">
             <div>
               <label className="block text-white font-bold mb-2">Keyword/Topic</label>
               <input
@@ -225,7 +225,7 @@ export default function BlogWriter() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="e.g., Corporate Video Production"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
 
@@ -236,7 +236,7 @@ export default function BlogWriter() {
                 value={searchIntent}
                 onChange={(e) => setSearchIntent(e.target.value)}
                 placeholder="e.g., Find best corporate videographers"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
 
@@ -249,16 +249,16 @@ export default function BlogWriter() {
                 min="500"
                 max="3000"
                 step="100"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold"
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-3 md:gap-4">
             <button
               onClick={doMarketResearch}
               disabled={researching}
-              className="flex-1 bg-gradient-to-r from-cobalt to-cobalt-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-cobalt to-cobalt-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 md:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {researching ? 'Researching...' : 'Research Market First'}
             </button>
@@ -266,24 +266,24 @@ export default function BlogWriter() {
             <button
               onClick={generateBlog}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-4 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-3 sm:py-4 px-4 sm:px-6 md:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Generating Blog...' : 'Generate Blog Post'}
             </button>
           </div>
 
           {error && (
-            <div className="mt-4 bg-red-500/20 border border-red-500 rounded-lg p-4 text-red-200">
+            <div className="mt-4 bg-red-500/20 border border-red-500 rounded-lg p-3 sm:p-4 text-red-200">
               {error}
             </div>
           )}
         </div>
 
         {marketResearch && (
-          <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-900/40 backdrop-blur-lg rounded-2xl p-8 border border-cobalt-400/30 mb-6">
-            <h3 className="text-2xl font-bold text-white mb-6">Market Intelligence</h3>
+          <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-900/40 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-cobalt-400/30 mb-3 sm:mb-4 md:mb-6">
+            <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Market Intelligence</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               <div>
                 <h4 className="text-lg font-bold text-cobalt-300 mb-3">What Competitors Cover</h4>
                 <ul className="space-y-2">
@@ -324,7 +324,7 @@ export default function BlogWriter() {
             )}
 
             {marketResearch.market_gap && (
-              <div className="mt-4 bg-gold/10 border border-gold/30 rounded-lg p-4">
+              <div className="mt-4 bg-gold/10 border border-gold/30 rounded-lg p-3 sm:p-4">
                 <p className="text-gold-200"><strong>Market Gap:</strong> {marketResearch.market_gap}</p>
               </div>
             )}
@@ -332,18 +332,18 @@ export default function BlogWriter() {
         )}
 
         {blog && (
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-white">{blog.title}</h2>
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white">{blog.title}</h2>
               <span className="text-gray-400">{blog.estimated_read_time_min} min read</span>
             </div>
 
-            <div className="prose prose-invert prose-lg max-w-none mb-6">
+            <div className="prose prose-invert prose-lg max-w-none mb-3 sm:mb-4 md:mb-6">
               <ReactMarkdown
                 className="text-gray-300 leading-relaxed"
                 components={{
-                  h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-white mt-8 mb-4" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-xl font-bold text-white mt-6 mb-3" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mt-4 sm:mt-6 md:mt-8 mb-4" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mt-6 mb-3" {...props} />,
                   p: ({node, ...props}) => <p className="mb-4 text-gray-300" {...props} />,
                   ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
                   ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
@@ -351,8 +351,8 @@ export default function BlogWriter() {
                   strong: ({node, ...props}) => <strong className="font-bold text-white" {...props} />,
                   table: ({node, ...props}) => <table className="w-full border-collapse border border-gray-700 my-6" {...props} />,
                   thead: ({node, ...props}) => <thead className="bg-gray-800" {...props} />,
-                  th: ({node, ...props}) => <th className="border border-gray-700 px-4 py-2 text-white font-bold" {...props} />,
-                  td: ({node, ...props}) => <td className="border border-gray-700 px-4 py-2 text-gray-300" {...props} />,
+                  th: ({node, ...props}) => <th className="border border-gray-700 px-3 sm:px-4 py-2 text-white font-bold" {...props} />,
+                  td: ({node, ...props}) => <td className="border border-gray-700 px-3 sm:px-4 py-2 text-gray-300" {...props} />,
                 }}
               >
                 {blog.body_md}
@@ -360,12 +360,12 @@ export default function BlogWriter() {
             </div>
 
             {saveMessage && (
-              <div className="mb-4 bg-green-500/20 border border-green-500 rounded-lg p-4 text-green-200 text-center font-bold">
+              <div className="mb-4 bg-green-500/20 border border-green-500 rounded-lg p-3 sm:p-4 text-green-200 text-center font-bold">
                 {saveMessage}
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8 pt-6 border-t border-white/10">
               <button
                 onClick={saveToLibrary}
                 className="bg-gradient-to-r from-gold to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black font-bold py-3 px-6 rounded-lg transition-all"

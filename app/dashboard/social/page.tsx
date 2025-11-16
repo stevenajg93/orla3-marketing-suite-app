@@ -907,7 +907,7 @@ export default function SocialManagerPage() {
           <button onClick={() => router.push("/dashboard")} className="text-gold hover:text-cobalt-300 mb-2 flex items-center gap-2 text-sm">
             ← Back to Dashboard
           </button>
-          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
             Social Manager
           </h1>
           <p className="text-cobalt-300 mt-1">Create, engage, and schedule all your social content</p>
@@ -917,25 +917,25 @@ export default function SocialManagerPage() {
       <div className="bg-white/5 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-2">
-            <button onClick={() => setActiveTab("create")} className={`px-6 py-4 font-semibold transition ${activeTab === "create" ? "text-white border-b-2 border-green-500" : "text-gray-400 hover:text-white"}`}>
+            <button onClick={() => setActiveTab("create")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "create" ? "text-white border-b-2 border-green-500" : "text-gray-400 hover:text-white"}`}>
               Create
             </button>
-            <button onClick={() => setActiveTab("engage")} className={`px-6 py-4 font-semibold transition ${activeTab === "engage" ? "text-white border-b-2 border-cobalt" : "text-gray-400 hover:text-white"}`}>
+            <button onClick={() => setActiveTab("engage")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "engage" ? "text-white border-b-2 border-cobalt" : "text-gray-400 hover:text-white"}`}>
               Engage
             </button>
-            <button onClick={() => setActiveTab("schedule")} className={`px-6 py-4 font-semibold transition ${activeTab === "schedule" ? "text-white border-b-2 border-cobalt" : "text-gray-400 hover:text-white"}`}>
+            <button onClick={() => setActiveTab("schedule")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "schedule" ? "text-white border-b-2 border-cobalt" : "text-gray-400 hover:text-white"}`}>
               Schedule
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-4 sm:py-6 md:py-8">
         {activeTab === "create" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Post Type</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+            <div className="lg:col-span-2 space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Post Type</h2>
                 <div className="flex gap-3">
                   <button onClick={() => setPostType("text")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Text Post</button>
                   <button onClick={() => setPostType("video")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "video" ? "bg-gradient-to-r from-red-500 to-red-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Video Post</button>
@@ -943,8 +943,8 @@ export default function SocialManagerPage() {
                 </div>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Caption</h2>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Caption</h2>
                 
                 {/* AI Caption Generator */}
                 <div className="mb-3 flex gap-2">
@@ -954,7 +954,7 @@ export default function SocialManagerPage() {
                     onChange={(e) => setCaptionPrompt(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && generateCaption()}
                     placeholder="Describe what you want the caption about... (e.g. 'Promote videography for weddings')"
-                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                   <button
                     onClick={generateCaption}
@@ -974,14 +974,14 @@ export default function SocialManagerPage() {
 
                 {/* Trending Topics Display */}
                 {showTrends && trends && (
-                  <div className="mb-4 p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-gold-intense/30 rounded-lg">
+                  <div className="mb-4 p-3 sm:p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-gold-intense/30 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <span></span> Trending Topics in Videography
                       </h3>
                       <button
                         onClick={() => setShowTrends(false)}
-                        className="text-gray-400 hover:text-white transition text-xl"
+                        className="text-gray-400 hover:text-white transition text-base sm:text-lg md:text-xl"
                       >
                         ×
                       </button>
@@ -993,21 +993,21 @@ export default function SocialManagerPage() {
                   </div>
                 )}
                 
-                <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Your AI-generated caption will appear here... Or write your own!" rows={8} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
+                <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Your AI-generated caption will appear here... Or write your own!" rows={8} className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
                 <div className="flex items-center justify-between mt-3">
                   <span className="text-sm text-gray-400">{caption.length} characters</span>
                   {selectedPlatforms.includes("x") && caption.length > 280 && (<span className="text-sm text-red-400 font-semibold">Too long for X (280 char limit)</span>)}
                 </div>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Media</h2>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Media</h2>
                 <div onClick={() => { 
                   loadMediaLibrary(); 
                   loadDriveFolders();
                   setShowMediaLibrary(true); 
-                }} className="border-2 border-dashed border-white/20 rounded-lg p-12 text-center hover:border-cobalt/50 transition cursor-pointer">
-                  <div className="text-6xl mb-4"></div>
+                }} className="border-2 border-dashed border-white/20 rounded-lg p-6 sm:p-8 md:p-12 text-center hover:border-cobalt/50 transition cursor-pointer">
+                  <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
                   <p className="text-gray-400 mb-2">Click to browse Media Library</p>
                   <p className="text-sm text-gray-500">or drag and drop files here</p>
                 </div>
@@ -1024,7 +1024,7 @@ export default function SocialManagerPage() {
                         Clear All
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {selectedMedia.map((media, idx) => {
                         // Handle both object format (new) and string format (old/carousel)
                         console.log('📺 Preview media item:', media, 'Type:', typeof media);
@@ -1052,8 +1052,8 @@ export default function SocialManagerPage() {
                           <div key={idx} className="relative group bg-black/20 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition">
                             <div className="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
                               {isVideo ? (
-                                <div className="text-center p-4">
-                                  <span className="text-4xl mb-2 block"></span>
+                                <div className="text-center p-3 sm:p-4">
+                                  <span className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl mb-2 block"></span>
                                   <p className="text-xs text-gray-400">Video File</p>
                                 </div>
                               ) : isImage ? (
@@ -1067,8 +1067,8 @@ export default function SocialManagerPage() {
                                     const parent = target.parentElement;
                                     if (parent) {
                                       parent.innerHTML = `
-                                        <div class="text-center p-4">
-                                          <span class="text-4xl mb-2 block"></span>
+                                        <div class="text-center p-3 sm:p-4">
+                                          <span class="text-2xl sm:text-xl sm:text-base sm:text-lg md:text-xl lg:text-2xl md:text-3xl md:text-4xl mb-2 block"></span>
                                           <p class="text-xs text-gray-400">Media ${idx + 1}</p>
                                         </div>
                                       `;
@@ -1076,8 +1076,8 @@ export default function SocialManagerPage() {
                                   }}
                                 />
                               ) : (
-                                <div className="text-center p-4">
-                                  <span className="text-4xl mb-2 block"></span>
+                                <div className="text-center p-3 sm:p-4">
+                                  <span className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl mb-2 block"></span>
                                   <p className="text-xs text-gray-400">Document</p>
                                 </div>
                               )}
@@ -1107,14 +1107,14 @@ export default function SocialManagerPage() {
                 )}
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Schedule</h2>
-                <div className="flex gap-4">
-                  <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt" />
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Schedule</h2>
+                <div className="flex gap-2 sm:gap-3 md:gap-4">
+                  <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt" />
                   <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "📤 Publishing..." : "📤 Post Now"}</button>
                   
                   {publishMessage && (
-                    <div className={`mt-4 p-4 rounded-lg ${
+                    <div className={`mt-4 p-3 sm:p-4 rounded-lg ${
                       publishMessage.includes("") ? "bg-green-500/20 border border-green-500" : 
                       publishMessage.includes("") ? "bg-gold/20 border border-gold" : 
                       "bg-red-500/20 border border-red-500"
@@ -1138,27 +1138,27 @@ export default function SocialManagerPage() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Platforms</h2>
+            <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Platforms</h2>
                 <div className="space-y-3">
                   {platforms.map((platform) => (
-                    <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`w-full p-4 rounded-lg border-2 transition ${selectedPlatforms.includes(platform.id) ? `border-transparent bg-gradient-to-r ${platform.color} text-white` : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"}`}>
+                    <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`w-full p-3 sm:p-4 rounded-lg border-2 transition ${selectedPlatforms.includes(platform.id) ? `border-transparent bg-gradient-to-r ${platform.color} text-white` : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{platform.icon}</span>
+                          <span className="text-base sm:text-lg md:text-xl lg:text-2xl">{platform.icon}</span>
                           <span className="font-semibold">{platform.name}</span>
                         </div>
-                        {selectedPlatforms.includes(platform.id) && (<span className="text-xl"></span>)}
+                        {selectedPlatforms.includes(platform.id) && (<span className="text-base sm:text-lg md:text-xl"></span>)}
                       </div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Preview</h2>
-                <div className="bg-white rounded-lg p-4 aspect-square flex items-center justify-center">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Preview</h2>
+                <div className="bg-white rounded-lg p-3 sm:p-4 aspect-square flex items-center justify-center">
                   <p className="text-gray-400 text-center">Select platforms to see preview</p>
                 </div>
               </div>
@@ -1167,7 +1167,7 @@ export default function SocialManagerPage() {
         )}
         {activeTab === "engage" && (
           <>
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-3 mb-3 sm:mb-4 md:mb-6">
               <button onClick={() => setEngageSubTab("inbox")} className={`px-6 py-3 rounded-lg font-semibold transition ${engageSubTab === "inbox" ? "bg-cobalt text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>
                 Inbox ({comments.length})
               </button>
@@ -1180,10 +1180,10 @@ export default function SocialManagerPage() {
             </div>
 
             {engageSubTab === "inbox" && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                  <h2 className="text-2xl font-bold text-white mb-6">Comments Inbox</h2>
-                  <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+                <div className="lg:col-span-2 bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                  <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Comments Inbox</h2>
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
                     {loadingComments ? (
                       <div className="text-center py-12">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cobalt mx-auto mb-4"></div>
@@ -1200,17 +1200,17 @@ export default function SocialManagerPage() {
                         </button>
                       </div>
                     ) : comments.map((comment) => (
-                      <div key={comment.id} className="bg-white/5 border border-white/10 rounded-lg p-4 hover:border-cobalt/50 transition cursor-pointer" onClick={() => generateAIReplies(comment)}>
+                      <div key={comment.id} className="bg-white/5 border border-white/10 rounded-lg p-3 sm:p-4 hover:border-cobalt/50 transition cursor-pointer" onClick={() => generateAIReplies(comment)}>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">{getPlatformIcon(comment.platform)}</span>
+                            <span className="text-base sm:text-lg md:text-xl lg:text-2xl">{getPlatformIcon(comment.platform)}</span>
                             <div>
                               <p className="text-white font-semibold">{comment.author}</p>
                               <p className="text-sm text-gray-400">{comment.postTitle}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`text-xl ${getSentimentColor(comment.sentiment)}`}>{getSentimentIcon(comment.sentiment)}</span>
+                            <span className={`text-base sm:text-lg md:text-xl ${getSentimentColor(comment.sentiment)}`}>{getSentimentIcon(comment.sentiment)}</span>
                             <span className="text-xs text-gray-500">{comment.timestamp}</span>
                           </div>
                         </div>
@@ -1220,29 +1220,29 @@ export default function SocialManagerPage() {
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                  <h2 className="text-xl font-bold text-white mb-4">AI Reply</h2>
+                <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                  <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">AI Reply</h2>
                   {!selectedComment ? (
                     <div className="text-center py-12">
-                      <div className="text-6xl mb-4"></div>
+                      <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
                       <p className="text-gray-400">Select a comment to generate AI replies</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="bg-white/10 rounded-lg p-4">
+                    <div className="space-y-2 sm:space-y-3 md:space-y-4">
+                      <div className="bg-white/10 rounded-lg p-3 sm:p-4">
                         <p className="text-sm text-gray-400 mb-2">Replying to:</p>
                         <p className="text-white">{selectedComment.content}</p>
                       </div>
                       {generatingReplies ? (
-                        <div className="text-center py-8">
-                          <div className="text-4xl mb-2"></div>
+                        <div className="text-center py-4 sm:py-6 md:py-8">
+                          <div className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl mb-2"></div>
                           <p className="text-gold">Generating replies...</p>
                         </div>
                       ) : aiReplies.length > 0 && (
                         <>
                           <div className="space-y-3">
                             {aiReplies.map((reply, idx) => (
-                              <div key={idx} className="bg-white/10 rounded-lg p-4 hover:bg-white/20 transition cursor-pointer" onClick={() => setManualReply(reply)}>
+                              <div key={idx} className="bg-white/10 rounded-lg p-3 sm:p-4 hover:bg-white/20 transition cursor-pointer" onClick={() => setManualReply(reply)}>
                                 <div className="flex items-start justify-between mb-2">
                                   <span className="text-xs font-semibold text-gold">Option {idx + 1}</span>
                                   <button className="text-xs text-green-400 hover:text-green-300">Use this →</button>
@@ -1253,7 +1253,7 @@ export default function SocialManagerPage() {
                           </div>
                           <div className="border-t border-white/10 pt-4">
                             <label className="block text-white font-semibold mb-2">Manual Reply</label>
-                            <textarea value={manualReply} onChange={(e) => setManualReply(e.target.value)} placeholder="Edit AI suggestion or write your own..." rows={4} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
+                            <textarea value={manualReply} onChange={(e) => setManualReply(e.target.value)} placeholder="Edit AI suggestion or write your own..." rows={4} className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
                             <button className="w-full mt-3 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition">Send Reply</button>
                           </div>
                         </>
@@ -1265,21 +1265,21 @@ export default function SocialManagerPage() {
             )}
 
             {engageSubTab === "discovery" && (
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-2xl font-bold text-white mb-4">Find Relevant Posts</h2>
-                <div className="flex gap-3 mb-6">
-                  <input type="text" value={searchKeywords} onChange={(e) => setSearchKeywords(e.target.value)} placeholder="Enter keywords or hashtags" className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt" />
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Find Relevant Posts</h2>
+                <div className="flex gap-3 mb-3 sm:mb-4 md:mb-6">
+                  <input type="text" value={searchKeywords} onChange={(e) => setSearchKeywords(e.target.value)} placeholder="Enter keywords or hashtags" className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt" />
                   <button onClick={searchRelevantPosts} disabled={searchingPosts} className="px-6 py-3 bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-600 hover:to-gold-600 rounded-lg text-white font-semibold transition disabled:opacity-50">
                     {searchingPosts ? "Searching..." : "Search"}
                   </button>
                 </div>
                 {discoveryPosts.length > 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
                     {discoveryPosts.map((post) => (
-                      <div key={post.id} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <div key={post.id} className="bg-white/5 border border-white/10 rounded-lg p-3 sm:p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">{getPlatformIcon(post.platform)}</span>
+                            <span className="text-base sm:text-lg md:text-xl lg:text-2xl">{getPlatformIcon(post.platform)}</span>
                             <p className="text-white font-semibold">{post.author}</p>
                           </div>
                           <p className="text-sm text-gray-400">{post.engagement} engagements</p>
@@ -1301,12 +1301,12 @@ export default function SocialManagerPage() {
             )}
 
             {engageSubTab === "settings" && (
-              <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h2 className="text-2xl font-bold text-white mb-6">Engagement Settings</h2>
-                <div className="bg-white/5 rounded-lg p-6 mb-6">
+              <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Engagement Settings</h2>
+                <div className="bg-white/5 rounded-lg p-4 sm:p-6 mb-3 sm:mb-4 md:mb-6">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-2">Auto-Reply</h3>
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Auto-Reply</h3>
                       <p className="text-gray-400 text-sm">Let AI automatically respond to comments</p>
                     </div>
                     <button onClick={() => setAutoReplyEnabled(!autoReplyEnabled)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${autoReplyEnabled ? "bg-green-500" : "bg-gray-600"}`}>
@@ -1314,12 +1314,12 @@ export default function SocialManagerPage() {
                     </button>
                   </div>
                   {autoReplyEnabled && (
-                    <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                    <div className="mt-4 p-3 sm:p-4 bg-gold/10 border border-gold/30 rounded-lg">
                       <p className="text-gold-400 text-sm font-semibold">Auto-reply is enabled</p>
                     </div>
                   )}
                 </div>
-                <button className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
+                <button className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
                   Save Settings
                 </button>
               </div>
@@ -1328,9 +1328,9 @@ export default function SocialManagerPage() {
         )}
 
         {activeTab === "schedule" && (
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4"></div>
-            <h2 className="text-2xl font-bold text-white mb-2">Schedule View</h2>
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 md:p-12 border border-white/10 text-center">
+            <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">Schedule View</h2>
             <button onClick={() => router.push("/dashboard/calendar")} className="px-6 py-3 bg-gradient-to-r from-cobalt to-gold-intense hover:from-cobalt-600 hover:to-gold-600 rounded-lg text-white font-semibold transition">
               Open Content Calendar
             </button>
@@ -1340,12 +1340,12 @@ export default function SocialManagerPage() {
 
         {/* Media Library Modal */}
         {showMediaLibrary && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8" onClick={() => setShowMediaLibrary(false)}>
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8" onClick={() => setShowMediaLibrary(false)}>
             <div className="max-w-6xl w-full max-h-[80vh] bg-slate-900 rounded-2xl border border-white/20 flex flex-col" onClick={(e) => e.stopPropagation()}>
               {/* Modal Header */}
-              <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-white">Browse Media Library</h3>
-                <button onClick={() => setShowMediaLibrary(false)} className="text-white hover:text-red-400 text-3xl">×</button>
+              <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">Browse Media Library</h3>
+                <button onClick={() => setShowMediaLibrary(false)} className="text-white hover:text-red-400 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">×</button>
               </div>
               
               {/* Tabs */}
@@ -1394,10 +1394,10 @@ export default function SocialManagerPage() {
               </div>
 
               {/* Content Area */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-auto p-4 sm:p-6">
                 {/* Generated Content Tab */}
                 {mediaLibraryTab === 'generated' && (
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                     {libraryContent.map((item) => (
                       <div key={item.id} onClick={() => handleMediaSelect(item)} className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-cobalt">
                         {/* Show actual media if available */}
@@ -1420,11 +1420,11 @@ export default function SocialManagerPage() {
                         ) : (
                           <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
                             {item.content_type === 'carousel' ? (
-                              <span className="text-6xl"></span>
+                              <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                             ) : item.content_type === 'blog' ? (
-                              <span className="text-6xl"></span>
+                              <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                             ) : (
-                              <span className="text-6xl"></span>
+                              <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                             )}
                           </div>
                         )}
@@ -1447,8 +1447,8 @@ export default function SocialManagerPage() {
                   <div>
                     {driveFolders.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">Connect Google Drive</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Connect Google Drive</h3>
                         <p className="text-gray-400 mb-4">No folders found. Connect Drive from Media Library.</p>
                         <button 
                           onClick={() => window.open('/dashboard/media', '_blank')}
@@ -1463,7 +1463,7 @@ export default function SocialManagerPage() {
                           <select 
                             value={selectedFolder}
                             onChange={(e) => { setSelectedFolder(e.target.value); loadDriveAssets(e.target.value); }}
-                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"
+                            className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"
                           >
                             <option value="">All Files</option>
                             {driveFolders.map((folder: any) => (
@@ -1480,7 +1480,7 @@ export default function SocialManagerPage() {
                             <p className="text-gray-400">No assets found in this folder</p>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                             {driveAssets.map((asset: any) => (
                               <div 
                                 key={asset.id}
@@ -1490,24 +1490,24 @@ export default function SocialManagerPage() {
                                   {asset.thumbnail ? (
                                     <img src={asset.thumbnail} alt={asset.name} className="w-full h-full object-cover" />
                                   ) : asset.type === 'folder' ? (
-                                    <span className="text-6xl"></span>
+                                    <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                                   ) : asset.type === 'video' ? (
-                                    <span className="text-6xl"></span>
+                                    <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                                   ) : asset.type === 'image' ? (
-                                    <span className="text-6xl"></span>
+                                    <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                                   ) : (
-                                    <span className="text-6xl"></span>
+                                    <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                                   )}
                                   
                                   {/* Hover buttons for files */}
                                   {asset.type !== 'folder' && (
-                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-3 sm:p-4">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           window.open(`https://drive.google.com/file/d/${asset.id}/view`, '_blank');
                                         }}
-                                        className="w-full px-4 py-2 bg-cobalt hover:bg-cobalt-700 rounded-lg text-white text-sm font-semibold transition"
+                                        className="w-full px-3 sm:px-4 py-2 bg-cobalt hover:bg-cobalt-700 rounded-lg text-white text-sm font-semibold transition"
                                       >
                                         👁️ Preview in Drive
                                       </button>
@@ -1518,7 +1518,7 @@ export default function SocialManagerPage() {
                                           const folderName = driveFolders.find(f => f.id === selectedFolder)?.name || 'Drive';
                                           handleMediaSelect({ ...asset, folderName });
                                         }}
-                                        className="w-full px-4 py-2 bg-cobalt hover:bg-cobalt-700 rounded-lg text-white text-sm font-semibold transition"
+                                        className="w-full px-3 sm:px-4 py-2 bg-cobalt hover:bg-cobalt-700 rounded-lg text-white text-sm font-semibold transition"
                                       >
                                         Select for Post
                                       </button>
@@ -1558,12 +1558,12 @@ export default function SocialManagerPage() {
                       </div>
                     ) : dropboxFiles.length === 0 && dropboxFolders.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">Dropbox Connected</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Dropbox Connected</h3>
                         <p className="text-gray-400">No files found in this folder.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {/* Folders */}
                         {dropboxFolders.map((folder: any) => (
                           <div
@@ -1575,7 +1575,7 @@ export default function SocialManagerPage() {
                             className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-royal transition cursor-pointer"
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
-                              <span className="text-6xl"></span>
+                              <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                             </div>
                             <div className="p-3">
                               <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
@@ -1591,16 +1591,16 @@ export default function SocialManagerPage() {
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
                               {file.type === 'image' ? (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               ) : file.type === 'video' ? (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               ) : (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               )}
-                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-3 sm:p-4">
                                 <button
                                   onClick={() => handleMediaSelect({ ...file, source: 'dropbox' })}
-                                  className="w-full px-4 py-2 bg-royal hover:bg-royal-700 rounded-lg text-white text-sm font-semibold transition"
+                                  className="w-full px-3 sm:px-4 py-2 bg-royal hover:bg-royal-700 rounded-lg text-white text-sm font-semibold transition"
                                 >
                                   Select for Post
                                 </button>
@@ -1626,12 +1626,12 @@ export default function SocialManagerPage() {
                       </div>
                     ) : onedriveFiles.length === 0 && onedriveFolders.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">OneDrive Connected</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">OneDrive Connected</h3>
                         <p className="text-gray-400">No files found in this folder.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {/* Folders */}
                         {onedriveFolders.map((folder: any) => (
                           <div
@@ -1643,7 +1643,7 @@ export default function SocialManagerPage() {
                             className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition cursor-pointer"
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
-                              <span className="text-6xl"></span>
+                              <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                             </div>
                             <div className="p-3">
                               <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
@@ -1659,16 +1659,16 @@ export default function SocialManagerPage() {
                           >
                             <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center relative">
                               {file.type === 'image' ? (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               ) : file.type === 'video' ? (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               ) : (
-                                <span className="text-6xl"></span>
+                                <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl"></span>
                               )}
-                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-4">
+                              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-3 sm:p-4">
                                 <button
                                   onClick={() => handleMediaSelect({ ...file, source: 'onedrive', url: file.download_url })}
-                                  className="w-full px-4 py-2 bg-royal-600 hover:bg-cobalt rounded-lg text-white text-sm font-semibold transition"
+                                  className="w-full px-3 sm:px-4 py-2 bg-royal-600 hover:bg-cobalt rounded-lg text-white text-sm font-semibold transition"
                                 >
                                   Select for Post
                                 </button>
@@ -1688,14 +1688,14 @@ export default function SocialManagerPage() {
                 {/* Pexels Photos Tab */}
                 {mediaLibraryTab === 'pexels-photos' && (
                   <div>
-                    <div className="mb-6 flex gap-3">
+                    <div className="mb-3 sm:mb-4 md:mb-6 flex gap-3">
                       <input
                         type="text"
                         value={pexelsQuery}
                         onChange={(e) => setPexelsQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchPexelsPhotos()}
                         placeholder="Search free stock photos..."
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                        className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                       />
                       <button
                         onClick={searchPexelsPhotos}
@@ -1710,12 +1710,12 @@ export default function SocialManagerPage() {
                       </div>
                     ) : pexelsPhotos.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">Search Pexels Photos</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Search Pexels Photos</h3>
                         <p className="text-gray-400">Search millions of free, high-quality stock photos</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {pexelsPhotos.map((photo: any) => (
                           <div
                             key={photo.id}
@@ -1739,14 +1739,14 @@ export default function SocialManagerPage() {
                 {/* Pexels Videos Tab */}
                 {mediaLibraryTab === 'pexels-videos' && (
                   <div>
-                    <div className="mb-6 flex gap-3">
+                    <div className="mb-3 sm:mb-4 md:mb-6 flex gap-3">
                       <input
                         type="text"
                         value={pexelsQuery}
                         onChange={(e) => setPexelsQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
                         placeholder="Search free stock videos..."
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
+                        className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
                       />
                       <button
                         onClick={searchPexelsVideos}
@@ -1761,12 +1761,12 @@ export default function SocialManagerPage() {
                       </div>
                     ) : pexelsVideos.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">Search Pexels Videos</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Search Pexels Videos</h3>
                         <p className="text-gray-400">Search thousands of free, high-quality stock videos</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {pexelsVideos.map((video: any) => (
                           <div
                             key={video.id}
@@ -1776,7 +1776,7 @@ export default function SocialManagerPage() {
                             <div className="aspect-video relative group">
                               <img src={video.thumbnail} alt={video.name} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <div className="text-white text-4xl"></div>
+                                <div className="text-white text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl"></div>
                               </div>
                               <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
                                 {Math.floor(video.duration)}s
@@ -1796,8 +1796,8 @@ export default function SocialManagerPage() {
                 {/* AI Images Tab (Imagen 3 - Nano Banana ) */}
                 {mediaLibraryTab === 'ai-images' && (
                   <div>
-                    <div className="mb-6 space-y-4">
-                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-4">
+                    <div className="mb-3 sm:mb-4 md:mb-6 space-y-2 sm:space-y-3 md:space-y-4">
+                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 sm:p-4">
                         <h4 className="text-lg font-bold text-gold-400 mb-2">Google Imagen 3 (Nano Banana)</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate high-quality AI images from text prompts. Cost: $0.03 per image.</p>
                       </div>
@@ -1807,16 +1807,16 @@ export default function SocialManagerPage() {
                         onChange={(e) => setAiImagePrompt(e.target.value)}
                         placeholder="Describe the image you want to generate... (e.g., 'Professional videographer filming a corporate interview in modern office')"
                         rows={3}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold resize-none"
+                        className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold resize-none"
                       />
 
-                      <div className="flex gap-4 items-center">
+                      <div className="flex gap-2 sm:gap-3 md:gap-4 items-center">
                         <div className="flex-1">
                           <label className="block text-sm text-gray-400 mb-2">Aspect Ratio</label>
                           <select
                             value={aiAspectRatio}
                             onChange={(e) => setAiAspectRatio(e.target.value as any)}
-                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-gold"
+                            className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-gold"
                           >
                             <option value="1:1">1:1 Square</option>
                             <option value="16:9">16:9 Landscape</option>
@@ -1829,7 +1829,7 @@ export default function SocialManagerPage() {
                         <button
                           onClick={generateAiImage}
                           disabled={generatingAiImage || !aiImagePrompt.trim()}
-                          className="px-8 py-2 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
+                          className="px-4 sm:px-6 md:px-8 py-2 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
                         >
                           {generatingAiImage ? 'Generating...' : 'Generate Image'}
                         </button>
@@ -1838,12 +1838,12 @@ export default function SocialManagerPage() {
 
                     {aiGeneratedImages.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">No AI Images Generated Yet</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No AI Images Generated Yet</h3>
                         <p className="text-gray-400">Enter a prompt above and click Generate to create AI images</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {aiGeneratedImages.map((image: any, idx: number) => (
                           <div
                             key={idx}
@@ -1867,8 +1867,8 @@ export default function SocialManagerPage() {
                 {/* AI Videos Tab (Veo 3.1 ) */}
                 {mediaLibraryTab === 'ai-videos' && (
                   <div>
-                    <div className="mb-6 space-y-4">
-                      <div className="bg-gradient-to-r from-red-900/30 to-gold-900/30 border border-red-500/30 rounded-lg p-4">
+                    <div className="mb-3 sm:mb-4 md:mb-6 space-y-2 sm:space-y-3 md:space-y-4">
+                      <div className="bg-gradient-to-r from-red-900/30 to-gold-900/30 border border-red-500/30 rounded-lg p-3 sm:p-4">
                         <h4 className="text-lg font-bold text-red-400 mb-2">Google Veo 3.1</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate 8-second AI videos with audio from text prompts. Cost: $0.75/second ($6 per video).</p>
                         <p className="text-xs text-gold-400">Video generation takes 2-5 minutes</p>
@@ -1879,16 +1879,16 @@ export default function SocialManagerPage() {
                         onChange={(e) => setAiVideoPrompt(e.target.value)}
                         placeholder="Describe the video you want to generate... (e.g., 'Professional videographer filming behind-the-scenes of a wedding ceremony')"
                         rows={3}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500 resize-none"
+                        className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500 resize-none"
                       />
 
-                      <div className="flex gap-4 items-center">
+                      <div className="flex gap-2 sm:gap-3 md:gap-4 items-center">
                         <div className="flex-1">
                           <label className="block text-sm text-gray-400 mb-2">Resolution</label>
                           <select
                             value={aiVideoResolution}
                             onChange={(e) => setAiVideoResolution(e.target.value as any)}
-                            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-500"
+                            className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-500"
                           >
                             <option value="720p">720p (HD)</option>
                             <option value="1080p">1080p (Full HD) - Higher cost</option>
@@ -1898,7 +1898,7 @@ export default function SocialManagerPage() {
                         <button
                           onClick={generateAiVideo}
                           disabled={generatingAiVideo || !aiVideoPrompt.trim()}
-                          className="px-8 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
+                          className="px-4 sm:px-6 md:px-8 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-bold transition mt-6"
                         >
                           {generatingAiVideo ? 'Generating...' : 'Generate Video'}
                         </button>
@@ -1907,12 +1907,12 @@ export default function SocialManagerPage() {
 
                     {aiGeneratedVideos.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4"></div>
-                        <h3 className="text-xl font-bold text-white mb-2">No AI Videos Generated Yet</h3>
+                        <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No AI Videos Generated Yet</h3>
                         <p className="text-gray-400">Enter a prompt above and click Generate to create AI videos</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                         {aiGeneratedVideos.map((video: any, idx: number) => (
                           <div
                             key={idx}
@@ -1922,13 +1922,13 @@ export default function SocialManagerPage() {
                             <div className="aspect-video bg-gradient-to-br from-red-900 to-gold-900 flex items-center justify-center">
                               {video.status === 'generating' ? (
                                 <div className="text-center">
-                                  <div className="text-4xl mb-2">⏳</div>
+                                  <div className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl mb-2">⏳</div>
                                   <p className="text-sm text-gray-300">Generating...</p>
                                 </div>
                               ) : video.url ? (
                                 <video src={video.url} className="w-full h-full object-cover" />
                               ) : (
-                                <div className="text-4xl"></div>
+                                <div className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl"></div>
                               )}
                             </div>
                             <div className="p-3">

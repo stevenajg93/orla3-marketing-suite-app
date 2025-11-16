@@ -132,15 +132,15 @@ export default function CompetitorAnalysis() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-4 inline-block">← Back to Dashboard</Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-intense mb-2">Competitor Analysis</h1>
-          <p className="text-xl text-gray-300">Track competitors and discover content opportunities</p>
+          <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-intense mb-2">Competitor Analysis</h1>
+          <p className="text-base sm:text-lg md:text-xl text-gray-300">Track competitors and discover content opportunities</p>
         </div>
 
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <button onClick={() => setShowAddForm(!showAddForm)} className="px-6 py-3 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition">
             {showAddForm ? 'Cancel' : '+ Add Competitor'}
           </button>
@@ -152,59 +152,59 @@ export default function CompetitorAnalysis() {
         </div>
 
         {showAddForm && (
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Add Competitor</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input type="text" placeholder="Competitor Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
-              <input type="text" placeholder="Industry (optional)" value={formData.industry} onChange={(e) => setFormData({...formData, industry: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Add Competitor</h2>
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 mb-4">
+              <input type="text" placeholder="Competitor Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="Industry (optional)" value={formData.industry} onChange={(e) => setFormData({...formData, industry: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
             </div>
-            <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense mb-4" />
+            <input type="text" placeholder="Location (optional)" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense mb-4" />
 
-            <div className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-4 mb-4">
+            <div className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-3 sm:p-4 mb-4">
               <p className="text-sm text-cobalt-300">
                 <span className="font-semibold">AI-Powered Research:</span> When you click "Analyze", Perplexity AI will automatically research this competitor's website and social media to provide accurate, real-time insights!
               </p>
             </div>
 
             <h3 className="text-lg font-semibold text-white mb-3">Social Media Handles (Optional but Recommended)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              <input type="text" placeholder="Instagram: @handle" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
-              <input type="text" placeholder="LinkedIn: company-name" value={formData.linkedin} onChange={(e) => setFormData({...formData, linkedin: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
-              <input type="text" placeholder="𝕏 X/Twitter: @handle" value={formData.x} onChange={(e) => setFormData({...formData, x: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
-              <input type="text" placeholder="TikTok: @handle" value={formData.tiktok} onChange={(e) => setFormData({...formData, tiktok: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
-              <input type="text" placeholder="📺 YouTube: channel-name" value={formData.youtube} onChange={(e) => setFormData({...formData, youtube: e.target.value})} className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
+              <input type="text" placeholder="Instagram: @handle" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="LinkedIn: company-name" value={formData.linkedin} onChange={(e) => setFormData({...formData, linkedin: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="𝕏 X/Twitter: @handle" value={formData.x} onChange={(e) => setFormData({...formData, x: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="TikTok: @handle" value={formData.tiktok} onChange={(e) => setFormData({...formData, tiktok: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
+              <input type="text" placeholder="📺 YouTube: channel-name" value={formData.youtube} onChange={(e) => setFormData({...formData, youtube: e.target.value})} className="px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold-intense" />
             </div>
-            <button onClick={addCompetitor} disabled={loading} className="w-full py-4 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition disabled:opacity-50">
+            <button onClick={addCompetitor} disabled={loading} className="w-full py-3 sm:py-4 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition disabled:opacity-50">
               {loading ? 'Adding...' : 'Add Competitor'}
             </button>
           </div>
         )}
 
         {insights && (
-          <div className="bg-gradient-to-br from-royal-900/50 to-cobalt-900/50 backdrop-blur-lg rounded-xl p-6 border border-cobalt/30 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Strategic Insights</h2>
+          <div className="bg-gradient-to-br from-royal-900/50 to-cobalt-900/50 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt/30 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Strategic Insights</h2>
             <p className="text-gray-200 whitespace-pre-wrap leading-relaxed">{insights}</p>
           </div>
         )}
 
         {competitors.length === 0 ? (
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4"></div>
-            <h2 className="text-2xl font-bold text-white mb-2">No Competitors Yet</h2>
-            <p className="text-gray-400 mb-6">Add competitors to start analyzing their content strategy</p>
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 md:p-12 border border-white/10 text-center">
+            <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">No Competitors Yet</h2>
+            <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6">Add competitors to start analyzing their content strategy</p>
             <button onClick={() => setShowAddForm(true)} className="px-6 py-3 bg-gradient-to-r from-gold-intense to-gold hover:from-gold-700 hover:to-gold-600 rounded-lg text-white font-bold transition">+ Add Your First Competitor</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {competitors.map((comp) => (
-              <div key={comp.id} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+              <div key={comp.id} className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-1">{comp.name}</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1">{comp.name}</h3>
                     {comp.industry && <p className="text-sm text-gray-400">{comp.industry}</p>}
                     {comp.location && <p className="text-sm text-gray-500">📍 {comp.location}</p>}
                   </div>
-                  <button onClick={() => deleteCompetitor(comp.id)} className="text-red-400 hover:text-red-300 text-xl">×</button>
+                  <button onClick={() => deleteCompetitor(comp.id)} className="text-red-400 hover:text-red-300 text-base sm:text-lg md:text-xl">×</button>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -216,7 +216,7 @@ export default function CompetitorAnalysis() {
                 </div>
 
                 {comp.analysis ? (
-                  <div className="space-y-4 mb-4">
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4 mb-4">
                     {/* Threat Level Badge */}
                     {comp.analysis.threat_level && (
                       <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export default function CompetitorAnalysis() {
 
                     {/* Strategic Summary */}
                     {comp.analysis.strategic_summary && (
-                      <div className="bg-royal-900/30 border border-cobalt/30 rounded-lg p-4">
+                      <div className="bg-royal-900/30 border border-cobalt/30 rounded-lg p-3 sm:p-4">
                         <h4 className="text-sm font-semibold text-cobalt-300 mb-2">Strategic Summary</h4>
                         <p className="text-sm text-gray-200">{comp.analysis.strategic_summary}</p>
                       </div>
@@ -249,10 +249,10 @@ export default function CompetitorAnalysis() {
 
                     {/* Expanded Details */}
                     {expandedCompetitor === comp.id && (
-                      <div className="space-y-4 pt-4 border-t border-white/10">
+                      <div className="space-y-2 sm:space-y-3 md:space-y-4 pt-4 border-t border-white/10">
                         {/* Marketing They Do Well */}
                         {comp.analysis.marketing_they_do_well && comp.analysis.marketing_they_do_well.length > 0 && (
-                          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3 sm:p-4">
                             <h4 className="text-sm font-semibold text-green-300 mb-3 flex items-center gap-2">
                               <span></span> Marketing They Do Well
                             </h4>
@@ -269,7 +269,7 @@ export default function CompetitorAnalysis() {
 
                         {/* Content Gaps */}
                         {comp.analysis.content_gaps && comp.analysis.content_gaps.length > 0 && (
-                          <div className="bg-gold-900/20 border border-gold/30 rounded-lg p-4">
+                          <div className="bg-gold-900/20 border border-gold/30 rounded-lg p-3 sm:p-4">
                             <h4 className="text-sm font-semibold text-gold-300 mb-3 flex items-center gap-2">
                               <span></span> Content Gaps (Opportunities)
                             </h4>
@@ -286,7 +286,7 @@ export default function CompetitorAnalysis() {
 
                         {/* Positioning Messaging */}
                         {comp.analysis.positioning_messaging && (
-                          <div className="bg-royal-900/20 border border-cobalt/30 rounded-lg p-4">
+                          <div className="bg-royal-900/20 border border-cobalt/30 rounded-lg p-3 sm:p-4">
                             <h4 className="text-sm font-semibold text-cobalt-300 mb-2 flex items-center gap-2">
                               <span></span> Our Messaging Position
                             </h4>
@@ -296,7 +296,7 @@ export default function CompetitorAnalysis() {
 
                         {/* Content Opportunities */}
                         {comp.analysis.content_opportunities && comp.analysis.content_opportunities.length > 0 && (
-                          <div className="bg-gold-900/20 border border-gold-intense/30 rounded-lg p-4">
+                          <div className="bg-gold-900/20 border border-gold-intense/30 rounded-lg p-3 sm:p-4">
                             <h4 className="text-sm font-semibold text-gold-300 mb-3 flex items-center gap-2">
                               <span></span> Content Opportunities
                             </h4>

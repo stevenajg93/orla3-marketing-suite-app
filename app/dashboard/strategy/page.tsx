@@ -90,22 +90,22 @@ export default function StrategyPlanner() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-4 inline-block">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-2">
+          <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-2">
             Strategy Planner
           </h1>
-          <p className="text-xl text-gray-300">AI-powered brand voice analysis & competitive strategy</p>
+          <p className="text-base sm:text-lg md:text-xl text-gray-300">AI-powered brand voice analysis & competitive strategy</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
+        <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Brand Voice + Competitive Analysis</h2>
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">Brand Voice + Competitive Analysis</h2>
               <p className="text-gray-400">
                 {strategy 
                   ? `Last analyzed: ${new Date(strategy.generated_at || '').toLocaleDateString()}` + 
@@ -117,7 +117,7 @@ export default function StrategyPlanner() {
             <button
               onClick={analyzeStrategy}
               disabled={analyzing}
-              className={`px-8 py-4 rounded-xl font-bold text-lg transition ${
+              className={`px-4 py-3 sm:px-6 sm:py-4 md:px-8 rounded-xl font-bold text-lg transition ${
                 analyzing
                   ? 'bg-gray-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white'
@@ -128,30 +128,30 @@ export default function StrategyPlanner() {
           </div>
 
           {strategy?.assets_analyzed && (
-            <div className="mt-6 grid grid-cols-5 gap-4">
-              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-4 text-center">
-                <div className="text-3xl mb-2"></div>
-                <div className="text-2xl font-bold text-white">{strategy.assets_analyzed}</div>
+            <div className="mt-6 grid grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.assets_analyzed}</div>
                 <div className="text-sm text-gray-400">Total Assets</div>
               </div>
-              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-4 text-center">
-                <div className="text-3xl mb-2"></div>
-                <div className="text-2xl font-bold text-white">{strategy.categories?.guidelines || 0}</div>
+              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.categories?.guidelines || 0}</div>
                 <div className="text-sm text-gray-400">Guidelines</div>
               </div>
-              <div className="bg-green-900/40 border border-green-400/30 rounded-lg p-4 text-center">
-                <div className="text-3xl mb-2"></div>
-                <div className="text-2xl font-bold text-white">{strategy.categories?.voice_samples || 0}</div>
+              <div className="bg-green-900/40 border border-green-400/30 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.categories?.voice_samples || 0}</div>
                 <div className="text-sm text-gray-400">Voice Samples</div>
               </div>
-              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-4 text-center">
-                <div className="text-3xl mb-2"></div>
-                <div className="text-2xl font-bold text-white">{strategy.categories?.community || 0}</div>
+              <div className="bg-royal-900/40 border border-cobalt-400/30 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.categories?.community || 0}</div>
                 <div className="text-sm text-gray-400">Community</div>
               </div>
-              <div className="bg-gold-900/40 border border-gold-400/30 rounded-lg p-4 text-center">
-                <div className="text-3xl mb-2"></div>
-                <div className="text-2xl font-bold text-white">{strategy.competitors_included || 0}</div>
+              <div className="bg-gold-900/40 border border-gold-400/30 rounded-lg p-3 sm:p-4 text-center">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.competitors_included || 0}</div>
                 <div className="text-sm text-gray-400">Competitors</div>
               </div>
             </div>
@@ -159,18 +159,18 @@ export default function StrategyPlanner() {
         </div>
 
         {loading ? (
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4 animate-pulse">🧠</div>
-            <p className="text-xl text-white">Loading strategy...</p>
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 md:p-12 border border-white/10 text-center">
+            <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4 animate-pulse">🧠</div>
+            <p className="text-base sm:text-lg md:text-xl text-white">Loading strategy...</p>
           </div>
         ) : !strategy ? (
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-12 border border-white/10 text-center">
-            <div className="text-6xl mb-4"></div>
-            <h2 className="text-2xl font-bold text-white mb-2">No Strategy Yet</h2>
-            <p className="text-gray-400 mb-6">
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 md:p-12 border border-white/10 text-center">
+            <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4"></div>
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">No Strategy Yet</h2>
+            <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6">
               Upload brand voice assets and add competitors, then click "Analyze Brand Voice"
             </p>
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-2 sm:gap-3 md:gap-4 justify-center">
               <Link
                 href="/dashboard/brand-voice"
                 className="inline-block px-6 py-3 bg-gradient-to-r from-cobalt to-cobalt hover:from-cobalt-600 hover:to-cobalt-600 rounded-lg text-white font-bold transition"
@@ -186,22 +186,22 @@ export default function StrategyPlanner() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
             {/* Competitive Positioning - NEW SECTION */}
             {strategy.competitive_positioning && (
-              <div className="bg-gradient-to-br from-gold-900/40 to-gold-800/40 backdrop-blur-lg rounded-xl p-6 border border-gold-400/30">
-                <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <span className="text-3xl"></span>
+              <div className="bg-gradient-to-br from-gold-900/40 to-gold-800/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold-400/30">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                  <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                   Competitive Positioning
                 </h3>
-                <div className="space-y-6">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
                   <div>
                     <span className="text-gold-400 font-semibold text-lg">Our Unique Value:</span>
                     <p className="text-white mt-2 text-lg">{strategy.competitive_positioning.unique_value}</p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4">
+                  <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                    <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3 sm:p-4">
                       <h4 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
                         <span></span> Copy & Adapt
                       </h4>
@@ -215,7 +215,7 @@ export default function StrategyPlanner() {
                       </ul>
                     </div>
 
-                    <div className="bg-yellow-900/30 border border-gold/30 rounded-lg p-4">
+                    <div className="bg-yellow-900/30 border border-gold/30 rounded-lg p-3 sm:p-4">
                       <h4 className="text-gold-400 font-semibold mb-3 flex items-center gap-2">
                         <span></span> Gaps to Exploit
                       </h4>
@@ -229,7 +229,7 @@ export default function StrategyPlanner() {
                       </ul>
                     </div>
 
-                    <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4">
+                    <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 sm:p-4">
                       <h4 className="text-red-400 font-semibold mb-3 flex items-center gap-2">
                         <span></span> Avoid
                       </h4>
@@ -248,12 +248,12 @@ export default function StrategyPlanner() {
             )}
 
             {/* Brand Voice */}
-            <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-900/40 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <span className="text-3xl">🎤</span>
+            <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt-400/30">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">🎤</span>
                 Brand Voice Profile
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
                   <span className="text-cobalt-400 font-semibold">Tone:</span>
                   <p className="text-white mt-1">{strategy.brand_voice.tone}</p>
@@ -282,15 +282,15 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Messaging Pillars */}
-            <div className="bg-gradient-to-br from-royal-900/40 to-cyan-900/40 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <span className="text-3xl">🏛️</span>
+            <div className="bg-gradient-to-br from-royal-900/40 to-cyan-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt-400/30">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">🏛️</span>
                 Messaging Pillars
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {strategy.messaging_pillars.map((pillar, i) => (
-                  <div key={i} className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-cobalt-300">#{i + 1}</div>
+                  <div key={i} className="bg-cobalt/10 border border-cobalt/30 rounded-lg p-3 sm:p-4 text-center">
+                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-cobalt-300">#{i + 1}</div>
                     <p className="text-white mt-2">{pillar}</p>
                   </div>
                 ))}
@@ -298,12 +298,12 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Language Patterns */}
-            <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-lg rounded-xl p-6 border border-green-400/30">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <span className="text-3xl"></span>
+            <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-green-400/30">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                 Language Patterns
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
                   <span className="text-green-400 font-semibold">Writing Style:</span>
                   <p className="text-white mt-1">{strategy.language_patterns.writing_style}</p>
@@ -332,31 +332,31 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Do's and Don'ts */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-green-900/40 to-teal-900/40 backdrop-blur-lg rounded-xl p-6 border border-green-400/30">
-                <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <span className="text-3xl"></span>
+            <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+              <div className="bg-gradient-to-br from-green-900/40 to-teal-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-green-400/30">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                  <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                   Do's
                 </h3>
                 <ul className="space-y-2">
                   {strategy.dos_and_donts.dos.map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="text-green-400 text-xl">•</span>
+                      <span className="text-green-400 text-base sm:text-lg md:text-xl">•</span>
                       <span className="text-white">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-br from-red-900/40 to-gold-900/40 backdrop-blur-lg rounded-xl p-6 border border-red-400/30">
-                <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <span className="text-3xl"></span>
+              <div className="bg-gradient-to-br from-red-900/40 to-gold-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-red-400/30">
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                  <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                   Don'ts
                 </h3>
                 <ul className="space-y-2">
                   {strategy.dos_and_donts.donts.map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="text-red-400 text-xl">•</span>
+                      <span className="text-red-400 text-base sm:text-lg md:text-xl">•</span>
                       <span className="text-white">{item}</span>
                     </li>
                   ))}
@@ -365,12 +365,12 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Target Audience */}
-            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 backdrop-blur-lg rounded-xl p-6 border border-gold-400/30">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <span className="text-3xl"></span>
+            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold-400/30">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                 Target Audience
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
                   <span className="text-gold-400 font-semibold">Primary Audience:</span>
                   <p className="text-white mt-1">{strategy.target_audience.primary}</p>
@@ -389,14 +389,14 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Content Themes */}
-            <div className="bg-gradient-to-br from-gold-900/40 to-gold-800/40 backdrop-blur-lg rounded-xl p-6 border border-gold-400/30">
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                <span className="text-3xl">📚</span>
+            <div className="bg-gradient-to-br from-gold-900/40 to-gold-800/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold-400/30">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">📚</span>
                 Content Themes
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {strategy.content_themes.map((theme, i) => (
-                  <div key={i} className="bg-gold-intense/10 border border-gold-intense/30 rounded-lg p-4 text-center">
+                  <div key={i} className="bg-gold-intense/10 border border-gold-intense/30 rounded-lg p-3 sm:p-4 text-center">
                     <p className="text-white font-semibold">{theme}</p>
                   </div>
                 ))}

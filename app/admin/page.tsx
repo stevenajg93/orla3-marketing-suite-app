@@ -257,17 +257,17 @@ export default function AdminDashboard() {
   if (!stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">Loading admin dashboard...</div>
+        <div className="text-white text-base sm:text-lg md:text-xl">Loading admin dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
             Super Admin Portal
           </h1>
           <p className="text-gray-300 text-lg">
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Platform Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <StatCard
             title="Total Users"
             value={stats.overview.total_users}
@@ -304,13 +304,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Subscription Breakdown */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Subscription Breakdown</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Subscription Breakdown</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {stats.subscriptions.map((sub) => (
-              <div key={sub.subscription_tier} className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div key={sub.subscription_tier} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
                 <div className="text-gray-400 text-sm capitalize">{sub.subscription_tier}</div>
-                <div className="text-white text-2xl font-bold">{sub.count}</div>
+                <div className="text-white text-base sm:text-lg md:text-xl lg:text-2xl font-bold">{sub.count}</div>
                 <div className="text-gray-500 text-xs">
                   {sub.used_seats || 0}/{sub.total_seats || 0} seats
                 </div>
@@ -320,27 +320,27 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Management */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">User Management</h2>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">User Management</h2>
             <div className="text-gray-400 text-sm">
               {usersTotal} total users
             </div>
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
             <input
               type="text"
               placeholder="Search by email or name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+              className="px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+              className="px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
             >
               <option value="">All Statuses</option>
               <option value="active">Active</option>
@@ -351,7 +351,7 @@ export default function AdminDashboard() {
             <select
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value)}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+              className="px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
             >
               <option value="">All Plans</option>
               <option value="free">Free</option>
@@ -378,20 +378,20 @@ export default function AdminDashboard() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                    <td colSpan={6} className="text-center py-4 sm:py-6 md:py-8 text-gray-400">
                       Loading users...
                     </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">
+                    <td colSpan={6} className="text-center py-4 sm:py-6 md:py-8 text-gray-400">
                       No users found
                     </td>
                   </tr>
                 ) : (
                   users.map((u) => (
                     <tr key={u.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <div className="flex flex-col">
                           <div className="text-white font-semibold">{u.name}</div>
                           <div className="text-gray-400 text-sm">{u.email}</div>
@@ -402,10 +402,10 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <span className="text-white capitalize">{u.plan}</span>
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <div className="flex flex-col">
                           <span className="text-white font-semibold">
                             {u.credit_balance.toLocaleString()}
@@ -415,7 +415,7 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           u.account_status === 'active' ? 'bg-green-500/20 text-green-400' :
                           u.account_status === 'trial' ? 'bg-blue-500/20 text-blue-400' :
@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                           {u.account_status}
                         </span>
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <div className="flex flex-col">
                           <span className="text-white text-sm">{u.organization_name || 'N/A'}</span>
                           {u.org_role && (
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="py-4">
+                      <td className="py-3 sm:py-4">
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/users/${u.id}`}
@@ -501,10 +501,10 @@ export default function AdminDashboard() {
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setShowGrantModal(false)} />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
-            <div className="bg-slate-800 rounded-2xl border border-white/20 p-6">
-              <h3 className="text-2xl font-bold text-white mb-4">Gift Credits</h3>
+            <div className="bg-slate-800 rounded-2xl border border-white/20 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Gift Credits</h3>
 
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
                   <label className="block text-gray-300 text-sm mb-2">Credits Amount</label>
                   <input
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
                     value={grantAmount}
                     onChange={(e) => setGrantAmount(e.target.value)}
                     placeholder="e.g., 1000"
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                 </div>
 
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setGrantReason(e.target.value)}
                     placeholder="e.g., Promotional gift, Compensation for issue, etc."
                     rows={3}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                 </div>
 
@@ -531,13 +531,13 @@ export default function AdminDashboard() {
                   <button
                     onClick={handleGrantCredits}
                     disabled={grantLoading}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-cobalt to-royal rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50"
                   >
                     {grantLoading ? 'Granting...' : 'Grant Credits'}
                   </button>
                   <button
                     onClick={() => setShowGrantModal(false)}
-                    className="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
                   >
                     Cancel
                   </button>
@@ -553,13 +553,13 @@ export default function AdminDashboard() {
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setShowSuperAdminModal(false)} />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
-            <div className="bg-slate-800 rounded-2xl border border-white/20 p-6">
-              <h3 className="text-2xl font-bold text-white mb-4">
+            <div className="bg-slate-800 rounded-2xl border border-white/20 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">
                 {superAdminAction === 'grant' ? 'Grant Super Admin' : 'Revoke Super Admin'}
               </h3>
 
-              <div className="space-y-4">
-                <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
+                <div className="p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                   <p className="text-yellow-300 text-sm">
                     {superAdminAction === 'grant'
                       ? '⚠️ This will grant full platform access and unlimited credits to this user.'
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setSuperAdminReason(e.target.value)}
                     placeholder="e.g., Platform co-administrator, Temporary access for support, etc."
                     rows={3}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                    className="w-full px-3 sm:px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
                   />
                 </div>
 
@@ -582,7 +582,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={handleSuperAdmin}
                     disabled={superAdminLoading}
-                    className={`flex-1 px-4 py-2 rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50 ${
+                    className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50 ${
                       superAdminAction === 'grant'
                         ? 'bg-gradient-to-r from-purple-500 to-purple-700'
                         : 'bg-gradient-to-r from-orange-500 to-red-600'
@@ -594,7 +594,7 @@ export default function AdminDashboard() {
                   </button>
                   <button
                     onClick={() => setShowSuperAdminModal(false)}
-                    className="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
+                    className="flex-1 px-3 sm:px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
                   >
                     Cancel
                   </button>
@@ -612,9 +612,9 @@ function StatCard({ title, value, subtitle, color }: { title: string; value: num
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg">
       <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-10`}></div>
-      <div className="relative p-6">
+      <div className="relative p-4 sm:p-6">
         <div className="text-gray-400 text-sm mb-1">{title}</div>
-        <div className="text-white text-3xl font-bold mb-1">{value}</div>
+        <div className="text-white text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold mb-1">{value}</div>
         <div className="text-gray-500 text-xs">{subtitle}</div>
       </div>
     </div>

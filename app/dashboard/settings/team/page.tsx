@@ -144,17 +144,17 @@ export default function TeamSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8 flex items-center justify-center">
-        <div className="text-white text-xl">Loading team data...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8 flex items-center justify-center">
+        <div className="text-white text-base sm:text-lg md:text-xl">Loading team data...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8 flex items-center gap-2 sm:gap-3 md:gap-4">
           <Link
             href="/dashboard/settings"
             className="text-gray-400 hover:text-white transition"
@@ -163,9 +163,9 @@ export default function TeamSettingsPage() {
           </Link>
         </div>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Team Settings</h1>
+            <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-bold text-white mb-2">Team Settings</h1>
             <p className="text-gray-400">
               Manage your team members and permissions
             </p>
@@ -183,10 +183,10 @@ export default function TeamSettingsPage() {
 
         {/* Organization Overview */}
         {organization && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Organization</h2>
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 mb-3 sm:mb-4 md:mb-6">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Organization</h2>
 
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               <div>
                 <p className="text-gray-400 text-sm">Name</p>
                 <p className="text-white font-semibold text-lg">{organization.name}</p>
@@ -213,8 +213,8 @@ export default function TeamSettingsPage() {
         )}
 
         {/* Team Members */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-6">Team Members</h2>
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Team Members</h2>
 
           {members.length === 0 ? (
             <div className="text-center py-12">
@@ -225,26 +225,26 @@ export default function TeamSettingsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Member</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Role</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Joined</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Last Active</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Status</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-gray-400 font-semibold">Member</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-gray-400 font-semibold">Role</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-gray-400 font-semibold">Joined</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-gray-400 font-semibold">Last Active</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-gray-400 font-semibold">Status</th>
                     {isOwnerOrAdmin && (
-                      <th className="text-right py-3 px-4 text-gray-400 font-semibold">Actions</th>
+                      <th className="text-right py-3 px-3 sm:px-4 text-gray-400 font-semibold">Actions</th>
                     )}
                   </tr>
                 </thead>
                 <tbody>
                   {members.map((member) => (
                     <tr key={member.user_id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="py-4 px-4">
+                      <td className="py-3 sm:py-4 px-3 sm:px-4">
                         <div>
                           <p className="text-white font-semibold">{member.name}</p>
                           <p className="text-gray-400 text-sm">{member.email}</p>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3 sm:py-4 px-3 sm:px-4">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-sm font-semibold border ${getRoleBadgeColor(
                             member.role
@@ -253,15 +253,15 @@ export default function TeamSettingsPage() {
                           {member.role}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className="py-3 sm:py-4 px-3 sm:px-4 text-gray-300">
                         {new Date(member.joined_at).toLocaleDateString()}
                       </td>
-                      <td className="py-4 px-4 text-gray-300">
+                      <td className="py-3 sm:py-4 px-3 sm:px-4 text-gray-300">
                         {member.last_login_at
                           ? new Date(member.last_login_at).toLocaleDateString()
                           : 'Never'}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3 sm:py-4 px-3 sm:px-4">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
                             member.is_active
@@ -273,7 +273,7 @@ export default function TeamSettingsPage() {
                         </span>
                       </td>
                       {isOwnerOrAdmin && (
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-3 sm:py-4 px-3 sm:px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {member.role !== 'owner' && member.user_id !== user?.id && (
                               <>
@@ -312,11 +312,11 @@ export default function TeamSettingsPage() {
 
       {/* Invite Member Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">Invite Team Member</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl p-4 sm:p-6 md:p-8 max-w-md w-full border border-white/20">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Invite Team Member</h2>
 
-            <form onSubmit={handleInviteMember} className="space-y-6">
+            <form onSubmit={handleInviteMember} className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
@@ -327,7 +327,7 @@ export default function TeamSettingsPage() {
                   onChange={(e) => setInviteEmail(e.target.value)}
                   required
                   placeholder="colleague@company.com"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
+                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cobalt"
                 />
               </div>
 
@@ -338,7 +338,7 @@ export default function TeamSettingsPage() {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as 'member' | 'admin')}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+                  className="w-full px-3 sm:px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
                 >
                   <option value="viewer" className="bg-slate-800">Viewer - Can view only</option>
                   <option value="member" className="bg-slate-800">Member - Can create & edit</option>
@@ -346,7 +346,7 @@ export default function TeamSettingsPage() {
                 </select>
               </div>
 
-              <div className="bg-cobalt-500/10 border border-cobalt-400/30 rounded-lg p-4">
+              <div className="bg-cobalt-500/10 border border-cobalt-400/30 rounded-lg p-3 sm:p-4">
                 <p className="text-cobalt-300 text-sm">
                   An invitation email will be sent to this address with a link to join your team.
                 </p>

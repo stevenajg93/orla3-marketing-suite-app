@@ -47,24 +47,24 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-bold text-white mb-2">Settings</h1>
           <p className="text-gray-400">
             Manage your account, connections, and preferences
           </p>
         </div>
 
         {/* Settings Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
           {tabs.map((tab) => (
             <Link
               key={tab.id}
               href={tab.comingSoon ? '#' : tab.href}
               className={`
-                relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20
+                relative bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20
                 transition-all duration-300
                 ${tab.comingSoon
                   ? 'opacity-60 cursor-not-allowed'
@@ -85,12 +85,12 @@ export default function SettingsPage() {
               )}
 
               {/* Icon */}
-              <div className="text-5xl mb-4">
+              <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl mb-4">
                 {tab.icon}
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">
                 {tab.name}
               </h3>
               <p className="text-gray-400 text-sm">
@@ -108,39 +108,10 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-12 bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-          <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <Link
-              href="/dashboard/settings/cloud-storage"
-              className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
-            >
-              <div className="text-3xl"></div>
-              <div>
-                <h4 className="text-white font-semibold">Connect Cloud Storage</h4>
-                <p className="text-gray-400 text-sm">Import brand assets from Drive</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/dashboard/settings/social-accounts"
-              className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10"
-            >
-              <div className="text-3xl"></div>
-              <div>
-                <h4 className="text-white font-semibold">Connect Social Accounts</h4>
-                <p className="text-gray-400 text-sm">Start publishing to your platforms</p>
-              </div>
-            </Link>
-          </div>
-        </div>
-
         {/* Help Section */}
-        <div className="mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="text-3xl"></div>
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-cobalt/10 border border-cobalt/30 rounded-xl p-4 sm:p-6">
+          <div className="flex items-start gap-2 sm:gap-3 md:gap-4">
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></div>
             <div>
               <h4 className="text-lg font-semibold text-cobalt-300 mb-2">
                 Need Help?
@@ -153,13 +124,13 @@ export default function SettingsPage() {
                   href="https://docs.orla3.ai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-cobalt/20 hover:bg-cobalt/30 text-cobalt-300 rounded-lg text-sm font-semibold transition"
+                  className="px-3 sm:px-4 py-2 bg-cobalt/20 hover:bg-cobalt/30 text-cobalt-300 rounded-lg text-sm font-semibold transition"
                 >
                   Documentation
                 </a>
                 <a
                   href="mailto:support@orla3.ai"
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition"
+                  className="px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition"
                 >
                   Contact Support
                 </a>

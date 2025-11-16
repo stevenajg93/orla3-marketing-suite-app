@@ -111,41 +111,41 @@ export default function BillingPage() {
   const progressPercentage = (creditsRemaining / totalCredits) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+          <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
             Billing & Credits
           </h1>
           <p className="text-gray-400 mt-2">Manage your subscription and credit balance</p>
         </div>
 
         {/* Current Plan & Credits Overview */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           {/* Current Plan */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Current Plan</h2>
-              <span className="bg-gradient-to-r from-cobalt to-royal text-white px-4 py-2 rounded-full text-sm font-bold">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">Current Plan</h2>
+              <span className="bg-gradient-to-r from-cobalt to-royal text-white px-3 sm:px-4 py-2 rounded-full text-sm font-bold">
                 {currentPlan}
               </span>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Monthly Credits</p>
-                <p className="text-3xl font-bold text-white">{totalCredits.toLocaleString()}</p>
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white">{totalCredits.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-gray-400 text-sm mb-1">Billing Cycle</p>
-                <p className="text-xl font-semibold text-white">Monthly</p>
+                <p className="text-base sm:text-lg md:text-xl font-semibold text-white">Monthly</p>
               </div>
               <div>
                 <p className="text-gray-400 text-sm mb-1">Next Billing Date</p>
-                <p className="text-xl font-semibold text-white">December 12, 2025</p>
+                <p className="text-base sm:text-lg md:text-xl font-semibold text-white">December 12, 2025</p>
               </div>
               <div className="pt-4">
                 <button className="w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-6 py-3 rounded-lg font-bold transition">
@@ -156,13 +156,13 @@ export default function BillingPage() {
           </div>
 
           {/* Credits Overview */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-6">Credits Balance</h2>
-            <div className="space-y-4">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Credits Balance</h2>
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
               <div>
                 <div className="flex justify-between items-end mb-2">
                   <p className="text-gray-400 text-sm">Remaining</p>
-                  <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cobalt-400">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cobalt-400">
                     {creditsRemaining.toLocaleString()}
                   </p>
                 </div>
@@ -173,14 +173,14 @@ export default function BillingPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 pt-2">
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Used This Month</p>
-                  <p className="text-xl font-semibold text-white">{creditsUsed.toLocaleString()}</p>
+                  <p className="text-base sm:text-lg md:text-xl font-semibold text-white">{creditsUsed.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Total Allocated</p>
-                  <p className="text-xl font-semibold text-white">{totalCredits.toLocaleString()}</p>
+                  <p className="text-base sm:text-lg md:text-xl font-semibold text-white">{totalCredits.toLocaleString()}</p>
                 </div>
               </div>
               <div className="pt-4">
@@ -196,15 +196,15 @@ export default function BillingPage() {
         </div>
 
         {/* Credit Packs */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8" id="buy-credits">
-          <h2 className="text-2xl font-bold text-white mb-6">💰 Buy Additional Credits</h2>
-          <p className="text-gray-400 mb-6">Need more credits before your next billing cycle? Purchase credit packs instantly.</p>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10 mb-3 sm:mb-4 md:mb-6 lg:mb-8" id="buy-credits">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">💰 Buy Additional Credits</h2>
+          <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6">Need more credits before your next billing cycle? Purchase credit packs instantly.</p>
 
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {creditPacks.map((pack, idx) => (
               <div
                 key={idx}
-                className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:border-cobalt-400/50 transition relative"
+                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/20 hover:border-cobalt-400/50 transition relative"
               >
                 {pack.bonus > 0 && (
                   <div className="absolute -top-3 right-4 bg-gradient-to-r from-gold to-gold-intense text-white text-xs px-3 py-1 rounded-full font-bold">
@@ -212,16 +212,16 @@ export default function BillingPage() {
                   </div>
                 )}
                 <div className="text-center mb-4">
-                  <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
+                  <p className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
                     {(pack.credits + pack.bonus).toLocaleString()}
                   </p>
                   <p className="text-gray-400 text-sm">credits</p>
                 </div>
                 <div className="text-center mb-4">
-                  <p className="text-2xl font-bold text-white">£{pack.price}</p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">£{pack.price}</p>
                   <p className="text-gray-500 text-xs">one-time payment</p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                <button className="w-full bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition">
                   Purchase
                 </button>
               </div>
@@ -230,12 +230,12 @@ export default function BillingPage() {
         </div>
 
         {/* Pricing Plans */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Upgrade Your Plan</h2>
-          <p className="text-gray-400 mb-6">Get more credits every month with a higher tier plan.</p>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4">Upgrade Your Plan</h2>
+          <p className="text-gray-400 mb-3 sm:mb-4 md:mb-6">Get more credits every month with a higher tier plan.</p>
 
           {/* Billing Toggle */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
             <div className="bg-white/10 backdrop-blur-lg rounded-lg p-1 inline-flex border border-white/20">
               <button
                 onClick={() => setBillingCycle('monthly')}
@@ -261,11 +261,11 @@ export default function BillingPage() {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className={`bg-white/10 backdrop-blur-lg rounded-2xl p-6 border ${
+                className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border ${
                   plan.name === currentPlan
                     ? 'border-green-400 ring-2 ring-green-400/50'
                     : plan.popular
@@ -275,24 +275,24 @@ export default function BillingPage() {
               >
                 {plan.name === currentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-green-600 text-white px-3 sm:px-4 py-1 rounded-full text-sm font-bold">
                       Current Plan
                     </span>
                   </div>
                 )}
                 {plan.popular && plan.name !== currentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-cobalt to-royal text-white px-4 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-gradient-to-r from-cobalt to-royal text-white px-3 sm:px-4 py-1 rounded-full text-sm font-bold">
                       Most Popular
                     </span>
                   </div>
                 )}
 
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">{plan.name}</h3>
                 <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
 
-                <div className="mb-6">
-                  <span className="text-4xl font-black text-white">£{plan.price}</span>
+                <div className="mb-3 sm:mb-4 md:mb-6">
+                  <span className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-white">£{plan.price}</span>
                   {plan.name !== 'Enterprise' && (
                     <span className="text-gray-400">
                       /{billingCycle === 'monthly' ? 'mo' : 'yr'}
@@ -300,7 +300,7 @@ export default function BillingPage() {
                   )}
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-3 sm:mb-4 md:mb-6">
                   <div className="bg-gradient-to-r from-cobalt/20 to-royal/20 rounded-lg p-3 border border-cobalt-400/30">
                     <p className="text-cobalt-300 font-bold text-center">
                       {plan.credits.toLocaleString()} Credits/month
@@ -308,7 +308,7 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                <ul className="space-y-2 mb-6 text-sm">
+                <ul className="space-y-2 mb-3 sm:mb-4 md:mb-6 text-sm">
                   {plan.features.slice(0, 5).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-gray-300">
                       <span className="text-green-400 mt-1"></span>
@@ -335,8 +335,8 @@ export default function BillingPage() {
         </div>
 
         {/* Usage History */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-          <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/10">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Recent Activity</h2>
 
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -365,9 +365,9 @@ export default function BillingPage() {
         </div>
 
         {/* Credit Cost Reference */}
-        <div className="mt-8 bg-royal-900/30 border border-cobalt/50 rounded-lg p-6">
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-royal-900/30 border border-cobalt/50 rounded-lg p-4 sm:p-6">
           <h3 className="text-lg font-bold text-cobalt-300 mb-4">ℹ️ Credit Costs</h3>
-          <div className="grid md:grid-cols-5 gap-4 text-center">
+          <div className="grid md:grid-cols-5 gap-2 sm:gap-3 md:gap-4 text-center">
             {[
               { action: 'Social Caption', credits: 2, icon: '' },
               { action: 'Full Blog Post', credits: 5, icon: '' },
@@ -376,8 +376,8 @@ export default function BillingPage() {
               { action: 'AI Video (8-sec)', credits: 200, icon: '' },
             ].map((item, idx) => (
               <div key={idx}>
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-1">
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2">{item.icon}</div>
+                <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-1">
                   {item.credits}
                 </div>
                 <div className="text-gray-300 text-sm">{item.action}</div>

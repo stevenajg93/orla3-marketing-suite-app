@@ -562,14 +562,14 @@ export default function MediaLibrary() {
   const currentAssets = activeTab === 'drive' ? assets : activeTab === 'pexels-photos' ? pexelsPhotos : activeTab === 'pexels-videos' ? pexelsVideos : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <div>
             <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
+            <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-200">
               Media Library
             </h1>
             <p className="text-gray-400 mt-2">Manage Google Drive assets & generated AI content</p>
@@ -577,10 +577,10 @@ export default function MediaLibrary() {
         </div>
 
         {/* Premium Content CTA Banner */}
-        <div className="mb-6 bg-gradient-to-r from-royal/20 to-cobalt/20 backdrop-blur-lg rounded-xl p-6 border border-cobalt-400/30">
+        <div className="mb-3 sm:mb-4 md:mb-6 bg-gradient-to-r from-royal/20 to-cobalt/20 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt-400/30">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="text-4xl"></div>
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+              <div className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl"></div>
               <div>
                 <h3 className="text-white font-bold text-lg">
                   Need Professional Video or Photography?
@@ -601,10 +601,10 @@ export default function MediaLibrary() {
           </div>
         </div>
 
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
           <button
             onClick={() => setActiveTab('cloud')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'cloud'
                 ? 'bg-gradient-to-r from-cobalt to-cobalt-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -614,7 +614,7 @@ export default function MediaLibrary() {
           </button>
           <button
             onClick={() => setActiveTab('pexels-photos')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'pexels-photos'
                 ? 'bg-gradient-to-r from-cobalt-600 to-cobalt-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -624,7 +624,7 @@ export default function MediaLibrary() {
           </button>
           <button
             onClick={() => setActiveTab('pexels-videos')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'pexels-videos'
                 ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -634,7 +634,7 @@ export default function MediaLibrary() {
           </button>
           <button
             onClick={() => setActiveTab('generated')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'generated'
                 ? 'bg-gradient-to-r from-gold to-gold-600 text-black'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -644,7 +644,7 @@ export default function MediaLibrary() {
           </button>
           <button
             onClick={() => setActiveTab('ai-images')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'ai-images'
                 ? 'bg-gradient-to-r from-gold-600 to-gold-intense text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -654,7 +654,7 @@ export default function MediaLibrary() {
           </button>
           <button
             onClick={() => setActiveTab('ai-videos')}
-            className={`flex-1 py-4 px-6 rounded-lg font-bold transition-all ${
+            className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'ai-videos'
                 ? 'bg-gradient-to-r from-red-600 to-red-700 text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -664,13 +664,13 @@ export default function MediaLibrary() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+        <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/10">
             {activeTab === 'cloud' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Cloud Storage</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Cloud Storage</h2>
                 {connectedProviders.length === 0 ? (
-                  <div className="bg-royal/20 border border-royal/30 rounded-lg p-4 mb-4">
+                  <div className="bg-royal/20 border border-royal/30 rounded-lg p-3 sm:p-4 mb-4">
                     <p className="text-sm text-gray-300 mb-2">No cloud storage connected</p>
                     <p className="text-xs text-gray-400">Connect a provider in Settings → Cloud Storage</p>
                   </div>
@@ -684,7 +684,7 @@ export default function MediaLibrary() {
                             setCloudStorageProvider('google_drive');
                             loadDriveFiles('');
                           }}
-                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                          className={`px-3 sm:px-4 py-3 rounded-lg text-left transition-all ${
                             cloudStorageProvider === 'google_drive'
                               ? 'bg-cobalt text-white font-bold'
                               : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -699,7 +699,7 @@ export default function MediaLibrary() {
                             setCloudStorageProvider('dropbox');
                             loadDropboxFiles('');
                           }}
-                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                          className={`px-3 sm:px-4 py-3 rounded-lg text-left transition-all ${
                             cloudStorageProvider === 'dropbox'
                               ? 'bg-royal text-white font-bold'
                               : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -714,7 +714,7 @@ export default function MediaLibrary() {
                             setCloudStorageProvider('onedrive');
                             loadOnedriveFiles('');
                           }}
-                          className={`px-4 py-3 rounded-lg text-left transition-all ${
+                          className={`px-3 sm:px-4 py-3 rounded-lg text-left transition-all ${
                             cloudStorageProvider === 'onedrive'
                               ? 'bg-royal-600 text-white font-bold'
                               : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -729,7 +729,7 @@ export default function MediaLibrary() {
               </>
             ) : activeTab === 'pexels-photos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Search Pexels Photos</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Search Pexels Photos</h2>
                 <div className="bg-gradient-to-r from-royal-900/30 to-gold-900/30 border border-cobalt/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Free stock photos • Millions available</p>
                 </div>
@@ -739,19 +739,19 @@ export default function MediaLibrary() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchPexelsPhotos()}
                   placeholder="e.g., videography, camera"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cobalt mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cobalt mb-4"
                 />
                 <button
                   onClick={searchPexelsPhotos}
                   disabled={loading}
-                  className="w-full bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-cobalt hover:bg-cobalt-700 text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {loading ? 'Searching...' : 'Search Photos'}
                 </button>
               </>
             ) : activeTab === 'pexels-videos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Search Pexels Videos</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Search Pexels Videos</h2>
                 <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Free stock videos • Thousands available</p>
                 </div>
@@ -761,19 +761,19 @@ export default function MediaLibrary() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
                   placeholder="e.g., office, business meeting"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
                 />
                 <button
                   onClick={searchPexelsVideos}
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-green-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {loading ? 'Searching...' : 'Search Videos'}
                 </button>
               </>
             ) : activeTab === 'ai-images' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">AI Image Generation</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">AI Image Generation</h2>
                 <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Imagen 3 • $0.03/image</p>
                 </div>
@@ -796,19 +796,19 @@ export default function MediaLibrary() {
                   onChange={(e) => setAiImagePrompt(e.target.value)}
                   placeholder="Describe the image you want to generate..."
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
                 />
                 <button
                   onClick={generateAiImage}
                   disabled={generatingAiImage || !aiImagePrompt.trim()}
-                  className="w-full bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {generatingAiImage ? 'Generating...' : 'Generate Image'}
                 </button>
               </>
             ) : activeTab === 'ai-videos' ? (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">AI Video Generation</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">AI Video Generation</h2>
                 <div className="bg-gradient-to-r from-royal-900/30 to-gold-900/30 border border-cobalt/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Veo 3.1 • $6 per 8s video with audio</p>
                 </div>
@@ -828,12 +828,12 @@ export default function MediaLibrary() {
                   onChange={(e) => setAiVideoPrompt(e.target.value)}
                   placeholder="Describe the video you want to generate..."
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
                 />
                 <button
                   onClick={generateAiVideo}
                   disabled={generatingAiVideo || !aiVideoPrompt.trim()}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {generatingAiVideo ? 'Generating...' : 'Generate Video'}
                 </button>
@@ -841,7 +841,7 @@ export default function MediaLibrary() {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold text-white mb-4">Filters</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Filters</h2>
                 <p className="text-gray-400 text-sm mb-4">All your generated blogs, carousels, and captions in one place.</p>
                 
                 {/* Search */}
@@ -912,7 +912,7 @@ export default function MediaLibrary() {
                     setContentSearchQuery('');
                     setDateFilter('all');
                   }}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition-all text-sm"
                 >
                   Clear All Filters
                 </button>
@@ -920,9 +920,9 @@ export default function MediaLibrary() {
             )}
           </div>
 
-          <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">
+          <div className="lg:col-span-3 bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/10">
+            <div className="mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">
                 {activeTab === 'cloud'
                   ? `Cloud Storage ${cloudStorageProvider === 'google_drive' ? '- Google Drive' : cloudStorageProvider === 'dropbox' ? '- Dropbox' : cloudStorageProvider === 'onedrive' ? '- OneDrive' : ''}`
                   : activeTab === 'pexels-photos' ? 'Pexels Photos'
@@ -940,7 +940,7 @@ export default function MediaLibrary() {
                   <p className="text-gray-500 text-sm">Use the sidebar to generate your first AI image with Google Imagen 3!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {aiGeneratedImages.map((image: any, idx: number) => (
                     <div
                       key={idx}
@@ -951,7 +951,7 @@ export default function MediaLibrary() {
                         alt={image.prompt}
                         className="w-full h-48 object-cover"
                       />
-                      <div className="p-4 bg-slate-800/50">
+                      <div className="p-3 sm:p-4 bg-slate-800/50">
                         <p className="text-white text-sm mb-2 line-clamp-2">{image.prompt}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-gold-600 to-gold-intense text-white">
@@ -962,7 +962,7 @@ export default function MediaLibrary() {
                           </span>
                         </div>
                       </div>
-                      <div className="px-4 pb-4 bg-slate-800/50 flex gap-2">
+                      <div className="px-3 sm:px-4 pb-4 bg-slate-800/50 flex gap-2">
                         <button
                           onClick={() => {
                             const link = document.createElement('a');
@@ -992,7 +992,7 @@ export default function MediaLibrary() {
                   <p className="text-gray-500 text-sm">Use the sidebar to generate your first AI video with Runway ML Gen-3!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {aiGeneratedVideos.map((video: any, idx: number) => (
                     <div
                       key={idx}
@@ -1011,7 +1011,7 @@ export default function MediaLibrary() {
                           </span>
                         </div>
                       )}
-                      <div className="p-4 bg-slate-800/50">
+                      <div className="p-3 sm:p-4 bg-slate-800/50">
                         <p className="text-white text-sm mb-2 line-clamp-2">{video.prompt}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs px-2 py-1 rounded font-medium bg-gradient-to-r from-red-600 to-red-700 text-white">
@@ -1023,7 +1023,7 @@ export default function MediaLibrary() {
                         </div>
                       </div>
                       {video.status === 'complete' && video.url && (
-                        <div className="px-4 pb-4 bg-slate-800/50 flex gap-2">
+                        <div className="px-3 sm:px-4 pb-4 bg-slate-800/50 flex gap-2">
                           <button
                             onClick={() => {
                               const link = document.createElement('a');
@@ -1050,8 +1050,8 @@ export default function MediaLibrary() {
             ) : activeTab === 'cloud' ? (
               connectedProviders.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">☁️</div>
-                  <h3 className="text-xl font-bold text-white mb-2">No Cloud Storage Connected</h3>
+                  <div className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl mb-4">☁️</div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No Cloud Storage Connected</h3>
                   <p className="text-gray-400 mb-4">Connect Google Drive, Dropbox, or OneDrive to browse your files here.</p>
                   <button
                     onClick={() => window.location.href = '/dashboard/settings/cloud-storage'}
@@ -1067,11 +1067,11 @@ export default function MediaLibrary() {
                   </div>
                 ) : driveFiles.length === 0 && driveFolders.length === 0 ? (
                   <div className="text-center py-12">
-                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No Files Found</h3>
                     <p className="text-gray-400">This folder is empty.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                     {driveFolders.map((folder: any) => (
                       <div
                         key={folder.id}
@@ -1079,14 +1079,14 @@ export default function MediaLibrary() {
                           setDriveFolderId(folder.id);
                           loadDriveFiles(folder.id);
                         }}
-                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
+                        className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
                       >
                         <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
                         <p className="text-xs text-gray-400">Folder</p>
                       </div>
                     ))}
                     {driveFiles.map((file: any) => (
-                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
+                      <div key={file.id} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-cobalt transition">
                         <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
                         <p className="text-xs text-gray-400 capitalize">{file.type}</p>
                       </div>
@@ -1100,11 +1100,11 @@ export default function MediaLibrary() {
                   </div>
                 ) : dropboxFiles.length === 0 && dropboxFolders.length === 0 ? (
                   <div className="text-center py-12">
-                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No Files Found</h3>
                     <p className="text-gray-400">This folder is empty.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                     {dropboxFolders.map((folder: any) => (
                       <div
                         key={folder.id}
@@ -1112,14 +1112,14 @@ export default function MediaLibrary() {
                           setDropboxPath(folder.path);
                           loadDropboxFiles(folder.path);
                         }}
-                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition cursor-pointer"
+                        className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-royal transition cursor-pointer"
                       >
                         <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
                         <p className="text-xs text-gray-400">Folder</p>
                       </div>
                     ))}
                     {dropboxFiles.map((file: any) => (
-                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-royal transition">
+                      <div key={file.id} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-royal transition">
                         <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
                         <p className="text-xs text-gray-400 capitalize">{file.type}</p>
                       </div>
@@ -1133,11 +1133,11 @@ export default function MediaLibrary() {
                   </div>
                 ) : onedriveFiles.length === 0 && onedriveFolders.length === 0 ? (
                   <div className="text-center py-12">
-                    <h3 className="text-xl font-bold text-white mb-2">No Files Found</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">No Files Found</h3>
                     <p className="text-gray-400">This folder is empty.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                     {onedriveFolders.map((folder: any) => (
                       <div
                         key={folder.id}
@@ -1145,14 +1145,14 @@ export default function MediaLibrary() {
                           setOnedrivePath(`items/${folder.id}`);
                           loadOnedriveFiles(`items/${folder.id}`);
                         }}
-                        className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
+                        className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-cobalt transition cursor-pointer"
                       >
                         <h4 className="text-white font-bold text-sm truncate">{folder.name}</h4>
                         <p className="text-xs text-gray-400">Folder • {folder.item_count || 0} items</p>
                       </div>
                     ))}
                     {onedriveFiles.map((file: any) => (
-                      <div key={file.id} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-cobalt transition">
+                      <div key={file.id} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 hover:border-cobalt transition">
                         <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
                         <p className="text-xs text-gray-400 capitalize">{file.type}</p>
                       </div>
@@ -1209,7 +1209,7 @@ export default function MediaLibrary() {
                   <p className="text-gray-400 text-lg">No generated content yet. Create some blogs or carousels to get started!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                   {(() => {
                     // Apply same filters
                     let filtered = generatedContent;
@@ -1258,11 +1258,11 @@ export default function MediaLibrary() {
                         </div>
                       ) : (
                         <div className="w-full h-40 bg-gradient-to-br from-cobalt-700 to-royal-900 flex items-center justify-center">
-                          <span className="text-6xl">{getFileIcon(item.content_type)}</span>
+                          <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl">{getFileIcon(item.content_type)}</span>
                         </div>
                       )}
 
-                      <div className="p-4 bg-slate-800/50">
+                      <div className="p-3 sm:p-4 bg-slate-800/50">
                         <h3 className="text-white font-bold text-sm mb-2 truncate">{item.title}</h3>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusColor(item.status)}`}>
@@ -1301,7 +1301,7 @@ export default function MediaLibrary() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                 {currentAssets.map((asset) => (
                   <div
                     key={asset.id}
@@ -1323,12 +1323,12 @@ export default function MediaLibrary() {
                         />
                       ) : null}
                       <div className={`w-full h-40 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center ${asset.thumbnail && asset.type !== 'folder' ? 'hidden' : ''}`}>
-                        <span className="text-6xl">
+                        <span className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl lg:text-6xl">
                           {getFileIcon(asset.type)}
                         </span>
                       </div>
                       
-                      <div className="p-4 bg-slate-800/50">
+                      <div className="p-3 sm:p-4 bg-slate-800/50">
                         <h3 className="text-white font-bold text-sm mb-2 truncate">{asset.name}</h3>
                         <div className="flex items-center justify-between">
                           <span className={`text-xs px-2 py-1 rounded font-medium ${
@@ -1346,7 +1346,7 @@ export default function MediaLibrary() {
                     </div>
                     
                     {asset.type !== 'folder' && (
-                      <div className="px-4 pb-4 bg-slate-800/50 flex gap-2">
+                      <div className="px-3 sm:px-4 pb-4 bg-slate-800/50 flex gap-2">
                         <button
                           onClick={() => handleDownload(asset)}
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
@@ -1371,20 +1371,20 @@ export default function MediaLibrary() {
 
       {previewAsset && (
         <div 
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8"
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8"
           onClick={() => setPreviewAsset(null)}
         >
           <div className="max-w-6xl w-full max-h-full overflow-auto bg-slate-900 rounded-2xl border border-white/20" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-white/10 flex items-center justify-between">
-              <h3 className="text-2xl font-bold text-white">{previewAsset.name}</h3>
+            <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{previewAsset.name}</h3>
               <button
                 onClick={() => setPreviewAsset(null)}
-                className="text-white hover:text-red-400 text-3xl"
+                className="text-white hover:text-red-400 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"
               >
                 ×
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {previewAsset.type === 'image' ? (
                 <img 
                   src={previewAsset.url || `https://drive.google.com/uc?export=view&id=${previewAsset.id}`}
@@ -1410,7 +1410,7 @@ export default function MediaLibrary() {
                   </button>
                 </div>
               )}
-              <div className="mt-6 flex gap-4 justify-center">
+              <div className="mt-6 flex gap-2 sm:gap-3 md:gap-4 justify-center">
                 <button
                   onClick={() => handleDownload(previewAsset)}
                   className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
@@ -1431,33 +1431,33 @@ export default function MediaLibrary() {
 
       {previewContent && (
         <div 
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8"
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8"
           onClick={() => setPreviewContent(null)}
         >
           <div className="max-w-4xl w-full max-h-full overflow-auto bg-slate-900 rounded-2xl border border-white/20" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 sm:p-6 border-b border-white/10 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold text-white">{previewContent.title}</h3>
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{previewContent.title}</h3>
                 <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusColor(previewContent.status)} mt-2 inline-block`}>
                   {previewContent.status}
                 </span>
               </div>
               <button
                 onClick={() => setPreviewContent(null)}
-                className="text-white hover:text-red-400 text-3xl"
+                className="text-white hover:text-red-400 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"
               >
                 ×
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {previewContent.content_type === "image" && previewContent.media_url ? (
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4">
                   <img
                     src={previewContent.media_url}
                     alt={previewContent.title}
                     className="w-full rounded-lg"
                   />
-                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-4">
+                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-3 sm:p-4">
                     <strong className="text-white">Prompt:</strong> {previewContent.content}
                   </div>
                   {previewContent.tags && previewContent.tags.length > 0 && (
@@ -1471,13 +1471,13 @@ export default function MediaLibrary() {
                   )}
                 </div>
               ) : previewContent.content_type === "video" && previewContent.media_url ? (
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4">
                   <video
                     src={previewContent.media_url}
                     controls
                     className="w-full rounded-lg"
                   />
-                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-4">
+                  <div className="text-gray-300 text-sm bg-white/5 rounded-lg p-3 sm:p-4">
                     <strong className="text-white">Prompt:</strong> {previewContent.content}
                   </div>
                   {previewContent.tags && previewContent.tags.length > 0 && (
@@ -1491,13 +1491,13 @@ export default function MediaLibrary() {
                   )}
                 </div>
               ) : previewContent.content_type === "carousel" ? (
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4">
                   {(() => {
                     try {
                       const slides = JSON.parse(previewContent.content);
                       return slides.map((slide: any, idx: number) => (
-                        <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                          <div className="flex gap-4">
+                        <div key={idx} className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                          <div className="flex gap-2 sm:gap-3 md:gap-4">
                             <img src={slide.branded_image || slide.image_url} alt={slide.alt_hint} className="w-32 h-32 object-cover rounded-lg" />
                             <div className="flex-1">
                               <h4 className="text-white font-bold mb-2">Slide {idx + 1}: {slide.title}</h4>
@@ -1519,7 +1519,7 @@ export default function MediaLibrary() {
                 </div>
               )}
 
-              <div className="mt-6 flex gap-4 justify-center pt-6 border-t border-white/10">
+              <div className="mt-6 flex gap-2 sm:gap-3 md:gap-4 justify-center pt-6 border-t border-white/10">
                 {previewContent.media_url && (
                   <button
                     onClick={() => {
