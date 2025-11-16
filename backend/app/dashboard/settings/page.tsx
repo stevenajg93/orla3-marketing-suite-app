@@ -70,7 +70,7 @@ export default function SettingsPage() {
       name: 'Microsoft OneDrive',
       icon: '☁️',
       description: 'Access files from OneDrive',
-      color: 'from-blue-600 to-cyan-600',
+      color: 'from-cobalt-600 to-cobalt-600',
       connected: false,
     },
     {
@@ -158,11 +158,11 @@ export default function SettingsPage() {
   const getPlatformColor = (color: string) => {
     const colors: { [key: string]: string } = {
       blue: 'from-blue-600 to-blue-700',
-      pink: 'from-pink-600 to-pink-700',
+      pink: 'from-gold-600 to-gold-700',
       sky: 'from-sky-600 to-sky-700',
       red: 'from-red-600 to-red-700',
-      purple: 'from-purple-600 to-purple-700',
-      orange: 'from-orange-600 to-orange-700',
+      purple: 'from-royal-600 to-royal-700',
+      orange: 'from-gold-600 to-gold-700',
       indigo: 'from-indigo-600 to-indigo-700',
       gray: 'from-gray-600 to-gray-700',
     };
@@ -182,14 +182,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-black p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <Link href="/dashboard" className="text-gray-400 hover:text-white mb-2 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal">
               ⚙️ Settings
             </h1>
             <p className="text-gray-400 mt-2">Manage your social media accounts and cloud storage</p>
@@ -222,9 +222,9 @@ export default function SettingsPage() {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-900/30 border border-green-500/50 rounded-lg p-4 flex items-center justify-between">
-            <p className="text-green-300">{successMessage}</p>
-            <button onClick={() => setSuccessMessage('')} className="text-green-300 hover:text-white">✕</button>
+          <div className="mb-6 bg-gold-900/30 border border-gold/50 rounded-lg p-4 flex items-center justify-between">
+            <p className="text-gold-300">{successMessage}</p>
+            <button onClick={() => setSuccessMessage('')} className="text-gold-300 hover:text-white">✕</button>
           </div>
         )}
 
@@ -269,7 +269,7 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-2">
                             <h3 className="text-xl font-bold text-white">{account.account_name}</h3>
                             {account.is_default && (
-                              <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+                              <span className="bg-gold-600 text-white text-xs px-2 py-1 rounded-full font-bold">
                                 ⭐ DEFAULT
                               </span>
                             )}
@@ -288,7 +288,7 @@ export default function SettingsPage() {
                         {!account.is_default && (
                           <button
                             onClick={() => setDefaultAccount(account.id, platform?.name || account.platform)}
-                            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition"
+                            className="px-4 py-2 bg-gold-600 hover:bg-gold-700 text-white rounded-lg font-semibold transition"
                           >
                             Set Default
                           </button>
@@ -320,7 +320,7 @@ export default function SettingsPage() {
                   key={platform.id}
                   className={`bg-white/10 rounded-lg p-6 border ${
                     connected
-                      ? 'border-green-500/50 bg-green-900/20'
+                      ? 'border-gold/50 bg-gold-900/20'
                       : platform.available
                       ? 'border-white/20 hover:border-white/40'
                       : 'border-white/10 opacity-50'
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-4xl">{platform.icon}</div>
                     {connected && (
-                      <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      <span className="bg-gold-600 text-white text-xs px-2 py-1 rounded-full font-bold">
                         ✓ CONNECTED
                       </span>
                     )}
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                   )}
 
                   {connected && (
-                    <p className="text-green-400 text-sm font-semibold text-center">
+                    <p className="text-gold-400 text-sm font-semibold text-center">
                       {connected.account_name}
                     </p>
                   )}
@@ -416,8 +416,8 @@ export default function SettingsPage() {
                         <div>
                           <h3 className="text-white font-bold">{provider.name}</h3>
                           {provider.connected && (
-                            <span className="text-xs text-green-400 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                            <span className="text-xs text-gold-400 flex items-center gap-1">
+                              <span className="w-2 h-2 bg-gold-400 rounded-full"></span>
                               Connected
                             </span>
                           )}
@@ -465,7 +465,7 @@ export default function SettingsPage() {
             {/* Security Notice */}
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
               <div className="flex items-start gap-3">
-                <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gold-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <div>

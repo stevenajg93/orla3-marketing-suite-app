@@ -159,7 +159,7 @@ export default function CreditPurchaseModal({
                     >
                       {/* Badge */}
                       {pkg.badge && (
-                        <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        <div className="absolute top-4 right-4 bg-gradient-to-r from-gold to-gold-intense text-white text-xs font-bold px-3 py-1 rounded-full">
                           {pkg.badge}
                         </div>
                       )}
@@ -205,11 +205,11 @@ export default function CreditPurchaseModal({
 
                 {/* Monthly Allocation Info */}
                 {credits && (
-                  <div className="bg-purple-500/10 border border-purple-400/30 rounded-lg p-4 mb-6">
+                  <div className="bg-royal/10 border border-royal/30 rounded-lg p-4 mb-6">
                     <div className="flex items-start gap-3">
                       <div className="text-2xl">📊</div>
                       <div className="flex-1">
-                        <p className="text-purple-300 font-semibold mb-2">
+                        <p className="text-royal-300 font-semibold mb-2">
                           Your Monthly Allocation
                         </p>
                         <div className="space-y-1 text-sm">
@@ -250,7 +250,7 @@ export default function CreditPurchaseModal({
                     disabled={!selectedPackage || purchasing}
                     className={`px-8 py-3 rounded-lg font-semibold transition ${
                       selectedPackage && !purchasing
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white'
+                        ? 'bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-500 hover:to-royal-500 text-white'
                         : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                     }`}
                   >
