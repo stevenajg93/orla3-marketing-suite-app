@@ -115,7 +115,7 @@ CREATE TABLE content_calendar (
     title TEXT NOT NULL,
     content_type TEXT NOT NULL,
     scheduled_date TIMESTAMPTZ NOT NULL,
-    status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published', 'cancelled')),
+    status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'published', 'cancelled', 'failed')),
     platform TEXT,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),

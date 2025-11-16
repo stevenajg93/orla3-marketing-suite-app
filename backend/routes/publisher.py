@@ -131,7 +131,27 @@ class InstagramPublisher:
         self.business_account_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
         self.api_version = "v21.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
-    
+
+    async def publish(self, post_data: dict) -> dict:
+        """
+        Generic publish method for scheduler compatibility
+        Routes to appropriate method based on content type
+        """
+        caption = post_data.get('text', '')
+        image_urls = post_data.get('imageUrls', [])
+
+        if not image_urls:
+            # Instagram requires images - cannot post text-only
+            return {
+                "success": False,
+                "error": "Instagram requires at least one image. Text-only posts are not supported."
+            }
+
+        if len(image_urls) == 1:
+            return await self.publish_single_image(caption, image_urls[0])
+        else:
+            return await self.publish_carousel(caption, image_urls)
+
     async def publish_single_image(self, caption: str, image_url: str) -> dict:
         """Publish single image post to Instagram"""
         if not self.access_token or not self.business_account_id:
