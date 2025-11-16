@@ -26,15 +26,15 @@ export default function SettingsPage() {
       icon: '',
       description: 'Manage your account details',
       href: '/dashboard/settings/profile',
-      comingSoon: true
+      badge: 'Active'
     },
     {
       id: 'billing',
       name: 'Billing',
       icon: '',
       description: 'Manage subscription and payment methods',
-      href: '/dashboard/settings/billing',
-      comingSoon: true
+      href: '/dashboard/billing',
+      badge: 'Active'
     },
     {
       id: 'team',
@@ -42,15 +42,7 @@ export default function SettingsPage() {
       icon: '',
       description: 'Invite team members and manage permissions',
       href: '/dashboard/settings/team',
-      comingSoon: true
-    },
-    {
-      id: 'api',
-      name: 'API Keys',
-      icon: '',
-      description: 'Generate API keys for integrations',
-      href: '/dashboard/settings/api',
-      comingSoon: true
+      badge: 'Active'
     }
   ];
 
