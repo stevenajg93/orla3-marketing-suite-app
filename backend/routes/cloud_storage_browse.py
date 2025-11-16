@@ -429,8 +429,13 @@ async def browse_google_drive_files(
                     params={"pageSize": 100}
                 )
 
+                logger.info(f"Shared drives API response: status={shared_drives_response.status_code}")
+
                 if shared_drives_response.status_code == 200:
                     shared_drives_data = shared_drives_response.json()
+                    drives_count = len(shared_drives_data.get('drives', []))
+                    logger.info(f"Found {drives_count} shared drives for org {organization_id}")
+
                     for drive in shared_drives_data.get('drives', []):
                         folders_list.append({
                             "id": drive['id'],
@@ -440,6 +445,8 @@ async def browse_google_drive_files(
                             "size": 0,
                             "source": "google_drive"
                         })
+                else:
+                    logger.error(f"Shared drives API error: {shared_drives_response.status_code} - {shared_drives_response.text}")
 
             # Build query for regular files/folders
             if folder_id:
