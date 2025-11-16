@@ -47,9 +47,9 @@ def get_organization_cloud_connection(organization_id: str, provider: str):
                 refresh_token,
                 token_expires_at,
                 provider_email,
-                selected_folders,
                 storage_type,
-                drive_id
+                drive_id,
+                metadata
             FROM user_cloud_storage_tokens
             WHERE organization_id = %s
               AND provider = %s
@@ -69,9 +69,9 @@ def get_organization_cloud_connection(organization_id: str, provider: str):
         # Convert to dict
         connection = dict(connection)
 
-        # Ensure selected_folders is a list
-        if not connection.get('selected_folders'):
-            connection['selected_folders'] = []
+        # Extract selected_folders from metadata if available
+        metadata = connection.get('metadata', {}) or {}
+        connection['selected_folders'] = metadata.get('selected_folders', [])
 
         logger.info(f"Cloud connection loaded for organization {org_id_str}: provider={provider}, storage_type={connection.get('storage_type', 'personal')}")
         return connection
