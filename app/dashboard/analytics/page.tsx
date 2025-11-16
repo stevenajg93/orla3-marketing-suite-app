@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">Analytics</h1>
-              <p className="text-gray-400">Track your marketing performance and credit usage</p>
+              <p className="text-gray-400">Track your ORLA³ credit usage and content creation</p>
             </div>
 
             {/* Time Range Selector */}

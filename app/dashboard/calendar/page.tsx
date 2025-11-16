@@ -228,7 +228,7 @@ export default function ContentCalendar() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
               Content Calendar
             </h1>
-            <p className="text-cobalt-300 mt-2">Plan and schedule your content across all platforms</p>
+            <p className="text-cobalt-300 mt-2">Plan and schedule ORLA³-created content across all platforms</p>
           </div>
           <div className="flex gap-3">
             <button
