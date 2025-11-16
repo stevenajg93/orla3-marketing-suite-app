@@ -71,6 +71,17 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    timezone: Optional[str] = None
+    profile_image_url: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 # ============================================================================
 # DATABASE HELPERS
 # ============================================================================
@@ -820,6 +831,288 @@ async def reset_password(request: ResetPasswordRequest):
             "message": "Password reset successfully. Please log in with your new password."
         }
 
+    finally:
+        cur.close()
+        conn.close()
+
+
+# ============================================================================
+# UPDATE PROFILE
+# ============================================================================
+
+@router.put("/auth/profile")
+async def update_profile(request: UpdateProfileRequest, req: Request):
+    """
+    Update user profile information
+
+    Requires: Bearer token in Authorization header
+    """
+    # Get token from Authorization header
+    auth_header = req.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization header"
+        )
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+
+    user_id = payload.get('sub')
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Build update query dynamically based on provided fields
+        update_fields = []
+        update_values = []
+
+        if request.name is not None:
+            update_fields.append("name = %s")
+            update_values.append(request.name)
+
+        if request.timezone is not None:
+            update_fields.append("timezone = %s")
+            update_values.append(request.timezone)
+
+        if request.profile_image_url is not None:
+            update_fields.append("profile_image_url = %s")
+            update_values.append(request.profile_image_url)
+
+        if not update_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No fields to update"
+            )
+
+        # Add updated_at timestamp
+        update_fields.append("updated_at = NOW()")
+        update_values.append(user_id)
+
+        # Execute update
+        query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s RETURNING *"
+        cur.execute(query, update_values)
+        updated_user = cur.fetchone()
+
+        conn.commit()
+
+        logger.info(f"Profile updated for user: {updated_user['email']}")
+
+        return {
+            "success": True,
+            "message": "Profile updated successfully",
+            "user": {
+                "id": str(updated_user['id']),
+                "name": updated_user['name'],
+                "email": updated_user['email'],
+                "timezone": updated_user.get('timezone'),
+                "profile_image_url": updated_user.get('profile_image_url')
+            }
+        }
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Profile update error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update profile"
+        )
+    finally:
+        cur.close()
+        conn.close()
+
+
+# ============================================================================
+# CHANGE PASSWORD
+# ============================================================================
+
+@router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, req: Request):
+    """
+    Change user password
+
+    Requires: Bearer token in Authorization header
+    Validates current password before updating
+    """
+    # Get token from Authorization header
+    auth_header = req.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization header"
+        )
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+
+    user_id = payload.get('sub')
+    user = get_user_by_id(user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Verify current password
+    if not verify_password(request.current_password, user['password_hash']):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    # Validate new password strength
+    is_valid, error_msg = validate_password_strength(request.new_password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg
+        )
+
+    # Hash new password
+    new_password_hash = hash_password(request.new_password)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Update password
+        cur.execute("""
+            UPDATE users
+            SET password_hash = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (new_password_hash, user_id))
+
+        # Revoke all refresh tokens (force re-login on all devices)
+        cur.execute("""
+            UPDATE refresh_tokens
+            SET is_revoked = true, revoked_at = NOW()
+            WHERE user_id = %s AND is_revoked = false
+        """, (user_id,))
+
+        conn.commit()
+
+        logger.info(f"Password changed for user: {user['email']}")
+
+        return {
+            "success": True,
+            "message": "Password changed successfully. Please log in again on all devices."
+        }
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Password change error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to change password"
+        )
+    finally:
+        cur.close()
+        conn.close()
+
+
+# ============================================================================
+# DELETE ACCOUNT
+# ============================================================================
+
+@router.delete("/auth/account")
+async def delete_account(req: Request):
+    """
+    Delete user account and all associated data
+
+    WARNING: This is a destructive action that cannot be undone
+    Deletes:
+    - User account
+    - All content library items
+    - All credit transactions
+    - All social connections
+    - All cloud storage tokens
+    - Organization membership
+
+    Requires: Bearer token in Authorization header
+    """
+    # Get token from Authorization header
+    auth_header = req.headers.get('authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization header"
+        )
+
+    token = auth_header.replace('Bearer ', '')
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+
+    user_id = payload.get('sub')
+    user = get_user_by_id(user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # Check if user is organization owner
+        cur.execute("""
+            SELECT o.id, o.name, o.current_user_count
+            FROM organizations o
+            JOIN organization_members om ON o.id = om.organization_id
+            WHERE om.user_id = %s AND om.role = 'owner'
+        """, (user_id,))
+
+        owned_orgs = cur.fetchall()
+
+        # If user owns organizations with other members, prevent deletion
+        for org in owned_orgs:
+            if org['current_user_count'] > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot delete account. You own organization '{org['name']}' with {org['current_user_count']} members. Please transfer ownership or remove other members first."
+                )
+
+        # Delete user (CASCADE will handle related records)
+        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
+        conn.commit()
+
+        logger.info(f"Account deleted: {user['email']} (ID: {user_id})")
+
+        return {
+            "success": True,
+            "message": "Account permanently deleted"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Account deletion error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account"
+        )
     finally:
         cur.close()
         conn.close()
