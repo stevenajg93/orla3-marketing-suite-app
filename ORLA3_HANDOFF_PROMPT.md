@@ -778,7 +778,7 @@ GET    /cloud-storage/folders/selected         # Get selected folders
   - Files updated: `calendar/page.tsx`, `carousel/page.tsx`, `social/page.tsx`, `media/page.tsx`
 
 - ✅ **Google Drive OAuth Fix** - Updated to web application OAuth client
-  - Changed from desktop client ([REDACTED]...) to web application client (388364497109...)
+  - Changed from desktop client to web application client
   - Client ID: `[REDACTED - See Railway environment variables]`
   - Client Secret: `[REDACTED - See Railway environment variables]`
   - Redirect URI properly configured: `{BACKEND_URL}/cloud-storage/callback/google_drive`

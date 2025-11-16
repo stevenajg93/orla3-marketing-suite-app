@@ -17,8 +17,9 @@ from google.auth.transport.requests import Request
 import json
 
 # OAuth2 credentials from GCP Console
-CLIENT_ID = "388364497109-jgo5o0g244hrsgfogcpme4eoq5ka1101.apps.googleusercontent.com"
-CLIENT_SECRET = "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"
+# ⚠️  DO NOT HARDCODE CREDENTIALS - Use environment variables or generate your own
+CLIENT_ID = os.getenv("GCP_CLIENT_ID", "YOUR_CLIENT_ID_HERE")
+CLIENT_SECRET = os.getenv("GCP_CLIENT_SECRET", "YOUR_CLIENT_SECRET_HERE")
 
 # Scopes needed for Vertex AI (Imagen 3 + Veo)
 SCOPES = [
