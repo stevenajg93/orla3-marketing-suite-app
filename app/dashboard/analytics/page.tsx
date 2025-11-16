@@ -42,6 +42,68 @@ export default function AnalyticsPage() {
           { name: 'Instagram', posts: 34, engagement: 5234 },
           { name: 'LinkedIn', posts: 28, engagement: 4123 },
           { name: 'Twitter', posts: 27, engagement: 3096 }
+        ],
+        recentPosts: [
+          {
+            id: 1,
+            title: 'Summer Marketing Campaign Tips',
+            platform: 'LinkedIn',
+            date: '2025-11-15',
+            type: 'Blog Post',
+            views: 2453,
+            likes: 156,
+            comments: 23,
+            shares: 12,
+            engagement: 191
+          },
+          {
+            id: 2,
+            title: 'New Product Launch Announcement',
+            platform: 'Instagram',
+            date: '2025-11-14',
+            type: 'Image',
+            views: 5821,
+            likes: 432,
+            comments: 67,
+            shares: 34,
+            engagement: 533
+          },
+          {
+            id: 3,
+            title: 'Behind the Scenes: Our Team',
+            platform: 'Facebook',
+            date: '2025-11-13',
+            type: 'Video',
+            views: 8234,
+            likes: 621,
+            comments: 89,
+            shares: 156,
+            engagement: 866
+          },
+          {
+            id: 4,
+            title: 'Quick Marketing Tip of the Day',
+            platform: 'Twitter',
+            date: '2025-11-12',
+            type: 'Text',
+            views: 1823,
+            likes: 234,
+            comments: 45,
+            shares: 78,
+            engagement: 357
+          },
+          {
+            id: 5,
+            title: 'Client Success Story Feature',
+            platform: 'LinkedIn',
+            date: '2025-11-11',
+            type: 'Carousel',
+            views: 3456,
+            likes: 289,
+            comments: 34,
+            shares: 23,
+            engagement: 346
+          }
         ]
       });
     } catch (error) {
@@ -210,6 +272,78 @@ export default function AnalyticsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Individual Post Performance */}
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Recent Post Performance</h2>
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+                {/* Table Header */}
+                <div className="hidden md:grid md:grid-cols-7 gap-4 p-4 sm:p-6 bg-white/5 border-b border-white/10 font-bold text-white text-sm">
+                  <div className="col-span-2">Post</div>
+                  <div>Platform</div>
+                  <div>Views</div>
+                  <div>Likes</div>
+                  <div>Comments</div>
+                  <div>Engagement</div>
+                </div>
+
+                {/* Table Rows */}
+                <div className="divide-y divide-white/10">
+                  {stats?.recentPosts.map((post: any) => (
+                    <div key={post.id} className="p-4 sm:p-6 hover:bg-white/5 transition-colors">
+                      <div className="grid grid-cols-1 md:grid-cols-7 gap-3 md:gap-4">
+                        {/* Post Info - Mobile/Desktop */}
+                        <div className="col-span-1 md:col-span-2">
+                          <p className="text-white font-semibold text-sm sm:text-base mb-1">{post.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <span className="px-2 py-0.5 bg-cobalt/20 border border-cobalt/40 rounded text-cobalt-300">{post.type}</span>
+                            <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                        </div>
+
+                        {/* Platform */}
+                        <div className="flex items-center">
+                          <span className="md:hidden text-gray-400 text-sm mr-2">Platform:</span>
+                          <span className="text-white font-medium text-sm sm:text-base">{post.platform}</span>
+                        </div>
+
+                        {/* Metrics - Mobile shows labels, Desktop doesn't */}
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
+                          <div className="flex items-center md:block">
+                            <span className="md:hidden text-gray-400 text-sm mr-2">Views:</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{post.views.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
+                          <div className="flex items-center md:block">
+                            <span className="md:hidden text-gray-400 text-sm mr-2">Likes:</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{post.likes.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
+                          <div className="flex items-center md:block">
+                            <span className="md:hidden text-gray-400 text-sm mr-2">Comments:</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{post.comments.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
+                          <div className="flex items-center md:block">
+                            <span className="md:hidden text-gray-400 text-sm mr-2">Total:</span>
+                            <span className="text-cobalt-300 font-bold text-sm sm:text-base">{post.engagement.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-400 text-xs sm:text-sm mt-3">
+                Note: Performance data shown is mock data. Real-time analytics require social platform API integration.
+              </p>
             </div>
 
             {/* Future Enhancements */}
