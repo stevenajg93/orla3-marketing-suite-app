@@ -12,6 +12,7 @@ interface User {
   role: string;
   plan: string;
   email_verified: boolean;
+  is_super_admin?: boolean;
   profile_image_url?: string;
   timezone?: string;
   created_at?: string;

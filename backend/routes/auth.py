@@ -465,6 +465,7 @@ async def get_current_user(request: Request):
             "role": user['role'],
             "plan": user['plan'],
             "email_verified": user['email_verified'],
+            "is_super_admin": user.get('is_super_admin', False),
             "profile_image_url": user.get('profile_image_url'),
             "timezone": user.get('timezone'),
             "created_at": user['created_at'].isoformat() if user['created_at'] else None,

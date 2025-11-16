@@ -38,6 +38,23 @@ export default function DashboardLayout({
 
             {/* Right Side - User Account */}
             <div className="flex items-center gap-4">
+              {/* Super Admin Link */}
+              {user?.is_super_admin && (
+                <Link
+                  href="/admin"
+                  className={`hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gold/20 to-gold-intense/20 hover:from-gold/30 hover:to-gold-intense/30 rounded-lg border border-gold-400/30 transition group ${
+                    pathname?.startsWith('/admin') ? 'ring-2 ring-gold-400/50' : ''
+                  }`}
+                >
+                  <svg className="w-5 h-5 text-gold-300 group-hover:text-gold-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-gold-300 font-semibold group-hover:text-gold-200">
+                    Admin
+                  </span>
+                </Link>
+              )}
+
               {/* Find Creators Link */}
               <a
                 href="https://orla3.com/browse"
