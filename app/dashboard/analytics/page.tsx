@@ -212,16 +212,41 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Coming Soon */}
-            <div className="bg-cobalt/10 border border-cobalt/30 rounded-2xl p-4 sm:p-6 md:p-8">
+            {/* Future Enhancements */}
+            <div className="bg-gradient-to-r from-cobalt/10 to-royal/10 border border-cobalt/30 rounded-2xl p-4 sm:p-6 md:p-8">
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="text-2xl sm:text-3xl md:text-4xl"></div>
+                <div className="text-2xl sm:text-3xl md:text-4xl">📊</div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-cobalt-300 mb-2">More Analytics Coming Soon</h3>
-                  <p className="text-gray-300 text-sm sm:text-base">
-                    We're building advanced analytics features including content performance insights, audience demographics,
-                    best posting times, competitor benchmarking, and ROI tracking. Stay tuned!
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Advanced Analytics in Development</h3>
+                  <p className="text-gray-300 text-sm sm:text-base mb-3">
+                    Currently showing real-time credit usage and content stats. Future updates will include:
                   </p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-400">
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      Content performance insights
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      Audience demographics
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      Optimal posting times
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      Competitor benchmarking
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      ROI tracking
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-cobalt-400">•</span>
+                      Historical trend analysis
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>

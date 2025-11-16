@@ -225,7 +225,7 @@ export default function ContentCalendar() {
             <Link href="/dashboard" className="text-gold hover:text-cobalt-300 mb-2 inline-block text-sm">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-3xl sm:text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
               Content Calendar
             </h1>
             <p className="text-cobalt-300 mt-2">Plan and schedule your content across all platforms</p>
@@ -345,7 +345,7 @@ export default function ContentCalendar() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Published</h3>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-green-400">
