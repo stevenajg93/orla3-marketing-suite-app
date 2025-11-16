@@ -401,7 +401,8 @@ async def login(request: LoginRequest, req: Request):
                 "organization_name": user['organization_name'],
                 "role": user['role'],
                 "plan": user['plan'],
-                "email_verified": user['email_verified']
+                "email_verified": user['email_verified'],
+                "is_super_admin": user.get('is_super_admin', False)
             }
         }
 
