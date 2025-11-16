@@ -161,28 +161,28 @@ export default function AnalyticsPage() {
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 text-center">
                   <div className="text-3xl sm:text-4xl mb-2"></div>
                   <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-1">
-                    {stats?.content.blogs}
+                    {stats?.content.blogs ?? 0}
                   </p>
                   <p className="text-gray-400 text-sm">Blog Posts</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 text-center">
                   <div className="text-3xl sm:text-4xl mb-2"></div>
                   <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-1">
-                    {stats?.content.captions}
+                    {stats?.content.captions ?? 0}
                   </p>
                   <p className="text-gray-400 text-sm">Captions</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 text-center">
                   <div className="text-3xl sm:text-4xl mb-2"></div>
                   <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-1">
-                    {stats?.content.images}
+                    {stats?.content.images ?? 0}
                   </p>
                   <p className="text-gray-400 text-sm">Images</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20 text-center">
                   <div className="text-3xl sm:text-4xl mb-2"></div>
                   <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-royal mb-1">
-                    {stats?.content.videos}
+                    {stats?.content.videos ?? 0}
                   </p>
                   <p className="text-gray-400 text-sm">Videos</p>
                 </div>
@@ -195,19 +195,19 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20">
                   <p className="text-gray-400 text-sm mb-2">Total Posts</p>
-                  <p className="text-2xl sm:text-3xl font-black text-white">{stats?.social.posts}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{stats?.social.posts ?? 0}</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20">
                   <p className="text-gray-400 text-sm mb-2">Engagement</p>
-                  <p className="text-2xl sm:text-3xl font-black text-white">{stats?.social.engagement.toLocaleString()}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{(stats?.social.engagement ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20">
                   <p className="text-gray-400 text-sm mb-2">Total Reach</p>
-                  <p className="text-2xl sm:text-3xl font-black text-white">{stats?.social.reach.toLocaleString()}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{(stats?.social.reach ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/20">
                   <p className="text-gray-400 text-sm mb-2">Click-throughs</p>
-                  <p className="text-2xl sm:text-3xl font-black text-white">{stats?.social.clicks.toLocaleString()}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white">{(stats?.social.clicks ?? 0).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -223,11 +223,11 @@ export default function AnalyticsPage() {
                         </div>
                         <div>
                           <p className="text-white font-semibold text-sm sm:text-base">{platform.name}</p>
-                          <p className="text-gray-400 text-xs sm:text-sm">{platform.posts} posts</p>
+                          <p className="text-gray-400 text-xs sm:text-sm">{platform.posts ?? 0} posts</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-white font-bold text-sm sm:text-base">{platform.engagement.toLocaleString()}</p>
+                        <p className="text-white font-bold text-sm sm:text-base">{(platform.engagement ?? 0).toLocaleString()}</p>
                         <p className="text-gray-400 text-xs">engagements</p>
                       </div>
                     </div>
@@ -274,28 +274,28 @@ export default function AnalyticsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
                           <div className="flex items-center md:block">
                             <span className="md:hidden text-gray-400 text-sm mr-2">Views:</span>
-                            <span className="text-white font-medium text-sm sm:text-base">{post.views.toLocaleString()}</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{(post.views ?? 0).toLocaleString()}</span>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
                           <div className="flex items-center md:block">
                             <span className="md:hidden text-gray-400 text-sm mr-2">Likes:</span>
-                            <span className="text-white font-medium text-sm sm:text-base">{post.likes.toLocaleString()}</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{(post.likes ?? 0).toLocaleString()}</span>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
                           <div className="flex items-center md:block">
                             <span className="md:hidden text-gray-400 text-sm mr-2">Comments:</span>
-                            <span className="text-white font-medium text-sm sm:text-base">{post.comments.toLocaleString()}</span>
+                            <span className="text-white font-medium text-sm sm:text-base">{(post.comments ?? 0).toLocaleString()}</span>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-0">
                           <div className="flex items-center md:block">
                             <span className="md:hidden text-gray-400 text-sm mr-2">Total:</span>
-                            <span className="text-cobalt-300 font-bold text-sm sm:text-base">{post.engagement.toLocaleString()}</span>
+                            <span className="text-cobalt-300 font-bold text-sm sm:text-base">{(post.engagement ?? 0).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
