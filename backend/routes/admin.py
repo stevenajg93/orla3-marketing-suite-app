@@ -667,6 +667,87 @@ async def revoke_super_admin(
         conn.close()
 
 
+@router.delete("/admin/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    admin_id: str = Depends(verify_super_admin)
+):
+    """
+    Permanently delete a user and all their data
+
+    WARNING: This is a destructive action that cannot be undone.
+    Deletes:
+    - User account
+    - All content library items
+    - All credit transactions
+    - All social connections
+    - All cloud storage tokens
+    - Organization membership
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Prevent self-deletion
+        if user_id == admin_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete your own account"
+            )
+
+        # Get user info for audit log
+        cursor.execute("""
+            SELECT email, name, plan, credit_balance
+            FROM users
+            WHERE id = %s
+        """, (user_id,))
+
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Log to audit trail BEFORE deletion
+        cursor.execute("""
+            INSERT INTO admin_audit_log (
+                admin_user_id, action_type, target_user_id, details
+            ) VALUES (%s, %s, %s, %s)
+        """, (
+            admin_id,
+            'delete_user',
+            user_id,
+            {
+                'email': user['email'],
+                'name': user['name'],
+                'plan': user['plan'],
+                'credit_balance': user['credit_balance']
+            }
+        ))
+
+        # Delete user (CASCADE will handle related records)
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
+        conn.commit()
+
+        logger.info(f"Admin {admin_id} deleted user {user['email']} (ID: {user_id})")
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "email": user['email'],
+            "message": "User permanently deleted"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error deleting user: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
 # ============================================================================
 # ADMIN AUDIT LOG
 # ============================================================================

@@ -200,6 +200,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    const confirmText = `DELETE ${userEmail}`;
+    const confirmation = prompt(
+      `⚠️ WARNING: This will PERMANENTLY delete this user and ALL their data.\n\n` +
+      `This includes:\n` +
+      `- User account\n` +
+      `- All content library items\n` +
+      `- All credit transactions\n` +
+      `- All social connections\n` +
+      `- All cloud storage tokens\n\n` +
+      `This action CANNOT be undone!\n\n` +
+      `Type "${confirmText}" to confirm:`
+    );
+
+    if (confirmation !== confirmText) {
+      if (confirmation !== null) {
+        alert('Deletion cancelled - confirmation text did not match');
+      }
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      alert(`User ${userEmail} permanently deleted`);
+      loadUsers();
+    } catch (error: any) {
+      alert(`Failed to delete user: ${error.message}`);
+    }
+  };
+
   const handleSuperAdmin = async () => {
     if (!superAdminReason) {
       alert('Please provide a reason');
@@ -440,16 +470,25 @@ export default function AdminDashboard() {
                             {u.is_super_admin ? 'Revoke Admin' : 'Make Admin'}
                           </button>
                           {!u.is_super_admin && (
-                            <button
-                              onClick={() => handleSuspendUser(u.id, u.account_status)}
-                              className={`px-3 py-1 rounded text-sm ${
-                                u.account_status === 'suspended'
-                                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300'
-                                  : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'
-                              }`}
-                            >
-                              {u.account_status === 'suspended' ? 'Activate' : 'Suspend'}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleSuspendUser(u.id, u.account_status)}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  u.account_status === 'suspended'
+                                    ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300'
+                                    : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'
+                                }`}
+                              >
+                                {u.account_status === 'suspended' ? 'Activate' : 'Suspend'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(u.id, u.email)}
+                                className="px-3 py-1 rounded text-sm bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-500/30"
+                                title="Permanently delete this user and all their data"
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
