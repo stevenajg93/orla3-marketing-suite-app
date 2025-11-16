@@ -8,11 +8,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Dict
 import sys
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
-from utils.db import get_db_connection
 
 security = HTTPBearer()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 async def get_current_user_id(
@@ -148,7 +150,7 @@ async def get_user_context(
     Raises:
         HTTPException: If user has no organization or invalid state
     """
-    conn = get_db_connection()
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     cursor = conn.cursor()
 
     try:
@@ -165,17 +167,18 @@ async def get_user_context(
 
         result = cursor.fetchone()
 
-        if not result or not result[0]:
+        if not result or not result['current_organization_id']:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="User has no organization. Database state is invalid.",
             )
 
-        organization_id, role = result
+        organization_id = result['current_organization_id']
+        role = result['role']
 
         return {
             "user_id": user_id,
-            "organization_id": organization_id,
+            "organization_id": str(organization_id),
             "role": role or "member"  # Default to member if no role found
         }
 
