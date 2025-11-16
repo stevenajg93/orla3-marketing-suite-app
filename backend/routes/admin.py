@@ -9,6 +9,7 @@ from typing import Optional, List, Dict
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+import json
 from datetime import datetime, timedelta
 from utils.auth_dependency import get_current_user_id
 from logger import setup_logger
@@ -581,7 +582,7 @@ async def grant_super_admin(
             admin_id,
             'grant_super_admin',
             request.user_id,
-            {'reason': request.reason}
+            json.dumps({'reason': request.reason})
         ))
 
         conn.commit()
@@ -645,7 +646,7 @@ async def revoke_super_admin(
             admin_id,
             'revoke_super_admin',
             request.user_id,
-            {'reason': request.reason}
+            json.dumps({'reason': request.reason})
         ))
 
         conn.commit()
@@ -715,12 +716,12 @@ async def delete_user(
             admin_id,
             'delete_user',
             user_id,
-            {
+            json.dumps({
                 'email': user['email'],
                 'name': user['name'],
                 'plan': user['plan'],
                 'credit_balance': user['credit_balance']
-            }
+            })
         ))
 
         # Delete user (CASCADE will handle related records)

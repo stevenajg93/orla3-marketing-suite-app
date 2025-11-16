@@ -201,23 +201,18 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
-    const confirmText = `DELETE ${userEmail}`;
-    const confirmation = prompt(
-      `⚠️ WARNING: This will PERMANENTLY delete this user and ALL their data.\n\n` +
-      `This includes:\n` +
+    const confirmed = window.confirm(
+      `⚠️ WARNING: Permanently delete ${userEmail}?\n\n` +
+      `This will delete:\n` +
       `- User account\n` +
       `- All content library items\n` +
       `- All credit transactions\n` +
       `- All social connections\n` +
       `- All cloud storage tokens\n\n` +
-      `This action CANNOT be undone!\n\n` +
-      `Type "${confirmText}" to confirm:`
+      `This action CANNOT be undone!`
     );
 
-    if (confirmation !== confirmText) {
-      if (confirmation !== null) {
-        alert('Deletion cancelled - confirmation text did not match');
-      }
+    if (!confirmed) {
       return;
     }
 
