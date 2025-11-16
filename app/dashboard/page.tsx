@@ -11,12 +11,12 @@ const contentCreation = [
 ];
 
 const socialManagement = [
-  { name: 'Social Manager', icon: '', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gradient-to-r from-green-500 to-emerald-500' },
+  { name: 'Social Manager', icon: '', href: '/dashboard/social', description: 'Unified social posting & scheduling', color: 'from-gold to-gold-intense' },
 ];
 
 const planningAnalysis = [
   { name: 'Content Calendar', icon: '', href: '/dashboard/calendar', description: 'Plan & schedule ORLA³ content', color: 'from-royal to-royal-600' },
-  { name: 'Analytics', icon: '', href: '/dashboard/analytics', description: 'Track content performance', color: 'from-teal-500 to-teal-600', disabled: false },
+  { name: 'Analytics', icon: '', href: '/dashboard/analytics', description: 'Track content performance', color: 'from-cobalt to-cobalt-600', disabled: false },
   { name: 'Brand Voice', icon: '', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cobalt to-cobalt-600', disabled: false },
   { name: 'Competitor Analysis', icon: '', href: '/dashboard/competitor', description: 'Market insights', color: 'from-gold-intense to-gold-600', disabled: false },
   { name: 'Strategy Planner', icon: '', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-cobalt to-cobalt-600', disabled: false },
@@ -43,7 +43,7 @@ const ToolCard = ({ tool }: { tool: any }) => {
         <div className="flex items-start justify-between">
           <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{tool.icon}</div>
           {tool.isNew && (
-            <span className="px-2 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 text-xs font-bold animate-pulse">
+            <span className="px-2 py-1 bg-gold/20 border border-gold rounded-full text-gold text-xs font-bold animate-pulse">
               NEW
             </span>
           )}

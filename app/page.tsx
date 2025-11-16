@@ -208,13 +208,13 @@ export default function LandingPage() {
             className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 text-gray-400 text-sm"
           >
             <div className="flex items-center gap-2">
-              <span className="text-green-400"></span> Cancel anytime
+              <span className="text-gold"></span> Cancel anytime
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-green-400"></span> Instant access
+              <span className="text-gold"></span> Instant access
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-green-400"></span> All features included
+              <span className="text-gold"></span> All features included
             </div>
           </motion.div>
         </motion.div>
@@ -379,8 +379,8 @@ export default function LandingPage() {
               <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4">{feature.icon}</div>
               <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-3">{feature.title}</h3>
               <p className="text-gray-300 mb-4">{feature.description}</p>
-              <div className="inline-block px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full">
-                <span className="text-green-300 text-sm font-semibold">{feature.time}</span>
+              <div className="inline-block px-3 py-1 bg-gold/20 border border-gold/50 rounded-full">
+                <span className="text-gold text-sm font-semibold">{feature.time}</span>
               </div>
             </motion.div>
           ))}
@@ -434,15 +434,15 @@ export default function LandingPage() {
                 title: 'Social Discovery',
                 description: 'Search non-follower posts by keywords and trends. Find and engage with relevant conversations before your competitors do.',
                 features: ['Keyword tracking', 'Trend monitoring', 'Real-time discovery', 'Engagement suggestions'],
-                gradient: 'from-royal/20 to-purple-500/20',
-                borderGradient: 'from-royal-400/30 to-purple-400/30',
+                gradient: 'from-royal/20 to-royal/20',
+                borderGradient: 'from-royal-400/30 to-royal/30',
               },
               {
                 title: 'Trends Search',
                 description: 'Real-time trending topics discovery to inform your content strategy and engagement timing. Stay ahead of the curve.',
                 features: ['Live trend analysis', 'Industry insights', 'Timing optimization', 'Content opportunities'],
-                gradient: 'from-gold/20 to-amber-500/20',
-                borderGradient: 'from-gold-400/30 to-amber-400/30',
+                gradient: 'from-gold/20 to-gold-intense/20',
+                borderGradient: 'from-gold/30 to-gold-intense/30',
               },
             ].map((feature, index) => (
               <motion.div
@@ -466,7 +466,7 @@ export default function LandingPage() {
                       transition={{ duration: 0.4, delay: index * 0.1 + 0.3 + idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
                       className="flex items-center gap-2 text-sm text-gray-400"
                     >
-                      <span className="text-green-400">✓</span>
+                      <span className="text-gold">✓</span>
                       <span>{item}</span>
                     </motion.li>
                   ))}
@@ -492,11 +492,11 @@ export default function LandingPage() {
                   <div className="text-gray-400">More Engagement</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-royal to-purple-400 mb-1">5x</div>
+                  <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-royal to-royal mb-1">5x</div>
                   <div className="text-gray-400">Faster Growth</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold to-amber-400 mb-1">10x</div>
+                  <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-1">10x</div>
                   <div className="text-gray-400">Time Saved</div>
                 </div>
               </div>
@@ -567,8 +567,8 @@ export default function LandingPage() {
       {/* SEO & AI Search Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20 bg-gradient-to-b from-transparent via-cobalt/5 to-transparent">
         <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
-          <div className="inline-block mb-4 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500/20 to-cobalt/20 rounded-full border border-green-500/30">
-            <span className="text-green-300 font-semibold">
+          <div className="inline-block mb-4 px-3 sm:px-4 py-2 bg-gradient-to-r from-gold/20 to-cobalt/20 rounded-full border border-gold/30">
+            <span className="text-gold font-semibold">
               Built for Discovery
             </span>
           </div>
@@ -583,37 +583,37 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-4 sm:mb-6 md:mb-8 lg:mb-12">
           {/* Traditional SEO */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20 hover:border-green-500/50 transition">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20 hover:border-gold/50 transition">
             <div className="flex items-start gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-gold to-gold-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <div>
                 <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">Traditional Search Engines</h3>
-                <p className="text-green-300 font-semibold mb-4">Rank Higher on Google</p>
+                <p className="text-gold font-semibold mb-4">Rank Higher on Google</p>
               </div>
             </div>
             <ul className="space-y-3 text-gray-300">
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gold mt-1">✓</span>
                 <span><strong className="text-white">SEO-optimized headlines</strong> with target keywords naturally integrated</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gold mt-1">✓</span>
                 <span><strong className="text-white">Structured content</strong> with proper H1-H6 hierarchy for crawlers</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gold mt-1">✓</span>
                 <span><strong className="text-white">Meta descriptions</strong> crafted to improve click-through rates</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gold mt-1">✓</span>
                 <span><strong className="text-white">Internal linking</strong> suggestions to boost domain authority</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gold mt-1">✓</span>
                 <span><strong className="text-white">Long-form content</strong> (1500-3000 words) that ranks better</span>
               </li>
             </ul>
@@ -659,8 +659,8 @@ export default function LandingPage() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-          <div className="bg-gradient-to-br from-green-500/10 to-emerald-600/10 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-green-500/20 text-center">
-            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-2">
+          <div className="bg-gradient-to-br from-gold/10 to-gold-intense/10 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold/20 text-center">
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
               2-3x
             </div>
             <p className="text-white font-semibold mb-1">Better Rankings</p>
@@ -727,7 +727,7 @@ export default function LandingPage() {
                   : 'text-gray-300 hover:text-white'
               }`}
             >
-              Annual <span className="text-green-400">(Save 17%)</span>
+              Annual <span className="text-gold">(Save 17%)</span>
             </button>
           </div>
         </motion.div>
@@ -779,7 +779,7 @@ export default function LandingPage() {
               <ul className="space-y-3 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-gray-300">
-                    <span className="text-green-400 mt-1"></span>
+                    <span className="text-gold mt-1"></span>
                     <span className="text-sm">{feature}</span>
                   </li>
                 ))}

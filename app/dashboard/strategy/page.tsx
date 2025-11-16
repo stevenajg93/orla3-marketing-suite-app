@@ -139,7 +139,7 @@ export default function StrategyPlanner() {
                 <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.categories?.guidelines || 0}</div>
                 <div className="text-sm text-gray-400">Guidelines</div>
               </div>
-              <div className="bg-green-900/40 border border-green-400/30 rounded-lg p-3 sm:p-4 text-center">
+              <div className="bg-gold-600/40 border border-gold/30 rounded-lg p-3 sm:p-4 text-center">
                 <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2"></div>
                 <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">{strategy.categories?.voice_samples || 0}</div>
                 <div className="text-sm text-gray-400">Voice Samples</div>
@@ -201,21 +201,21 @@ export default function StrategyPlanner() {
                   </div>
                   
                   <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                    <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3 sm:p-4">
-                      <h4 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                    <div className="bg-gold-600/30 border border-gold/30 rounded-lg p-3 sm:p-4">
+                      <h4 className="text-gold font-semibold mb-3 flex items-center gap-2">
                         <span></span> Copy & Adapt
                       </h4>
                       <ul className="space-y-2">
                         {strategy.competitive_positioning.copy_and_adapt.map((item, i) => (
                           <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
-                            <span className="text-green-400">•</span>
+                            <span className="text-gold">•</span>
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="bg-yellow-900/30 border border-gold/30 rounded-lg p-3 sm:p-4">
+                    <div className="bg-gold-600/30 border border-gold/30 rounded-lg p-3 sm:p-4">
                       <h4 className="text-gold-400 font-semibold mb-3 flex items-center gap-2">
                         <span></span> Gaps to Exploit
                       </h4>
@@ -282,7 +282,7 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Messaging Pillars */}
-            <div className="bg-gradient-to-br from-royal-900/40 to-cyan-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt-400/30">
+            <div className="bg-gradient-to-br from-royal-900/40 to-cobalt-600/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-cobalt-400/30">
               <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">🏛️</span>
                 Messaging Pillars
@@ -298,31 +298,31 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Language Patterns */}
-            <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-green-400/30">
+            <div className="bg-gradient-to-br from-gold-600/40 to-gold-intense/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold/30">
               <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                 Language Patterns
               </h3>
               <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 <div>
-                  <span className="text-green-400 font-semibold">Writing Style:</span>
+                  <span className="text-gold font-semibold">Writing Style:</span>
                   <p className="text-white mt-1">{strategy.language_patterns.writing_style}</p>
                 </div>
                 <div>
-                  <span className="text-green-400 font-semibold">Preferred Phrases:</span>
+                  <span className="text-gold font-semibold">Preferred Phrases:</span>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {strategy.language_patterns.preferred_phrases.map((phrase, i) => (
-                      <span key={i} className="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-300 text-sm">
+                      <span key={i} className="px-3 py-1 bg-gold/20 border border-gold rounded-full text-gold text-sm">
                         "{phrase}"
                       </span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <span className="text-green-400 font-semibold">Key Vocabulary:</span>
+                  <span className="text-gold font-semibold">Key Vocabulary:</span>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {strategy.language_patterns.vocabulary.map((word, i) => (
-                      <span key={i} className="px-3 py-1 bg-emerald-500/20 border border-emerald-500 rounded-full text-emerald-300 text-sm">
+                      <span key={i} className="px-3 py-1 bg-gold-intense/20 border border-gold-intense rounded-full text-gold-intense text-sm">
                         {word}
                       </span>
                     ))}
@@ -333,7 +333,7 @@ export default function StrategyPlanner() {
 
             {/* Do's and Don'ts */}
             <div className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-              <div className="bg-gradient-to-br from-green-900/40 to-teal-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-green-400/30">
+              <div className="bg-gradient-to-br from-gold-600/40 to-cobalt-600/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold/30">
                 <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
                   <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                   Do's
@@ -341,7 +341,7 @@ export default function StrategyPlanner() {
                 <ul className="space-y-2">
                   {strategy.dos_and_donts.dos.map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="text-green-400 text-base sm:text-lg md:text-xl">•</span>
+                      <span className="text-gold text-base sm:text-lg md:text-xl">•</span>
                       <span className="text-white">{item}</span>
                     </li>
                   ))}
@@ -365,7 +365,7 @@ export default function StrategyPlanner() {
             </div>
 
             {/* Target Audience */}
-            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold-400/30">
+            <div className="bg-gradient-to-br from-gold-600/40 to-gold-intense/40 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold-400/30">
               <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 flex items-center gap-3">
                 <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl"></span>
                 Target Audience

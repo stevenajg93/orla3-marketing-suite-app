@@ -880,7 +880,7 @@ export default function SocialManagerPage() {
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case "positive": return "text-green-400";
+      case "positive": return "text-gold";
       case "negative": return "text-red-400";
       case "question": return "text-cobalt-300";
       default: return "text-gray-400";
@@ -907,7 +907,7 @@ export default function SocialManagerPage() {
           <button onClick={() => router.push("/dashboard")} className="text-gold hover:text-cobalt-300 mb-2 flex items-center gap-2 text-sm">
             ← Back to Dashboard
           </button>
-          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+          <h1 className="text-2xl sm:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense">
             Social Manager
           </h1>
           <p className="text-cobalt-300 mt-1">Create, engage, and schedule all your social content</p>
@@ -917,7 +917,7 @@ export default function SocialManagerPage() {
       <div className="bg-white/5 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-2">
-            <button onClick={() => setActiveTab("create")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "create" ? "text-white border-b-2 border-green-500" : "text-gray-400 hover:text-white"}`}>
+            <button onClick={() => setActiveTab("create")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "create" ? "text-white border-b-2 border-gold" : "text-gray-400 hover:text-white"}`}>
               Create
             </button>
             <button onClick={() => setActiveTab("engage")} className={`px-6 py-3 sm:py-4 font-semibold transition ${activeTab === "engage" ? "text-white border-b-2 border-cobalt" : "text-gray-400 hover:text-white"}`}>
@@ -937,7 +937,7 @@ export default function SocialManagerPage() {
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Post Type</h2>
                 <div className="flex gap-3">
-                  <button onClick={() => setPostType("text")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Text Post</button>
+                  <button onClick={() => setPostType("text")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-gold to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Text Post</button>
                   <button onClick={() => setPostType("video")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "video" ? "bg-gradient-to-r from-red-500 to-red-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Video Post</button>
                   <button onClick={() => setPostType("carousel")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "carousel" ? "bg-gradient-to-r from-cobalt to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Carousel</button>
                 </div>
@@ -966,7 +966,7 @@ export default function SocialManagerPage() {
                   <button
                     onClick={fetchTrendingTopics}
                     disabled={loadingTrends}
-                    className="px-6 py-2 bg-gradient-to-r from-gold-intense to-red-500 hover:from-orange-600 hover:to-red-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="px-6 py-2 bg-gradient-to-r from-gold-intense to-red-500 hover:from-gold-intense hover:to-red-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {loadingTrends ? "Searching..." : "Trends"}
                   </button>
@@ -974,7 +974,7 @@ export default function SocialManagerPage() {
 
                 {/* Trending Topics Display */}
                 {showTrends && trends && (
-                  <div className="mb-4 p-3 sm:p-4 bg-gradient-to-br from-orange-900/30 to-red-900/30 border border-gold-intense/30 rounded-lg">
+                  <div className="mb-4 p-3 sm:p-4 bg-gradient-to-br from-gold-intense/30 to-red-900/30 border border-gold-intense/30 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <span></span> Trending Topics in Videography
@@ -1111,11 +1111,11 @@ export default function SocialManagerPage() {
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Schedule</h2>
                 <div className="flex gap-2 sm:gap-3 md:gap-4">
                   <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt" />
-                  <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "📤 Publishing..." : "📤 Post Now"}</button>
+                  <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "📤 Publishing..." : "📤 Post Now"}</button>
                   
                   {publishMessage && (
                     <div className={`mt-4 p-3 sm:p-4 rounded-lg ${
-                      publishMessage.includes("") ? "bg-green-500/20 border border-green-500" : 
+                      publishMessage.includes("") ? "bg-gold/20 border border-gold" : 
                       publishMessage.includes("") ? "bg-gold/20 border border-gold" : 
                       "bg-red-500/20 border border-red-500"
                     }`}>
@@ -1245,7 +1245,7 @@ export default function SocialManagerPage() {
                               <div key={idx} className="bg-white/10 rounded-lg p-3 sm:p-4 hover:bg-white/20 transition cursor-pointer" onClick={() => setManualReply(reply)}>
                                 <div className="flex items-start justify-between mb-2">
                                   <span className="text-xs font-semibold text-gold">Option {idx + 1}</span>
-                                  <button className="text-xs text-green-400 hover:text-green-300">Use this →</button>
+                                  <button className="text-xs text-gold hover:text-gold">Use this →</button>
                                 </div>
                                 <p className="text-white text-sm">{reply}</p>
                               </div>
@@ -1254,7 +1254,7 @@ export default function SocialManagerPage() {
                           <div className="border-t border-white/10 pt-4">
                             <label className="block text-white font-semibold mb-2">Manual Reply</label>
                             <textarea value={manualReply} onChange={(e) => setManualReply(e.target.value)} placeholder="Edit AI suggestion or write your own..." rows={4} className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
-                            <button className="w-full mt-3 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition">Send Reply</button>
+                            <button className="w-full mt-3 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition">Send Reply</button>
                           </div>
                         </>
                       )}
@@ -1290,7 +1290,7 @@ export default function SocialManagerPage() {
                             <span key={idx} className="text-xs px-2 py-1 bg-cobalt/20 text-cobalt-300 rounded-full">#{tag}</span>
                           ))}
                         </div>
-                        <button className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition text-sm">
+                        <button className="w-full py-2 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition text-sm">
                           Generate Comment
                         </button>
                       </div>
@@ -1309,7 +1309,7 @@ export default function SocialManagerPage() {
                       <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2">Auto-Reply</h3>
                       <p className="text-gray-400 text-sm">Let AI automatically respond to comments</p>
                     </div>
-                    <button onClick={() => setAutoReplyEnabled(!autoReplyEnabled)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${autoReplyEnabled ? "bg-green-500" : "bg-gray-600"}`}>
+                    <button onClick={() => setAutoReplyEnabled(!autoReplyEnabled)} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${autoReplyEnabled ? "bg-gold" : "bg-gray-600"}`}>
                       <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${autoReplyEnabled ? "translate-x-7" : "translate-x-1"}`} />
                     </button>
                   </div>
@@ -1319,7 +1319,7 @@ export default function SocialManagerPage() {
                     </div>
                   )}
                 </div>
-                <button className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition">
+                <button className="w-full py-3 sm:py-4 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-bold transition">
                   Save Settings
                 </button>
               </div>
@@ -1375,7 +1375,7 @@ export default function SocialManagerPage() {
                 </button>
                 <button
                   onClick={() => setMediaLibraryTab('pexels-videos')}
-                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'pexels-videos' ? 'bg-green-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'pexels-videos' ? 'bg-gold-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                 >
                   Pexels Videos
                 </button>
@@ -1746,11 +1746,11 @@ export default function SocialManagerPage() {
                         onChange={(e) => setPexelsQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
                         placeholder="Search free stock videos..."
-                        className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
+                        className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gold"
                       />
                       <button
                         onClick={searchPexelsVideos}
-                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-semibold transition"
+                        className="px-6 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition"
                       >
                         Search
                       </button>
@@ -1771,7 +1771,7 @@ export default function SocialManagerPage() {
                           <div
                             key={video.id}
                             onClick={() => handleMediaSelect(video)}
-                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-green-500"
+                            className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-gold"
                           >
                             <div className="aspect-video relative group">
                               <img src={video.thumbnail} alt={video.name} className="w-full h-full object-cover" />
@@ -1797,7 +1797,7 @@ export default function SocialManagerPage() {
                 {mediaLibraryTab === 'ai-images' && (
                   <div>
                     <div className="mb-3 sm:mb-4 md:mb-6 space-y-2 sm:space-y-3 md:space-y-4">
-                      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 sm:p-4">
+                      <div className="bg-gradient-to-r from-gold-600/30 to-gold-intense/30 border border-gold/30 rounded-lg p-3 sm:p-4">
                         <h4 className="text-lg font-bold text-gold-400 mb-2">Google Imagen 3 (Nano Banana)</h4>
                         <p className="text-sm text-gray-300 mb-2">Generate high-quality AI images from text prompts. Cost: $0.03 per image.</p>
                       </div>

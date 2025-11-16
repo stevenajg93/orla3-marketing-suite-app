@@ -552,7 +552,7 @@ export default function MediaLibrary() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'published': return 'bg-green-600';
+      case 'published': return 'bg-gold-600';
       case 'scheduled': return 'bg-cobalt';
       case 'draft': return 'bg-gold-600';
       default: return 'bg-gray-600';
@@ -626,7 +626,7 @@ export default function MediaLibrary() {
             onClick={() => setActiveTab('pexels-videos')}
             className={`flex-1 py-3 sm:py-4 px-6 rounded-lg font-bold transition-all ${
               activeTab === 'pexels-videos'
-                ? 'bg-gradient-to-r from-green-600 to-emerald-700 text-white'
+                ? 'bg-gradient-to-r from-gold-600 to-gold-intense text-white'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -752,7 +752,7 @@ export default function MediaLibrary() {
             ) : activeTab === 'pexels-videos' ? (
               <>
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Search Pexels Videos</h2>
-                <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-3 mb-4">
+                <div className="bg-gradient-to-r from-gold-600/30 to-gold-intense/30 border border-gold/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Free stock videos • Thousands available</p>
                 </div>
                 <input
@@ -761,12 +761,12 @@ export default function MediaLibrary() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchPexelsVideos()}
                   placeholder="e.g., office, business meeting"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold mb-4"
                 />
                 <button
                   onClick={searchPexelsVideos}
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
+                  className="w-full bg-gold-600 hover:bg-gold-intense text-white font-bold py-3 px-3 sm:px-4 rounded-lg transition-all disabled:opacity-50"
                 >
                   {loading ? 'Searching...' : 'Search Videos'}
                 </button>
@@ -774,7 +774,7 @@ export default function MediaLibrary() {
             ) : activeTab === 'ai-images' ? (
               <>
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">AI Image Generation</h2>
-                <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-gold/30 rounded-lg p-3 mb-4">
+                <div className="bg-gradient-to-r from-gold-600/30 to-gold-intense/30 border border-gold/30 rounded-lg p-3 mb-4">
                   <p className="text-xs text-gray-300">Google Imagen 3 • $0.03/image</p>
                 </div>
                 <div className="mb-4">
@@ -970,7 +970,7 @@ export default function MediaLibrary() {
                             link.download = `ai-image-${Date.now()}.png`;
                             link.click();
                           }}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                          className="flex-1 bg-gold-600 hover:bg-gold-600 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                         >
                           ⬇️ Download
                         </button>
@@ -1031,7 +1031,7 @@ export default function MediaLibrary() {
                               link.download = `ai-video-${Date.now()}.mp4`;
                               link.click();
                             }}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                            className="flex-1 bg-gold-600 hover:bg-gold-600 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                           >
                             ⬇️ Download
                           </button>
@@ -1349,7 +1349,7 @@ export default function MediaLibrary() {
                       <div className="px-3 sm:px-4 pb-4 bg-slate-800/50 flex gap-2">
                         <button
                           onClick={() => handleDownload(asset)}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded transition-all"
+                          className="flex-1 bg-gold-600 hover:bg-gold-600 text-white text-xs font-bold py-2 px-3 rounded transition-all"
                         >
                           ⬇️ Download
                         </button>
@@ -1413,7 +1413,7 @@ export default function MediaLibrary() {
               <div className="mt-6 flex gap-2 sm:gap-3 md:gap-4 justify-center">
                 <button
                   onClick={() => handleDownload(previewAsset)}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
+                  className="bg-gold-600 hover:bg-gold-600 text-white font-bold py-3 px-6 rounded-lg"
                 >
                   ⬇️ Download
                 </button>
@@ -1528,7 +1528,7 @@ export default function MediaLibrary() {
                       link.download = `${previewContent.title.replace(/[^a-z0-9]/gi, '-')}.${previewContent.content_type === 'video' ? 'mp4' : 'png'}`;
                       link.click();
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
+                    className="bg-gold-600 hover:bg-gold-600 text-white font-bold py-3 px-6 rounded-lg"
                   >
                     ⬇️ Download
                   </button>

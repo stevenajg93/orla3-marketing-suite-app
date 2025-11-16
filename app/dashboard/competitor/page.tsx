@@ -223,7 +223,7 @@ export default function CompetitorAnalysis() {
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                           comp.analysis.threat_level === 'direct' ? 'bg-red-500/20 border border-red-500 text-red-300' :
                           comp.analysis.threat_level === 'indirect' ? 'bg-gold/20 border border-gold text-gold-300' :
-                          'bg-green-500/20 border border-green-500 text-green-300'
+                          'bg-gold/20 border border-gold text-gold'
                         }`}>
                           {comp.analysis.threat_level.toUpperCase()} THREAT
                         </span>
@@ -252,14 +252,14 @@ export default function CompetitorAnalysis() {
                       <div className="space-y-2 sm:space-y-3 md:space-y-4 pt-4 border-t border-white/10">
                         {/* Marketing They Do Well */}
                         {comp.analysis.marketing_they_do_well && comp.analysis.marketing_they_do_well.length > 0 && (
-                          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3 sm:p-4">
-                            <h4 className="text-sm font-semibold text-green-300 mb-3 flex items-center gap-2">
+                          <div className="bg-gold-600/20 border border-gold/30 rounded-lg p-3 sm:p-4">
+                            <h4 className="text-sm font-semibold text-gold mb-3 flex items-center gap-2">
                               <span></span> Marketing They Do Well
                             </h4>
                             <ul className="space-y-2">
                               {comp.analysis.marketing_they_do_well.map((item, i) => (
                                 <li key={i} className="text-sm text-gray-200 flex items-start gap-2">
-                                  <span className="text-green-400">•</span>
+                                  <span className="text-gold">•</span>
                                   <span>{item}</span>
                                 </li>
                               ))}

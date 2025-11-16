@@ -189,7 +189,7 @@ export default function UserDetailPage() {
                   onClick={handleSuspendUser}
                   className={`px-3 sm:px-4 py-2 rounded-lg text-white font-semibold ${
                     u.account_status === 'suspended'
-                      ? 'bg-green-500 hover:bg-green-600'
+                      ? 'bg-gold hover:bg-gold-600'
                       : 'bg-red-500 hover:bg-red-600'
                   }`}
                 >
@@ -203,7 +203,7 @@ export default function UserDetailPage() {
         {/* Account Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           <InfoCard title="Account Status" value={u.account_status} color={
-            u.account_status === 'active' ? 'text-green-400' :
+            u.account_status === 'active' ? 'text-gold' :
             u.account_status === 'trial' ? 'text-blue-400' :
             u.account_status === 'suspended' ? 'text-red-400' :
             'text-gray-400'
@@ -212,12 +212,12 @@ export default function UserDetailPage() {
           <InfoCard
             title="Credit Balance"
             value={u.credits_exempt ? 'Unlimited' : u.credit_balance.toLocaleString()}
-            color={u.credits_exempt ? 'text-green-400' : 'text-gold-300'}
+            color={u.credits_exempt ? 'text-gold' : 'text-gold-300'}
           />
           <InfoCard
             title="Email Verified"
             value={u.email_verified ? 'Yes' : 'No'}
-            color={u.email_verified ? 'text-green-400' : 'text-red-400'}
+            color={u.email_verified ? 'text-gold' : 'text-red-400'}
           />
         </div>
 
@@ -303,7 +303,7 @@ export default function UserDetailPage() {
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      conn.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                      conn.is_active ? 'bg-gold/20 text-gold' : 'bg-gray-500/20 text-gray-400'
                     }`}>
                       {conn.is_active ? 'Active' : 'Inactive'}
                     </span>
@@ -329,7 +329,7 @@ export default function UserDetailPage() {
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      storage.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                      storage.is_active ? 'bg-gold/20 text-gold' : 'bg-gray-500/20 text-gray-400'
                     }`}>
                       {storage.is_active ? 'Active' : 'Inactive'}
                     </span>
@@ -374,7 +374,7 @@ export default function UserDetailPage() {
                       <td className="py-3 text-gray-300">{transaction.description}</td>
                       <td className="py-3 text-right">
                         <span className={`font-semibold ${
-                          transaction.amount > 0 ? 'text-green-400' : 'text-red-400'
+                          transaction.amount > 0 ? 'text-gold' : 'text-red-400'
                         }`}>
                           {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}
                         </span>

@@ -130,7 +130,7 @@ export default function TeamSettingsPage() {
       case 'owner':
         return 'bg-gold-500/20 text-gold-300 border-gold-400/30';
       case 'admin':
-        return 'bg-purple-500/20 text-purple-300 border-purple-400/30';
+        return 'bg-royal/20 text-royal border-royal/30';
       case 'member':
         return 'bg-cobalt-500/20 text-cobalt-300 border-cobalt-400/30';
       default:
@@ -203,7 +203,7 @@ export default function TeamSettingsPage() {
                   {organization.current_user_count} / {organization.max_users} seats
                 </p>
                 {organization.current_user_count >= organization.max_users && (
-                  <p className="text-orange-300 text-xs mt-1">
+                  <p className="text-gold-intense text-xs mt-1">
                     At capacity - upgrade to add more members
                   </p>
                 )}
@@ -265,7 +265,7 @@ export default function TeamSettingsPage() {
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
                             member.is_active
-                              ? 'bg-green-500/20 text-green-300'
+                              ? 'bg-gold/20 text-gold'
                               : 'bg-gray-500/20 text-gray-300'
                           }`}
                         >

@@ -415,7 +415,7 @@ export default function CarouselMakerPage() {
               <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">Carousel Maker</h1>
               <p className="text-sm text-cobalt-300">
                 Instagram-ready carousels with your brand colors, fonts & logo
-                {brandAssets.brand_colors.length > 2 && <span className="ml-2 text-green-400">Branded</span>}
+                {brandAssets.brand_colors.length > 2 && <span className="ml-2 text-gold">Branded</span>}
               </p>
             </div>
           </div>
@@ -626,7 +626,7 @@ export default function CarouselMakerPage() {
               })}
             </div>
 
-            {saveMessage && <div className="mb-3 text-center bg-green-500/20 border border-green-500 rounded px-3 py-1 text-green-200 text-sm font-bold">{saveMessage}</div>}
+            {saveMessage && <div className="mb-3 text-center bg-gold/20 border border-gold rounded px-3 py-1 text-gold text-sm font-bold">{saveMessage}</div>}
             <div className="flex gap-2 sm:gap-3 md:gap-4">
               <button
                 onClick={() => {

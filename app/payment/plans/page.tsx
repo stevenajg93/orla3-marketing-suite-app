@@ -210,7 +210,7 @@ export default function SelectPlanPage() {
                   : 'text-gray-300 hover:text-white'
               }`}
             >
-              Annual <span className="text-green-400 hidden sm:inline">(Save 17%)</span><span className="text-green-400 sm:hidden">-17%</span>
+              Annual <span className="text-gold hidden sm:inline">(Save 17%)</span><span className="text-gold sm:hidden">-17%</span>
             </button>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function SelectPlanPage() {
               <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-gray-300">
-                    <span className="text-green-400 mt-0.5 sm:mt-1 text-sm"></span>
+                    <span className="text-gold mt-0.5 sm:mt-1 text-sm"></span>
                     <span className="text-xs sm:text-sm">{feature}</span>
                   </li>
                 ))}

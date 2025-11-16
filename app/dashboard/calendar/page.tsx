@@ -130,7 +130,7 @@ export default function ContentCalendar() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published': return 'bg-green-600/80';
+      case 'published': return 'bg-gold-600/80';
       case 'scheduled': return 'bg-cobalt/80';
       case 'draft': return 'bg-gold-600/80';
       default: return 'bg-gray-600/80';
@@ -346,9 +346,9 @@ export default function ContentCalendar() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-          <div className="bg-green-900/40 border border-green-400/30 rounded-xl p-3 sm:p-4">
+          <div className="bg-gold-600/40 border border-gold/30 rounded-xl p-3 sm:p-4">
             <h3 className="text-white font-bold mb-2">Published</h3>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-green-400">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-gold">
               {events.filter(e => e.status === 'published').length}
             </p>
           </div>

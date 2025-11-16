@@ -162,13 +162,13 @@ export default function BillingPage() {
               <div>
                 <div className="flex justify-between items-end mb-2">
                   <p className="text-gray-400 text-sm">Remaining</p>
-                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cobalt-400">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold to-cobalt-400">
                     {creditsRemaining.toLocaleString()}
                   </p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-cobalt h-full rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-gold to-cobalt h-full rounded-full transition-all duration-500"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
@@ -255,7 +255,7 @@ export default function BillingPage() {
                     : 'text-gray-300 hover:text-white'
                 }`}
               >
-                Annual <span className="text-green-400">(Save 17%)</span>
+                Annual <span className="text-gold">(Save 17%)</span>
               </button>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function BillingPage() {
                 key={index}
                 className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border ${
                   plan.name === currentPlan
-                    ? 'border-green-400 ring-2 ring-green-400/50'
+                    ? 'border-gold ring-2 ring-gold/50'
                     : plan.popular
                     ? 'border-cobalt-400 ring-2 ring-blue-400/50'
                     : 'border-white/20'
@@ -275,7 +275,7 @@ export default function BillingPage() {
               >
                 {plan.name === currentPlan && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-green-600 text-white px-3 sm:px-4 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-gold-600 text-white px-3 sm:px-4 py-1 rounded-full text-sm font-bold">
                       Current Plan
                     </span>
                   </div>
@@ -311,7 +311,7 @@ export default function BillingPage() {
                 <ul className="space-y-2 mb-3 sm:mb-4 md:mb-6 text-sm">
                   {plan.features.slice(0, 5).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-gray-300">
-                      <span className="text-green-400 mt-1"></span>
+                      <span className="text-gold mt-1"></span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -353,7 +353,7 @@ export default function BillingPage() {
                   <tr key={idx} className="border-b border-white/10 hover:bg-white/5 transition">
                     <td className="py-3 text-gray-300">{new Date(item.date).toLocaleDateString('en-GB')}</td>
                     <td className="py-3 text-white">{item.action}</td>
-                    <td className={`py-3 text-right font-semibold ${item.credits > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className={`py-3 text-right font-semibold ${item.credits > 0 ? 'text-gold' : 'text-red-400'}`}>
                       {item.credits > 0 ? '+' : ''}{item.credits}
                     </td>
                     <td className="py-3 text-right text-gray-300">{item.balance.toLocaleString()}</td>

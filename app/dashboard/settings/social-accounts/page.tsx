@@ -112,7 +112,7 @@ export default function SocialAccountsSettings() {
       name: 'Instagram',
       icon: 'IG',
       description: 'Share photos and stories with your followers',
-      iconBg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
+      iconBg: 'bg-gradient-to-br from-royal via-royal to-gold-intense',
       requirements: 'Requires Instagram Business Account'
     },
     {
@@ -144,7 +144,7 @@ export default function SocialAccountsSettings() {
       name: 'TikTok',
       icon: 'TT',
       description: 'Short-form video content',
-      iconBg: 'bg-gradient-to-br from-cyan-400 via-slate-900 to-pink-500',
+      iconBg: 'bg-gradient-to-br from-cobalt via-slate-900 to-royal',
       requirements: 'TikTok Creator account'
     },
     {
@@ -160,7 +160,7 @@ export default function SocialAccountsSettings() {
       name: 'Reddit',
       icon: 'RD',
       description: 'Engage with communities',
-      iconBg: 'bg-gradient-to-br from-orange-600 to-red-600',
+      iconBg: 'bg-gradient-to-br from-gold-intense to-red-600',
       requirements: 'Reddit account with verified email'
     },
     {
@@ -205,11 +205,11 @@ export default function SocialAccountsSettings() {
         )}
 
         {success && (
-          <div className="bg-green-500/20 border border-green-500 text-green-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
+          <div className="bg-gold/20 border border-gold text-gold px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {success}
             <button
               onClick={() => setSuccess(null)}
-              className="float-right text-green-200 hover:text-white"
+              className="float-right text-gold hover:text-white"
             >
               </button>
           </div>
@@ -271,8 +271,8 @@ export default function SocialAccountsSettings() {
                           {platform.description}
                         </p>
                         {isConnected && connection?.service_id && (
-                          <div className="flex items-center gap-2 text-green-400 text-sm">
-                            <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                          <div className="flex items-center gap-2 text-gold text-sm">
+                            <span className="inline-block w-2 h-2 bg-gold rounded-full animate-pulse"></span>
                             Connected
                           </div>
                         )}
@@ -325,8 +325,8 @@ export default function SocialAccountsSettings() {
           </div>
 
           {/* Privacy & Security */}
-          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 sm:p-6">
-            <h4 className="text-lg font-semibold text-green-400 mb-3">
+          <div className="bg-gold/10 border border-gold/30 rounded-xl p-4 sm:p-6">
+            <h4 className="text-lg font-semibold text-gold mb-3">
               Privacy & Security
             </h4>
             <ul className="text-gray-300 space-y-2 text-sm">

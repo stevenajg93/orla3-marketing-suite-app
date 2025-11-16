@@ -299,7 +299,7 @@ export default function AdminDashboard() {
             title="Paying Customers"
             value={stats.revenue.paying_customers}
             subtitle={`${stats.revenue.active_subscriptions} subscriptions`}
-            color="from-green-500 to-emerald-500"
+            color="from-gold to-gold-intense"
           />
         </div>
 
@@ -411,13 +411,13 @@ export default function AdminDashboard() {
                             {u.credit_balance.toLocaleString()}
                           </span>
                           {u.credits_exempt && (
-                            <span className="text-green-400 text-xs">Unlimited</span>
+                            <span className="text-gold text-xs">Unlimited</span>
                           )}
                         </div>
                       </td>
                       <td className="py-3 sm:py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          u.account_status === 'active' ? 'bg-green-500/20 text-green-400' :
+                          u.account_status === 'active' ? 'bg-gold/20 text-gold' :
                           u.account_status === 'trial' ? 'bg-blue-500/20 text-blue-400' :
                           u.account_status === 'suspended' ? 'bg-red-500/20 text-red-400' :
                           'bg-gray-500/20 text-gray-400'
@@ -458,8 +458,8 @@ export default function AdminDashboard() {
                             }}
                             className={`px-3 py-1 rounded text-sm ${
                               u.is_super_admin
-                                ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300'
-                                : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300'
+                                ? 'bg-gold-intense/20 hover:bg-gold-600/30 text-gold-intense'
+                                : 'bg-royal/20 hover:bg-royal/30 text-royal'
                             }`}
                           >
                             {u.is_super_admin ? 'Revoke Admin' : 'Make Admin'}
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
                                 onClick={() => handleSuspendUser(u.id, u.account_status)}
                                 className={`px-3 py-1 rounded text-sm ${
                                   u.account_status === 'suspended'
-                                    ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300'
+                                    ? 'bg-gold/20 hover:bg-gold/30 text-gold'
                                     : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'
                                 }`}
                               >
@@ -559,8 +559,8 @@ export default function AdminDashboard() {
               </h3>
 
               <div className="space-y-2 sm:space-y-3 md:space-y-4">
-                <div className="p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                  <p className="text-yellow-300 text-sm">
+                <div className="p-3 sm:p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                  <p className="text-gold text-sm">
                     {superAdminAction === 'grant'
                       ? '⚠️ This will grant full platform access and unlimited credits to this user.'
                       : '⚠️ This will remove super admin privileges from this user.'}
@@ -584,8 +584,8 @@ export default function AdminDashboard() {
                     disabled={superAdminLoading}
                     className={`flex-1 px-3 sm:px-4 py-2 rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50 ${
                       superAdminAction === 'grant'
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-700'
-                        : 'bg-gradient-to-r from-orange-500 to-red-600'
+                        ? 'bg-gradient-to-r from-royal to-royal-600'
+                        : 'bg-gradient-to-r from-gold-intense to-red-600'
                     }`}
                   >
                     {superAdminLoading

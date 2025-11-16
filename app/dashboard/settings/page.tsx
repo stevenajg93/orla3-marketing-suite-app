@@ -79,7 +79,7 @@ export default function SettingsPage() {
                   Coming Soon
                 </div>
               ) : tab.badge && (
-                <div className="absolute top-4 right-4 bg-green-500/20 border border-green-500 text-green-300 text-xs px-2 py-1 rounded-full font-semibold">
+                <div className="absolute top-4 right-4 bg-gold/20 border border-gold text-gold text-xs px-2 py-1 rounded-full font-semibold">
                   {tab.badge}
                 </div>
               )}

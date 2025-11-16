@@ -172,11 +172,11 @@ export default function CloudStorageSettings() {
         )}
 
         {success && (
-          <div className="bg-green-500/20 border border-green-500 text-green-200 px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
+          <div className="bg-gold/20 border border-gold text-gold px-3 sm:px-4 py-3 rounded-lg mb-3 sm:mb-4 md:mb-6">
             {success}
             <button
               onClick={() => setSuccess(null)}
-              className="float-right text-green-200 hover:text-white"
+              className="float-right text-gold hover:text-white"
             >
               </button>
           </div>
@@ -200,7 +200,7 @@ export default function CloudStorageSettings() {
                   key={provider.id}
                   className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border-2 transition ${
                     isConnected
-                      ? 'border-green-500/50 bg-green-500/5'
+                      ? 'border-gold/50 bg-gold/5'
                       : 'border-white/20 hover:border-white/40'
                   }`}
                 >
@@ -209,7 +209,7 @@ export default function CloudStorageSettings() {
                       <div className={`text-3xl sm:text-2xl sm:text-xl sm:text-base sm:text-lg md:text-xl lg:text-2xl md:text-3xl md:text-4xl md:text-5xl p-3 sm:p-4 rounded-xl bg-gradient-to-br ${provider.color} relative`}>
                         {provider.icon}
                         {isConnected && (
-                          <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-base sm:text-lg md:text-xl font-bold shadow-lg">
+                          <div className="absolute -top-2 -right-2 bg-gold text-white rounded-full w-8 h-8 flex items-center justify-center text-base sm:text-lg md:text-xl font-bold shadow-lg">
                             ✓
                           </div>
                         )}
@@ -220,7 +220,7 @@ export default function CloudStorageSettings() {
                             {provider.name}
                           </h3>
                           {isConnected && (
-                            <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full uppercase tracking-wide">
+                            <span className="px-3 py-1 bg-gold/20 border border-gold/50 text-gold text-xs font-bold rounded-full uppercase tracking-wide">
                               ✓ Connected
                             </span>
                           )}
@@ -229,8 +229,8 @@ export default function CloudStorageSettings() {
                           {provider.description}
                         </p>
                         {isConnected && connection?.provider_email && (
-                          <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
-                            <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                          <div className="flex items-center gap-2 text-gold text-sm font-medium">
+                            <span className="inline-block w-2 h-2 bg-gold rounded-full animate-pulse"></span>
                             Connected as {connection.provider_email}
                           </div>
                         )}

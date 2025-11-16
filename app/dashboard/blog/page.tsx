@@ -199,16 +199,16 @@ export default function BlogWriter() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-4 sm:p-6 border border-green-400/30 mb-3 sm:mb-4 md:mb-6">
+        <div className="bg-gradient-to-r from-gold-600 to-gold-intense rounded-2xl p-4 sm:p-6 border border-gold/30 mb-3 sm:mb-4 md:mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-2">Autonomous Mode</h3>
-              <p className="text-green-100">Strategic keyword + market research + blog generation</p>
+              <p className="text-white">Strategic keyword + market research + blog generation</p>
             </div>
             <button
               onClick={autoGenerate}
               disabled={loading}
-              className="bg-white hover:bg-green-50 text-green-700 font-bold py-3 sm:py-4 px-4 sm:px-6 md:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="bg-white hover:bg-gold-100 text-gold-intense font-bold py-3 sm:py-4 px-4 sm:px-6 md:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {researching ? 'Researching Market...' : loading ? 'Generating...' : 'Auto-Generate'}
             </button>
@@ -297,11 +297,11 @@ export default function BlogWriter() {
               </div>
 
               <div>
-                <h4 className="text-lg font-bold text-green-300 mb-3">Content Gaps (Our Advantage)</h4>
+                <h4 className="text-lg font-bold text-gold mb-3">Content Gaps (Our Advantage)</h4>
                 <ul className="space-y-2">
                   {marketResearch.content_gaps?.map((gap: string, i: number) => (
                     <li key={i} className="text-gray-300 flex items-start">
-                      <span className="text-green-400 mr-2"></span>
+                      <span className="text-gold mr-2"></span>
                       {gap}
                     </li>
                   ))}
@@ -360,7 +360,7 @@ export default function BlogWriter() {
             </div>
 
             {saveMessage && (
-              <div className="mb-4 bg-green-500/20 border border-green-500 rounded-lg p-3 sm:p-4 text-green-200 text-center font-bold">
+              <div className="mb-4 bg-gold/20 border border-gold rounded-lg p-3 sm:p-4 text-gold text-center font-bold">
                 {saveMessage}
               </div>
             )}
@@ -377,7 +377,7 @@ export default function BlogWriter() {
               </Link>
               <button
                 onClick={saveAndOpenSocialManager}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all text-center"
+                className="bg-gold-600 hover:bg-gold-600 text-white font-bold py-3 px-6 rounded-lg transition-all text-center"
               >
                 Open in Social Manager
               </button>

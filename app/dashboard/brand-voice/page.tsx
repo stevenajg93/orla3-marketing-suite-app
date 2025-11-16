@@ -246,7 +246,7 @@ export default function BrandVoice() {
                   loadDriveFiles();
                   setShowDriveModal(true);
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-lg text-white font-bold transition"
+                className="px-6 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-bold transition"
               >
                 Import from Google Drive
               </button>
@@ -323,7 +323,7 @@ export default function BrandVoice() {
                     onClick={() => loadDriveFiles('')}
                     className={`w-full text-left p-3 rounded-lg mb-2 transition ${
                       selectedFolder === ''
-                        ? 'bg-green-600 text-white'
+                        ? 'bg-gold-600 text-white'
                         : 'bg-white/10 text-gray-300 hover:bg-white/20'
                     }`}
                   >
@@ -335,7 +335,7 @@ export default function BrandVoice() {
                       onClick={() => loadDriveFiles(folder.id)}
                       className={`w-full text-left p-3 rounded-lg mb-2 transition truncate ${
                         selectedFolder === folder.id
-                          ? 'bg-green-600 text-white'
+                          ? 'bg-gold-600 text-white'
                           : 'bg-white/10 text-gray-300 hover:bg-white/20'
                       }`}
                     >
@@ -369,7 +369,7 @@ export default function BrandVoice() {
                             <button
                               onClick={() => importFromDrive(file.id, file.name)}
                               disabled={uploading}
-                              className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
+                              className="px-3 sm:px-4 py-2 bg-gold hover:bg-gold-600 rounded-lg text-white font-semibold transition disabled:opacity-50"
                             >
                               {uploading ? '...' : 'Import'}
                             </button>

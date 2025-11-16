@@ -34,7 +34,7 @@ export default function UnverifiedEmailBanner({ userEmail }: UnverifiedEmailBann
   if (dismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-yellow-900/40 via-orange-900/40 to-yellow-900/40 backdrop-blur-lg border border-gold/30 rounded-lg p-4 mb-6">
+    <div className="bg-gradient-to-r from-gold-600/40 via-gold-intense/40 to-gold-600/40 backdrop-blur-lg border border-gold/30 rounded-lg p-4 mb-6">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3 flex-1">
           <div className="flex-shrink-0">
@@ -66,11 +66,11 @@ export default function UnverifiedEmailBanner({ userEmail }: UnverifiedEmailBann
                 {loading ? 'Sending...' : 'Resend Verification Email'}
               </button>
             ) : (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-500/50 rounded-lg">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-600/30 border border-gold/50 rounded-lg">
+                <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-green-300 text-sm font-medium">Verification email sent!</span>
+                <span className="text-gold text-sm font-medium">Verification email sent!</span>
               </div>
             )}
           </div>
