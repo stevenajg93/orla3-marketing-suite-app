@@ -536,6 +536,138 @@ async def list_all_organizations(
 
 
 # ============================================================================
+# SUPER ADMIN MANAGEMENT
+# ============================================================================
+
+class GrantSuperAdminRequest(BaseModel):
+    user_id: str
+    reason: str
+
+
+@router.post("/admin/super-admin/grant")
+async def grant_super_admin(
+    request: GrantSuperAdminRequest,
+    admin_id: str = Depends(verify_super_admin)
+):
+    """
+    Grant super admin privileges to a user
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Update user to super admin
+        cursor.execute("""
+            UPDATE users
+            SET
+                is_super_admin = true,
+                credits_exempt = true,
+                account_status = 'active',
+                admin_notes = %s
+            WHERE id = %s
+        """, (f"Granted super admin by {admin_id}. Reason: {request.reason}", request.user_id))
+
+        conn.commit()
+
+        # Log admin action
+        cursor.execute("""
+            INSERT INTO admin_audit_log (
+                admin_user_id,
+                action_type,
+                target_user_id,
+                details
+            ) VALUES (%s, %s, %s, %s)
+        """, (
+            admin_id,
+            'grant_super_admin',
+            request.user_id,
+            {'reason': request.reason}
+        ))
+
+        conn.commit()
+
+        logger.info(f"Admin {admin_id} granted super admin to user {request.user_id}")
+
+        return {
+            "success": True,
+            "user_id": request.user_id,
+            "reason": request.reason
+        }
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error granting super admin: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@router.post("/admin/super-admin/revoke")
+async def revoke_super_admin(
+    request: GrantSuperAdminRequest,  # Reuse same model
+    admin_id: str = Depends(verify_super_admin)
+):
+    """
+    Revoke super admin privileges from a user
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Prevent self-revoke
+        if request.user_id == admin_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot revoke your own super admin privileges"
+            )
+
+        # Update user
+        cursor.execute("""
+            UPDATE users
+            SET
+                is_super_admin = false,
+                admin_notes = %s
+            WHERE id = %s
+        """, (f"Super admin revoked by {admin_id}. Reason: {request.reason}", request.user_id))
+
+        conn.commit()
+
+        # Log admin action
+        cursor.execute("""
+            INSERT INTO admin_audit_log (
+                admin_user_id,
+                action_type,
+                target_user_id,
+                details
+            ) VALUES (%s, %s, %s, %s)
+        """, (
+            admin_id,
+            'revoke_super_admin',
+            request.user_id,
+            {'reason': request.reason}
+        ))
+
+        conn.commit()
+
+        logger.info(f"Admin {admin_id} revoked super admin from user {request.user_id}")
+
+        return {
+            "success": True,
+            "user_id": request.user_id,
+            "reason": request.reason
+        }
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error revoking super admin: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ============================================================================
 # ADMIN AUDIT LOG
 # ============================================================================
 

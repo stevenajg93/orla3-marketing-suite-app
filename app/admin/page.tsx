@@ -91,6 +91,12 @@ export default function AdminDashboard() {
   const [grantReason, setGrantReason] = useState('');
   const [grantLoading, setGrantLoading] = useState(false);
 
+  // Grant Super Admin Modal
+  const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
+  const [superAdminAction, setSuperAdminAction] = useState<'grant' | 'revoke'>('grant');
+  const [superAdminReason, setSuperAdminReason] = useState('');
+  const [superAdminLoading, setSuperAdminLoading] = useState(false);
+
   // Check if user is super admin
   useEffect(() => {
     if (!user) {
@@ -98,21 +104,29 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Check if user is super admin
-    const checkSuperAdmin = async () => {
+    // Check if user is super admin directly from user object
+    if (!user.is_super_admin) {
+      console.error('User is not a super admin:', user);
+      router.push('/dashboard');
+      return;
+    }
+
+    // Load platform stats
+    const loadStats = async () => {
       try {
         const response = await api.get('/admin/stats/overview');
-        // If this succeeds, user is super admin
         setStats(response);
       } catch (error: any) {
+        console.error('Failed to load admin stats:', error);
         if (error.status === 403) {
           // Not authorized
+          alert('Access denied: You are not a super admin. Please contact support if this is an error.');
           router.push('/dashboard');
         }
       }
     };
 
-    checkSuperAdmin();
+    loadStats();
   }, [user, router]);
 
   // Load users
@@ -183,6 +197,35 @@ export default function AdminDashboard() {
       loadUsers();
     } catch (error: any) {
       alert(`Failed to update user status: ${error.message}`);
+    }
+  };
+
+  const handleSuperAdmin = async () => {
+    if (!superAdminReason) {
+      alert('Please provide a reason');
+      return;
+    }
+
+    try {
+      setSuperAdminLoading(true);
+      const endpoint = superAdminAction === 'grant'
+        ? '/admin/super-admin/grant'
+        : '/admin/super-admin/revoke';
+
+      await api.post(endpoint, {
+        user_id: selectedUserId,
+        reason: superAdminReason,
+      });
+
+      alert(`Super admin ${superAdminAction === 'grant' ? 'granted' : 'revoked'} successfully!`);
+      setShowSuperAdminModal(false);
+      setSelectedUserId('');
+      setSuperAdminReason('');
+      loadUsers(); // Refresh
+    } catch (error: any) {
+      alert(`Failed to ${superAdminAction} super admin: ${error.message}`);
+    } finally {
+      setSuperAdminLoading(false);
     }
   };
 
@@ -382,6 +425,20 @@ export default function AdminDashboard() {
                           >
                             Gift Credits
                           </button>
+                          <button
+                            onClick={() => {
+                              setSelectedUserId(u.id);
+                              setSuperAdminAction(u.is_super_admin ? 'revoke' : 'grant');
+                              setShowSuperAdminModal(true);
+                            }}
+                            className={`px-3 py-1 rounded text-sm ${
+                              u.is_super_admin
+                                ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300'
+                                : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300'
+                            }`}
+                          >
+                            {u.is_super_admin ? 'Revoke Admin' : 'Make Admin'}
+                          </button>
                           {!u.is_super_admin && (
                             <button
                               onClick={() => handleSuspendUser(u.id, u.account_status)}
@@ -446,6 +503,63 @@ export default function AdminDashboard() {
                   </button>
                   <button
                     onClick={() => setShowGrantModal(false)}
+                    className="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Super Admin Modal */}
+      {showSuperAdminModal && (
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setShowSuperAdminModal(false)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
+            <div className="bg-slate-800 rounded-2xl border border-white/20 p-6">
+              <h3 className="text-2xl font-bold text-white mb-4">
+                {superAdminAction === 'grant' ? 'Grant Super Admin' : 'Revoke Super Admin'}
+              </h3>
+
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <p className="text-yellow-300 text-sm">
+                    {superAdminAction === 'grant'
+                      ? '⚠️ This will grant full platform access and unlimited credits to this user.'
+                      : '⚠️ This will remove super admin privileges from this user.'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 text-sm mb-2">Reason</label>
+                  <textarea
+                    value={superAdminReason}
+                    onChange={(e) => setSuperAdminReason(e.target.value)}
+                    placeholder="e.g., Platform co-administrator, Temporary access for support, etc."
+                    rows={3}
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cobalt"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSuperAdmin}
+                    disabled={superAdminLoading}
+                    className={`flex-1 px-4 py-2 rounded-lg text-white font-semibold hover:opacity-90 disabled:opacity-50 ${
+                      superAdminAction === 'grant'
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-700'
+                        : 'bg-gradient-to-r from-orange-500 to-red-600'
+                    }`}
+                  >
+                    {superAdminLoading
+                      ? (superAdminAction === 'grant' ? 'Granting...' : 'Revoking...')
+                      : (superAdminAction === 'grant' ? 'Grant Super Admin' : 'Revoke Super Admin')}
+                  </button>
+                  <button
+                    onClick={() => setShowSuperAdminModal(false)}
                     className="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white font-semibold hover:bg-white/20"
                   >
                     Cancel
