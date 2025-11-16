@@ -100,7 +100,7 @@ export default function AdminDashboard() {
   // Check if user is super admin
   useEffect(() => {
     if (!user) {
-      router.push('/login');
+      router.push('/login?redirect=/admin');
       return;
     }
 
