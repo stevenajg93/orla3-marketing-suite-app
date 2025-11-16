@@ -94,17 +94,28 @@ CREATE INDEX IF NOT EXISTS idx_users_current_org ON users(current_organization_i
 -- MIGRATE EXISTING USERS TO ORGANIZATIONS
 -- ============================================================================
 -- Create personal organization for each existing user
+-- Map existing 'plan' column values to new 'subscription_tier' structure
 INSERT INTO organizations (id, name, slug, subscription_tier, max_users, stripe_customer_id, stripe_subscription_id)
 SELECT
     uuid_generate_v4(),
     COALESCE(email, 'Personal Workspace'),
     LOWER(REGEXP_REPLACE(COALESCE(email, id::text), '[^a-z0-9]', '-', 'g')),
-    COALESCE(subscription_tier, 'starter'),
-    CASE
-        WHEN subscription_tier = 'starter' THEN 1
-        WHEN subscription_tier = 'professional' THEN 3
-        WHEN subscription_tier = 'business' THEN 10
-        WHEN subscription_tier = 'enterprise' THEN 25
+    -- Map plan values to subscription_tier
+    CASE COALESCE(plan, 'starter')
+        WHEN 'free' THEN 'starter'
+        WHEN 'starter' THEN 'starter'
+        WHEN 'pro' THEN 'professional'
+        WHEN 'business' THEN 'business'
+        WHEN 'enterprise' THEN 'enterprise'
+        ELSE 'starter'
+    END,
+    -- Set max_users based on plan
+    CASE COALESCE(plan, 'starter')
+        WHEN 'free' THEN 1
+        WHEN 'starter' THEN 1
+        WHEN 'pro' THEN 3
+        WHEN 'business' THEN 10
+        WHEN 'enterprise' THEN 25
         ELSE 1
     END,
     stripe_customer_id,

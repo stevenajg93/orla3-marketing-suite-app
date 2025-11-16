@@ -5,11 +5,12 @@ Provides a standard way to extract and validate user_id from JWT tokens
 
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+from typing import Optional, Dict
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
+from utils.db import get_db_connection
 
 security = HTTPBearer()
 
@@ -119,3 +120,65 @@ async def get_optional_user_id(
         return None
 
     return payload.get("sub")
+
+
+async def get_user_context(
+    user_id: str = Depends(get_current_user_id)
+) -> Dict[str, str]:
+    """
+    Get full user context including organization_id and role
+
+    Usage in routes:
+    ```python
+    from utils.auth_dependency import get_user_context
+
+    @router.get("/my-route")
+    async def my_route(context: Dict = Depends(get_user_context)):
+        user_id = context['user_id']
+        org_id = context['organization_id']
+        role = context['role']
+    ```
+
+    Returns:
+        Dict containing:
+        - user_id: str (UUID)
+        - organization_id: str (UUID)
+        - role: str (owner|admin|member|viewer)
+
+    Raises:
+        HTTPException: If user has no organization or invalid state
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Get user's current organization and role
+        cursor.execute("""
+            SELECT
+                u.current_organization_id,
+                om.role
+            FROM users u
+            LEFT JOIN organization_members om ON om.user_id = u.id
+                AND om.organization_id = u.current_organization_id
+            WHERE u.id = %s
+        """, (user_id,))
+
+        result = cursor.fetchone()
+
+        if not result or not result[0]:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="User has no organization. Database state is invalid.",
+            )
+
+        organization_id, role = result
+
+        return {
+            "user_id": user_id,
+            "organization_id": organization_id,
+            "role": role or "member"  # Default to member if no role found
+        }
+
+    finally:
+        cursor.close()
+        conn.close()

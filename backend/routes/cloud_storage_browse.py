@@ -3,18 +3,19 @@ Cloud Storage File Browsing Routes
 Browse files from Google Drive, OneDrive, and Dropbox
 """
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import httpx
 import os
 import json
-from typing import Optional, List
+from typing import Optional, List, Dict
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from middleware import get_user_id
+from utils.auth_dependency import get_user_context
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -27,55 +28,57 @@ def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
-def get_user_cloud_connection(user_id: str, provider: str):
-    """Get user's cloud storage connection from database"""
+def get_organization_cloud_connection(organization_id: str, provider: str):
+    """
+    Get organization's cloud storage connection from database
+
+    Organization-level cloud storage ensures all team members access the same shared drive.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Convert user_id to string to avoid UUID adapter errors
-    user_id_str = str(user_id)
+    # Convert to string to avoid UUID adapter errors
+    org_id_str = str(organization_id)
 
-    # Check if selected_folders column exists (may not be in production yet)
-    cursor.execute("""
-        SELECT column_name
-        FROM information_schema.columns
-        WHERE table_name = 'user_cloud_storage_tokens' AND column_name = 'selected_folders'
-    """)
-    has_folder_column = cursor.fetchone() is not None
-
-    if has_folder_column:
+    try:
         cursor.execute("""
-            SELECT access_token, refresh_token, token_expires_at, provider_email, selected_folders
+            SELECT
+                access_token,
+                refresh_token,
+                token_expires_at,
+                provider_email,
+                selected_folders,
+                storage_type,
+                drive_id
             FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = %s AND is_active = true
+            WHERE organization_id = %s
+              AND provider = %s
+              AND is_active = true
+            ORDER BY created_at DESC
             LIMIT 1
-        """, (user_id_str, provider))
-    else:
-        cursor.execute("""
-            SELECT access_token, refresh_token, token_expires_at, provider_email
-            FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = %s AND is_active = true
-            LIMIT 1
-        """, (user_id_str, provider))
+        """, (org_id_str, provider))
 
-    connection = cursor.fetchone()
-    cursor.close()
-    conn.close()
+        connection = cursor.fetchone()
 
-    if not connection:
-        raise HTTPException(status_code=404, detail=f"No active {provider} connection found. Please connect {provider} first.")
+        if not connection:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No active {provider} connection found for this organization. Please connect {provider} first."
+            )
 
-    # Add empty selected_folders if column doesn't exist
-    if not has_folder_column and connection:
-        # Convert to dict if needed and add selected_folders
-        connection = dict(connection)
-        connection['selected_folders'] = []
-    elif connection:
-        # Ensure it's a dict
+        # Convert to dict
         connection = dict(connection)
 
-    logger.info(f"Cloud connection loaded for {provider}: user={user_id_str}, has_folders_column={has_folder_column}")
-    return connection
+        # Ensure selected_folders is a list
+        if not connection.get('selected_folders'):
+            connection['selected_folders'] = []
+
+        logger.info(f"Cloud connection loaded for organization {org_id_str}: provider={provider}, storage_type={connection.get('storage_type', 'personal')}")
+        return connection
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # ============================================================================
@@ -83,17 +86,21 @@ def get_user_cloud_connection(user_id: str, provider: str):
 # ============================================================================
 
 @router.get("/cloud-storage/browse/dropbox")
-async def browse_dropbox_files(request: Request, path: Optional[str] = ""):
+async def browse_dropbox_files(
+    request: Request,
+    path: Optional[str] = "",
+    context: Dict = Depends(get_user_context)
+):
     """
     Browse Dropbox files and folders
 
     Query params:
     - path: Folder path to browse (default: root)
 
-    PRIVACY: Only shows files from selected folders if user has set restrictions
+    ORGANIZATION-LEVEL: Shows files from organization's connected Dropbox
     """
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'dropbox')
+    organization_id = context['organization_id']
+    connection = get_organization_cloud_connection(organization_id, 'dropbox')
 
     access_token = connection['access_token']
     selected_folders = connection.get('selected_folders', [])
@@ -189,10 +196,10 @@ async def browse_dropbox_files(request: Request, path: Optional[str] = ""):
 
 
 @router.get("/cloud-storage/file/dropbox/{file_id}")
-async def get_dropbox_file_link(request: Request, file_id: str):
+async def get_dropbox_file_link(request: Request, file_id: str, context: Dict = Depends(get_user_context)):
     """Get temporary download link for Dropbox file"""
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'dropbox')
+    organization_id = context['organization_id']
+    connection = get_organization_cloud_connection(organization_id, 'dropbox')
 
     access_token = connection['access_token']
 
@@ -227,17 +234,21 @@ async def get_dropbox_file_link(request: Request, file_id: str):
 # ============================================================================
 
 @router.get("/cloud-storage/browse/onedrive")
-async def browse_onedrive_files(request: Request, path: Optional[str] = ""):
+async def browse_onedrive_files(
+    request: Request,
+    path: Optional[str] = "",
+    context: Dict = Depends(get_user_context)
+):
     """
     Browse OneDrive files and folders
 
     Query params:
     - path: Folder path or item ID to browse (default: root)
 
-    PRIVACY: Only shows files from selected folders if user has set restrictions
+    ORGANIZATION-LEVEL: Shows files from organization's connected OneDrive
     """
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'onedrive')
+    organization_id = context['organization_id']
+    connection = get_organization_cloud_connection(organization_id, 'onedrive')
 
     access_token = connection['access_token']
     selected_folders = connection.get('selected_folders', [])
@@ -337,10 +348,10 @@ async def browse_onedrive_files(request: Request, path: Optional[str] = ""):
 
 
 @router.get("/cloud-storage/file/onedrive/{item_id}")
-async def get_onedrive_file_link(request: Request, item_id: str):
+async def get_onedrive_file_link(request: Request, item_id: str, context: Dict = Depends(get_user_context)):
     """Get download link for OneDrive file"""
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'onedrive')
+    organization_id = context['organization_id']
+    connection = get_organization_cloud_connection(organization_id, 'onedrive')
 
     access_token = connection['access_token']
 
@@ -375,23 +386,30 @@ async def get_onedrive_file_link(request: Request, item_id: str):
 # ============================================================================
 
 @router.get("/cloud-storage/browse/google_drive")
-async def browse_google_drive_files(request: Request, folder_id: Optional[str] = None):
+async def browse_google_drive_files(
+    request: Request,
+    folder_id: Optional[str] = None,
+    context: Dict = Depends(get_user_context)
+):
     """
     Browse Google Drive files and folders
 
     Query params:
     - folder_id: Folder ID to browse (default: root)
 
-    PRIVACY: Only shows files from selected folders if user has set restrictions
+    ORGANIZATION-LEVEL: Shows files from organization's connected shared drive
+    All team members see the same files
     """
     try:
-        user_id = get_user_id(request)
-        connection = get_user_cloud_connection(user_id, 'google_drive')
+        organization_id = context['organization_id']
+        connection = get_organization_cloud_connection(organization_id, 'google_drive')
 
         access_token = connection['access_token']
         selected_folders = connection.get('selected_folders', [])
+
+        logger.info(f"User {context['user_id']} ({context['role']}) browsing org {organization_id} Google Drive")
     except HTTPException as e:
-        logger.error(f"Failed to get user connection: {e.detail}")
+        logger.error(f"Failed to get organization connection: {e.detail}")
         raise
     except Exception as e:
         logger.error(f"Unexpected error getting connection: {str(e)}", exc_info=True)
@@ -497,10 +515,10 @@ async def browse_google_drive_files(request: Request, folder_id: Optional[str] =
 
 
 @router.get("/cloud-storage/file/google_drive/{file_id}")
-async def get_google_drive_file_link(request: Request, file_id: str):
+async def get_google_drive_file_link(request: Request, file_id: str, context: Dict = Depends(get_user_context)):
     """Get download link for Google Drive file"""
-    user_id = get_user_id(request)
-    connection = get_user_cloud_connection(user_id, 'google_drive')
+    organization_id = context['organization_id']
+    connection = get_organization_cloud_connection(organization_id, 'google_drive')
 
     access_token = connection['access_token']
 
