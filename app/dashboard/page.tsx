@@ -75,17 +75,18 @@ export default function Dashboard() {
         )}
 
         <div className="mb-6 sm:mb-8 md:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 sm:mb-4">
-            Orla³ Marketing Suite
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-2 sm:mb-4">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-intense to-gold">Orla³</span>
+            <span className="text-white"> Marketing Suite</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
         </div>
 
         {/* TIER 1: Content Creation */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
             <span className="text-2xl sm:text-3xl"></span>
-            Content Creation
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">Content Creation</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {contentCreation.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
@@ -94,9 +95,9 @@ export default function Dashboard() {
 
         {/* TIER 2: Social Management */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
             <span className="text-2xl sm:text-3xl"></span>
-            Social Management
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense">Social Management</span>
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:gap-6">
             {socialManagement.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
@@ -105,9 +106,9 @@ export default function Dashboard() {
 
         {/* TIER 3: Planning & Intelligence */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
             <span className="text-2xl sm:text-3xl"></span>
-            Planning & Intelligence
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-royal to-cobalt">Planning & Intelligence</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {planningAnalysis.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
