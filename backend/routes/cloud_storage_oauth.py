@@ -188,23 +188,29 @@ async def google_drive_callback(code: str, state: str):
 
         provider_email = user_info.get('email')
 
+        # Get user's organization_id
+        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+        org_record = cur.fetchone()
+        organization_id = org_record['current_organization_id'] if org_record else None
+
         # Store tokens in database
         expires_at = datetime.utcnow() + timedelta(seconds=tokens.get('expires_in', 3600))
 
         cur.execute("""
             INSERT INTO user_cloud_storage_tokens (
-                user_id, provider, provider_email, access_token, refresh_token,
+                user_id, organization_id, provider, provider_email, access_token, refresh_token,
                 token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), true)
             ON CONFLICT (user_id, provider) DO UPDATE SET
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
                 token_expires_at = EXCLUDED.token_expires_at,
                 provider_email = EXCLUDED.provider_email,
+                organization_id = EXCLUDED.organization_id,
                 is_active = true,
                 updated_at = NOW()
         """, (
-            user_id, 'google_drive', provider_email,
+            user_id, organization_id, 'google_drive', provider_email,
             tokens['access_token'], tokens['refresh_token'], expires_at
         ))
 
@@ -319,22 +325,28 @@ async def onedrive_callback(code: str, state: str):
         with urllib.request.urlopen(req) as response:
             tokens = json.loads(response.read().decode('utf-8'))
 
+        # Get user's organization_id
+        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+        org_record = cur.fetchone()
+        organization_id = org_record['current_organization_id'] if org_record else None
+
         expires_at = datetime.utcnow() + timedelta(seconds=tokens.get('expires_in', 3600))
 
         # Store tokens
         cur.execute("""
             INSERT INTO user_cloud_storage_tokens (
-                user_id, provider, access_token, refresh_token,
+                user_id, organization_id, provider, access_token, refresh_token,
                 token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, NOW(), true)
+            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
             ON CONFLICT (user_id, provider) DO UPDATE SET
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
                 token_expires_at = EXCLUDED.token_expires_at,
+                organization_id = EXCLUDED.organization_id,
                 is_active = true,
                 updated_at = NOW()
         """, (
-            user_id, 'onedrive',
+            user_id, organization_id, 'onedrive',
             tokens['access_token'], tokens['refresh_token'], expires_at
         ))
 
@@ -445,23 +457,29 @@ async def dropbox_callback(code: str, state: str):
         with urllib.request.urlopen(req) as response:
             tokens = json.loads(response.read().decode('utf-8'))
 
+        # Get user's organization_id
+        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+        org_record = cur.fetchone()
+        organization_id = org_record['current_organization_id'] if org_record else None
+
         # Dropbox tokens don't have expiry, set to 4 hours (typical)
         expires_at = datetime.utcnow() + timedelta(hours=4)
 
         # Store tokens
         cur.execute("""
             INSERT INTO user_cloud_storage_tokens (
-                user_id, provider, access_token, refresh_token,
+                user_id, organization_id, provider, access_token, refresh_token,
                 token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, NOW(), true)
+            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
             ON CONFLICT (user_id, provider) DO UPDATE SET
                 access_token = EXCLUDED.access_token,
                 refresh_token = EXCLUDED.refresh_token,
                 token_expires_at = EXCLUDED.token_expires_at,
+                organization_id = EXCLUDED.organization_id,
                 is_active = true,
                 updated_at = NOW()
         """, (
-            user_id, 'dropbox',
+            user_id, organization_id, 'dropbox',
             tokens['access_token'], tokens.get('refresh_token', ''), expires_at
         ))
 
