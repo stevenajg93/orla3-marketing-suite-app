@@ -17,13 +17,14 @@
   - `admin_audit_log` table tracking all admin actions
   - Database functions: `admin_grant_credits()`, `is_user_super_admin()`
 
-- ✅ **Backend Admin API** (`backend/routes/admin.py`) - 700+ lines
+- ✅ **Backend Admin API** (`backend/routes/admin.py`) - 780+ lines
   - `GET /admin/stats/overview` - Platform statistics dashboard
   - `GET /admin/users` - User management with search/filtering
   - `GET /admin/users/{user_id}` - Detailed user profile
   - `POST /admin/credits/grant` - Gift credits to users
   - `POST /admin/super-admin/grant` - Delegate super admin privileges
   - `POST /admin/super-admin/revoke` - Revoke super admin privileges
+  - `DELETE /admin/users/{user_id}` - Permanently delete user and all data
   - All endpoints protected by `verify_super_admin()` dependency
 
 - ✅ **Frontend Admin Dashboard** (`app/admin/page.tsx`) - 575 lines
@@ -39,7 +40,7 @@
   - Content generation statistics
   - Social media connections
   - Cloud storage connections
-  - Quick actions (gift credits, suspend account)
+  - Quick actions (gift credits, suspend account, delete user)
 
 - ✅ **Auth Integration**
   - `/auth/login` now returns `is_super_admin` in user object (backend/routes/auth.py:405)
@@ -260,6 +261,7 @@ All secrets are in `.env` files (gitignored). Templates available:
 5. `5e381e0` - fix: Login now redirects to intended destination after auth
 6. `fbe3d60` - fix: Include is_super_admin in /auth/login response
 7. `3960029` - fix: Wrap useSearchParams in Suspense boundary
+8. `f4e2386` - feat: Add user deletion capability to admin portal
 
 ---
 
@@ -277,6 +279,7 @@ All secrets are in `.env` files (gitignored). Templates available:
 - ✅ User detail page shows full information
 - ✅ Credit gifting works
 - ✅ Super admin grant/revoke works
+- ✅ User deletion with strict confirmation
 - ✅ Audit log captures all actions
 
 ### Auth Integration
