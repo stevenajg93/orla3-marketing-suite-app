@@ -44,13 +44,7 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.engagement - a.engagement)
         .slice(0, 3);
 
-      // Mock credit data (until we have real credit tracking)
       setStats({
-        credits: {
-          used: 1247,
-          total: 2000,
-          percentage: 62
-        },
         content: {
           blogs: recentPosts.filter((p: any) => p.type === 'Blog Post').length,
           captions: recentPosts.filter((p: any) => p.type === 'Text').length,
@@ -83,7 +77,7 @@ export default function AnalyticsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">Analytics</h1>
-              <p className="text-gray-400">Track your ORLA³ credit usage and content creation</p>
+              <p className="text-gray-400">Track your ORLA³ content performance and engagement</p>
             </div>
 
             {/* Time Range Selector */}
@@ -128,32 +122,6 @@ export default function AnalyticsPage() {
           </div>
         ) : (
           <>
-            {/* Credit Usage */}
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Credit Usage</h2>
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Credits Used This Month</p>
-                    <p className="text-3xl sm:text-4xl font-black text-white">
-                      {stats?.credits.used.toLocaleString()} <span className="text-lg sm:text-xl text-gray-400">/ {stats?.credits.total.toLocaleString()}</span>
-                    </p>
-                  </div>
-                  <div className="mt-4 sm:mt-0 px-4 py-2 bg-cobalt/20 border border-cobalt rounded-lg">
-                    <p className="text-cobalt-300 font-bold text-lg sm:text-xl">{stats?.credits.percentage}% Used</p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-white/10 rounded-full h-3 sm:h-4">
-                  <div
-                    className="bg-gradient-to-r from-cobalt to-royal h-3 sm:h-4 rounded-full transition-all duration-500"
-                    style={{ width: `${stats?.credits.percentage}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Content Stats */}
             <div className="mb-6 sm:mb-8">
               <h2 className="text-lg sm:text-xl font-bold text-white mb-4">Content Generated</h2>

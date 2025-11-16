@@ -16,7 +16,7 @@ const socialManagement = [
 
 const planningAnalysis = [
   { name: 'Content Calendar', icon: '', href: '/dashboard/calendar', description: 'Plan & schedule ORLA³ content', color: 'from-royal to-royal-600' },
-  { name: 'Analytics', icon: '', href: '/dashboard/analytics', description: 'Track credits & content created', color: 'from-teal-500 to-teal-600', disabled: false },
+  { name: 'Analytics', icon: '', href: '/dashboard/analytics', description: 'Track content performance', color: 'from-teal-500 to-teal-600', disabled: false },
   { name: 'Brand Voice', icon: '', href: '/dashboard/brand-voice', description: 'Consistent messaging', color: 'from-cobalt to-cobalt-600', disabled: false },
   { name: 'Competitor Analysis', icon: '', href: '/dashboard/competitor', description: 'Market insights', color: 'from-gold-intense to-gold-600', disabled: false },
   { name: 'Strategy Planner', icon: '', href: '/dashboard/strategy', description: 'Content strategy', color: 'from-cobalt to-cobalt-600', disabled: false },
