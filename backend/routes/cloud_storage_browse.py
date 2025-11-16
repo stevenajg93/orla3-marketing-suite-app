@@ -504,6 +504,9 @@ async def browse_google_drive_files(
                 else:
                     files_list.append(file_obj)
 
+            logger.info(f"Returning {len(files_list)} files and {len(folders_list)} folders for org {organization_id}")
+            logger.info(f"Folders: {[f['name'] for f in folders_list[:5]]}")  # Log first 5 folder names
+
             return {
                 "success": True,
                 "provider": "google_drive",
