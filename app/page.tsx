@@ -733,15 +733,38 @@ export default function LandingPage() {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 sm:grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={{
+            initial: {},
+            animate: {
+              transition: {
+                staggerChildren: 0.08,
+                delayChildren: 0.2,
+              },
+            },
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+        >
           {plans.map((plan, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -8, transition: { duration: 0.3, ease: 'easeOut' } }}
+              variants={{
+                initial: {
+                  opacity: 0,
+                  y: 20,
+                },
+                animate: {
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    duration: 0.5,
+                    ease: [0.22, 1, 0.36, 1],
+                  },
+                },
+              }}
+              whileHover={{ y: -8, transition: { duration: 0.2, ease: 'easeOut' } }}
               className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border ${
                 plan.popular
                   ? 'border-cobalt-400 ring-2 ring-blue-400/50 scale-105'
@@ -797,7 +820,7 @@ export default function LandingPage() {
               </Link>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Credit Cost Breakdown */}
         <div className="mt-16 bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20">
