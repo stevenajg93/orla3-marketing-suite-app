@@ -680,9 +680,9 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             # Get Instagram Business Account ID from service_metadata
             import json
             try:
-                metadata = credentials.get('service_metadata', {})
-                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
-                business_account_id = meta_dict.get('business_account_id', '')
+                metadata = credentials.get('service_metadata') or {}
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata or {}
+                business_account_id = meta_dict.get('business_account_id', '') if meta_dict else ''
 
                 if not business_account_id:
                     return PublishResponse(
