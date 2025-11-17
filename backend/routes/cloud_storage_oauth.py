@@ -194,7 +194,8 @@ async def google_drive_callback(code: str, state: str):
         organization_id = org_record['current_organization_id'] if org_record else None
 
         # Store tokens in database
-        expires_at = datetime.utcnow() + timedelta(seconds=tokens.get('expires_in', 3600))
+        from datetime import timezone
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=tokens.get('expires_in', 3600))
 
         cur.execute("""
             INSERT INTO user_cloud_storage_tokens (
