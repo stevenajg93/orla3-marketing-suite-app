@@ -1351,8 +1351,8 @@ export default function SocialManagerPage() {
                 <button onClick={() => setShowMediaLibrary(false)} className="text-white hover:text-red-400 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">×</button>
               </div>
               
-              {/* Tabs */}
-              <div className="px-6 pt-4 flex gap-3 border-b border-white/10 overflow-x-auto">
+              {/* Tabs - Sticky to prevent content overlap */}
+              <div className="sticky top-0 z-20 bg-slate-900 px-6 pt-4 flex gap-3 border-b border-white/10 overflow-x-auto flex-shrink-0">
                 <button
                   onClick={() => setMediaLibraryTab('generated')}
                   className={`px-6 py-3 rounded-t-lg font-semibold transition whitespace-nowrap ${mediaLibraryTab === 'generated' ? 'bg-cobalt text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
