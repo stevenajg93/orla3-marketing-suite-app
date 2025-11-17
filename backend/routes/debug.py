@@ -167,7 +167,7 @@ async def debug_user_data(email: str):
     try:
         # Find user
         cursor.execute("""
-            SELECT id, email, full_name, role, current_organization_id, created_at
+            SELECT id, email, name, role, current_organization_id, created_at
             FROM users
             WHERE email = %s
         """, (email,))
@@ -180,7 +180,7 @@ async def debug_user_data(email: str):
         result["user"] = {
             "id": str(user['id']),
             "email": user['email'],
-            "full_name": user['full_name'],
+            "name": user['name'],
             "role": user['role'],
             "organization_id": str(user['current_organization_id']) if user['current_organization_id'] else None,
             "created_at": str(user['created_at'])
