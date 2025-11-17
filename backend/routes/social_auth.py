@@ -297,6 +297,9 @@ async def get_auth_url(platform: str, request: Request):
     if platform == "twitter":
         params["code_challenge"] = code_challenge
         params["code_challenge_method"] = "S256"
+    elif platform in ["instagram", "facebook"]:
+        # Force Facebook to show full permission screens (page selection, etc.)
+        params["auth_type"] = "rerequest"
 
     # Build URL
     auth_url = config['auth_url'] + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
@@ -359,6 +362,9 @@ async def connect_platform(platform: str, request: Request):
     if platform == "twitter":
         params["code_challenge"] = code_challenge
         params["code_challenge_method"] = "S256"
+    elif platform in ["instagram", "facebook"]:
+        # Force Facebook to show full permission screens (page selection, etc.)
+        params["auth_type"] = "rerequest"
 
     # Build URL
     auth_url = config['auth_url'] + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
