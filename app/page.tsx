@@ -261,7 +261,20 @@ export default function LandingPage() {
             builds strategy, and executes across all channels automatically.
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={{
+            initial: {},
+            animate: {
+              transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2,
+              },
+            },
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16"
+        >
           {[
             {
               metric: 'AI Auto-Select',
@@ -283,27 +296,21 @@ export default function LandingPage() {
           ].map((stat, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+              variants={{
+                initial: { opacity: 0, y: 20 },
+                animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }},
+              }}
               whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
               className="bg-gradient-to-br from-cobalt/10 to-royal/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-cobalt-400/30 hover:border-cobalt-400/50 text-center hover:shadow-2xl hover:shadow-cobalt/20 transition-all duration-300"
             >
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: idx * 0.1 + 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2"
-              >
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold mb-2">
                 {stat.metric}
-              </motion.div>
+              </div>
               <div className="text-white font-bold text-base sm:text-lg md:text-xl mb-3">{stat.label}</div>
               <p className="text-gray-400">{stat.description}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* Features Grid */}
@@ -322,7 +329,20 @@ export default function LandingPage() {
             8 specialized AI models working together to create content that converts
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={{
+            initial: {},
+            animate: {
+              transition: {
+                staggerChildren: 0.08,
+                delayChildren: 0.2,
+              },
+            },
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+        >
           {[
             {
               icon: '',
@@ -369,10 +389,10 @@ export default function LandingPage() {
           ].map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              variants={{
+                initial: { opacity: 0, y: 20 },
+                animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }},
+              }}
               whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
               className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20 hover:border-cobalt-400/50 hover:shadow-2xl hover:shadow-cobalt/10 transition-all duration-300 group"
             >
@@ -384,7 +404,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* Social Engagement Suite - NEW SECTION */}
@@ -421,7 +441,20 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+          <motion.div
+            initial="initial"
+            animate="animate"
+            variants={{
+              initial: {},
+              animate: {
+                transition: {
+                  staggerChildren: 0.1,
+                  delayChildren: 0.2,
+                },
+              },
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12"
+          >
             {[
               {
                 title: 'AI Comment Replies',
@@ -447,10 +480,10 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                variants={{
+                  initial: { opacity: 0, y: 20 },
+                  animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }},
+                }}
                 whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
                 className={`bg-gradient-to-br ${feature.gradient} backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-gradient-to-r ${feature.borderGradient} hover:shadow-2xl hover:shadow-cobalt/20 transition-all duration-300`}
               >
@@ -458,22 +491,18 @@ export default function LandingPage() {
                 <p className="text-gray-300 mb-3 sm:mb-4 md:mb-6">{feature.description}</p>
                 <ul className="space-y-2">
                   {feature.features.map((item, idx) => (
-                    <motion.li
+                    <li
                       key={idx}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: index * 0.1 + 0.3 + idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
                       className="flex items-center gap-2 text-sm text-gray-400"
                     >
                       <span className="text-gold">✓</span>
                       <span>{item}</span>
-                    </motion.li>
+                    </li>
                   ))}
                 </ul>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
