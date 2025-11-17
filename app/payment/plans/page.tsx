@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { config } from '@/lib/config';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { staggerContainer, staggerItem } from '@/lib/motion';
 
 export default function SelectPlanPage() {
   const router = useRouter();

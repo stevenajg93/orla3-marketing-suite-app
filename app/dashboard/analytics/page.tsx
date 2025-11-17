@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { createApiClient } from '@/lib/api-client';
+import { staggerContainer, staggerItem, fadeInUp, DURATION, EASE_PREMIUM } from '@/lib/motion';
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
