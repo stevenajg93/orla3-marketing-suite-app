@@ -76,8 +76,8 @@ def update_access_token_in_db(user_id: str, organization_id: str, provider: str,
     cursor = conn.cursor()
 
     try:
-        from datetime import datetime, timedelta
-        new_expires_at = datetime.now() + timedelta(seconds=expires_in)
+        from datetime import datetime, timedelta, timezone
+        new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
         # Try updating organization-level token first
         if organization_id:
@@ -517,10 +517,16 @@ async def browse_google_drive_files(
         selected_folders = connection.get('selected_folders', [])
 
         # Check if token is expired or about to expire (within 5 minutes)
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         if token_expires_at:
             expiry_time = token_expires_at if isinstance(token_expires_at, datetime) else datetime.fromisoformat(str(token_expires_at))
-            time_until_expiry = expiry_time - datetime.now()
+
+            # Ensure both datetimes are timezone-aware for comparison
+            if expiry_time.tzinfo is None:
+                expiry_time = expiry_time.replace(tzinfo=timezone.utc)
+
+            now = datetime.now(timezone.utc)
+            time_until_expiry = expiry_time - now
 
             if time_until_expiry < timedelta(minutes=5):
                 logger.info(f"Access token expired or expiring soon, refreshing...")
