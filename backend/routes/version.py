@@ -27,5 +27,6 @@ async def get_version():
         "git_commit": get_git_commit(),
         "git_branch": get_git_branch(),
         "deployment_time": os.getenv("RAILWAY_DEPLOYMENT_TIME", "not_set"),
-        "has_user_id_fallback": True  # Marker for the cloud storage fix
+        "has_user_id_fallback": True,  # Marker for the cloud storage fix
+        "allows_null_organization": True  # Marker for auth_dependency fix (commit 818b98a)
     }
