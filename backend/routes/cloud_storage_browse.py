@@ -546,6 +546,10 @@ async def browse_google_drive_files(
     except httpx.HTTPError as e:
         logger.error(f"HTTP error browsing Google Drive: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to browse Google Drive: {str(e)}")
+    except HTTPException as e:
+        # Re-raise HTTPException with original detail preserved
+        logger.error(f"HTTPException browsing Google Drive: {e.detail}", exc_info=True)
+        raise
     except Exception as e:
         error_msg = f"{type(e).__name__}: {str(e)}"
         logger.error(f"Error browsing Google Drive: {error_msg}", exc_info=True)
