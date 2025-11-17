@@ -32,22 +32,55 @@ def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/content")
-def get_library_content(request: Request):
+def get_library_content(request: Request, limit: int = 100, offset: int = 0):
+    """
+    Get library content with pagination
+
+    Args:
+        limit: Maximum number of items to return (default 100, max 500)
+        offset: Number of items to skip (default 0)
+
+    Returns paginated library items WITHOUT the large 'content' field for performance
+    """
     try:
+        # Validate and cap limit
+        limit = min(limit, 500)
+
         user_id = get_user_id(request)
         # Convert UUID to string for PostgreSQL compatibility
         user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
+
+        # Get total count
         cur.execute(
-            "SELECT * FROM content_library WHERE user_id = %s ORDER BY created_at DESC",
+            "SELECT COUNT(*) as total FROM content_library WHERE user_id = %s",
             (user_id_str,)
+        )
+        total = cur.fetchone()['total']
+
+        # Get paginated items WITHOUT the large 'content' field to reduce response size
+        cur.execute(
+            """SELECT id, user_id, title, content_type, status, platform, tags,
+                      media_url, created_at
+               FROM content_library
+               WHERE user_id = %s
+               ORDER BY created_at DESC
+               LIMIT %s OFFSET %s""",
+            (user_id_str, limit, offset)
         )
         items = cur.fetchall()
         cur.close()
         conn.close()
-        logger.info(f"Loaded {len(items)} library items for user {user_id}")
-        return {"items": items}
+
+        logger.info(f"Loaded {len(items)}/{total} library items for user {user_id} (limit={limit}, offset={offset})")
+        return {
+            "items": items,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + len(items)) < total
+        }
     except Exception as e:
         logger.error(f"Error loading library: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to load content: {str(e)}")
