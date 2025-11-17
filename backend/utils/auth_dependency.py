@@ -167,18 +167,20 @@ async def get_user_context(
 
         result = cursor.fetchone()
 
-        if not result or not result['current_organization_id']:
+        # Allow legacy users without organizations (for backwards compatibility)
+        if not result:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="User has no organization. Database state is invalid.",
+                detail="User not found in database",
             )
 
         organization_id = result['current_organization_id']
         role = result['role']
 
+        # For users without organization (legacy/free users), use NULL organization_id
         return {
             "user_id": user_id,
-            "organization_id": str(organization_id),
+            "organization_id": str(organization_id) if organization_id else None,
             "role": role or "member"  # Default to member if no role found
         }
 
