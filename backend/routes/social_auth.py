@@ -450,6 +450,9 @@ async def oauth_callback(platform: str, code: str, state: str):
             # Get platform-specific user info
             service_id = await get_platform_user_id(actual_platform, access_token)
 
+            # Get platform-specific metadata
+            service_metadata = await get_platform_metadata(actual_platform, access_token)
+
             # Store tokens in database
             conn = get_db_connection()
             cur = conn.cursor()
@@ -459,6 +462,10 @@ async def oauth_callback(platform: str, code: str, state: str):
             try:
                 # Format service_name (e.g., "twitter" -> "Twitter")
                 service_name = actual_platform.capitalize()
+
+                # Convert metadata dict to JSON string
+                import json
+                metadata_json = json.dumps(service_metadata) if service_metadata else None
 
                 cur.execute("""
                     INSERT INTO connected_services
@@ -483,7 +490,7 @@ async def oauth_callback(platform: str, code: str, state: str):
                     access_token,
                     refresh_token,
                     expires_at,
-                    None  # service_metadata
+                    metadata_json  # service_metadata as JSON
                 ))
 
                 conn.commit()
@@ -570,6 +577,62 @@ async def get_platform_user_id(platform: str, access_token: str) -> str:
     except Exception as e:
         logger.error(f"Error getting {platform} user ID: {e}")
         return f"{platform}_user"
+
+
+async def get_platform_metadata(platform: str, access_token: str) -> Optional[Dict[str, Any]]:
+    """
+    Get platform-specific metadata (e.g., Instagram Business Account ID)
+
+    For Instagram: Fetches the Instagram Business Account ID from Facebook Pages
+    Returns: Dict with platform-specific metadata or None
+    """
+    if platform != "instagram":
+        # Other platforms don't need metadata yet
+        return None
+
+    try:
+        async with httpx.AsyncClient() as client:
+            # Step 1: Get user's Facebook Pages
+            pages_response = await client.get(
+                "https://graph.facebook.com/v18.0/me/accounts",
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={"fields": "id,name,access_token,instagram_business_account"}
+            )
+
+            if pages_response.status_code != 200:
+                logger.warning(f"Failed to fetch Facebook Pages: {pages_response.text}")
+                return None
+
+            pages_data = pages_response.json()
+            pages = pages_data.get("data", [])
+
+            if not pages:
+                logger.warning("No Facebook Pages found for Instagram Business Account")
+                return None
+
+            # Step 2: Find first page with Instagram Business Account
+            for page in pages:
+                ig_account = page.get("instagram_business_account")
+                if ig_account:
+                    business_account_id = ig_account.get("id")
+                    page_access_token = page.get("access_token")
+
+                    if business_account_id:
+                        logger.info(f"Found Instagram Business Account: {business_account_id}")
+                        return {
+                            "business_account_id": business_account_id,
+                            "page_id": page.get("id"),
+                            "page_name": page.get("name"),
+                            "page_access_token": page_access_token
+                        }
+
+            logger.warning("No Instagram Business Account found on any Facebook Page")
+            logger.info("User needs to connect an Instagram Business Account to their Facebook Page")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error getting Instagram metadata: {e}")
+        return None
 
 
 @router.post("/disconnect/{platform}")
