@@ -21,11 +21,90 @@ router = APIRouter()
 logger = setup_logger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 
 def get_db_connection():
     """Get database connection"""
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+
+async def refresh_google_drive_token(refresh_token: str) -> dict:
+    """
+    Refresh Google Drive access token using refresh token
+
+    Returns:
+        dict with 'access_token' and 'expires_in' keys
+    """
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token available. Please reconnect Google Drive.")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "refresh_token": refresh_token,
+                    "grant_type": "refresh_token"
+                }
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Token refresh failed: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=401,
+                    detail="Failed to refresh access token. Please reconnect Google Drive."
+                )
+
+            token_data = response.json()
+            logger.info("Successfully refreshed Google Drive access token")
+            return {
+                "access_token": token_data["access_token"],
+                "expires_in": token_data.get("expires_in", 3600)
+            }
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error refreshing token: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error refreshing token: {str(e)}")
+
+
+def update_access_token_in_db(user_id: str, organization_id: str, provider: str, new_access_token: str, expires_in: int):
+    """Update access token in database after refresh"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        from datetime import datetime, timedelta
+        new_expires_at = datetime.now() + timedelta(seconds=expires_in)
+
+        # Try updating organization-level token first
+        if organization_id:
+            cursor.execute("""
+                UPDATE user_cloud_storage_tokens
+                SET access_token = %s, token_expires_at = %s
+                WHERE organization_id = %s AND provider = %s AND is_active = true
+            """, (new_access_token, new_expires_at, str(organization_id), provider))
+
+            if cursor.rowcount > 0:
+                conn.commit()
+                logger.info(f"Updated org-level token for org {organization_id}")
+                return
+
+        # Fallback to user-level token
+        cursor.execute("""
+            UPDATE user_cloud_storage_tokens
+            SET access_token = %s, token_expires_at = %s
+            WHERE user_id = %s AND provider = %s AND is_active = true
+        """, (new_access_token, new_expires_at, str(user_id), provider))
+
+        conn.commit()
+        logger.info(f"Updated user-level token for user {user_id}")
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def get_organization_cloud_connection(organization_id: str, provider: str, user_id: str = None):
@@ -433,7 +512,36 @@ async def browse_google_drive_files(
         connection = get_organization_cloud_connection(organization_id, 'google_drive', user_id)
 
         access_token = connection['access_token']
+        refresh_token = connection.get('refresh_token')
+        token_expires_at = connection.get('token_expires_at')
         selected_folders = connection.get('selected_folders', [])
+
+        # Check if token is expired or about to expire (within 5 minutes)
+        from datetime import datetime, timedelta
+        if token_expires_at:
+            expiry_time = token_expires_at if isinstance(token_expires_at, datetime) else datetime.fromisoformat(str(token_expires_at))
+            time_until_expiry = expiry_time - datetime.now()
+
+            if time_until_expiry < timedelta(minutes=5):
+                logger.info(f"Access token expired or expiring soon, refreshing...")
+                if refresh_token:
+                    try:
+                        new_token_data = await refresh_google_drive_token(refresh_token)
+                        access_token = new_token_data['access_token']
+                        update_access_token_in_db(user_id, organization_id, 'google_drive', access_token, new_token_data['expires_in'])
+                        logger.info("Successfully refreshed and updated Google Drive access token")
+                    except Exception as refresh_error:
+                        logger.error(f"Failed to refresh token: {str(refresh_error)}")
+                        raise HTTPException(
+                            status_code=401,
+                            detail="Access token expired and refresh failed. Please reconnect Google Drive."
+                        )
+                else:
+                    logger.warning("Token expired but no refresh token available")
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Access token expired. Please reconnect Google Drive."
+                    )
 
         logger.info(f"User {user_id} ({context['role']}) browsing org {organization_id} Google Drive")
     except HTTPException as e:
@@ -458,6 +566,28 @@ async def browse_google_drive_files(
                 )
 
                 logger.info(f"Shared drives API response: status={shared_drives_response.status_code}")
+
+                # Handle 401 - token expired, try to refresh
+                if shared_drives_response.status_code == 401:
+                    logger.warning("Received 401 from Google Drive API, attempting token refresh...")
+                    if refresh_token:
+                        try:
+                            new_token_data = await refresh_google_drive_token(refresh_token)
+                            access_token = new_token_data['access_token']
+                            update_access_token_in_db(user_id, organization_id, 'google_drive', access_token, new_token_data['expires_in'])
+                            logger.info("Token refreshed after 401, retrying request...")
+
+                            # Retry the request with new token
+                            shared_drives_response = await client.get(
+                                "https://www.googleapis.com/drive/v3/drives",
+                                headers={"Authorization": f"Bearer {access_token}"},
+                                params={"pageSize": 100}
+                            )
+                        except Exception as e:
+                            logger.error(f"Token refresh failed: {str(e)}")
+                            raise HTTPException(status_code=401, detail="Authentication failed. Please reconnect Google Drive.")
+                    else:
+                        raise HTTPException(status_code=401, detail="Access token expired. Please reconnect Google Drive.")
 
                 if shared_drives_response.status_code == 200:
                     shared_drives_data = shared_drives_response.json()
@@ -495,6 +625,35 @@ async def browse_google_drive_files(
                     "includeItemsFromAllDrives": "true"
                 }
             )
+
+            # Handle 401 - token expired, try to refresh
+            if response.status_code == 401:
+                logger.warning("Received 401 from Google Drive files API, attempting token refresh...")
+                if refresh_token:
+                    try:
+                        new_token_data = await refresh_google_drive_token(refresh_token)
+                        access_token = new_token_data['access_token']
+                        update_access_token_in_db(user_id, organization_id, 'google_drive', access_token, new_token_data['expires_in'])
+                        logger.info("Token refreshed after 401, retrying files request...")
+
+                        # Retry the request with new token
+                        response = await client.get(
+                            "https://www.googleapis.com/drive/v3/files",
+                            headers={"Authorization": f"Bearer {access_token}"},
+                            params={
+                                "q": query,
+                                "fields": "files(id, name, mimeType, size, thumbnailLink, webViewLink, modifiedTime)",
+                                "pageSize": 1000,
+                                "orderBy": "folder,name",
+                                "supportsAllDrives": "true",
+                                "includeItemsFromAllDrives": "true"
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Token refresh failed: {str(e)}")
+                        raise HTTPException(status_code=401, detail="Authentication failed. Please reconnect Google Drive.")
+                else:
+                    raise HTTPException(status_code=401, detail="Access token expired. Please reconnect Google Drive.")
 
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code, detail=f"Google Drive API error: {response.text}")
