@@ -157,19 +157,28 @@ export default function SocialManagerPage() {
   }, [showMediaLibrary]);
 
   const loadMediaLibrary = async () => {
+    setMediaLoading(true);
     try {
+      console.log('📚 Loading generated content...');
       const data = await api.get('/library/content');
+      console.log('✓ Generated content loaded:', data.items?.length || 0, 'items');
       setLibraryContent(data.items || []);
-    } catch (err) {
-      console.error('Failed to load media library');
+    } catch (err: any) {
+      console.error('❌ Failed to load media library:', err);
+      alert(`Failed to load generated content: ${err.message || 'Unknown error'}`);
+    } finally {
+      setMediaLoading(false);
     }
   };
 
   const loadConnectedProviders = async () => {
     try {
+      console.log('☁️ Loading connected providers...');
       const data = await api.get('/cloud-storage/connections');
+      console.log('☁️ Provider response:', data);
       if (data.success && data.connections) {
         const providers = data.connections.map((conn: any) => conn.provider);
+        console.log('☁️ Found providers:', providers);
         setConnectedProviders(providers);
 
         // Set initial cloud storage provider to first connected one
@@ -1400,6 +1409,15 @@ export default function SocialManagerPage() {
               <div className="flex-1 overflow-auto p-4 sm:p-6">
                 {/* Generated Content Tab */}
                 {mediaLibraryTab === 'generated' && (
+                  <>
+                    {mediaLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cobalt mx-auto mb-4"></div>
+                          <p className="text-gray-400">Loading generated content...</p>
+                        </div>
+                      </div>
+                    ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                     {libraryContent.map((item) => (
                       <div key={item.id} onClick={() => handleMediaSelect(item)} className="bg-white/5 rounded-lg overflow-hidden cursor-pointer hover:bg-white/10 transition border border-white/10 hover:border-cobalt">
@@ -1443,6 +1461,8 @@ export default function SocialManagerPage() {
                   </div>
                 )}
                   </div>
+                    )}
+                  </>
                 )}
 
                 {/* Cloud Storage Tab */}
