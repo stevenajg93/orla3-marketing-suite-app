@@ -9,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from utils.auth import decode_token
 from utils.credits import deduct_credits, InsufficientCreditsError
+from lib.gcs_storage import upload_bytes_to_gcs
 
 logger = setup_logger(__name__)
 router = APIRouter()
@@ -511,25 +512,79 @@ async def get_veo_status(operation_name: str):
 
                         # Video is in bytesBase64Encoded or gcsUri
                         video_base64 = video.get("bytesBase64Encoded")
+                        gcs_uri = video.get("gcsUri")
+
+                        # CRITICAL: Download and upload to permanent storage
+                        # Veo GCS URIs contain JWT tokens that expire, causing 401 errors
+                        # Users pay for these videos - they must never expire!
+                        permanent_url = None
 
                         if video_base64:
-                            logger.info(f"✅ Veo video generation complete (base64, {len(video_base64)} chars)")
+                            logger.info(f"📦 Veo video in base64 format ({len(video_base64)} chars)")
+                            try:
+                                # Decode base64 video
+                                video_bytes = base64.b64decode(video_base64)
+                                logger.info(f"📦 Decoded video: {len(video_bytes)} bytes")
+
+                                # Upload to permanent GCS storage
+                                permanent_url = upload_bytes_to_gcs(
+                                    file_bytes=video_bytes,
+                                    filename="veo-video.mp4",
+                                    destination_folder="ai-videos",
+                                    content_type="video/mp4",
+                                    make_public=True
+                                )
+
+                                if permanent_url:
+                                    logger.info(f"✅ Veo video saved to permanent storage: {permanent_url}")
+                                else:
+                                    logger.warning("⚠️ Failed to upload to permanent storage, falling back to base64")
+                                    permanent_url = f"data:video/mp4;base64,{video_base64}"
+
+                            except Exception as e:
+                                logger.error(f"❌ Failed to process base64 video: {e}")
+                                permanent_url = f"data:video/mp4;base64,{video_base64}"
+
+                        elif gcs_uri:
+                            logger.info(f"📦 Veo video in GCS URI format: {gcs_uri}")
+                            try:
+                                # Download video from temporary GCS URI (has JWT token)
+                                async with httpx.AsyncClient(timeout=120.0) as client:
+                                    download_response = await client.get(gcs_uri)
+
+                                    if download_response.status_code == 200:
+                                        video_bytes = download_response.content
+                                        logger.info(f"📥 Downloaded video: {len(video_bytes)} bytes")
+
+                                        # Upload to permanent GCS storage
+                                        permanent_url = upload_bytes_to_gcs(
+                                            file_bytes=video_bytes,
+                                            filename="veo-video.mp4",
+                                            destination_folder="ai-videos",
+                                            content_type="video/mp4",
+                                            make_public=True
+                                        )
+
+                                        if permanent_url:
+                                            logger.info(f"✅ Veo video saved to permanent storage: {permanent_url}")
+                                        else:
+                                            logger.error("❌ Failed to upload to permanent storage")
+                                            permanent_url = gcs_uri  # Fallback to temporary URI
+                                    else:
+                                        logger.error(f"❌ Failed to download video: {download_response.status_code}")
+                                        permanent_url = gcs_uri  # Fallback to temporary URI
+
+                            except Exception as e:
+                                logger.error(f"❌ Failed to download/upload video: {e}")
+                                permanent_url = gcs_uri  # Fallback to temporary URI
+
+                        if permanent_url:
                             return {
                                 "success": True,
                                 "status": "complete",
-                                "video_url": f"data:video/mp4;base64,{video_base64}",
+                                "video_url": permanent_url,
                                 "done": True
                             }
-                        else:
-                            gcs_uri = video.get("gcsUri")
-                            if gcs_uri:
-                                logger.info(f"✅ Veo video generation complete: {gcs_uri}")
-                                return {
-                                    "success": True,
-                                    "status": "complete",
-                                    "video_url": gcs_uri,
-                                    "done": True
-                                }
 
                     logger.error(f"❌ Veo succeeded but no video in videos array. Full response: {data}")
                     return {
@@ -555,6 +610,116 @@ async def get_veo_status(operation_name: str):
 
     except Exception as e:
         logger.error(f"❌ Veo status check error: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/repair-veo-video")
+async def repair_veo_video(request: Request):
+    """
+    Repair a Veo video that has an expired JWT token URL.
+
+    This endpoint attempts to download the video from the expired URL
+    and re-upload it to permanent storage. If download fails (401),
+    the video cannot be recovered.
+
+    Request body:
+        {
+            "video_url": "https://...gcs_uri_with_jwt...",
+            "content_id": "abc123"  # optional, for logging
+        }
+
+    Returns:
+        {
+            "success": bool,
+            "permanent_url": str,  # new permanent URL if successful
+            "error": str  # error message if failed
+        }
+    """
+    try:
+        body = await request.json()
+        video_url = body.get("video_url")
+        content_id = body.get("content_id", "unknown")
+
+        if not video_url:
+            raise HTTPException(status_code=400, detail="video_url is required")
+
+        logger.info(f"🔧 Attempting to repair Veo video (content_id: {content_id})")
+        logger.info(f"   Original URL: {video_url[:100]}...")
+
+        # If it's a base64 data URL, it's already permanent
+        if video_url.startswith("data:video/"):
+            return {
+                "success": True,
+                "permanent_url": video_url,
+                "message": "Video is already in permanent base64 format"
+            }
+
+        # If it's already in our permanent storage, return it
+        if "storage.googleapis.com" in video_url and "ai-videos" in video_url:
+            return {
+                "success": True,
+                "permanent_url": video_url,
+                "message": "Video is already in permanent GCS storage"
+            }
+
+        # Try to download the video (may fail if JWT expired)
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                logger.info("📥 Downloading video from temporary URL...")
+                download_response = await client.get(video_url)
+
+                if download_response.status_code == 200:
+                    video_bytes = download_response.content
+                    logger.info(f"✅ Downloaded video: {len(video_bytes)} bytes")
+
+                    # Upload to permanent storage
+                    permanent_url = upload_bytes_to_gcs(
+                        file_bytes=video_bytes,
+                        filename="veo-video.mp4",
+                        destination_folder="ai-videos",
+                        content_type="video/mp4",
+                        make_public=True
+                    )
+
+                    if permanent_url:
+                        logger.info(f"✅ Video repaired and saved: {permanent_url}")
+                        return {
+                            "success": True,
+                            "permanent_url": permanent_url,
+                            "message": "Video successfully repaired and uploaded to permanent storage"
+                        }
+                    else:
+                        logger.error("❌ Failed to upload to permanent storage")
+                        return {
+                            "success": False,
+                            "error": "Failed to upload video to permanent storage"
+                        }
+
+                elif download_response.status_code == 401:
+                    logger.error(f"❌ Video URL has expired (401 Unauthorized)")
+                    return {
+                        "success": False,
+                        "error": "Video URL has expired and cannot be recovered. The video must be regenerated.",
+                        "expired": True
+                    }
+                else:
+                    logger.error(f"❌ Failed to download video: {download_response.status_code}")
+                    return {
+                        "success": False,
+                        "error": f"Failed to download video (HTTP {download_response.status_code})"
+                    }
+
+        except Exception as download_error:
+            logger.error(f"❌ Download error: {str(download_error)}")
+            return {
+                "success": False,
+                "error": f"Failed to download video: {str(download_error)}"
+            }
+
+    except Exception as e:
+        logger.error(f"❌ Video repair error: {str(e)}", exc_info=True)
         return {
             "success": False,
             "error": str(e)
