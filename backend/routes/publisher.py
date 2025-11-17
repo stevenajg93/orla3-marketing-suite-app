@@ -124,11 +124,11 @@ class InstagramPublisher:
     Requires: Instagram Business Account, Facebook Page Access Token
     """
 
-    def __init__(self, access_token: str = None):
-        # Accept access_token parameter for worker compatibility
-        # Falls back to environment variable if not provided
+    def __init__(self, access_token: str = None, business_account_id: str = None):
+        # Accept credentials as parameters for multi-tenant support
+        # Falls back to environment variables for backwards compatibility
         self.access_token = access_token or os.getenv("INSTAGRAM_ACCESS_TOKEN")
-        self.business_account_id = os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
+        self.business_account_id = business_account_id or os.getenv("INSTAGRAM_BUSINESS_ACCOUNT_ID")
         self.api_version = "v21.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
 
@@ -677,27 +677,55 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             )
 
         if platform == "instagram":
-            publisher = InstagramPublisher()
+            # Get Instagram Business Account ID from service_metadata
+            import json
+            try:
+                metadata = credentials.get('service_metadata', {})
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                business_account_id = meta_dict.get('business_account_id', '')
 
-            if publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
-                publish_result = await publisher.publish_carousel(
-                    caption=publish_request.caption,
-                    image_urls=publish_request.image_urls
+                if not business_account_id:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="Instagram Business Account ID not found. Please reconnect your Instagram account.",
+                        published_at=result["published_at"]
+                    )
+
+                # Pass credentials from database to publisher
+                publisher = InstagramPublisher(
+                    access_token=credentials['access_token'],
+                    business_account_id=business_account_id
                 )
-            elif publish_request.image_urls:
-                publish_result = await publisher.publish_single_image(
-                    caption=publish_request.caption,
-                    image_url=publish_request.image_urls[0]
-                )
-            else:
+
+                if publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
+                    publish_result = await publisher.publish_carousel(
+                        caption=publish_request.caption,
+                        image_urls=publish_request.image_urls
+                    )
+                elif publish_request.image_urls:
+                    publish_result = await publisher.publish_single_image(
+                        caption=publish_request.caption,
+                        image_url=publish_request.image_urls[0]
+                    )
+                else:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="Instagram posts require at least one image",
+                        published_at=result["published_at"]
+                    )
+
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"Instagram publish error: {e}")
                 return PublishResponse(
                     success=False,
                     platform=publish_request.platform,
-                    error="Instagram posts require at least one image",
+                    error=f"Instagram error: {str(e)}",
                     published_at=result["published_at"]
                 )
-
-            result.update(publish_result)
 
         elif platform == "linkedin":
             # Get LinkedIn person URN from metadata
