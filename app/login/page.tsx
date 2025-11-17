@@ -3,8 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/context/AuthContext';
 import { ApiError } from '@/lib/api-client';
+import { fadeInUp, scaleIn, DURATION, EASE_PREMIUM } from '@/lib/motion';
 
 function LoginForm() {
   const router = useRouter();
@@ -52,15 +54,25 @@ function LoginForm() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
-        <div className="text-center mb-6 sm:mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: DURATION.moderate, ease: EASE_PREMIUM }}
+          className="text-center mb-6 sm:mb-8"
+        >
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
             ORLA³
           </h1>
           <p className="text-sm sm:text-base text-gray-400 mt-2">Marketing Automation Suite</p>
-        </div>
+        </motion.div>
 
         {/* Login Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-5 sm:p-6 md:p-8 border border-white/20 shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: DURATION.moderate, delay: 0.1, ease: EASE_PREMIUM }}
+          className="bg-white/10 backdrop-blur-lg rounded-2xl p-5 sm:p-6 md:p-8 border border-white/20 shadow-2xl"
+        >
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">Welcome Back</h2>
 
           {error && (
@@ -109,13 +121,16 @@ function LoginForm() {
               </Link>
             </div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white text-sm sm:text-base font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              transition={{ duration: DURATION.fast, ease: EASE_PREMIUM }}
+              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-cobalt to-royal hover:from-cobalt-600 hover:to-royal-600 text-white text-sm sm:text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+            </motion.button>
           </form>
 
           <div className="mt-4 sm:mt-6 text-center">
@@ -126,7 +141,7 @@ function LoginForm() {
               </Link>
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <div className="mt-6 sm:mt-8 text-center text-gray-500 text-xs sm:text-sm">

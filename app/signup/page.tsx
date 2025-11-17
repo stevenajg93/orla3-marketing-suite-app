@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/context/AuthContext';
+import { DURATION, EASE_PREMIUM } from '@/lib/motion';
 
 export default function SignupPage() {
   const router = useRouter();

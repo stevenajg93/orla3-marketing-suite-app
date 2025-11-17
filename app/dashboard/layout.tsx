@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCredits } from '@/lib/hooks/useCredits';
 import CreditPurchaseModal from '@/components/CreditPurchaseModal';
+import PageTransition from '@/components/PageTransition';
 
 export default function DashboardLayout({
   children,
@@ -442,7 +443,9 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </main>
 
       {/* Credit Purchase Modal */}

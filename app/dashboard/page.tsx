@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/lib/context/AuthContext';
 import UnverifiedEmailBanner from './components/UnverifiedEmailBanner';
+import { staggerContainer, staggerItem, hoverLift, DURATION, EASE_PREMIUM } from '@/lib/motion';
 
 const contentCreation = [
   { name: 'Blog Writer', icon: '', href: '/dashboard/blog', description: 'AI-powered long-form content', color: 'from-cobalt to-cobalt-600' },
@@ -24,21 +26,9 @@ const planningAnalysis = [
 ];
 
 const ToolCard = ({ tool }: { tool: any }) => {
-  const LinkWrapper = tool.external ? 'a' : Link;
-  const linkProps = tool.external
-    ? { href: tool.href, target: '_blank', rel: 'noopener noreferrer' }
-    : { href: tool.disabled ? '#' : tool.href };
-
-  return (
-    <LinkWrapper
-      {...linkProps}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 transition-all ${
-        tool.disabled
-          ? 'opacity-50 cursor-not-allowed'
-          : 'hover:scale-105 hover:border-white/30 cursor-pointer'
-      }`}
-    >
-      <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
+  const CardContent = (
+    <>
+      <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
       <div className="relative p-4 sm:p-6 bg-white/5 backdrop-blur-lg">
         <div className="flex items-start justify-between">
           <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">{tool.icon}</div>
@@ -59,7 +49,75 @@ const ToolCard = ({ tool }: { tool: any }) => {
           </span>
         )}
       </div>
-    </LinkWrapper>
+    </>
+  );
+
+  const baseClassName = `group relative overflow-hidden rounded-2xl border border-white/10 block ${
+    tool.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+  }`;
+
+  if (tool.disabled) {
+    return (
+      <motion.div
+        variants={staggerItem}
+        className={baseClassName}
+      >
+        {CardContent}
+      </motion.div>
+    );
+  }
+
+  if (tool.external) {
+    return (
+      <motion.a
+        href={tool.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        variants={staggerItem}
+        whileHover={{
+          y: -8,
+          scale: 1.02,
+          transition: {
+            duration: DURATION.fast,
+            ease: EASE_PREMIUM,
+          },
+        }}
+        whileTap={{
+          scale: 0.98,
+          transition: {
+            duration: 0.1,
+          },
+        }}
+        className={baseClassName}
+      >
+        {CardContent}
+      </motion.a>
+    );
+  }
+
+  return (
+    <Link href={tool.href} className="block">
+      <motion.div
+        variants={staggerItem}
+        whileHover={{
+          y: -8,
+          scale: 1.02,
+          transition: {
+            duration: DURATION.fast,
+            ease: EASE_PREMIUM,
+          },
+        }}
+        whileTap={{
+          scale: 0.98,
+          transition: {
+            duration: 0.1,
+          },
+        }}
+        className={baseClassName}
+      >
+        {CardContent}
+      </motion.div>
+    </Link>
   );
 };
 
@@ -74,46 +132,85 @@ export default function Dashboard() {
           <UnverifiedEmailBanner userEmail={user.email} />
         )}
 
-        <div className="mb-6 sm:mb-8 md:mb-12">
+        {/* Header with fade in */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: DURATION.moderate, ease: EASE_PREMIUM }}
+          className="mb-6 sm:mb-8 md:mb-12"
+        >
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-2 sm:mb-4">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-intense to-gold">Orla³</span>
             <span className="text-white"> Marketing Suite</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300">AI-powered marketing automation at your fingertips</p>
-        </div>
+        </motion.div>
 
         {/* TIER 1: Content Creation */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer(0.08)}
+          className="mb-6 sm:mb-8"
+        >
+          <motion.h2
+            variants={staggerItem}
+            className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3"
+          >
             <span className="text-2xl sm:text-3xl"></span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">Content Creation</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          </motion.h2>
+          <motion.div
+            variants={staggerContainer(0.08)}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+          >
             {contentCreation.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* TIER 2: Social Management */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer(0.08)}
+          className="mb-6 sm:mb-8"
+        >
+          <motion.h2
+            variants={staggerItem}
+            className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3"
+          >
             <span className="text-2xl sm:text-3xl"></span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense">Social Management</span>
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:gap-6">
+          </motion.h2>
+          <motion.div
+            variants={staggerContainer(0.08)}
+            className="grid grid-cols-1 gap-4 sm:gap-6"
+          >
             {socialManagement.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* TIER 3: Planning & Intelligence */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+        <motion.div
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer(0.08)}
+          className="mb-6 sm:mb-8"
+        >
+          <motion.h2
+            variants={staggerItem}
+            className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3"
+          >
             <span className="text-2xl sm:text-3xl"></span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-royal to-cobalt">Planning & Intelligence</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          </motion.h2>
+          <motion.div
+            variants={staggerContainer(0.08)}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+          >
             {planningAnalysis.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
