@@ -119,7 +119,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-black">
       {/* Navigation */}
       <nav className="border-b border-white/10 backdrop-blur-lg bg-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cobalt to-gold">
@@ -145,7 +145,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20 text-center relative overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center relative overflow-hidden">
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative z-10"
@@ -221,8 +221,8 @@ export default function LandingPage() {
       </section>
 
       {/* Powered By Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-12 border-y border-white/10">
-        <h3 className="text-center text-gray-400 mb-3 sm:mb-4 md:mb-6 lg:mb-8 uppercase tracking-wider text-sm font-bold">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-y border-white/10">
+        <h3 className="text-center text-gray-400 mb-8 uppercase tracking-wider text-sm font-bold">
           Powered By Industry-Leading AI
         </h3>
         <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 text-gray-300">
@@ -245,7 +245,7 @@ export default function LandingPage() {
       </section>
 
       {/* ROI Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -261,7 +261,7 @@ export default function LandingPage() {
             builds strategy, and executes across all channels automatically.
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16">
           {[
             {
               metric: 'AI Auto-Select',
@@ -307,7 +307,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -322,7 +322,7 @@ export default function LandingPage() {
             8 specialized AI models working together to create content that converts
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {[
             {
               icon: '',
@@ -388,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* Social Engagement Suite - NEW SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20 relative overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 relative overflow-hidden">
         {/* Animated background gradient */}
         <motion.div
           animate={{
@@ -421,7 +421,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-4 sm:mb-6 md:mb-8 lg:mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
             {[
               {
                 title: 'AI Comment Replies',
@@ -506,9 +506,9 @@ export default function LandingPage() {
       </section>
 
       {/* Premium Content CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
         <div className="bg-gradient-to-br from-royal/20 to-cobalt/20 backdrop-blur-lg rounded-3xl p-6 sm:p-8 md:p-12 border border-cobalt-400/30">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 items-center">
             <div>
               <div className="inline-block mb-4 px-3 sm:px-4 py-2 bg-cobalt/30 rounded-full border border-cobalt-400/50">
                 <span className="text-cobalt-300 font-semibold">Premium Content</span>
@@ -543,7 +543,7 @@ export default function LandingPage() {
                 Find Videographers Near Me →
               </a>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { icon: '', label: 'Videographers', count: '500+' },
                 { icon: '', label: 'Wedding Films', count: '200+' },
@@ -565,7 +565,7 @@ export default function LandingPage() {
       </section>
 
       {/* SEO & AI Search Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20 bg-gradient-to-b from-transparent via-cobalt/5 to-transparent">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-transparent via-cobalt/5 to-transparent">
         <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-12">
           <div className="inline-block mb-4 px-3 sm:px-4 py-2 bg-gradient-to-r from-gold/20 to-cobalt/20 rounded-full border border-gold/30">
             <span className="text-gold font-semibold">
@@ -581,7 +581,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-8 mb-4 sm:mb-6 md:mb-8 lg:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 mb-12">
           {/* Traditional SEO */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 sm:p-6 md:p-8 border border-white/20 hover:border-gold/50 transition">
             <div className="flex items-start gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
@@ -658,7 +658,7 @@ export default function LandingPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-gradient-to-br from-gold/10 to-gold-intense/10 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-gold/20 text-center">
             <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-intense mb-2">
               2-3x
@@ -684,7 +684,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20" id="pricing">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24" id="pricing">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -851,7 +851,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-4 md:px-8 py-20 text-center">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
