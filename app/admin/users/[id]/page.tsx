@@ -5,6 +5,9 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { api } from '@/lib/api-client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 
 interface UserDetails {
   user: {

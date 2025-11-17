@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 
 export default function BillingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');

@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 
 type Competitor = {
   id: string;

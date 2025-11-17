@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from 'framer-motion';
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 
 type PostType = "text" | "video" | "carousel";
 type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr";

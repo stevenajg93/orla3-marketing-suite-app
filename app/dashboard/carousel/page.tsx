@@ -2,9 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from 'framer-motion';
 import html2canvas from "html2canvas";
 import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 
 interface BrandAssets {
   brand_colors: string[];

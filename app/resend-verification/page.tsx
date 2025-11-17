@@ -1,5 +1,8 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { AnimatedPage } from '@/components/AnimatedPage';
+import { fadeInUp } from '@/lib/motion';
 import { useState } from 'react';
 import Link from 'next/link';
 import { config } from '@/lib/config';
