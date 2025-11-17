@@ -28,11 +28,12 @@ def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
-def get_organization_cloud_connection(organization_id: str, provider: str):
+def get_organization_cloud_connection(organization_id: str, provider: str, user_id: str = None):
     """
     Get organization's cloud storage connection from database
 
     Organization-level cloud storage ensures all team members access the same shared drive.
+    Fallback to user_id for legacy connections created before multi-tenant migration.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -41,6 +42,7 @@ def get_organization_cloud_connection(organization_id: str, provider: str):
     org_id_str = str(organization_id)
 
     try:
+        # Try organization-level connection first
         cursor.execute("""
             SELECT
                 access_token,
@@ -60,10 +62,31 @@ def get_organization_cloud_connection(organization_id: str, provider: str):
 
         connection = cursor.fetchone()
 
+        # Fallback to user-level connection if no org connection found
+        if not connection and user_id:
+            logger.warning(f"No org-level {provider} found for org {org_id_str}, trying user-level for user {user_id}")
+            cursor.execute("""
+                SELECT
+                    access_token,
+                    refresh_token,
+                    token_expires_at,
+                    provider_email,
+                    storage_type,
+                    drive_id,
+                    metadata
+                FROM user_cloud_storage_tokens
+                WHERE user_id = %s
+                  AND provider = %s
+                  AND is_active = true
+                ORDER BY connected_at DESC
+                LIMIT 1
+            """, (str(user_id), provider))
+            connection = cursor.fetchone()
+
         if not connection:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active {provider} connection found for this organization. Please connect {provider} first."
+                detail=f"No active {provider} connection found. Please connect {provider} first."
             )
 
         # Convert to dict
@@ -100,7 +123,8 @@ async def browse_dropbox_files(
     ORGANIZATION-LEVEL: Shows files from organization's connected Dropbox
     """
     organization_id = context['organization_id']
-    connection = get_organization_cloud_connection(organization_id, 'dropbox')
+    user_id = context['user_id']
+    connection = get_organization_cloud_connection(organization_id, 'dropbox', user_id)
 
     access_token = connection['access_token']
     selected_folders = connection.get('selected_folders', [])
@@ -199,7 +223,8 @@ async def browse_dropbox_files(
 async def get_dropbox_file_link(request: Request, file_id: str, context: Dict = Depends(get_user_context)):
     """Get temporary download link for Dropbox file"""
     organization_id = context['organization_id']
-    connection = get_organization_cloud_connection(organization_id, 'dropbox')
+    user_id = context['user_id']
+    connection = get_organization_cloud_connection(organization_id, 'dropbox', user_id)
 
     access_token = connection['access_token']
 
@@ -248,7 +273,8 @@ async def browse_onedrive_files(
     ORGANIZATION-LEVEL: Shows files from organization's connected OneDrive
     """
     organization_id = context['organization_id']
-    connection = get_organization_cloud_connection(organization_id, 'onedrive')
+    user_id = context['user_id']
+    connection = get_organization_cloud_connection(organization_id, 'onedrive', user_id)
 
     access_token = connection['access_token']
     selected_folders = connection.get('selected_folders', [])
@@ -351,7 +377,8 @@ async def browse_onedrive_files(
 async def get_onedrive_file_link(request: Request, item_id: str, context: Dict = Depends(get_user_context)):
     """Get download link for OneDrive file"""
     organization_id = context['organization_id']
-    connection = get_organization_cloud_connection(organization_id, 'onedrive')
+    user_id = context['user_id']
+    connection = get_organization_cloud_connection(organization_id, 'onedrive', user_id)
 
     access_token = connection['access_token']
 
@@ -402,12 +429,13 @@ async def browse_google_drive_files(
     """
     try:
         organization_id = context['organization_id']
-        connection = get_organization_cloud_connection(organization_id, 'google_drive')
+        user_id = context['user_id']
+        connection = get_organization_cloud_connection(organization_id, 'google_drive', user_id)
 
         access_token = connection['access_token']
         selected_folders = connection.get('selected_folders', [])
 
-        logger.info(f"User {context['user_id']} ({context['role']}) browsing org {organization_id} Google Drive")
+        logger.info(f"User {user_id} ({context['role']}) browsing org {organization_id} Google Drive")
     except HTTPException as e:
         logger.error(f"Failed to get organization connection: {e.detail}")
         raise
@@ -528,7 +556,8 @@ async def browse_google_drive_files(
 async def get_google_drive_file_link(request: Request, file_id: str, context: Dict = Depends(get_user_context)):
     """Get download link for Google Drive file"""
     organization_id = context['organization_id']
-    connection = get_organization_cloud_connection(organization_id, 'google_drive')
+    user_id = context['user_id']
+    connection = get_organization_cloud_connection(organization_id, 'google_drive', user_id)
 
     access_token = connection['access_token']
 
