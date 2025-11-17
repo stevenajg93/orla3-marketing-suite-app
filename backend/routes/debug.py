@@ -147,3 +147,134 @@ async def debug_cloud_storage(request: Request):
         conn.close()
 
     return results
+
+
+@router.get("/debug/user/{email}")
+async def debug_user_data(email: str):
+    """
+    Check user data: library content and cloud storage connections
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    result = {
+        "user": None,
+        "library_content": None,
+        "cloud_storage_user_level": None,
+        "cloud_storage_org_level": None,
+        "errors": []
+    }
+
+    try:
+        # Find user
+        cursor.execute("""
+            SELECT id, email, full_name, role, current_organization_id, created_at
+            FROM users
+            WHERE email = %s
+        """, (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            result["errors"].append(f"User not found: {email}")
+            return result
+
+        result["user"] = {
+            "id": str(user['id']),
+            "email": user['email'],
+            "full_name": user['full_name'],
+            "role": user['role'],
+            "organization_id": str(user['current_organization_id']) if user['current_organization_id'] else None,
+            "created_at": str(user['created_at'])
+        }
+
+        user_id = str(user['id'])
+        org_id = str(user['current_organization_id']) if user['current_organization_id'] else None
+
+        # Check library content
+        cursor.execute("""
+            SELECT COUNT(*) as count
+            FROM library_content
+            WHERE user_id = %s
+        """, (user_id,))
+        content_count = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT id, title, content_type, media_url IS NOT NULL as has_media_url,
+                   LENGTH(body::text) as body_length, created_at
+            FROM library_content
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 10
+        """, (user_id,))
+        sample_content = cursor.fetchall()
+
+        result["library_content"] = {
+            "total_count": content_count['count'],
+            "sample_items": [
+                {
+                    "id": str(item['id']),
+                    "title": item['title'],
+                    "content_type": item['content_type'],
+                    "has_media_url": item['has_media_url'],
+                    "body_length": item['body_length'],
+                    "created_at": str(item['created_at'])
+                }
+                for item in sample_content
+            ]
+        }
+
+        # Check user-level cloud storage
+        cursor.execute("""
+            SELECT provider, provider_email, is_active, connected_at,
+                   token_expires_at, organization_id
+            FROM user_cloud_storage_tokens
+            WHERE user_id = %s
+            ORDER BY connected_at DESC
+        """, (user_id,))
+        user_connections = cursor.fetchall()
+
+        result["cloud_storage_user_level"] = [
+            {
+                "provider": conn_row['provider'],
+                "provider_email": conn_row['provider_email'],
+                "is_active": conn_row['is_active'],
+                "connected_at": str(conn_row['connected_at']),
+                "token_expires_at": str(conn_row['token_expires_at']) if conn_row['token_expires_at'] else None,
+                "is_expired": conn_row['token_expires_at'] < datetime.now() if conn_row['token_expires_at'] else False,
+                "organization_id": str(conn_row['organization_id']) if conn_row['organization_id'] else None
+            }
+            for conn_row in user_connections
+        ]
+
+        # Check org-level cloud storage if user has org
+        if org_id:
+            cursor.execute("""
+                SELECT provider, provider_email, is_active, connected_at,
+                       token_expires_at, user_id
+                FROM user_cloud_storage_tokens
+                WHERE organization_id = %s
+                ORDER BY connected_at DESC
+            """, (org_id,))
+            org_connections = cursor.fetchall()
+
+            result["cloud_storage_org_level"] = [
+                {
+                    "provider": conn_row['provider'],
+                    "provider_email": conn_row['provider_email'],
+                    "is_active": conn_row['is_active'],
+                    "connected_at": str(conn_row['connected_at']),
+                    "token_expires_at": str(conn_row['token_expires_at']) if conn_row['token_expires_at'] else None,
+                    "is_expired": conn_row['token_expires_at'] < datetime.now() if conn_row['token_expires_at'] else False,
+                    "owner_user_id": str(conn_row['user_id'])
+                }
+                for conn_row in org_connections
+            ]
+        else:
+            result["cloud_storage_org_level"] = []
+
+    except Exception as e:
+        result["errors"].append(f"{type(e).__name__}: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return result
