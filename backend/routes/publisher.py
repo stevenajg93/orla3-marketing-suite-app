@@ -668,7 +668,9 @@ async def publish_content(publish_request: PublishRequest, request: Request):
         # Get user's credentials for this platform
         credentials = get_user_service_credentials(user_id, platform)
 
-        if not credentials:
+        # Instagram supports both OAuth and environment variable credentials
+        # Don't error out if no OAuth - let InstagramPublisher fall back to env vars
+        if not credentials and platform != "instagram":
             return PublishResponse(
                 success=False,
                 platform=publish_request.platform,
@@ -677,26 +679,28 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             )
 
         if platform == "instagram":
-            # Get Instagram Business Account ID from service_metadata
+            # Instagram supports both OAuth (database) and direct credentials (env vars)
             import json
             try:
-                metadata = credentials.get('service_metadata') or {}
-                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata or {}
-                business_account_id = meta_dict.get('business_account_id', '') if meta_dict else ''
+                if credentials:
+                    # Try OAuth credentials from database
+                    metadata = credentials.get('service_metadata') or {}
+                    meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata or {}
+                    business_account_id = meta_dict.get('business_account_id', '') if meta_dict else ''
+                    access_token = credentials.get('access_token')
 
-                if not business_account_id:
-                    return PublishResponse(
-                        success=False,
-                        platform=publish_request.platform,
-                        error="Instagram Business Account ID not found. Please reconnect your Instagram account.",
-                        published_at=result["published_at"]
-                    )
-
-                # Pass credentials from database to publisher
-                publisher = InstagramPublisher(
-                    access_token=credentials['access_token'],
-                    business_account_id=business_account_id
-                )
+                    if business_account_id and access_token:
+                        # Use OAuth credentials
+                        publisher = InstagramPublisher(
+                            access_token=access_token,
+                            business_account_id=business_account_id
+                        )
+                    else:
+                        # OAuth incomplete, fall back to env vars
+                        publisher = InstagramPublisher()
+                else:
+                    # No OAuth, use environment variables
+                    publisher = InstagramPublisher()
 
                 if publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
                     publish_result = await publisher.publish_carousel(
