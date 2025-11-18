@@ -1061,11 +1061,49 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                     page_access_token=page_access_token,
                     page_id=page_id
                 )
-                image_url = publish_request.image_urls[0] if publish_request.image_urls else None
-                publish_result = await publisher.publish_post(
-                    caption=publish_request.caption,
-                    image_url=image_url
-                )
+
+                # Route based on content type
+                if publish_request.content_type == "text":
+                    # Text-only post
+                    publish_result = await publisher.publish_text(
+                        message=publish_request.caption
+                    )
+
+                elif publish_request.link_url:
+                    # Link post with preview
+                    publish_result = await publisher.publish_link(
+                        message=publish_request.caption,
+                        link=publish_request.link_url
+                    )
+
+                elif publish_request.video_url:
+                    # Video post
+                    publish_result = await publisher.publish_video(
+                        description=publish_request.caption,
+                        video_url=publish_request.video_url,
+                        title=publish_request.title
+                    )
+
+                elif publish_request.image_urls and len(publish_request.image_urls) > 1:
+                    # Photo album (2-50 photos)
+                    publish_result = await publisher.publish_album(
+                        message=publish_request.caption,
+                        photo_urls=publish_request.image_urls
+                    )
+
+                elif publish_request.image_urls:
+                    # Single photo post
+                    publish_result = await publisher.publish_photo(
+                        caption=publish_request.caption,
+                        photo_url=publish_request.image_urls[0]
+                    )
+
+                else:
+                    # Fallback to text post
+                    publish_result = await publisher.publish_text(
+                        message=publish_request.caption
+                    )
+
                 result.update(publish_result)
 
             except Exception as e:
@@ -1265,14 +1303,14 @@ async def check_publisher_status_legacy():
 
 class FacebookPublisher:
     """
-    Facebook Graph API publisher (Multi-Tenant)
-    Uses OAuth tokens from connected_services table
-    Requires: pages_manage_posts permission (Meta App Review required)
+    Facebook Graph API v21.0 publisher
+    Supports: Text posts, Link posts, Photo posts, Video posts, Photo albums
+    Requires: pages_manage_posts permission
     """
 
     def __init__(self, page_access_token: str, page_id: str):
         """
-        Initialize with user's Facebook Page credentials
+        Initialize with Facebook Page credentials
 
         Args:
             page_access_token: Page-specific access token from /me/accounts
@@ -1283,31 +1321,34 @@ class FacebookPublisher:
         self.api_version = "v21.0"
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
 
-    async def publish_post(self, caption: str, image_url: Optional[str] = None) -> dict:
-        """Publish post to Facebook Page"""
+    async def publish_text(self, message: str) -> dict:
+        """
+        Publish text-only post to Facebook Page
+
+        Args:
+            message: Post text content
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
         if not self.access_token or not self.page_id:
-            return {
-                "success": False,
-                "error": "Facebook credentials not configured"
-            }
+            return {"success": False, "error": "Facebook credentials not configured"}
 
         try:
             async with httpx.AsyncClient() as client:
-                endpoint = f"{self.base_url}/{self.page_id}/feed"
-                data = {
-                    "message": caption,
-                    "access_token": self.access_token
-                }
-
-                if image_url:
-                    data["link"] = image_url
-
-                response = await client.post(endpoint, data=data)
+                response = await client.post(
+                    f"{self.base_url}/{self.page_id}/feed",
+                    data={
+                        "message": message,
+                        "access_token": self.access_token
+                    }
+                )
 
                 if response.status_code != 200:
+                    logger.error(f"Facebook text post failed: {response.text}")
                     return {
                         "success": False,
-                        "error": f"Facebook API error: {response.text}"
+                        "error": f"Facebook API error: {response.status_code}"
                     }
 
                 post_id = response.json()["id"]
@@ -1315,14 +1356,239 @@ class FacebookPublisher:
                 return {
                     "success": True,
                     "post_id": post_id,
-                    "post_url": f"https://www.facebook.com/{post_id}"
+                    "post_url": f"https://www.facebook.com/{post_id}",
+                    "message": "Posted to Facebook successfully"
                 }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            logger.error(f"Facebook text post error: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def publish_link(self, message: str, link: str) -> dict:
+        """
+        Publish link post with preview to Facebook Page
+
+        Args:
+            message: Post caption/text
+            link: URL to share
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.page_id:
+            return {"success": False, "error": "Facebook credentials not configured"}
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/{self.page_id}/feed",
+                    data={
+                        "message": message,
+                        "link": link,
+                        "access_token": self.access_token
+                    }
+                )
+
+                if response.status_code != 200:
+                    logger.error(f"Facebook link post failed: {response.text}")
+                    return {
+                        "success": False,
+                        "error": f"Facebook API error: {response.status_code}"
+                    }
+
+                post_id = response.json()["id"]
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.facebook.com/{post_id}",
+                    "message": "Link posted to Facebook successfully"
+                }
+
+        except Exception as e:
+            logger.error(f"Facebook link post error: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def publish_photo(self, caption: str, photo_url: str) -> dict:
+        """
+        Publish photo post to Facebook Page
+
+        Args:
+            caption: Photo caption
+            photo_url: Public URL to photo
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.page_id:
+            return {"success": False, "error": "Facebook credentials not configured"}
+
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(
+                    f"{self.base_url}/{self.page_id}/photos",
+                    data={
+                        "url": photo_url,
+                        "caption": caption,
+                        "access_token": self.access_token
+                    }
+                )
+
+                if response.status_code != 200:
+                    logger.error(f"Facebook photo post failed: {response.text}")
+                    return {
+                        "success": False,
+                        "error": f"Facebook API error: {response.status_code}"
+                    }
+
+                post_id = response.json()["post_id"]
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.facebook.com/{post_id}",
+                    "message": "Photo posted to Facebook successfully"
+                }
+
+        except httpx.TimeoutException:
+            return {"success": False, "error": "Photo upload timeout"}
+        except Exception as e:
+            logger.error(f"Facebook photo post error: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def publish_video(self, description: str, video_url: str, title: str = None) -> dict:
+        """
+        Publish video post to Facebook Page
+
+        Args:
+            description: Video description
+            video_url: Public URL to video file
+            title: Optional video title
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.page_id:
+            return {"success": False, "error": "Facebook credentials not configured"}
+
+        try:
+            async with httpx.AsyncClient(timeout=600.0) as client:  # 10 min timeout for large videos
+                data = {
+                    "file_url": video_url,
+                    "description": description,
+                    "access_token": self.access_token
+                }
+
+                if title:
+                    data["title"] = title
+
+                response = await client.post(
+                    f"{self.base_url}/{self.page_id}/videos",
+                    data=data
+                )
+
+                if response.status_code != 200:
+                    logger.error(f"Facebook video post failed: {response.text}")
+                    return {
+                        "success": False,
+                        "error": f"Facebook API error: {response.status_code}"
+                    }
+
+                video_id = response.json()["id"]
+
+                return {
+                    "success": True,
+                    "post_id": video_id,
+                    "post_url": f"https://www.facebook.com/watch/?v={video_id}",
+                    "message": "Video posted to Facebook successfully"
+                }
+
+        except httpx.TimeoutException:
+            return {"success": False, "error": "Video upload timeout - large videos may take 10+ minutes"}
+        except Exception as e:
+            logger.error(f"Facebook video post error: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def publish_album(self, message: str, photo_urls: List[str]) -> dict:
+        """
+        Publish photo album to Facebook Page (2-50 photos)
+
+        Args:
+            message: Album description
+            photo_urls: List of 2-50 photo URLs
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.page_id:
+            return {"success": False, "error": "Facebook credentials not configured"}
+
+        if len(photo_urls) < 2:
+            return {"success": False, "error": "Album requires at least 2 photos"}
+
+        if len(photo_urls) > 50:
+            return {"success": False, "error": "Album cannot exceed 50 photos"}
+
+        try:
+            async with httpx.AsyncClient(timeout=300.0) as client:
+                # Step 1: Upload all photos and collect photo IDs
+                photo_ids = []
+
+                for photo_url in photo_urls:
+                    upload_response = await client.post(
+                        f"{self.base_url}/{self.page_id}/photos",
+                        data={
+                            "url": photo_url,
+                            "published": "false",  # Don't publish yet
+                            "access_token": self.access_token
+                        }
+                    )
+
+                    if upload_response.status_code != 200:
+                        logger.error(f"Failed to upload photo: {upload_response.text}")
+                        continue
+
+                    photo_id = upload_response.json()["id"]
+                    photo_ids.append({"media_fbid": photo_id})
+
+                if len(photo_ids) < 2:
+                    return {
+                        "success": False,
+                        "error": "Failed to upload enough photos for album"
+                    }
+
+                # Step 2: Create album post with all photos
+                import json
+                album_response = await client.post(
+                    f"{self.base_url}/{self.page_id}/feed",
+                    data={
+                        "message": message,
+                        "attached_media": json.dumps(photo_ids),
+                        "access_token": self.access_token
+                    }
+                )
+
+                if album_response.status_code != 200:
+                    logger.error(f"Facebook album post failed: {album_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"Facebook API error: {album_response.status_code}"
+                    }
+
+                post_id = album_response.json()["id"]
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.facebook.com/{post_id}",
+                    "message": f"Album with {len(photo_ids)} photos posted to Facebook successfully"
+                }
+
+        except httpx.TimeoutException:
+            return {"success": False, "error": "Album upload timeout"}
+        except Exception as e:
+            logger.error(f"Facebook album post error: {e}")
+            return {"success": False, "error": str(e)}
 
 # ============================================================================
 # TIKTOK PUBLISHER

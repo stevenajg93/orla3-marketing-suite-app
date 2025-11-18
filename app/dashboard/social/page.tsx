@@ -68,6 +68,10 @@ export default function SocialManagerPage() {
   const [isShort, setIsShort] = useState(false);
   const [youtubeThumbnail, setYoutubeThumbnail] = useState("");
 
+  // Facebook Studio state
+  const [facebookPostType, setFacebookPostType] = useState<"text" | "link" | "photo" | "video" | "album">("text");
+  const [facebookLinkUrl, setFacebookLinkUrl] = useState("");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -785,6 +789,25 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "facebook") {
+        if (facebookPostType === "link" && !facebookLinkUrl.trim()) {
+          alert('Please add a URL for your link post');
+          return;
+        }
+        if (facebookPostType === "photo" && selectedMedia.length === 0) {
+          alert('Please select at least one photo');
+          return;
+        }
+        if (facebookPostType === "video" && (selectedMedia.length === 0 || !selectedMedia[0]?.content_type?.includes('video'))) {
+          alert('Please select a video');
+          return;
+        }
+        if (facebookPostType === "album" && selectedMedia.length < 2) {
+          alert('Album requires at least 2 photos');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -834,6 +857,25 @@ export default function SocialManagerPage() {
           payload.category_id = youtubeCategory;
           payload.is_short = isShort;
           payload.thumbnail_url = youtubeThumbnail || null;
+        } else if (mode === "studio" && platform === "facebook") {
+          payload.content_type = facebookPostType;
+
+          if (facebookPostType === "text") {
+            // Text-only post
+            // No additional fields needed
+          } else if (facebookPostType === "link") {
+            // Link post
+            payload.link_url = facebookLinkUrl;
+          } else if (facebookPostType === "photo") {
+            // Single photo
+            payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
+          } else if (facebookPostType === "video") {
+            // Video post
+            payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+          } else if (facebookPostType === "album") {
+            // Photo album
+            payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+          }
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -2330,8 +2372,228 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* Facebook Studio */}
+            {studioPlatform === "facebook" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Post Type Selector */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: "text" as const, label: "Text", icon: "T" },
+                          { id: "link" as const, label: "Link", icon: "🔗" },
+                          { id: "photo" as const, label: "Photo", icon: "📷" },
+                          { id: "video" as const, label: "Video", icon: "🎥" },
+                          { id: "album" as const, label: "Album", icon: "📚" },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setFacebookPostType(type.id)}
+                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                              facebookPostType === type.id
+                                ? "border-cobalt bg-cobalt/20 text-white"
+                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{type.icon}</div>
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Caption/Message */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                        {facebookPostType === "link" ? "Message" : "Caption"}
+                      </h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="What's on your mind?"
+                        rows={6}
+                        maxLength={63206}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{caption.length.toLocaleString()} / 63,206</span>
+                        {caption.length > 63206 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Link URL (for link posts) */}
+                    {facebookPostType === "link" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Link URL</h3>
+                        <input
+                          type="url"
+                          value={facebookLinkUrl}
+                          onChange={(e) => setFacebookLinkUrl(e.target.value)}
+                          placeholder="https://example.com"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">Facebook will automatically generate a preview</p>
+                      </div>
+                    )}
+
+                    {/* Media Upload (for photo/video/album) */}
+                    {(facebookPostType === "photo" || facebookPostType === "video" || facebookPostType === "album") && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                          {facebookPostType === "photo" && "Photo"}
+                          {facebookPostType === "video" && "Video"}
+                          {facebookPostType === "album" && "Photos"}
+                        </h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              {facebookPostType === "video" && selectedMedia[0].content_type?.includes('video') ? (
+                                <video
+                                  src={selectedMedia[0].url}
+                                  className="w-full aspect-video object-cover rounded-lg mx-auto"
+                                  controls
+                                />
+                              ) : facebookPostType === "album" ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {selectedMedia.slice(0, 6).map((media, idx) => (
+                                    <img
+                                      key={idx}
+                                      src={media.url || media.thumbnail_url}
+                                      alt={`Photo ${idx + 1}`}
+                                      className="w-full aspect-square object-cover rounded-lg"
+                                    />
+                                  ))}
+                                  {selectedMedia.length > 6 && (
+                                    <div className="w-full aspect-square bg-white/10 rounded-lg flex items-center justify-center text-white font-bold">
+                                      +{selectedMedia.length - 6}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <img
+                                  src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                  alt="Preview"
+                                  className="w-full aspect-video object-cover rounded-lg mx-auto"
+                                />
+                              )}
+                              <p className="text-sm text-gray-400">
+                                {facebookPostType === "album"
+                                  ? `${selectedMedia.length} photo${selectedMedia.length > 1 ? 's' : ''} selected`
+                                  : "Click to change"}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">
+                                {facebookPostType === "album" ? "Select photos from library (2-50)" : "Select from library"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || !caption.trim()}
+                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Publishing..." : "Post to Facebook"}
+                    </button>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* Facebook Post Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden">
+                      {/* Post Header */}
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cobalt to-royal"></div>
+                          <div>
+                            <p className="font-semibold text-gray-900">Your Page</p>
+                            <p className="text-xs text-gray-500">Just now • Public</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Post Content */}
+                      <div className="p-4">
+                        {caption && (
+                          <p className="text-gray-900 text-sm mb-3 whitespace-pre-wrap">{caption}</p>
+                        )}
+                      </div>
+
+                      {/* Media Preview */}
+                      {facebookPostType === "link" && facebookLinkUrl && (
+                        <div className="border-t border-gray-200">
+                          <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Link Preview</span>
+                          </div>
+                          <div className="p-3 bg-gray-50 border-t border-gray-200">
+                            <p className="text-xs text-gray-500 uppercase">
+                              {new URL(facebookLinkUrl).hostname}
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 truncate">{facebookLinkUrl}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {facebookPostType === "photo" && selectedMedia.length > 0 && (
+                        <img
+                          src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                          alt="Preview"
+                          className="w-full aspect-square object-cover"
+                        />
+                      )}
+
+                      {facebookPostType === "video" && selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') && (
+                        <video
+                          src={selectedMedia[0].url}
+                          className="w-full aspect-video object-cover"
+                          controls
+                        />
+                      )}
+
+                      {facebookPostType === "album" && selectedMedia.length > 0 && (
+                        <div className="grid grid-cols-2 gap-0.5">
+                          {selectedMedia.slice(0, 4).map((media, idx) => (
+                            <img
+                              key={idx}
+                              src={media.url || media.thumbnail_url}
+                              alt={`Photo ${idx + 1}`}
+                              className="w-full aspect-square object-cover"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Post Actions */}
+                      <div className="border-t border-gray-200 p-3 flex justify-around text-gray-600 text-sm font-semibold">
+                        <button className="hover:bg-gray-100 px-4 py-2 rounded">Like</button>
+                        <button className="hover:bg-gray-100 px-4 py-2 rounded">Comment</button>
+                        <button className="hover:bg-gray-100 px-4 py-2 rounded">Share</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
