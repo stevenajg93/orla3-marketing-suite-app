@@ -96,6 +96,53 @@ All 9 Platform Studios now match the quality standard set by Instagram/YouTube:
 - Auto-deploys on push to main
 - Platform Studios now show all 9 platforms
 
+### Bug Fixes (Same Session - Nov 18, 2025)
+
+After initial deployment, two client-side errors were discovered and fixed:
+
+#### 5. **Tumblr/WordPress - handlePublish Undefined Error**
+**Problem:** `ReferenceError: handlePublish is not defined`
+- Tumblr and WordPress Studios crashed on load with client-side exception
+- Console error: "Uncaught ReferenceError: handlePublish is not defined"
+
+**Root Cause:**
+```typescript
+// Function defined as:
+const publishToSocial = async () => { ... }  // Line 774
+
+// But components called:
+<button onClick={handlePublish} />  // ❌ Wrong function name
+```
+
+**Solution:**
+- Changed `onClick={handlePublish}` → `onClick={publishToSocial}` in both platforms
+- File: `app/dashboard/social/page.tsx` lines 3666, 3831
+- Commit: `75fe047`, `ddc4ed9`
+
+#### 6. **Analytics Page - createApiClient Import Error**
+**Problem:** `TypeError: createApiClient is not a function`
+- Analytics page crashed with "Failed to load analytics" error
+- Console error: "(0, r.createApiClient) is not a function"
+
+**Root Cause:**
+```typescript
+// Analytics imported non-existent function:
+import { createApiClient } from '@/lib/api-client';  // ❌ Doesn't exist
+const api = createApiClient();  // ❌ Function doesn't exist
+```
+
+**Solution:**
+- Changed import: `createApiClient` → `api`
+- Removed local declaration: `const api = createApiClient();`
+- Now uses exported `api` object directly
+- File: `app/dashboard/analytics/page.tsx` lines 5, 20
+- Commit: `ddc4ed9`
+
+**Final Deployment:**
+- Commit: `ddc4ed9` - "fix: Correct function names and imports in Platform Studios"
+- Status: ✅ Deployed to Vercel successfully
+- Verified: All 9 Platform Studios now load without errors
+
 ---
 
 ## 📋 Previous Session: Mobile Optimization + Analytics + Legal (November 16, 2025)
