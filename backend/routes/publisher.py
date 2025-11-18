@@ -95,7 +95,7 @@ router = APIRouter()
 
 class PublishRequest(BaseModel):
     platform: Literal["instagram", "linkedin", "twitter", "x", "facebook", "tiktok", "youtube", "reddit", "tumblr", "wordpress"]
-    content_type: Literal["text", "image", "video", "carousel", "reel", "story"]
+    content_type: Literal["text", "image", "video", "carousel", "reel", "story", "article"]
     caption: str
     image_urls: Optional[List[str]] = []
     video_url: Optional[str] = None  # For TikTok, YouTube video publishing, Instagram Reels
@@ -117,6 +117,9 @@ class PublishRequest(BaseModel):
     disable_comment: Optional[bool] = False  # TikTok: Disable comments
     disable_stitch: Optional[bool] = False  # TikTok: Disable stitch feature
     video_cover_timestamp_ms: Optional[int] = 1000  # TikTok: Cover frame timestamp
+    # LinkedIn-specific fields
+    article_title: Optional[str] = None  # LinkedIn: Article headline
+    article_url: Optional[str] = None  # LinkedIn: External article URL
 
 class PublishResponse(BaseModel):
     success: bool
@@ -678,6 +681,221 @@ class LinkedInPublisher:
                 "error": str(e)
             }
 
+    async def publish_video(self, caption: str, video_url: str) -> dict:
+        """
+        Publish video post to LinkedIn using asset registration
+
+        Args:
+            caption: Post caption/commentary (max 3000 chars)
+            video_url: Public URL to video file
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.person_urn:
+            return {
+                "success": False,
+                "error": "LinkedIn not connected. Please connect your LinkedIn account."
+            }
+
+        try:
+            from utils.media_upload import download_url_to_file, validate_media_file
+            import tempfile
+
+            async with httpx.AsyncClient(timeout=300.0) as client:
+                # Download video to temp file for validation and upload
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+                    tmp_path = tmp_file.name
+
+                # Download video
+                await download_url_to_file(video_url, tmp_path)
+
+                # Validate video
+                validate_media_file(tmp_path, "linkedin", "video")
+
+                # Step 1: Register upload
+                register_payload = {
+                    "registerUploadRequest": {
+                        "recipes": ["urn:li:digitalmediaRecipe:feedshare-video"],
+                        "owner": self.person_urn,
+                        "serviceRelationships": [
+                            {
+                                "relationshipType": "OWNER",
+                                "identifier": "urn:li:userGeneratedContent"
+                            }
+                        ]
+                    }
+                }
+
+                register_response = await client.post(
+                    "https://api.linkedin.com/v2/assets?action=registerUpload",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json"
+                    },
+                    json=register_payload
+                )
+
+                if register_response.status_code != 200:
+                    logger.error(f"LinkedIn video asset registration failed: {register_response.status_code} - {register_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"LinkedIn video asset registration failed: {register_response.status_code}"
+                    }
+
+                register_data = register_response.json()
+                upload_url = register_data['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
+                asset_urn = register_data['value']['asset']
+
+                # Step 2: Upload video binary
+                with open(tmp_path, 'rb') as f:
+                    upload_response = await client.put(
+                        upload_url,
+                        headers={
+                            "Authorization": f"Bearer {self.access_token}"
+                        },
+                        content=f.read()
+                    )
+
+                    if upload_response.status_code != 201:
+                        logger.error(f"LinkedIn video upload failed: {upload_response.status_code} - {upload_response.text}")
+                        return {
+                            "success": False,
+                            "error": f"LinkedIn video upload failed: {upload_response.status_code}"
+                        }
+
+                # Step 3: Create post with video
+                post_response = await client.post(
+                    f"{self.base_url}/posts",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json",
+                        "X-Restli-Protocol-Version": "2.0.0",
+                        "LinkedIn-Version": self.api_version
+                    },
+                    json={
+                        "author": self.person_urn,
+                        "commentary": caption[:3000],
+                        "visibility": "PUBLIC",
+                        "distribution": {
+                            "feedDistribution": "MAIN_FEED",
+                            "targetEntities": [],
+                            "thirdPartyDistributionChannels": []
+                        },
+                        "content": {
+                            "media": {
+                                "title": "Video",
+                                "id": asset_urn
+                            }
+                        },
+                        "lifecycleState": "PUBLISHED"
+                    }
+                )
+
+                if post_response.status_code not in [200, 201]:
+                    logger.error(f"LinkedIn video post creation failed: {post_response.status_code} - {post_response.text}")
+                    return {
+                        "success": False,
+                        "error": f"LinkedIn video post creation failed: {post_response.status_code}"
+                    }
+
+                post_data = post_response.json()
+                post_id = post_data.get("id", "")
+
+                # Cleanup temp file
+                os.unlink(tmp_path)
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.linkedin.com/feed/update/{post_id}",
+                    "message": "Video post published to LinkedIn"
+                }
+
+        except Exception as e:
+            logger.error(f"LinkedIn video publish error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    async def publish_article(self, title: str, article_text: str, article_url: str = "") -> dict:
+        """
+        Publish article/long-form post to LinkedIn
+
+        Args:
+            title: Article headline (required)
+            article_text: Article body content (max 3000 chars for commentary)
+            article_url: Optional external article URL to link
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not self.access_token or not self.person_urn:
+            return {
+                "success": False,
+                "error": "LinkedIn not connected. Please connect your LinkedIn account."
+            }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                post_payload = {
+                    "author": self.person_urn,
+                    "commentary": article_text[:3000],
+                    "visibility": "PUBLIC",
+                    "distribution": {
+                        "feedDistribution": "MAIN_FEED",
+                        "targetEntities": [],
+                        "thirdPartyDistributionChannels": []
+                    },
+                    "lifecycleState": "PUBLISHED"
+                }
+
+                # If external article URL provided, add article content
+                if article_url:
+                    post_payload["content"] = {
+                        "article": {
+                            "source": article_url,
+                            "title": title[:200],
+                            "description": article_text[:256]
+                        }
+                    }
+
+                response = await client.post(
+                    f"{self.base_url}/posts",
+                    headers={
+                        "Authorization": f"Bearer {self.access_token}",
+                        "Content-Type": "application/json",
+                        "X-Restli-Protocol-Version": "2.0.0",
+                        "LinkedIn-Version": self.api_version
+                    },
+                    json=post_payload
+                )
+
+                if response.status_code not in [200, 201]:
+                    logger.error(f"LinkedIn article post failed: {response.status_code} - {response.text}")
+                    return {
+                        "success": False,
+                        "error": f"LinkedIn article post failed: {response.status_code}"
+                    }
+
+                post_data = response.json()
+                post_id = post_data.get("id", "")
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.linkedin.com/feed/update/{post_id}",
+                    "message": "Article published to LinkedIn"
+                }
+
+        except Exception as e:
+            logger.error(f"LinkedIn article publish error: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
 # ============================================================================
 # TWITTER/X PUBLISHER
 # ============================================================================
@@ -977,13 +1195,28 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                     person_urn=person_urn
                 )
 
-                # Publish with image if provided
-                if publish_request.image_urls and len(publish_request.image_urls) > 0:
+                # Route based on content type
+                if publish_request.content_type == "video" or publish_request.video_url:
+                    # Video post
+                    publish_result = await publisher.publish_video(
+                        caption=publish_request.caption,
+                        video_url=publish_request.video_url
+                    )
+                elif publish_request.content_type == "article":
+                    # Article post
+                    publish_result = await publisher.publish_article(
+                        title=publish_request.article_title or publish_request.caption[:100],
+                        article_text=publish_request.caption,
+                        article_url=publish_request.article_url or ''
+                    )
+                elif publish_request.image_urls and len(publish_request.image_urls) > 0:
+                    # Image post
                     publish_result = await publisher.publish_image(
                         caption=publish_request.caption,
                         image_url=publish_request.image_urls[0]
                     )
                 else:
+                    # Text-only post
                     publish_result = await publisher.publish_text(caption=publish_request.caption)
 
                 result.update(publish_result)

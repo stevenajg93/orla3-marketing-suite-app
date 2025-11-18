@@ -78,6 +78,11 @@ export default function SocialManagerPage() {
   const [disableComment, setDisableComment] = useState(false);
   const [disableStitch, setDisableStitch] = useState(false);
 
+  // LinkedIn Studio state
+  const [linkedinPostType, setLinkedinPostType] = useState<"text" | "image" | "video" | "article">("text");
+  const [articleTitle, setArticleTitle] = useState("");
+  const [articleUrl, setArticleUrl] = useState("");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -821,6 +826,21 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "linkedin") {
+        if (linkedinPostType === "image" && selectedMedia.length === 0) {
+          alert('Please select an image');
+          return;
+        }
+        if (linkedinPostType === "video" && (selectedMedia.length === 0 || !selectedMedia[0]?.content_type?.includes('video'))) {
+          alert('Please select a video');
+          return;
+        }
+        if (linkedinPostType === "article" && !articleTitle.trim()) {
+          alert('Article posts require a title');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -896,6 +916,21 @@ export default function SocialManagerPage() {
           payload.disable_duet = disableDuet;
           payload.disable_comment = disableComment;
           payload.disable_stitch = disableStitch;
+        } else if (mode === "studio" && platform === "linkedin") {
+          payload.content_type = linkedinPostType;
+          if (linkedinPostType === "text") {
+            // Text-only post
+          } else if (linkedinPostType === "image") {
+            // Image post
+            payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
+          } else if (linkedinPostType === "video") {
+            // Video post
+            payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+          } else if (linkedinPostType === "article") {
+            // Article post
+            payload.article_title = articleTitle;
+            payload.article_url = articleUrl;
+          }
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -2813,8 +2848,226 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* LinkedIn Studio */}
+            {studioPlatform === "linkedin" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Post Type Selector */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: "text" as const, label: "Text", icon: "T" },
+                          { id: "image" as const, label: "Image", icon: "📷" },
+                          { id: "video" as const, label: "Video", icon: "🎥" },
+                          { id: "article" as const, label: "Article", icon: "📰" },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setLinkedinPostType(type.id)}
+                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                              linkedinPostType === type.id
+                                ? "border-cobalt bg-cobalt/20 text-white"
+                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{type.icon}</div>
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Caption/Post Content */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                        {linkedinPostType === "article" ? "Article Content" : "Post"}
+                      </h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder={linkedinPostType === "article" ? "Write your article content..." : "What do you want to talk about?"}
+                        rows={8}
+                        maxLength={3000}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{caption.length.toLocaleString()} / 3,000</span>
+                        {caption.length > 3000 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Article Title (for article posts) */}
+                    {linkedinPostType === "article" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Article Title</h3>
+                        <input
+                          type="text"
+                          value={articleTitle}
+                          onChange={(e) => setArticleTitle(e.target.value)}
+                          placeholder="Enter article headline"
+                          maxLength={200}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">{articleTitle.length} / 200 characters</p>
+                      </div>
+                    )}
+
+                    {/* Article URL (optional for article posts) */}
+                    {linkedinPostType === "article" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Article URL (Optional)</h3>
+                        <input
+                          type="url"
+                          value={articleUrl}
+                          onChange={(e) => setArticleUrl(e.target.value)}
+                          placeholder="https://example.com/article"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">Link to external article (if sharing from blog)</p>
+                      </div>
+                    )}
+
+                    {/* Media Upload (for image/video posts) */}
+                    {(linkedinPostType === "image" || linkedinPostType === "video") && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                          {linkedinPostType === "image" ? "Image" : "Video"}
+                        </h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              {linkedinPostType === "image" ? (
+                                <img
+                                  src={selectedMedia[0].url}
+                                  alt="Selected"
+                                  className="w-full max-w-sm mx-auto rounded-lg"
+                                />
+                              ) : (
+                                <video
+                                  src={selectedMedia[0].url}
+                                  className="w-full max-w-sm mx-auto rounded-lg"
+                                  controls
+                                />
+                              )}
+                              <p className="text-sm text-gray-400">Click to change {linkedinPostType}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select {linkedinPostType} from library</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || (linkedinPostType === "article" && !articleTitle.trim())}
+                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Publishing..." : "Post to LinkedIn"}
+                    </button>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* LinkedIn-style Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden">
+                      {/* Profile Header */}
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cobalt to-royal"></div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm">Your Name</h4>
+                            <p className="text-xs text-gray-600">Your Professional Title</p>
+                            <p className="text-xs text-gray-500">Just now • 🌍</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Post Content */}
+                      <div className="p-4">
+                        {linkedinPostType === "article" && articleTitle && (
+                          <h3 className="font-bold text-gray-900 text-lg mb-2">{articleTitle}</h3>
+                        )}
+                        {caption && (
+                          <p className="text-sm text-gray-900 whitespace-pre-wrap mb-3">
+                            {caption.slice(0, 200)}{caption.length > 200 ? '...' : ''}
+                          </p>
+                        )}
+                        {caption.length > 200 && (
+                          <button className="text-sm text-cobalt font-semibold">...see more</button>
+                        )}
+
+                        {/* Media Preview */}
+                        {linkedinPostType === "image" && selectedMedia.length > 0 && (
+                          <img
+                            src={selectedMedia[0].url}
+                            alt="Post"
+                            className="w-full mt-3 rounded"
+                          />
+                        )}
+                        {linkedinPostType === "video" && selectedMedia.length > 0 && (
+                          <video
+                            src={selectedMedia[0].url}
+                            className="w-full mt-3 rounded"
+                            controls
+                          />
+                        )}
+                        {linkedinPostType === "article" && articleUrl && (
+                          <div className="mt-3 border border-gray-200 rounded overflow-hidden">
+                            <div className="bg-gray-100 h-32 flex items-center justify-center">
+                              <span className="text-4xl">📰</span>
+                            </div>
+                            <div className="p-3 bg-gray-50">
+                              <p className="text-xs text-gray-600">{articleUrl.replace(/^https?:\/\//, '').split('/')[0]}</p>
+                              <p className="text-sm font-semibold text-gray-900 mt-1">{articleTitle || "Article Title"}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Engagement Bar */}
+                      <div className="border-t border-gray-200 px-4 py-2">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <button className="flex items-center gap-2 hover:text-cobalt">
+                            <span>👍</span>
+                            <span>Like</span>
+                          </button>
+                          <button className="flex items-center gap-2 hover:text-cobalt">
+                            <span>💬</span>
+                            <span>Comment</span>
+                          </button>
+                          <button className="flex items-center gap-2 hover:text-cobalt">
+                            <span>🔄</span>
+                            <span>Repost</span>
+                          </button>
+                          <button className="flex items-center gap-2 hover:text-cobalt">
+                            <span>📤</span>
+                            <span>Send</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && studioPlatform !== "linkedin" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
