@@ -60,7 +60,6 @@ export default function SocialManagerPage() {
   // Instagram Studio state
   const [reelCoverUrl, setReelCoverUrl] = useState("");
   const [shareToFeed, setShareToFeed] = useState(true);
-  const [storyTextOverlay, setStoryTextOverlay] = useState("");
 
   // Publishing state
   const [publishing, setPublishing] = useState(false);
@@ -801,7 +800,6 @@ export default function SocialManagerPage() {
             } else {
               payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
             }
-            payload.text_overlay = storyTextOverlay || null;
           } else if (instagramPostType === "carousel") {
             payload.content_type = "carousel";
             payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
@@ -1946,20 +1944,15 @@ export default function SocialManagerPage() {
                       {/* Reels Options */}
                       <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                         <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
-                        <div className="space-y-3">
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={shareToFeed}
-                              onChange={(e) => setShareToFeed(e.target.checked)}
-                              className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
-                            />
-                            <span className="text-sm text-gray-300">Share to Feed</span>
-                          </label>
-                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
-                            Add Location
-                          </button>
-                        </div>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={shareToFeed}
+                            onChange={(e) => setShareToFeed(e.target.checked)}
+                            className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                          />
+                          <span className="text-sm text-gray-300">Share to Feed</span>
+                        </label>
                       </div>
 
                       {/* Publish Button */}
@@ -2049,36 +2042,6 @@ export default function SocialManagerPage() {
                             <span className="font-semibold">Note:</span> Stories expire after 24 hours
                           </p>
                         </div>
-                      </div>
-
-                      {/* Text Overlay */}
-                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
-                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Text Overlay</h3>
-                        <textarea
-                          value={storyTextOverlay}
-                          onChange={(e) => setStoryTextOverlay(e.target.value)}
-                          placeholder="Add text overlay to your story..."
-                          rows={4}
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
-                        />
-                        <p className="text-xs text-gray-400 mt-2">Text will be overlaid on your story (optional)</p>
-                      </div>
-
-                      {/* Story Options */}
-                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
-                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
-                        <div className="space-y-3">
-                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
-                            Add Location
-                          </button>
-                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
-                            Add Stickers
-                          </button>
-                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
-                            Add Poll
-                          </button>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-3">Advanced features coming soon</p>
                       </div>
 
                       {/* Publish Button */}

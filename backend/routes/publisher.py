@@ -106,7 +106,6 @@ class PublishRequest(BaseModel):
     content: Optional[str] = None  # For WordPress full content (if different from caption)
     cover_url: Optional[str] = None  # For Instagram Reels cover image
     share_to_feed: Optional[bool] = True  # For Instagram Reels - share to feed
-    text_overlay: Optional[str] = None  # For Instagram Stories text overlay
 
 class PublishResponse(BaseModel):
     success: bool
@@ -374,15 +373,17 @@ class InstagramPublisher:
                 "error": f"Reel publishing error: {str(e)}"
             }
 
-    async def publish_story(self, media_url: str, media_type: str = "IMAGE", text_overlay: str = None) -> dict:
+    async def publish_story(self, media_url: str, media_type: str = "IMAGE") -> dict:
         """
         Publish Story to Instagram
         Stories expire after 24 hours automatically
 
+        Note: REST API only supports basic media upload. Text overlays, stickers,
+        polls, and location tags are not supported via REST API.
+
         Args:
             media_url: URL to the image or video file
             media_type: "IMAGE" or "VIDEO"
-            text_overlay: Optional text to overlay on the story
 
         Returns:
             dict with success status and post_id
@@ -908,8 +909,7 @@ async def publish_content(publish_request: PublishRequest, request: Request):
 
                     publish_result = await publisher.publish_story(
                         media_url=media_url,
-                        media_type=media_type,
-                        text_overlay=publish_request.text_overlay
+                        media_type=media_type
                     )
 
                 elif publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
