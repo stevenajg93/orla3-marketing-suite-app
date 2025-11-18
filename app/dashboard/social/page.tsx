@@ -84,7 +84,7 @@ export default function SocialManagerPage() {
   const [articleUrl, setArticleUrl] = useState("");
 
   // X Studio state
-  const [xPostType, setXPostType] = useState<"text" | "image">("text");
+  const [xPostType, setXPostType] = useState<"text" | "image" | "video">("text");
 
   // Publishing state
   const [publishing, setPublishing] = useState(false);
@@ -850,8 +850,12 @@ export default function SocialManagerPage() {
           alert('Please select at least one image');
           return;
         }
-        if (selectedMedia.length > 4) {
+        if (xPostType === "image" && selectedMedia.length > 4) {
           alert('X supports maximum 4 images per post');
+          return;
+        }
+        if (xPostType === "video" && selectedMedia.length === 0) {
+          alert('Please select a video');
           return;
         }
       }
@@ -950,6 +954,9 @@ export default function SocialManagerPage() {
           if (xPostType === "image") {
             // Image post (up to 4 images)
             payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+          } else if (xPostType === "video") {
+            // Video post
+            payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
           }
           // Text-only posts don't need additional fields
         } else {
@@ -3070,10 +3077,11 @@ export default function SocialManagerPage() {
                     {/* Post Type Selector */}
                     <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                       <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {[
                           { id: "text" as const, label: "Text", icon: "T" },
-                          { id: "image" as const, label: "Images", icon: "📷" },
+                          { id: "image" as const, label: "Images", icon: "IMG" },
+                          { id: "video" as const, label: "Video", icon: "VID" },
                         ].map((type) => (
                           <button
                             key={type.id}
@@ -3147,10 +3155,39 @@ export default function SocialManagerPage() {
                       </div>
                     )}
 
+                    {/* Video Upload (for video posts) */}
+                    {xPostType === "video" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                          Video
+                        </h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              <video
+                                src={selectedMedia[0].url}
+                                className="w-full max-w-sm mx-auto rounded-lg"
+                                controls
+                              />
+                              <p className="text-sm text-gray-400">Click to change video</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select video from library</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Publish Button */}
                     <button
                       onClick={publishToSocial}
-                      disabled={publishing || (xPostType === "image" && selectedMedia.length === 0)}
+                      disabled={publishing || (xPostType === "image" && selectedMedia.length === 0) || (xPostType === "video" && selectedMedia.length === 0)}
                       className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Posting..." : "Post to X"}
@@ -3194,6 +3231,14 @@ export default function SocialManagerPage() {
                                   />
                                 ))}
                               </div>
+                            )}
+
+                            {xPostType === "video" && selectedMedia.length > 0 && (
+                              <video
+                                src={selectedMedia[0].url}
+                                className="w-full rounded-2xl mb-3"
+                                controls
+                              />
                             )}
 
                             {/* Engagement Bar */}

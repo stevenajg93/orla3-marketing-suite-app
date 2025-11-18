@@ -904,7 +904,7 @@ class TwitterPublisher:
     """
     Twitter/X API v2 publisher
     Requires: Twitter OAuth 1.0a credentials
-    Supports: Text tweets, tweets with images (up to 4)
+    Supports: Text tweets, tweets with images (up to 4), tweets with video
     """
 
     def __init__(self, api_key: str, api_secret: str, access_token: str, access_token_secret: str):
@@ -1019,6 +1019,186 @@ class TwitterPublisher:
             return {
                 "success": False,
                 "error": f"Twitter publish exception: {str(e)}"
+            }
+
+    async def publish_tweet_with_video(self, caption: str, video_url: str) -> dict:
+        """
+        Publish tweet with video to Twitter/X using chunked upload
+
+        Args:
+            caption: Tweet text (max 280 chars)
+            video_url: URL to video file
+
+        Returns:
+            dict: {success: bool, post_id: str, post_url: str}
+        """
+        if not all([self.api_key, self.api_secret, self.access_token, self.access_token_secret]):
+            return {
+                "success": False,
+                "error": "Twitter not connected. Please connect your Twitter account."
+            }
+
+        try:
+            from utils.media_upload import download_url_to_file, validate_media_file
+            import tempfile
+            import time
+
+            # Create OAuth 1.0a session
+            oauth = OAuth1Session(
+                self.api_key,
+                client_secret=self.api_secret,
+                resource_owner_key=self.access_token,
+                resource_owner_secret=self.access_token_secret
+            )
+
+            # Download video to temp file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+                tmp_path = tmp_file.name
+
+            await download_url_to_file(video_url, tmp_path)
+            validate_media_file(tmp_path, "twitter", "video")
+
+            # Get file size
+            file_size = os.path.getsize(tmp_path)
+
+            # INIT: Initialize chunked upload
+            init_response = oauth.post(
+                f"{self.upload_url}/media/upload.json",
+                data={
+                    'command': 'INIT',
+                    'media_type': 'video/mp4',
+                    'total_bytes': file_size,
+                    'media_category': 'tweet_video'
+                }
+            )
+
+            if init_response.status_code != 200:
+                logger.error(f"Twitter video INIT failed: {init_response.status_code} - {init_response.text}")
+                os.unlink(tmp_path)
+                return {
+                    "success": False,
+                    "error": f"Twitter video upload initialization failed: {init_response.status_code}"
+                }
+
+            media_id = init_response.json()['media_id_string']
+
+            # APPEND: Upload video in chunks
+            chunk_size = 5 * 1024 * 1024  # 5MB chunks
+            segment_index = 0
+
+            with open(tmp_path, 'rb') as video_file:
+                while True:
+                    chunk = video_file.read(chunk_size)
+                    if not chunk:
+                        break
+
+                    append_response = oauth.post(
+                        f"{self.upload_url}/media/upload.json",
+                        data={
+                            'command': 'APPEND',
+                            'media_id': media_id,
+                            'segment_index': segment_index
+                        },
+                        files={'media': chunk}
+                    )
+
+                    if append_response.status_code not in [200, 201, 204]:
+                        logger.error(f"Twitter video APPEND failed: {append_response.status_code}")
+                        os.unlink(tmp_path)
+                        return {
+                            "success": False,
+                            "error": f"Twitter video upload failed at segment {segment_index}"
+                        }
+
+                    segment_index += 1
+
+            # FINALIZE: Complete upload
+            finalize_response = oauth.post(
+                f"{self.upload_url}/media/upload.json",
+                data={
+                    'command': 'FINALIZE',
+                    'media_id': media_id
+                }
+            )
+
+            if finalize_response.status_code != 200:
+                logger.error(f"Twitter video FINALIZE failed: {finalize_response.status_code}")
+                os.unlink(tmp_path)
+                return {
+                    "success": False,
+                    "error": "Twitter video finalization failed"
+                }
+
+            finalize_data = finalize_response.json()
+
+            # STATUS: Wait for video processing
+            processing_info = finalize_data.get('processing_info')
+            if processing_info:
+                state = processing_info.get('state')
+
+                while state in ['pending', 'in_progress']:
+                    check_after_secs = processing_info.get('check_after_secs', 5)
+                    time.sleep(check_after_secs)
+
+                    status_response = oauth.get(
+                        f"{self.upload_url}/media/upload.json",
+                        params={
+                            'command': 'STATUS',
+                            'media_id': media_id
+                        }
+                    )
+
+                    if status_response.status_code != 200:
+                        break
+
+                    processing_info = status_response.json().get('processing_info', {})
+                    state = processing_info.get('state')
+
+                if state == 'failed':
+                    os.unlink(tmp_path)
+                    return {
+                        "success": False,
+                        "error": "Twitter video processing failed"
+                    }
+
+            # Post tweet with video
+            payload = {
+                "text": caption,
+                "media": {
+                    "media_ids": [media_id]
+                }
+            }
+
+            response = oauth.post(
+                f"{self.base_url}/tweets",
+                json=payload
+            )
+
+            # Cleanup temp file
+            os.unlink(tmp_path)
+
+            if response.status_code not in [200, 201]:
+                logger.error(f"Twitter API error: {response.status_code} - {response.text}")
+                return {
+                    "success": False,
+                    "error": f"Twitter API error ({response.status_code}): {response.text}"
+                }
+
+            tweet_data = response.json()["data"]
+            tweet_id = tweet_data["id"]
+
+            return {
+                "success": True,
+                "post_id": tweet_id,
+                "post_url": f"https://twitter.com/i/web/status/{tweet_id}",
+                "message": "Tweet with video published to X"
+            }
+
+        except Exception as e:
+            logger.error(f"Twitter video publish error: {e}")
+            return {
+                "success": False,
+                "error": f"Twitter video publish exception: {str(e)}"
             }
 
 # ============================================================================
@@ -1256,10 +1436,19 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                     access_token_secret=access_token_secret
                 )
 
-                publish_result = await publisher.publish_tweet(
-                    caption=publish_request.caption,
-                    image_urls=publish_request.image_urls if publish_request.image_urls else None
-                )
+                # Route based on content type
+                if publish_request.video_url:
+                    # Video tweet
+                    publish_result = await publisher.publish_tweet_with_video(
+                        caption=publish_request.caption,
+                        video_url=publish_request.video_url
+                    )
+                else:
+                    # Text or image tweet
+                    publish_result = await publisher.publish_tweet(
+                        caption=publish_request.caption,
+                        image_urls=publish_request.image_urls if publish_request.image_urls else None
+                    )
                 result.update(publish_result)
 
             except Exception as e:
