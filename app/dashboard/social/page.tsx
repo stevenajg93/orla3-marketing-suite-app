@@ -18,6 +18,9 @@ type PostType = "text" | "image" | "video" | "carousel";
 type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr" | "wordpress";
 type Tab = "create" | "engage" | "schedule";
 type EngageSubTab = "inbox" | "discovery" | "settings";
+type Mode = "quick" | "studio";
+type StudioPlatform = Platform;
+type InstagramPostType = "feed" | "carousel" | "reel" | "story";
 
 type Comment = {
   id: string;
@@ -43,6 +46,13 @@ export default function SocialManagerPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("create");
   const [engageSubTab, setEngageSubTab] = useState<EngageSubTab>("inbox");
+
+  // Mode state (Quick Post vs Studio)
+  const [mode, setMode] = useState<Mode>("quick");
+  const [studioPlatform, setStudioPlatform] = useState<StudioPlatform>("instagram");
+  const [instagramPostType, setInstagramPostType] = useState<InstagramPostType>("feed");
+
+  // Quick Post state
   const [postType, setPostType] = useState<PostType>("text");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
   const [caption, setCaption] = useState("");
@@ -960,8 +970,71 @@ export default function SocialManagerPage() {
         </div>
       </div>
 
+      {/* Mode Switcher - Quick Post vs Studio */}
+      {activeTab === "create" && (
+        <div className="bg-white/5 border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-6 py-3">
+            <div className="flex gap-2 sm:gap-3">
+              <button
+                onClick={() => setMode("quick")}
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition text-sm sm:text-base ${
+                  mode === "quick"
+                    ? "bg-gradient-to-r from-gold to-gold-intense text-white"
+                    : "bg-white/10 text-gray-400 hover:bg-white/20"
+                }`}
+              >
+                Quick Post
+              </button>
+              <button
+                onClick={() => setMode("studio")}
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition text-sm sm:text-base ${
+                  mode === "studio"
+                    ? "bg-gradient-to-r from-cobalt to-royal text-white"
+                    : "bg-white/10 text-gray-400 hover:bg-white/20"
+                }`}
+              >
+                Platform Studio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Platform Tabs for Studio Mode */}
+      {activeTab === "create" && mode === "studio" && (
+        <div className="bg-white/5 border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6">
+            <div className="flex gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+              {[
+                { id: "instagram" as Platform, name: "Instagram", color: "from-gold-intense to-cobalt" },
+                { id: "youtube" as Platform, name: "YouTube", color: "from-cobalt to-royal" },
+                { id: "tiktok" as Platform, name: "TikTok", color: "from-royal-900 to-cobalt" },
+                { id: "linkedin" as Platform, name: "LinkedIn", color: "from-cobalt to-cobalt-700" },
+                { id: "facebook" as Platform, name: "Facebook", color: "from-cobalt to-cobalt-600" },
+                { id: "x" as Platform, name: "X", color: "from-slate-800 to-slate-900" },
+                { id: "reddit" as Platform, name: "Reddit", color: "from-gold-intense to-gold" },
+                { id: "tumblr" as Platform, name: "Tumblr", color: "from-cobalt to-royal" },
+                { id: "wordpress" as Platform, name: "WordPress", color: "from-slate-700 to-slate-900" },
+              ].map((platform) => (
+                <button
+                  key={platform.id}
+                  onClick={() => setStudioPlatform(platform.id)}
+                  className={`px-3 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap transition text-xs sm:text-sm ${
+                    studioPlatform === platform.id
+                      ? `text-white border-b-2 border-gold bg-gradient-to-r ${platform.color} bg-clip-text text-transparent`
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {platform.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-6 py-4 sm:py-6 md:py-8">
-        {activeTab === "create" && (
+        {activeTab === "create" && mode === "quick" && (
           <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             <div className="lg:col-span-2 space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
@@ -1411,6 +1484,226 @@ export default function SocialManagerPage() {
             </div>
           </div>
         )}
+
+        {/* STUDIO MODE CONTENT */}
+        {activeTab === "create" && mode === "studio" && (
+          <div>
+            {/* Instagram Studio */}
+            {studioPlatform === "instagram" && (
+              <div className="space-y-4 sm:space-y-6">
+                {/* Instagram Post Type Selector */}
+                <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                  <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Instagram Post Type</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button
+                      onClick={() => setInstagramPostType("feed")}
+                      className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
+                        instagramPostType === "feed"
+                          ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      }`}
+                    >
+                      Feed Post
+                    </button>
+                    <button
+                      onClick={() => setInstagramPostType("carousel")}
+                      className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
+                        instagramPostType === "carousel"
+                          ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      }`}
+                    >
+                      Carousel
+                    </button>
+                    <button
+                      onClick={() => setInstagramPostType("reel")}
+                      className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
+                        instagramPostType === "reel"
+                          ? "bg-gradient-to-r from-cobalt-600 to-cobalt text-white"
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      }`}
+                    >
+                      Reel
+                    </button>
+                    <button
+                      onClick={() => setInstagramPostType("story")}
+                      className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
+                        instagramPostType === "story"
+                          ? "bg-gradient-to-r from-royal to-cobalt text-white"
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      }`}
+                    >
+                      Story
+                    </button>
+                  </div>
+                </div>
+
+                {/* Instagram Feed Post Composer */}
+                {instagramPostType === "feed" && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Compose Column */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Media Upload */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Media</h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Selected"
+                                className="w-full aspect-square object-cover rounded-lg"
+                              />
+                              <p className="text-sm text-gray-400">Click to change media</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Click to select media</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Aspect Ratio Selector */}
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Aspect Ratio</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <button className="py-2 px-3 text-xs bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                              Square 1:1
+                            </button>
+                            <button className="py-2 px-3 text-xs bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                              Portrait 4:5
+                            </button>
+                            <button className="py-2 px-3 text-xs bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                              Landscape 16:9
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Caption */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Caption</h3>
+                        <textarea
+                          value={caption}
+                          onChange={(e) => setCaption(e.target.value)}
+                          placeholder="Write your Instagram caption..."
+                          rows={6}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-sm text-gray-400">{caption.length} / 2,200</span>
+                          {caption.length > 2200 && (
+                            <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Instagram-specific Options */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
+                        <div className="space-y-3">
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Location
+                          </button>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Alt Text
+                          </button>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Tag Products
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Publish Button */}
+                      <button
+                        onClick={publishToSocial}
+                        disabled={publishing || !caption.trim() || selectedMedia.length === 0}
+                        className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {publishing ? "Publishing..." : "Post to Instagram"}
+                      </button>
+                    </div>
+
+                    {/* Preview Column */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+                      <div className="bg-white rounded-lg overflow-hidden max-w-sm mx-auto">
+                        <div className="p-4">
+                          {/* Instagram header */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
+                              <p className="text-xs text-gray-500">Just now</p>
+                            </div>
+                          </div>
+
+                          {/* Media preview */}
+                          {selectedMedia.length > 0 ? (
+                            <div className="mb-3 -mx-4">
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Post preview"
+                                className="w-full aspect-square object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="mb-3 -mx-4 bg-gray-200 aspect-square flex items-center justify-center">
+                              <p className="text-gray-400 text-sm">No media selected</p>
+                            </div>
+                          )}
+
+                          {/* Instagram caption */}
+                          <div className="text-sm text-gray-900">
+                            <span className="font-semibold">Your Brand</span>{" "}
+                            <span className="whitespace-pre-wrap">
+                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption || "Your caption will appear here..."}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Placeholder for other Instagram post types */}
+                {instagramPostType === "carousel" && (
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
+                    <h3 className="text-xl font-bold text-white mb-2">Instagram Carousel</h3>
+                    <p className="text-gray-400">Carousel composer coming soon</p>
+                  </div>
+                )}
+
+                {instagramPostType === "reel" && (
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
+                    <h3 className="text-xl font-bold text-white mb-2">Instagram Reels</h3>
+                    <p className="text-gray-400">Reels composer coming soon</p>
+                  </div>
+                )}
+
+                {instagramPostType === "story" && (
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
+                    <h3 className="text-xl font-bold text-white mb-2">Instagram Stories</h3>
+                    <p className="text-gray-400">Stories composer coming soon</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Placeholder for other platforms */}
+            {studioPlatform !== "instagram" && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
+                <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
+                <p className="text-gray-400">Platform composer coming soon</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "engage" && (
           <>
             <div className="flex gap-3 mb-3 sm:mb-4 md:mb-6">
