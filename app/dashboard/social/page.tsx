@@ -83,6 +83,9 @@ export default function SocialManagerPage() {
   const [articleTitle, setArticleTitle] = useState("");
   const [articleUrl, setArticleUrl] = useState("");
 
+  // X Studio state
+  const [xPostType, setXPostType] = useState<"text" | "image">("text");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -841,6 +844,17 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "x") {
+        if (xPostType === "image" && selectedMedia.length === 0) {
+          alert('Please select at least one image');
+          return;
+        }
+        if (selectedMedia.length > 4) {
+          alert('X supports maximum 4 images per post');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -931,6 +945,13 @@ export default function SocialManagerPage() {
             payload.article_title = articleTitle;
             payload.article_url = articleUrl;
           }
+        } else if (mode === "studio" && (platform === "x" || platform === "twitter")) {
+          payload.content_type = xPostType;
+          if (xPostType === "image") {
+            // Image post (up to 4 images)
+            payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+          }
+          // Text-only posts don't need additional fields
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -3066,8 +3087,180 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* X (Twitter) Studio */}
+            {studioPlatform === "x" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Post Type Selector */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: "text" as const, label: "Text", icon: "T" },
+                          { id: "image" as const, label: "Images", icon: "📷" },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setXPostType(type.id)}
+                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                              xPostType === type.id
+                                ? "border-white bg-white/20 text-white"
+                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{type.icon}</div>
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Post Text */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post</h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="What is happening?!"
+                        rows={6}
+                        maxLength={280}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{caption.length} / 280</span>
+                        {caption.length > 280 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Media Upload (for image posts) */}
+                    {xPostType === "image" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                          Images (Up to 4)
+                        </h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-white transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              <div className={`grid ${selectedMedia.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+                                {selectedMedia.slice(0, 4).map((media, idx) => (
+                                  <img
+                                    key={idx}
+                                    src={media.url}
+                                    alt={`Selected ${idx + 1}`}
+                                    className="w-full aspect-square object-cover rounded-lg"
+                                  />
+                                ))}
+                              </div>
+                              <p className="text-sm text-gray-400">
+                                {selectedMedia.length} image{selectedMedia.length !== 1 ? 's' : ''} selected - Click to change
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select images from library</p>
+                              <p className="text-xs text-gray-500">Maximum 4 images</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || (xPostType === "image" && selectedMedia.length === 0)}
+                      className="w-full py-4 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Posting..." : "Post"}
+                    </button>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* X-style Preview */}
+                    <div className="bg-black rounded-lg overflow-hidden">
+                      <div className="p-4">
+                        {/* Profile Header */}
+                        <div className="flex gap-3 mb-3">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="font-bold text-white text-sm">Your Name</span>
+                              <span className="text-blue-400">✓</span>
+                              <span className="text-gray-500 text-sm">@yourhandle · Just now</span>
+                            </div>
+
+                            {/* Post Text */}
+                            {caption && (
+                              <p className="text-white text-sm mb-3 whitespace-pre-wrap">{caption}</p>
+                            )}
+
+                            {/* Media Preview */}
+                            {xPostType === "image" && selectedMedia.length > 0 && (
+                              <div className={`grid gap-1 rounded-2xl overflow-hidden mb-3 ${
+                                selectedMedia.length === 1 ? 'grid-cols-1' :
+                                selectedMedia.length === 2 ? 'grid-cols-2' :
+                                selectedMedia.length === 3 ? 'grid-cols-2' :
+                                'grid-cols-2'
+                              }`}>
+                                {selectedMedia.slice(0, 4).map((media, idx) => (
+                                  <img
+                                    key={idx}
+                                    src={media.url}
+                                    alt={`Post ${idx + 1}`}
+                                    className={`w-full ${
+                                      selectedMedia.length === 3 && idx === 0 ? 'col-span-2' : ''
+                                    } ${
+                                      selectedMedia.length === 1 ? 'max-h-96' : 'aspect-square'
+                                    } object-cover`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Engagement Bar */}
+                            <div className="flex items-center justify-between text-gray-500 pt-3 border-t border-gray-800">
+                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
+                                <span>💬</span>
+                                <span className="text-sm">123</span>
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-green-400 transition">
+                                <span>🔄</span>
+                                <span className="text-sm">45</span>
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-red-400 transition">
+                                <span>❤️</span>
+                                <span className="text-sm">678</span>
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
+                                <span>📊</span>
+                                <span className="text-sm">1.2K</span>
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
+                                <span>📤</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && studioPlatform !== "linkedin" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && studioPlatform !== "linkedin" && studioPlatform !== "x" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
