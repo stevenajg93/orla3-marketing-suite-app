@@ -7,10 +7,15 @@ import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
 import { AnimatedPage } from '@/components/AnimatedPage';
 import { fadeInUp } from '@/lib/motion';
-import { getPlatformCharacterLimit, isOverCharacterLimit } from '@/lib/validators';
+import {
+  getPlatformCharacterLimit,
+  isOverCharacterLimit,
+  isPlatformCompatible,
+  getIncompatibilityReason,
+} from '@/lib/validators';
 
 type PostType = "text" | "image" | "video" | "carousel";
-type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr";
+type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr" | "wordpress";
 type Tab = "create" | "engage" | "schedule";
 type EngageSubTab = "inbox" | "discovery" | "settings";
 
@@ -39,7 +44,7 @@ export default function SocialManagerPage() {
   const [activeTab, setActiveTab] = useState<Tab>("create");
   const [engageSubTab, setEngageSubTab] = useState<EngageSubTab>("inbox");
   const [postType, setPostType] = useState<PostType>("text");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["instagram"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
   const [caption, setCaption] = useState("");
   
   // Publishing state
@@ -100,22 +105,34 @@ export default function SocialManagerPage() {
 
 
   const platforms = [
-    { id: "instagram" as Platform, name: "Instagram", icon: "", color: "from-gold-intense to-cobalt", discovery: true, autoReply: true },
-    { id: "linkedin" as Platform, name: "LinkedIn", icon: "", color: "from-cobalt to-cobalt-700", discovery: true, autoReply: true },
-    { id: "facebook" as Platform, name: "Facebook", icon: "", color: "from-cobalt to-cobalt-600", discovery: true, autoReply: true },
-    { id: "x" as Platform, name: "X", icon: "", color: "from-slate-800 to-slate-900", discovery: true, autoReply: true },
-    { id: "tiktok" as Platform, name: "TikTok", icon: "", color: "from-royal-900 to-cobalt", discovery: false, autoReply: true },
-    { id: "youtube" as Platform, name: "YouTube", icon: "", color: "from-red-600 to-red-700", discovery: true, autoReply: true },
-    { id: "reddit" as Platform, name: "Reddit", icon: "", color: "from-gold-intense to-red-500", discovery: true, autoReply: false },
-    { id: "tumblr" as Platform, name: "Tumblr", icon: "", color: "from-cobalt to-royal", discovery: true, autoReply: true },
-    { id: "wordpress" as Platform, name: "WordPress", icon: "", color: "from-gray-700 to-gray-900", discovery: false, autoReply: false },
+    { id: "instagram" as Platform, name: "Instagram", color: "from-gold-intense to-cobalt", discovery: true, autoReply: true },
+    { id: "linkedin" as Platform, name: "LinkedIn", color: "from-cobalt to-cobalt-700", discovery: true, autoReply: true },
+    { id: "facebook" as Platform, name: "Facebook", color: "from-cobalt to-cobalt-600", discovery: true, autoReply: true },
+    { id: "x" as Platform, name: "X", color: "from-slate-800 to-slate-900", discovery: true, autoReply: true },
+    { id: "tiktok" as Platform, name: "TikTok", color: "from-royal-900 to-cobalt", discovery: false, autoReply: true },
+    { id: "youtube" as Platform, name: "YouTube", color: "from-cobalt to-royal", discovery: true, autoReply: true },
+    { id: "reddit" as Platform, name: "Reddit", color: "from-gold-intense to-gold", discovery: true, autoReply: false },
+    { id: "tumblr" as Platform, name: "Tumblr", color: "from-cobalt to-royal", discovery: true, autoReply: true },
+    { id: "wordpress" as Platform, name: "WordPress", color: "from-slate-700 to-slate-900", discovery: false, autoReply: false },
   ];
 
   // Real comments from API (no more mocks!)
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
 
+  // Auto-deselect incompatible platforms when post type changes
+  useEffect(() => {
+    setSelectedPlatforms(prevSelected =>
+      prevSelected.filter(platform => isPlatformCompatible(platform, postType))
+    );
+  }, [postType]);
+
   const togglePlatform = (platform: Platform) => {
+    // Check if platform is compatible with current post type
+    if (!isPlatformCompatible(platform, postType)) {
+      return; // Don't allow selection of incompatible platforms
+    }
+
     if (selectedPlatforms.includes(platform)) {
       setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
     } else {
@@ -1031,7 +1048,7 @@ export default function SocialManagerPage() {
                       <div key={platform} className="flex items-center justify-between text-sm">
                         <span className="text-gray-400 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
                         <span className={isOver ? "text-red-400 font-semibold" : "text-gray-400"}>
-                          {caption.length} / {limit} {isOver && '⚠️ Over limit!'}
+                          {caption.length} / {limit} {isOver && '- Over limit'}
                         </span>
                       </div>
                     );
@@ -1181,17 +1198,44 @@ export default function SocialManagerPage() {
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Platforms</h2>
                 <div className="space-y-3">
-                  {platforms.map((platform) => (
-                    <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`w-full p-3 sm:p-4 rounded-lg border-2 transition ${selectedPlatforms.includes(platform.id) ? `border-transparent bg-gradient-to-r ${platform.color} text-white` : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-base sm:text-lg md:text-xl lg:text-2xl">{platform.icon}</span>
-                          <span className="font-semibold">{platform.name}</span>
-                        </div>
-                        {selectedPlatforms.includes(platform.id) && (<span className="text-base sm:text-lg md:text-xl"></span>)}
+                  {platforms.map((platform) => {
+                    const isCompatible = isPlatformCompatible(platform.id, postType);
+                    const incompatibilityReason = getIncompatibilityReason(platform.id, postType);
+                    const isSelected = selectedPlatforms.includes(platform.id);
+
+                    return (
+                      <div key={platform.id} className="relative group">
+                        <button
+                          onClick={() => togglePlatform(platform.id)}
+                          disabled={!isCompatible}
+                          className={`w-full p-3 sm:p-4 rounded-lg border-2 transition ${
+                            !isCompatible
+                              ? "border-white/10 bg-white/5 text-gray-600 opacity-50 cursor-not-allowed"
+                              : isSelected
+                              ? `border-transparent bg-gradient-to-r ${platform.color} text-white`
+                              : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-sm sm:text-base">{platform.name}</span>
+                            </div>
+                            {isSelected && (
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                        </button>
+
+                        {!isCompatible && incompatibilityReason && (
+                          <div className="hidden group-hover:block absolute z-10 left-0 right-0 top-full mt-2 p-2 sm:p-3 bg-slate-900 border border-white/20 rounded-lg shadow-xl">
+                            <p className="text-xs sm:text-sm text-gray-300">{incompatibilityReason}</p>
+                          </div>
+                        )}
                       </div>
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

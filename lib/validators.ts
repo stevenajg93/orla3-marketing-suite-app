@@ -141,3 +141,104 @@ export function validateContent(
 
   return { valid: true };
 }
+
+/**
+ * Platform compatibility types
+ */
+export type PostType = "text" | "image" | "video" | "carousel";
+export type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr" | "wordpress";
+
+/**
+ * Platform compatibility matrix
+ * Defines which platforms support which post types
+ */
+const PLATFORM_COMPATIBILITY: Record<PostType, Platform[]> = {
+  text: [
+    "linkedin",
+    "facebook",
+    "x",
+    "reddit",
+    "tumblr",
+    "wordpress",
+  ],
+  image: [
+    "instagram",
+    "linkedin",
+    "facebook",
+    "x",
+    "reddit",
+    "tumblr",
+    "wordpress",
+  ],
+  video: [
+    "instagram",
+    "tiktok",
+    "youtube",
+    "linkedin",
+    "facebook",
+    "x",
+    "reddit",
+    "tumblr",
+    "wordpress",
+  ],
+  carousel: [
+    "instagram",
+    "linkedin",
+    "facebook",
+  ],
+};
+
+/**
+ * Check if a platform supports a post type
+ */
+export function isPlatformCompatible(platform: Platform, postType: PostType): boolean {
+  return PLATFORM_COMPATIBILITY[postType].includes(platform);
+}
+
+/**
+ * Get all platforms compatible with a post type
+ */
+export function getCompatiblePlatforms(postType: PostType): Platform[] {
+  return PLATFORM_COMPATIBILITY[postType];
+}
+
+/**
+ * Get platforms NOT compatible with a post type
+ */
+export function getIncompatiblePlatforms(postType: PostType): Platform[] {
+  const allPlatforms: Platform[] = [
+    "instagram", "linkedin", "facebook", "x", "tiktok", "youtube", "reddit", "tumblr", "wordpress"
+  ];
+  return allPlatforms.filter(p => !PLATFORM_COMPATIBILITY[postType].includes(p));
+}
+
+/**
+ * Get user-friendly reason why platform is incompatible
+ */
+export function getIncompatibilityReason(platform: Platform, postType: PostType): string | null {
+  if (isPlatformCompatible(platform, postType)) {
+    return null;
+  }
+
+  if (postType === "text") {
+    if (platform === "instagram") return "Instagram requires media";
+    if (platform === "tiktok") return "TikTok requires video";
+    if (platform === "youtube") return "YouTube requires video";
+  }
+
+  if (postType === "image") {
+    if (platform === "tiktok") return "TikTok requires video";
+    if (platform === "youtube") return "YouTube requires video";
+  }
+
+  if (postType === "carousel") {
+    if (platform === "tiktok") return "TikTok does not support carousels";
+    if (platform === "youtube") return "YouTube does not support carousels";
+    if (platform === "reddit") return "Reddit does not support carousels";
+    if (platform === "tumblr") return "Tumblr does not support carousels";
+    if (platform === "wordpress") return "WordPress does not support carousels";
+    if (platform === "x") return "X does not support carousel format";
+  }
+
+  return `${platform} does not support ${postType} posts`;
+}
