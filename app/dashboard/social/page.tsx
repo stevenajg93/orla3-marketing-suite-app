@@ -3664,10 +3664,10 @@ export default function SocialManagerPage() {
                     {/* Publish Button */}
                     <button
                       onClick={handlePublish}
-                      disabled={isPublishing}
+                      disabled={publishing}
                       className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
                     >
-                      {isPublishing ? "Publishing..." : "Publish to Tumblr"}
+                      {publishing ? "Publishing..." : "Publish to Tumblr"}
                     </button>
                   </div>
                 </div>
@@ -3829,10 +3829,10 @@ export default function SocialManagerPage() {
                     {/* Publish Button */}
                     <button
                       onClick={handlePublish}
-                      disabled={isPublishing}
+                      disabled={publishing}
                       className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
                     >
-                      {isPublishing ? "Publishing..." : `${wordpressStatus === "publish" ? "Publish" : "Save Draft"} to WordPress`}
+                      {publishing ? "Publishing..." : `${wordpressStatus === "publish" ? "Publish" : "Save Draft"} to WordPress`}
                     </button>
                   </div>
                 </div>
