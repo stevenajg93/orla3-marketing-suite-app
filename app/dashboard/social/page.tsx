@@ -7,8 +7,9 @@ import { api } from '@/lib/api-client';
 import { config } from '@/lib/config';
 import { AnimatedPage } from '@/components/AnimatedPage';
 import { fadeInUp } from '@/lib/motion';
+import { getPlatformCharacterLimit, isOverCharacterLimit } from '@/lib/validators';
 
-type PostType = "text" | "video" | "carousel";
+type PostType = "text" | "image" | "video" | "carousel";
 type Platform = "instagram" | "linkedin" | "facebook" | "x" | "tiktok" | "youtube" | "reddit" | "tumblr";
 type Tab = "create" | "engage" | "schedule";
 type EngageSubTab = "inbox" | "discovery" | "settings";
@@ -948,10 +949,11 @@ export default function SocialManagerPage() {
             <div className="lg:col-span-2 space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6">
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Post Type</h2>
-                <div className="flex gap-3">
-                  <button onClick={() => setPostType("text")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-gold to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Text Post</button>
-                  <button onClick={() => setPostType("video")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "video" ? "bg-gradient-to-r from-red-500 to-red-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Video Post</button>
-                  <button onClick={() => setPostType("carousel")} className={`flex-1 py-3 rounded-lg font-semibold transition ${postType === "carousel" ? "bg-gradient-to-r from-cobalt to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Carousel</button>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <button onClick={() => setPostType("text")} className={`py-3 rounded-lg font-semibold transition ${postType === "text" ? "bg-gradient-to-r from-gold to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Text Post</button>
+                  <button onClick={() => setPostType("image")} className={`py-3 rounded-lg font-semibold transition ${postType === "image" ? "bg-gradient-to-r from-cobalt-600 to-cobalt text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Image Post</button>
+                  <button onClick={() => setPostType("video")} className={`py-3 rounded-lg font-semibold transition ${postType === "video" ? "bg-gradient-to-r from-red-500 to-red-600 text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Video Post</button>
+                  <button onClick={() => setPostType("carousel")} className={`py-3 rounded-lg font-semibold transition ${postType === "carousel" ? "bg-gradient-to-r from-cobalt to-gold-intense text-white" : "bg-white/10 text-gray-400 hover:bg-white/20"}`}>Carousel</button>
                 </div>
               </div>
 
@@ -1006,9 +1008,34 @@ export default function SocialManagerPage() {
                 )}
                 
                 <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Your AI-generated caption will appear here... Or write your own!" rows={8} className="w-full px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none" />
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-sm text-gray-400">{caption.length} characters</span>
-                  {selectedPlatforms.includes("x") && caption.length > 280 && (<span className="text-sm text-red-400 font-semibold">Too long for X (280 char limit)</span>)}
+
+                {/* Platform-specific character counters */}
+                <div className="mt-3 space-y-2">
+                  {selectedPlatforms.length === 0 && (
+                    <span className="text-sm text-gray-400">{caption.length} characters</span>
+                  )}
+                  {selectedPlatforms.map((platform) => {
+                    const limit = getPlatformCharacterLimit(platform);
+                    const isOver = isOverCharacterLimit(caption, platform);
+
+                    if (limit === null) {
+                      return (
+                        <div key={platform} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
+                          <span className="text-gray-400">{caption.length} characters (no limit)</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={platform} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-400 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
+                        <span className={isOver ? "text-red-400 font-semibold" : "text-gray-400"}>
+                          {caption.length} / {limit} {isOver && '⚠️ Over limit!'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1170,9 +1197,172 @@ export default function SocialManagerPage() {
 
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Preview</h2>
-                <div className="bg-white rounded-lg p-3 sm:p-4 aspect-square flex items-center justify-center">
-                  <p className="text-gray-400 text-center">Select platforms to see preview</p>
-                </div>
+
+                {selectedPlatforms.length === 0 ? (
+                  <div className="bg-white rounded-lg p-3 sm:p-4 aspect-square flex items-center justify-center">
+                    <p className="text-gray-400 text-center">Select platforms to see preview</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedPlatforms.map((platform) => (
+                      <div key={platform} className="bg-white rounded-lg overflow-hidden">
+                        {/* Platform-specific preview cards */}
+                        {platform === 'instagram' && (
+                          <div className="p-4">
+                            {/* Instagram header */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
+                                <p className="text-xs text-gray-500">Sponsored</p>
+                              </div>
+                            </div>
+
+                            {/* Media preview */}
+                            {selectedMedia.length > 0 && (
+                              <div className="mb-3 -mx-4">
+                                <img
+                                  src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                  alt="Post preview"
+                                  className="w-full aspect-square object-cover"
+                                />
+                                {selectedMedia.length > 1 && (
+                                  <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                    1/{selectedMedia.length}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Instagram caption */}
+                            <div className="text-sm text-gray-900">
+                              <span className="font-semibold">Your Brand</span>{' '}
+                              <span className="whitespace-pre-wrap">
+                                {caption.length > 125 ? caption.substring(0, 125) + '... more' : caption}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {platform === 'linkedin' && (
+                          <div className="p-4">
+                            {/* LinkedIn header */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 rounded-full bg-cobalt"></div>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm">Your Company</p>
+                                <p className="text-xs text-gray-500">Followers • Now</p>
+                              </div>
+                            </div>
+
+                            {/* LinkedIn caption */}
+                            <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                              {caption}
+                            </div>
+
+                            {/* Media preview */}
+                            {selectedMedia.length > 0 && (
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Post preview"
+                                className="w-full rounded aspect-video object-cover"
+                              />
+                            )}
+                          </div>
+                        )}
+
+                        {platform === 'x' && (
+                          <div className="p-4">
+                            {/* X/Twitter header */}
+                            <div className="flex gap-3">
+                              <div className="w-12 h-12 rounded-full bg-slate-800"></div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <p className="font-bold text-gray-900 text-sm">Your Brand</p>
+                                  <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <p className="text-gray-500 text-sm">@yourbrand</p>
+                                </div>
+
+                                {/* Tweet text */}
+                                <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                                  {caption}
+                                </div>
+
+                                {/* Media preview */}
+                                {selectedMedia.length > 0 && (
+                                  <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden border border-gray-200">
+                                    {selectedMedia.slice(0, 4).map((media, idx) => (
+                                      <img
+                                        key={idx}
+                                        src={media.url || media.thumbnail_url}
+                                        alt={`Preview ${idx + 1}`}
+                                        className="w-full aspect-square object-cover"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {platform === 'facebook' && (
+                          <div className="p-4">
+                            {/* Facebook header */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-full bg-cobalt-600"></div>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm">Your Page</p>
+                                <p className="text-xs text-gray-500">Just now • 🌎</p>
+                              </div>
+                            </div>
+
+                            {/* Facebook caption */}
+                            <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                              {caption}
+                            </div>
+
+                            {/* Media preview */}
+                            {selectedMedia.length > 0 && (
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Post preview"
+                                className="w-full -mx-4 mb-2"
+                              />
+                            )}
+                          </div>
+                        )}
+
+                        {/* Generic preview for other platforms */}
+                        {!['instagram', 'linkedin', 'x', 'facebook'].includes(platform) && (
+                          <div className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm capitalize">{platform}</p>
+                                <p className="text-xs text-gray-500">Preview</p>
+                              </div>
+                            </div>
+
+                            <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                              {caption}
+                            </div>
+
+                            {selectedMedia.length > 0 && (
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Post preview"
+                                className="w-full rounded"
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
