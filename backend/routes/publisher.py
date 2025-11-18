@@ -120,6 +120,8 @@ class PublishRequest(BaseModel):
     # LinkedIn-specific fields
     article_title: Optional[str] = None  # LinkedIn: Article headline
     article_url: Optional[str] = None  # LinkedIn: External article URL
+    # WordPress-specific fields
+    status: Optional[str] = "publish"  # WordPress: publish, draft, pending, private
 
 class PublishResponse(BaseModel):
     success: bool
@@ -1654,11 +1656,13 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                 title = lines[0][:100] if lines else "Untitled Post"
 
             content = publish_request.content or publish_request.caption
+            status = publish_request.status or "publish"  # Default to publish if not specified
 
             publisher = WordPressPublisher()
             publish_result = await publisher.publish_post(
                 title=title,
-                content=content
+                content=content,
+                status=status
             )
             result.update(publish_result)
 
