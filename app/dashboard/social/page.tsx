@@ -56,7 +56,12 @@ export default function SocialManagerPage() {
   const [postType, setPostType] = useState<PostType>("text");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
   const [caption, setCaption] = useState("");
-  
+
+  // Instagram Studio state
+  const [reelCoverUrl, setReelCoverUrl] = useState("");
+  const [shareToFeed, setShareToFeed] = useState(true);
+  const [storyTextOverlay, setStoryTextOverlay] = useState("");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -734,33 +739,88 @@ export default function SocialManagerPage() {
       alert('Please write or generate a caption first');
       return;
     }
-    
-    if (selectedPlatforms.length === 0) {
-      alert('Please select at least one platform');
-      return;
+
+    // Validate based on mode
+    if (mode === "quick") {
+      if (selectedPlatforms.length === 0) {
+        alert('Please select at least one platform');
+        return;
+      }
+    } else if (mode === "studio") {
+      // Studio mode validation
+      if (studioPlatform === "instagram") {
+        if (instagramPostType === "reel") {
+          if (selectedMedia.length === 0 || !selectedMedia[0]?.content_type?.includes('video')) {
+            alert('Please upload a video for your Reel');
+            return;
+          }
+        }
+        if (instagramPostType === "story" && selectedMedia.length === 0) {
+          alert('Please upload media for your Story');
+          return;
+        }
+        if (instagramPostType === "feed" && selectedMedia.length === 0) {
+          alert('Please select at least one image for Feed post');
+          return;
+        }
+        if (instagramPostType === "carousel" && selectedMedia.length < 2) {
+          alert('Carousel requires at least 2 images');
+          return;
+        }
+      }
     }
-    
+
     setPublishing(true);
     setPublishResults([]);
     setPublishMessage('');
-    
+
     const results = [];
-    
-    for (const platform of selectedPlatforms) {
+
+    // Determine platforms to publish to
+    const platformsToPublish = mode === "quick" ? selectedPlatforms : [studioPlatform];
+
+    for (const platform of platformsToPublish) {
       try {
-        // Build request payload
-        const payload: any = {
+        let payload: any = {
           platform: platform,
-          content_type: postType,
           caption: caption,
-          image_urls: selectedMedia.map(m => m.url || m.image_url || '')
         };
 
-        // Add blog metadata for WordPress
-        if (platform === 'wordpress' && blogMetadata) {
-          payload.title = blogMetadata.title;
-          payload.content = blogMetadata.content;
-          console.log('Publishing to WordPress with title:', blogMetadata.title);
+        // Studio mode - platform-specific payloads
+        if (mode === "studio" && platform === "instagram") {
+          if (instagramPostType === "reel") {
+            payload.content_type = "reel";
+            payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+            payload.cover_url = reelCoverUrl || null;
+            payload.share_to_feed = shareToFeed;
+          } else if (instagramPostType === "story") {
+            payload.content_type = "story";
+            const isVideo = selectedMedia[0]?.content_type?.includes('video');
+            if (isVideo) {
+              payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+            } else {
+              payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
+            }
+            payload.text_overlay = storyTextOverlay || null;
+          } else if (instagramPostType === "carousel") {
+            payload.content_type = "carousel";
+            payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+          } else {
+            // Feed post
+            payload.content_type = "image";
+            payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+          }
+        } else {
+          // Quick Post mode - use postType
+          payload.content_type = postType;
+          payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
+
+          // Add blog metadata for WordPress
+          if (platform === 'wordpress' && blogMetadata) {
+            payload.title = blogMetadata.title;
+            payload.content = blogMetadata.content;
+            console.log('Publishing to WordPress with title:', blogMetadata.title);
+          }
         }
 
         const result = await api.post(`/publisher/publish`, payload);
@@ -781,12 +841,12 @@ export default function SocialManagerPage() {
         });
       }
     }
-    
+
     setPublishResults(results);
-    
+
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
-    
+
     if (successCount > 0 && failCount === 0) {
       setPublishMessage(`Successfully posted to ${successCount} platform(s)!`);
     } else if (successCount > 0 && failCount > 0) {
@@ -794,12 +854,12 @@ export default function SocialManagerPage() {
     } else {
       setPublishMessage(`Failed to post to all platforms`);
     }
-    
+
     setTimeout(() => {
       setPublishMessage('');
       setPublishResults([]);
     }, 10000);
-    
+
     setPublishing(false);
   };
   // Load real comments from all connected platforms
@@ -1888,7 +1948,12 @@ export default function SocialManagerPage() {
                         <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
                         <div className="space-y-3">
                           <label className="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt" defaultChecked />
+                            <input
+                              type="checkbox"
+                              checked={shareToFeed}
+                              onChange={(e) => setShareToFeed(e.target.checked)}
+                              className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                            />
                             <span className="text-sm text-gray-300">Share to Feed</span>
                           </label>
                           <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
@@ -1990,13 +2055,13 @@ export default function SocialManagerPage() {
                       <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
                         <h3 className="text-base sm:text-lg font-bold text-white mb-4">Text Overlay</h3>
                         <textarea
-                          value={caption}
-                          onChange={(e) => setCaption(e.target.value)}
+                          value={storyTextOverlay}
+                          onChange={(e) => setStoryTextOverlay(e.target.value)}
                           placeholder="Add text overlay to your story..."
                           rows={4}
                           className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
                         />
-                        <p className="text-xs text-gray-400 mt-2">Text will be overlaid on your story</p>
+                        <p className="text-xs text-gray-400 mt-2">Text will be overlaid on your story (optional)</p>
                       </div>
 
                       {/* Story Options */}

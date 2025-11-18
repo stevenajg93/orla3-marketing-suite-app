@@ -95,15 +95,18 @@ router = APIRouter()
 
 class PublishRequest(BaseModel):
     platform: Literal["instagram", "linkedin", "twitter", "x", "facebook", "tiktok", "youtube", "reddit", "tumblr", "wordpress"]
-    content_type: Literal["text", "image", "video", "carousel"]
+    content_type: Literal["text", "image", "video", "carousel", "reel", "story"]
     caption: str
     image_urls: Optional[List[str]] = []
-    video_url: Optional[str] = None  # For TikTok, YouTube video publishing
+    video_url: Optional[str] = None  # For TikTok, YouTube video publishing, Instagram Reels
     link_url: Optional[str] = None  # For Reddit link posts
     subreddit: Optional[str] = None  # For Reddit - subreddit name (without r/ prefix)
     account_id: Optional[str] = None  # For multi-account support later
     title: Optional[str] = None  # For WordPress blog posts and Reddit titles
     content: Optional[str] = None  # For WordPress full content (if different from caption)
+    cover_url: Optional[str] = None  # For Instagram Reels cover image
+    share_to_feed: Optional[bool] = True  # For Instagram Reels - share to feed
+    text_overlay: Optional[str] = None  # For Instagram Stories text overlay
 
 class PublishResponse(BaseModel):
     success: bool
@@ -286,6 +289,172 @@ class InstagramPublisher:
             return {
                 "success": False,
                 "error": str(e)
+            }
+
+    async def publish_reel(self, caption: str, video_url: str, cover_url: str = None, share_to_feed: bool = True) -> dict:
+        """
+        Publish Reel to Instagram
+        Uses Instagram Graph API REELS endpoint
+
+        Args:
+            caption: Caption for the Reel (max 2,200 chars)
+            video_url: URL to the video file (must be publicly accessible)
+            cover_url: Optional cover image URL
+            share_to_feed: Whether to share Reel to main feed (default: True)
+
+        Returns:
+            dict with success status, post_id, and post_url
+        """
+        if not self.access_token or not self.business_account_id:
+            return {
+                "success": False,
+                "error": "Instagram credentials not configured"
+            }
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                # Step 1: Create Reel container
+                container_data = {
+                    "media_type": "REELS",
+                    "video_url": video_url,
+                    "caption": caption,
+                    "share_to_feed": share_to_feed,
+                    "access_token": self.access_token
+                }
+
+                # Add cover image if provided
+                if cover_url:
+                    container_data["cover_url"] = cover_url
+
+                container_response = await client.post(
+                    f"{self.base_url}/{self.business_account_id}/media",
+                    data=container_data
+                )
+
+                if container_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Failed to create Reel container: {container_response.text}"
+                    }
+
+                container_id = container_response.json()["id"]
+
+                # Step 2: Publish Reel (may take time to process video)
+                publish_response = await client.post(
+                    f"{self.base_url}/{self.business_account_id}/media_publish",
+                    data={
+                        "creation_id": container_id,
+                        "access_token": self.access_token
+                    }
+                )
+
+                if publish_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Failed to publish Reel: {publish_response.text}"
+                    }
+
+                post_id = publish_response.json()["id"]
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "post_url": f"https://www.instagram.com/reel/{post_id}",
+                    "message": "Reel published successfully"
+                }
+
+        except httpx.TimeoutException:
+            return {
+                "success": False,
+                "error": "Video processing timeout. Large videos may take time to process. Please check Instagram for the post."
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Reel publishing error: {str(e)}"
+            }
+
+    async def publish_story(self, media_url: str, media_type: str = "IMAGE", text_overlay: str = None) -> dict:
+        """
+        Publish Story to Instagram
+        Stories expire after 24 hours automatically
+
+        Args:
+            media_url: URL to the image or video file
+            media_type: "IMAGE" or "VIDEO"
+            text_overlay: Optional text to overlay on the story
+
+        Returns:
+            dict with success status and post_id
+        """
+        if not self.access_token or not self.business_account_id:
+            return {
+                "success": False,
+                "error": "Instagram credentials not configured"
+            }
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                # Step 1: Create Story container
+                container_data = {
+                    "media_type": "STORIES",
+                    "access_token": self.access_token
+                }
+
+                # Add media based on type
+                if media_type.upper() == "VIDEO":
+                    container_data["video_url"] = media_url
+                else:
+                    container_data["image_url"] = media_url
+
+                # Note: Instagram Stories API has limited text overlay support
+                # Advanced overlays (stickers, polls) require Facebook SDK
+
+                container_response = await client.post(
+                    f"{self.base_url}/{self.business_account_id}/media",
+                    data=container_data
+                )
+
+                if container_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Failed to create Story container: {container_response.text}"
+                    }
+
+                container_id = container_response.json()["id"]
+
+                # Step 2: Publish Story
+                publish_response = await client.post(
+                    f"{self.base_url}/{self.business_account_id}/media_publish",
+                    data={
+                        "creation_id": container_id,
+                        "access_token": self.access_token
+                    }
+                )
+
+                if publish_response.status_code != 200:
+                    return {
+                        "success": False,
+                        "error": f"Failed to publish Story: {publish_response.text}"
+                    }
+
+                post_id = publish_response.json()["id"]
+
+                return {
+                    "success": True,
+                    "post_id": post_id,
+                    "message": "Story published successfully (expires in 24 hours)"
+                }
+
+        except httpx.TimeoutException:
+            return {
+                "success": False,
+                "error": "Story upload timeout. Please check Instagram for the post."
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Story publishing error: {str(e)}"
             }
 
 # ============================================================================
@@ -702,21 +871,66 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                     # No OAuth, use environment variables
                     publisher = InstagramPublisher()
 
-                if publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
+                # Route based on content type
+                if publish_request.content_type == "reel":
+                    # Instagram Reels
+                    if not publish_request.video_url:
+                        return PublishResponse(
+                            success=False,
+                            platform=publish_request.platform,
+                            error="Instagram Reels require a video",
+                            published_at=result["published_at"]
+                        )
+                    publish_result = await publisher.publish_reel(
+                        caption=publish_request.caption,
+                        video_url=publish_request.video_url,
+                        cover_url=publish_request.cover_url,
+                        share_to_feed=publish_request.share_to_feed
+                    )
+
+                elif publish_request.content_type == "story":
+                    # Instagram Stories
+                    if not publish_request.image_urls and not publish_request.video_url:
+                        return PublishResponse(
+                            success=False,
+                            platform=publish_request.platform,
+                            error="Instagram Stories require media (image or video)",
+                            published_at=result["published_at"]
+                        )
+
+                    # Determine media type and URL
+                    if publish_request.video_url:
+                        media_url = publish_request.video_url
+                        media_type = "VIDEO"
+                    else:
+                        media_url = publish_request.image_urls[0]
+                        media_type = "IMAGE"
+
+                    publish_result = await publisher.publish_story(
+                        media_url=media_url,
+                        media_type=media_type,
+                        text_overlay=publish_request.text_overlay
+                    )
+
+                elif publish_request.content_type == "carousel" and len(publish_request.image_urls) > 1:
+                    # Instagram Carousel (2-10 images)
                     publish_result = await publisher.publish_carousel(
                         caption=publish_request.caption,
                         image_urls=publish_request.image_urls
                     )
+
                 elif publish_request.image_urls:
+                    # Instagram Feed Post (single image)
                     publish_result = await publisher.publish_single_image(
                         caption=publish_request.caption,
                         image_url=publish_request.image_urls[0]
                     )
+
                 else:
                     return PublishResponse(
                         success=False,
                         platform=publish_request.platform,
-                        error="Instagram posts require at least one image",
+                        error="Instagram posts require at least one image or video",
                         published_at=result["published_at"]
                     )
 
