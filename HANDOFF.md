@@ -1,16 +1,18 @@
 # ORLA³ Marketing Suite - Production Handoff Document
 
-**Date:** November 16, 2025
-**Status:** ✅ PRODUCTION READY - Fully mobile-optimized with complete feature set
-**Version:** 1.0.0
+**Date:** November 18, 2025
+**Status:** ✅ PRODUCTION READY - Platform Studio Complete
+**Version:** 1.0.1
 **Live URL:** https://marketing.orla3.com
 **Admin Portal:** https://marketing.orla3.com/admin
+**Backend API:** https://orla3-marketing-suite-app-production.up.railway.app
 
 ---
 
 ## 🎯 Executive Summary
 
 The ORLA³ Marketing Suite is a **production-ready, enterprise-grade AI marketing automation platform** with:
+- ✅ **All 9 Platform Studios** complete with multi-tenant OAuth
 - ✅ **28 pages** fully mobile-optimized (320px to 4K displays)
 - ✅ **9 social platforms** integrated (8 live, TikTok in review)
 - ✅ **Multi-tenant architecture** with organization/team support
@@ -19,10 +21,84 @@ The ORLA³ Marketing Suite is a **production-ready, enterprise-grade AI marketin
 - ✅ **8 AI models** auto-selecting for optimal performance
 - ✅ **OAuth 2.0** for all third-party integrations
 - ✅ **Zero technical debt** - clean, documented, scalable code
+- ✅ **Railway auto-deploy** working correctly
 
 ---
 
-## 📋 Latest Session: Mobile Optimization + Analytics + Legal (November 16, 2025)
+## 📋 Latest Session: Platform Studio Completion (November 18, 2025)
+
+### What Was Completed
+
+#### 1. **Railway Auto-Deploy Fix**
+**Problem:** Railway deployments not triggering on GitHub push (auto-deploy was disabled)
+
+**Solution:**
+- Identified "Wait for CLI" toggle was OFF in Railway settings
+- Enabled automatic deployments from GitHub main branch
+- Verified deployment triggers correctly on new commits
+
+#### 2. **Tumblr Publisher Multi-Tenant Refactor**
+**Location:** `backend/routes/publisher.py` lines 2558-2617
+
+**Changes:**
+- Changed from global environment variables to per-user OAuth
+- Before: `__init__(self)` with `os.getenv("TUMBLR_ACCESS_TOKEN")`
+- After: `__init__(self, access_token: str, blog_name: str)`
+- Updated `/publisher/publish` endpoint to fetch user credentials from database
+- Users now publish to their own Tumblr blogs
+
+#### 3. **WordPress Publisher Multi-Tenant Refactor**
+**Location:** `backend/routes/publisher.py` lines 2656-2750
+
+**Changes:**
+- Changed from global environment variables to per-user OAuth
+- Before: `__init__(self)` with `os.getenv("WORDPRESS_ACCESS_TOKEN")`
+- After: `__init__(self, access_token: str, site_id: str)`
+- Updated `/publisher/publish` endpoint to fetch user credentials from database
+- Users now publish to their own WordPress sites
+
+#### 4. **Frontend Platform Studios Uncommented**
+**Location:** `app/dashboard/social/page.tsx` lines 1302-1304
+
+**Changes:**
+- Uncommented Tumblr and WordPress from Platform Studio selector
+- Both platforms now visible alongside Instagram, YouTube, TikTok, LinkedIn, Facebook, X, Reddit
+- All 9 platforms now accessible in Platform Studio mode
+
+### Platform Studio Feature Parity
+
+All 9 Platform Studios now match the quality standard set by Instagram/YouTube:
+
+**Reddit Studio:**
+- Post Types: Text, Link, Image, Video
+- Required Fields: Subreddit (r/...), Title (max 300 chars), Caption/URL
+- Multi-tenant: ✅ Users post to their own Reddit accounts
+
+**Tumblr Studio:**
+- Post Types: Text, Photo
+- Required Fields: Caption, Optional photo from Media Library
+- Multi-tenant: ✅ Users post to their own Tumblr blogs
+
+**WordPress Studio:**
+- Post Types: Blog Post
+- Required Fields: Title, Content, Optional featured image
+- Publish Control: Draft or Publish Live
+- Multi-tenant: ✅ Users post to their own WordPress.com sites
+
+### Deployment
+
+**Backend (Railway):**
+- Commit: `75037a7` - "feat: Complete Platform Studio - Reddit, Tumblr, WordPress multi-tenant OAuth"
+- Status: ✅ Deployed successfully
+- Verified: All 3 platforms visible in OpenAPI schema
+
+**Frontend (Vercel):**
+- Auto-deploys on push to main
+- Platform Studios now show all 9 platforms
+
+---
+
+## 📋 Previous Session: Mobile Optimization + Analytics + Legal (November 16, 2025)
 
 ### What Was Completed
 

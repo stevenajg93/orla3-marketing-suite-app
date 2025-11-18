@@ -3,12 +3,34 @@
 AI-powered marketing automation platform for videographers and creative professionals. Generate brand-aligned, strategically positioned content in seconds.
 
 **🚀 Live:** https://marketing.orla3.com
-**📱 Version:** 1.0.0 - Production Ready
+**📱 Version:** 1.0.1 - Production Ready
 **📊 Admin Portal:** https://marketing.orla3.com/admin
 
 ---
 
-## 🎉 Latest Updates (Nov 16, 2025)
+## 🎉 Latest Updates (Nov 18, 2025)
+
+**🎨 Platform Studio Complete**
+- ✅ **All 9 Platform Studios** fully implemented with multi-tenant OAuth
+- ✅ **Reddit Studio** - Text, Link, Image, Video posts to any subreddit
+- ✅ **Tumblr Studio** - Text and Photo posts to user blogs
+- ✅ **WordPress Studio** - Blog posts with draft/publish control
+- ✅ **No Mock Data** - All platforms use real user OAuth connections
+- ✅ **Railway Auto-Deploy Fixed** - Backend now deploys automatically on push
+- ✅ **Production Ready** - All studios match Instagram/YouTube quality standards
+
+**Platform Studios Available:**
+1. Instagram (Feed, Carousel, Reel, Story)
+2. YouTube (Video, Shorts, Thumbnails)
+3. TikTok (Video with privacy controls)
+4. LinkedIn (Text, Image, Video, Article)
+5. Facebook (Text, Photo, Video, Album, Link)
+6. X/Twitter (Text, Image, Video)
+7. Reddit (Text, Link, Image, Video)
+8. Tumblr (Text, Photo)
+9. WordPress (Blog posts)
+
+## 🎉 Previous Updates (Nov 16, 2025)
 
 **📱 Mobile Optimization Complete**
 - ✅ **28 pages** fully mobile-optimized (320px to 4K displays)
