@@ -102,10 +102,15 @@ class PublishRequest(BaseModel):
     link_url: Optional[str] = None  # For Reddit link posts
     subreddit: Optional[str] = None  # For Reddit - subreddit name (without r/ prefix)
     account_id: Optional[str] = None  # For multi-account support later
-    title: Optional[str] = None  # For WordPress blog posts and Reddit titles
+    title: Optional[str] = None  # For WordPress blog posts, Reddit titles, YouTube video title
     content: Optional[str] = None  # For WordPress full content (if different from caption)
     cover_url: Optional[str] = None  # For Instagram Reels cover image
     share_to_feed: Optional[bool] = True  # For Instagram Reels - share to feed
+    # YouTube-specific fields
+    privacy: Optional[str] = "private"  # YouTube privacy: public, private, unlisted
+    category_id: Optional[str] = "22"  # YouTube category (22 = People & Blogs)
+    is_short: Optional[bool] = False  # YouTube Shorts flag
+    thumbnail_url: Optional[str] = None  # YouTube custom thumbnail
 
 class PublishResponse(BaseModel):
     success: bool
@@ -1100,11 +1105,19 @@ async def publish_content(publish_request: PublishRequest, request: Request):
                 )
 
             publisher = YouTubePublisher(access_token=credentials['access_token'])
+
+            # Use title field if provided, otherwise use caption
+            video_title = publish_request.title if publish_request.title else publish_request.caption[:100] if publish_request.caption else "Video"
+            video_description = publish_request.caption or ""
+
             publish_result = await publisher.publish_video(
-                title=publish_request.caption[:100] if publish_request.caption else "Video",
-                description=publish_request.caption or "",
+                title=video_title,
+                description=video_description,
                 video_url=publish_request.video_url,
-                privacy="private"  # Default to private for safety
+                privacy=publish_request.privacy or "private",
+                category_id=publish_request.category_id or "22",
+                is_short=publish_request.is_short or False,
+                thumbnail_url=publish_request.thumbnail_url
             )
             result.update(publish_result)
 
@@ -1414,23 +1427,36 @@ class TikTokPublisher:
 class YouTubePublisher:
     """
     YouTube Data API v3 publisher
-    Requires: YouTube OAuth 2.0 access token
-    Note: YouTube is video-only platform
+    Supports: Regular videos, YouTube Shorts, thumbnail upload
+    Requires: YouTube OAuth 2.0 access token with youtube.upload scope
     """
 
     def __init__(self, access_token: str):
         self.access_token = access_token
-        self.base_url = "https://www.googleapis.com/upload/youtube/v3"
+        self.upload_url = "https://www.googleapis.com/upload/youtube/v3"
+        self.api_url = "https://www.googleapis.com/youtube/v3"
 
-    async def publish_video(self, title: str, description: str, video_url: str, privacy: str = "private") -> dict:
+    async def publish_video(
+        self,
+        title: str,
+        description: str,
+        video_url: str,
+        privacy: str = "private",
+        category_id: str = "22",
+        is_short: bool = False,
+        thumbnail_url: str = None
+    ) -> dict:
         """
         Upload video to YouTube using resumable upload
 
         Args:
-            title: Video title
-            description: Video description
+            title: Video title (max 100 chars)
+            description: Video description (max 5000 chars)
             video_url: Public URL to video file
             privacy: "public", "private", or "unlisted"
+            category_id: YouTube category ID (default: "22" = People & Blogs)
+            is_short: True for YouTube Shorts (<60s vertical video)
+            thumbnail_url: Optional custom thumbnail URL
 
         Returns:
             dict: {success: bool, post_id: str (video_id), post_url: str}
@@ -1442,51 +1468,43 @@ class YouTubePublisher:
             }
 
         try:
-            # Note: For production with large files, implement proper resumable upload
-            # For now, we'll use simple upload for videos < 100MB
-
-            async with httpx.AsyncClient(timeout=600.0) as client:  # 10 minute timeout for video upload
-                # Download video from URL first (in production, stream directly)
+            async with httpx.AsyncClient(timeout=600.0) as client:
+                # Step 1: Download video from URL
+                logger.info(f"Downloading video from {video_url}")
                 video_response = await client.get(video_url)
                 if video_response.status_code != 200:
                     return {
                         "success": False,
-                        "error": f"Failed to fetch video from URL: {video_response.status_code}"
+                        "error": f"Failed to fetch video: {video_response.status_code}"
                     }
 
                 video_data = video_response.content
+                video_size = len(video_data)
+                logger.info(f"Video downloaded: {video_size} bytes")
 
-                # Step 1: Create video resource
+                # Step 2: Prepare metadata
                 metadata = {
                     "snippet": {
-                        "title": title[:100],  # YouTube max title 100 chars
-                        "description": description[:5000],  # YouTube max description 5000 chars
-                        "categoryId": "22"  # 22 = People & Blogs (default category)
+                        "title": title[:100],
+                        "description": description[:5000],
+                        "categoryId": category_id
                     },
                     "status": {
-                        "privacyStatus": privacy,  # public, private, or unlisted
+                        "privacyStatus": privacy,
                         "selfDeclaredMadeForKids": False
                     }
                 }
 
-                # Step 2: Upload video
-                upload_response = await client.post(
-                    f"{self.base_url}/videos",
-                    params={
-                        "part": "snippet,status",
-                        "uploadType": "media"
-                    },
-                    headers={
-                        "Authorization": f"Bearer {self.access_token}",
-                        "Content-Type": "application/json"
-                    },
-                    json=metadata
-                )
+                # Add #Shorts to description for YouTube Shorts
+                if is_short:
+                    if metadata["snippet"]["description"]:
+                        metadata["snippet"]["description"] += "\n\n#Shorts"
+                    else:
+                        metadata["snippet"]["description"] = "#Shorts"
 
-                # Then upload the actual video binary
-                # (This is simplified - production should use resumable upload for files > 5MB)
-                upload_url_response = await client.post(
-                    f"{self.base_url}/videos",
+                # Step 3: Initialize resumable upload
+                init_response = await client.post(
+                    f"{self.upload_url}/videos",
                     params={
                         "part": "snippet,status",
                         "uploadType": "resumable"
@@ -1494,51 +1512,73 @@ class YouTubePublisher:
                     headers={
                         "Authorization": f"Bearer {self.access_token}",
                         "Content-Type": "application/json",
+                        "X-Upload-Content-Length": str(video_size),
                         "X-Upload-Content-Type": "video/*"
                     },
                     json=metadata
                 )
 
-                if upload_url_response.status_code != 200:
-                    logger.error(f"YouTube upload init failed: {upload_url_response.status_code} - {upload_url_response.text}")
+                if init_response.status_code != 200:
+                    logger.error(f"YouTube upload init failed: {init_response.status_code} - {init_response.text}")
                     return {
                         "success": False,
-                        "error": f"YouTube upload failed: {upload_url_response.status_code}"
+                        "error": f"YouTube upload initialization failed: {init_response.status_code}"
                     }
 
-                # Get upload URL from Location header
-                upload_url = upload_url_response.headers.get('Location')
-
-                if not upload_url:
+                # Get resumable upload URL from Location header
+                upload_session_url = init_response.headers.get('Location')
+                if not upload_session_url:
                     return {
                         "success": False,
-                        "error": "Failed to get YouTube upload URL"
+                        "error": "Failed to get YouTube upload session URL"
                     }
 
-                # Upload video binary
-                video_upload_response = await client.put(
-                    upload_url,
+                logger.info(f"Upload session created: {upload_session_url}")
+
+                # Step 4: Upload video binary using resumable upload
+                upload_response = await client.put(
+                    upload_session_url,
                     content=video_data,
                     headers={
                         "Content-Type": "video/*"
                     }
                 )
 
-                if video_upload_response.status_code not in [200, 201]:
-                    logger.error(f"YouTube video upload failed: {video_upload_response.status_code} - {video_upload_response.text}")
+                if upload_response.status_code not in [200, 201]:
+                    logger.error(f"YouTube video upload failed: {upload_response.status_code} - {upload_response.text}")
                     return {
                         "success": False,
-                        "error": f"YouTube video upload failed: {video_upload_response.status_code}"
+                        "error": f"YouTube video upload failed: {upload_response.status_code}"
                     }
 
-                video_data_response = video_upload_response.json()
-                video_id = video_data_response.get('id')
+                video_response_data = upload_response.json()
+                video_id = video_response_data.get('id')
+
+                if not video_id:
+                    return {
+                        "success": False,
+                        "error": "No video ID returned from YouTube"
+                    }
+
+                logger.info(f"Video uploaded successfully: {video_id}")
+
+                # Step 5: Upload custom thumbnail if provided
+                if thumbnail_url:
+                    thumbnail_result = await self.upload_thumbnail(video_id, thumbnail_url, client)
+                    if not thumbnail_result.get("success"):
+                        logger.warning(f"Thumbnail upload failed: {thumbnail_result.get('error')}")
+                        # Don't fail the whole operation if thumbnail fails
+
+                video_type = "Short" if is_short else "video"
+                watch_url = f"https://www.youtube.com/watch?v={video_id}"
+                if is_short:
+                    watch_url = f"https://www.youtube.com/shorts/{video_id}"
 
                 return {
                     "success": True,
                     "post_id": video_id,
-                    "post_url": f"https://www.youtube.com/watch?v={video_id}",
-                    "message": f"Video uploaded successfully as {privacy}"
+                    "post_url": watch_url,
+                    "message": f"YouTube {video_type} uploaded successfully as {privacy}"
                 }
 
         except httpx.TimeoutException:
@@ -1550,8 +1590,66 @@ class YouTubePublisher:
             logger.error(f"YouTube publish error: {e}")
             return {
                 "success": False,
-                "error": str(e)
+                "error": f"YouTube error: {str(e)}"
             }
+
+    async def upload_thumbnail(self, video_id: str, thumbnail_url: str, client: httpx.AsyncClient = None) -> dict:
+        """
+        Upload custom thumbnail for a YouTube video
+
+        Args:
+            video_id: YouTube video ID
+            thumbnail_url: Public URL to thumbnail image
+            client: Optional httpx client (reuse if provided)
+
+        Returns:
+            dict: {success: bool, error: str}
+        """
+        if not self.access_token:
+            return {"success": False, "error": "No access token"}
+
+        try:
+            should_close_client = False
+            if not client:
+                client = httpx.AsyncClient(timeout=60.0)
+                should_close_client = True
+
+            # Download thumbnail
+            thumb_response = await client.get(thumbnail_url)
+            if thumb_response.status_code != 200:
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch thumbnail: {thumb_response.status_code}"
+                }
+
+            thumbnail_data = thumb_response.content
+
+            # Upload thumbnail to YouTube
+            upload_response = await client.post(
+                f"{self.upload_url}/thumbnails/set",
+                params={"videoId": video_id},
+                headers={
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "image/jpeg"
+                },
+                content=thumbnail_data
+            )
+
+            if should_close_client:
+                await client.aclose()
+
+            if upload_response.status_code not in [200, 201]:
+                return {
+                    "success": False,
+                    "error": f"Thumbnail upload failed: {upload_response.status_code}"
+                }
+
+            logger.info(f"Thumbnail uploaded for video {video_id}")
+            return {"success": True}
+
+        except Exception as e:
+            logger.error(f"Thumbnail upload error: {e}")
+            return {"success": False, "error": str(e)}
 
 # ============================================================================
 # REDDIT PUBLISHER

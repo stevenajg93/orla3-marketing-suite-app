@@ -61,6 +61,13 @@ export default function SocialManagerPage() {
   const [reelCoverUrl, setReelCoverUrl] = useState("");
   const [shareToFeed, setShareToFeed] = useState(true);
 
+  // YouTube Studio state
+  const [youtubeTitle, setYoutubeTitle] = useState("");
+  const [youtubePrivacy, setYoutubePrivacy] = useState<"public" | "private" | "unlisted">("private");
+  const [youtubeCategory, setYoutubeCategory] = useState("22");
+  const [isShort, setIsShort] = useState(false);
+  const [youtubeThumbnail, setYoutubeThumbnail] = useState("");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -767,6 +774,17 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "youtube") {
+        if (selectedMedia.length === 0 || !selectedMedia[0]?.content_type?.includes('video')) {
+          alert('YouTube requires a video');
+          return;
+        }
+        if (!youtubeTitle.trim()) {
+          alert('Please add a video title');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -808,6 +826,14 @@ export default function SocialManagerPage() {
             payload.content_type = "image";
             payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
           }
+        } else if (mode === "studio" && platform === "youtube") {
+          payload.content_type = "video";
+          payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+          payload.title = youtubeTitle;
+          payload.privacy = youtubePrivacy;
+          payload.category_id = youtubeCategory;
+          payload.is_short = isShort;
+          payload.thumbnail_url = youtubeThumbnail || null;
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -2117,8 +2143,195 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* YouTube Studio */}
+            {studioPlatform === "youtube" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Video Upload */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Video</h3>
+                      <div
+                        onClick={() => setShowMediaLibrary(true)}
+                        className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                      >
+                        {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                          <div className="space-y-3">
+                            <video
+                              src={selectedMedia[0].url}
+                              className="w-full aspect-video object-cover rounded-lg mx-auto"
+                              controls
+                            />
+                            <p className="text-sm text-gray-400">Click to change video</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="text-4xl text-gray-400">+</div>
+                            <p className="text-sm text-gray-400">Select video from library</p>
+                            <p className="text-xs text-gray-500">MP4, MOV, AVI supported</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Video Type Toggle */}
+                      <div className="mt-4 p-3 bg-cobalt/10 border border-cobalt/20 rounded-lg">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isShort}
+                            onChange={(e) => setIsShort(e.target.checked)}
+                            className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                          />
+                          <span className="text-sm text-gray-300">YouTube Short (vertical video, under 60s)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Title</h3>
+                      <input
+                        type="text"
+                        value={youtubeTitle}
+                        onChange={(e) => setYoutubeTitle(e.target.value)}
+                        placeholder="Enter video title..."
+                        maxLength={100}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{youtubeTitle.length} / 100</span>
+                        {youtubeTitle.length > 100 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Description</h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="Tell viewers about your video..."
+                        rows={6}
+                        maxLength={5000}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{caption.length} / 5,000</span>
+                        {caption.length > 5000 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Thumbnail Upload */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Custom Thumbnail (Optional)</h3>
+                      <button
+                        onClick={() => setShowMediaLibrary(true)}
+                        className="w-full py-3 px-4 text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition"
+                      >
+                        {youtubeThumbnail ? "Change Thumbnail" : "Upload Thumbnail"}
+                      </button>
+                      <p className="text-xs text-gray-400 mt-2">1280x720px recommended (16:9 ratio)</p>
+                    </div>
+
+                    {/* Privacy & Category */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Settings</h3>
+
+                      {/* Privacy */}
+                      <div className="mb-4">
+                        <label className="block text-sm text-gray-300 mb-2">Privacy</label>
+                        <select
+                          value={youtubePrivacy}
+                          onChange={(e) => setYoutubePrivacy(e.target.value as "public" | "private" | "unlisted")}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+                        >
+                          <option value="private">Private</option>
+                          <option value="unlisted">Unlisted</option>
+                          <option value="public">Public</option>
+                        </select>
+                      </div>
+
+                      {/* Category */}
+                      <div>
+                        <label className="block text-sm text-gray-300 mb-2">Category</label>
+                        <select
+                          value={youtubeCategory}
+                          onChange={(e) => setYoutubeCategory(e.target.value)}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+                        >
+                          <option value="22">People & Blogs</option>
+                          <option value="1">Film & Animation</option>
+                          <option value="2">Autos & Vehicles</option>
+                          <option value="10">Music</option>
+                          <option value="15">Pets & Animals</option>
+                          <option value="17">Sports</option>
+                          <option value="19">Travel & Events</option>
+                          <option value="20">Gaming</option>
+                          <option value="23">Comedy</option>
+                          <option value="24">Entertainment</option>
+                          <option value="25">News & Politics</option>
+                          <option value="26">Howto & Style</option>
+                          <option value="27">Education</option>
+                          <option value="28">Science & Technology</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || !youtubeTitle.trim() || selectedMedia.length === 0 || !selectedMedia[0].content_type?.includes('video')}
+                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Uploading..." : `Upload ${isShort ? "Short" : "Video"} to YouTube`}
+                    </button>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* Video Preview */}
+                    <div className="bg-black rounded-lg overflow-hidden mb-4">
+                      {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                        <video
+                          src={selectedMedia[0].url}
+                          className={`w-full object-cover ${isShort ? 'aspect-[9/16] max-h-[600px]' : 'aspect-video'}`}
+                          controls
+                        />
+                      ) : (
+                        <div className={`w-full ${isShort ? 'aspect-[9/16] max-h-[600px]' : 'aspect-video'} bg-gray-900 flex items-center justify-center`}>
+                          <p className="text-gray-400 text-sm px-4 text-center">Upload a video to see preview</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Video Details Preview */}
+                    <div className="space-y-3">
+                      <h4 className="font-bold text-white text-base">
+                        {youtubeTitle || "Video Title"}
+                      </h4>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <span>{youtubePrivacy === "public" ? "Public" : youtubePrivacy === "unlisted" ? "Unlisted" : "Private"}</span>
+                        <span>•</span>
+                        <span>{isShort ? "Short" : "Video"}</span>
+                      </div>
+                      {caption && (
+                        <p className="text-sm text-gray-300 line-clamp-3">{caption}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
