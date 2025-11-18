@@ -1670,25 +1670,420 @@ export default function SocialManagerPage() {
                   </div>
                 )}
 
-                {/* Placeholder for other Instagram post types */}
+                {/* Instagram Carousel Composer */}
                 {instagramPostType === "carousel" && (
-                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
-                    <h3 className="text-xl font-bold text-white mb-2">Instagram Carousel</h3>
-                    <p className="text-gray-400">Carousel composer coming soon</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Compose Column */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Multi-Media Upload */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Media (2-10 images)</h3>
+
+                        {/* Selected Media Grid */}
+                        {selectedMedia.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            {selectedMedia.map((media, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={media.url || media.thumbnail_url}
+                                  alt={`Slide ${index + 1}`}
+                                  className="w-full aspect-square object-cover rounded-lg"
+                                />
+                                <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                                  {index + 1}
+                                </div>
+                                <button
+                                  onClick={() => setSelectedMedia(selectedMedia.filter((_, i) => i !== index))}
+                                  className="absolute top-1 right-1 bg-red-600 text-white text-xs w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add More Button */}
+                        {selectedMedia.length < 10 && (
+                          <div
+                            onClick={() => setShowMediaLibrary(true)}
+                            className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center cursor-pointer hover:border-cobalt transition"
+                          >
+                            <div className="text-3xl text-gray-400">+</div>
+                            <p className="text-sm text-gray-400 mt-2">
+                              {selectedMedia.length === 0 ? 'Select 2-10 images' : `Add more (${selectedMedia.length}/10)`}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedMedia.length === 1 && (
+                          <p className="text-sm text-red-400 mt-2">Carousel requires at least 2 images</p>
+                        )}
+                      </div>
+
+                      {/* Caption */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Caption</h3>
+                        <textarea
+                          value={caption}
+                          onChange={(e) => setCaption(e.target.value)}
+                          placeholder="Write your Instagram carousel caption..."
+                          rows={6}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-sm text-gray-400">{caption.length} / 2,200</span>
+                          {caption.length > 2200 && (
+                            <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Instagram-specific Options */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
+                        <div className="space-y-3">
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Location
+                          </button>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Alt Text for each image
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Publish Button */}
+                      <button
+                        onClick={publishToSocial}
+                        disabled={publishing || !caption.trim() || selectedMedia.length < 2 || selectedMedia.length > 10}
+                        className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {publishing ? "Publishing..." : "Post Carousel to Instagram"}
+                      </button>
+                    </div>
+
+                    {/* Preview Column */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+                      <div className="bg-white rounded-lg overflow-hidden max-w-sm mx-auto">
+                        <div className="p-4">
+                          {/* Instagram header */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
+                              <p className="text-xs text-gray-500">Just now</p>
+                            </div>
+                          </div>
+
+                          {/* Carousel Media Preview */}
+                          {selectedMedia.length > 0 ? (
+                            <div className="mb-3 -mx-4 relative">
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Carousel preview"
+                                className="w-full aspect-square object-cover"
+                              />
+                              {selectedMedia.length > 1 && (
+                                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                  1/{selectedMedia.length}
+                                </div>
+                              )}
+                              {/* Carousel dots */}
+                              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                                {selectedMedia.map((_, index) => (
+                                  <div
+                                    key={index}
+                                    className={`w-1.5 h-1.5 rounded-full ${index === 0 ? 'bg-cobalt' : 'bg-white/50'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mb-3 -mx-4 bg-gray-200 aspect-square flex items-center justify-center">
+                              <p className="text-gray-400 text-sm">Select 2-10 images</p>
+                            </div>
+                          )}
+
+                          {/* Instagram caption */}
+                          <div className="text-sm text-gray-900">
+                            <span className="font-semibold">Your Brand</span>{" "}
+                            <span className="whitespace-pre-wrap">
+                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption || "Your carousel caption will appear here..."}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
+                {/* Instagram Reels Composer */}
                 {instagramPostType === "reel" && (
-                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
-                    <h3 className="text-xl font-bold text-white mb-2">Instagram Reels</h3>
-                    <p className="text-gray-400">Reels composer coming soon</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Compose Column */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Video Upload */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Video</h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                            <div className="space-y-3">
+                              <video
+                                src={selectedMedia[0].url}
+                                className="w-full aspect-[9/16] object-cover rounded-lg mx-auto max-h-96"
+                                controls
+                              />
+                              <p className="text-sm text-gray-400">Click to change video</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select vertical video (9:16)</p>
+                              <p className="text-xs text-gray-500">15-90 seconds recommended</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Video Requirements */}
+                        <div className="mt-4 p-3 bg-cobalt/10 border border-cobalt/20 rounded-lg">
+                          <p className="text-xs text-gray-300">
+                            <span className="font-semibold">Requirements:</span> Vertical (9:16), 15-90 seconds
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Cover Image Selector */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Cover Image</h3>
+                        <p className="text-sm text-gray-400 mb-3">Select a frame from your video as the cover</p>
+                        <button className="w-full py-3 px-4 text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                          Choose from Video
+                        </button>
+                      </div>
+
+                      {/* Caption */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Caption</h3>
+                        <textarea
+                          value={caption}
+                          onChange={(e) => setCaption(e.target.value)}
+                          placeholder="Write your Reel caption..."
+                          rows={5}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-sm text-gray-400">{caption.length} / 2,200</span>
+                          {caption.length > 2200 && (
+                            <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Reels Options */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt" defaultChecked />
+                            <span className="text-sm text-gray-300">Share to Feed</span>
+                          </label>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Location
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Publish Button */}
+                      <button
+                        onClick={publishToSocial}
+                        disabled={publishing || !caption.trim() || selectedMedia.length === 0 || !selectedMedia[0].content_type?.includes('video')}
+                        className="w-full py-4 bg-gradient-to-r from-cobalt-600 to-cobalt text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {publishing ? "Publishing..." : "Post Reel to Instagram"}
+                      </button>
+                    </div>
+
+                    {/* Preview Column */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+                      <div className="bg-black rounded-lg overflow-hidden max-w-xs mx-auto aspect-[9/16]">
+                        {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                          <div className="relative h-full">
+                            <video
+                              src={selectedMedia[0].url}
+                              className="w-full h-full object-cover"
+                              muted
+                              loop
+                            />
+                            {/* Reels UI Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
+                                <span className="text-white font-semibold text-sm">Your Brand</span>
+                              </div>
+                              <p className="text-white text-sm line-clamp-2">
+                                {caption || "Your Reel caption will appear here..."}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-full flex items-center justify-center bg-gray-900">
+                            <p className="text-gray-400 text-sm px-4 text-center">Select a vertical video</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
+                {/* Instagram Stories Composer */}
                 {instagramPostType === "story" && (
-                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
-                    <h3 className="text-xl font-bold text-white mb-2">Instagram Stories</h3>
-                    <p className="text-gray-400">Stories composer coming soon</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Compose Column */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Media Upload */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Story Media</h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              {selectedMedia[0].content_type?.includes('video') ? (
+                                <video
+                                  src={selectedMedia[0].url}
+                                  className="w-full aspect-[9/16] object-cover rounded-lg mx-auto max-h-96"
+                                  controls
+                                />
+                              ) : (
+                                <img
+                                  src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                  alt="Story"
+                                  className="w-full aspect-[9/16] object-cover rounded-lg mx-auto max-h-96"
+                                />
+                              )}
+                              <p className="text-sm text-gray-400">Click to change media</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select vertical media (9:16)</p>
+                              <p className="text-xs text-gray-500">Image or video</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Story Requirements */}
+                        <div className="mt-4 p-3 bg-royal/10 border border-royal/20 rounded-lg">
+                          <p className="text-xs text-gray-300">
+                            <span className="font-semibold">Note:</span> Stories expire after 24 hours
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Text Overlay */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Text Overlay</h3>
+                        <textarea
+                          value={caption}
+                          onChange={(e) => setCaption(e.target.value)}
+                          placeholder="Add text overlay to your story..."
+                          rows={4}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">Text will be overlaid on your story</p>
+                      </div>
+
+                      {/* Story Options */}
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Options</h3>
+                        <div className="space-y-3">
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Location
+                          </button>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Stickers
+                          </button>
+                          <button className="w-full py-2 px-4 text-left text-sm bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition">
+                            Add Poll
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-3">Advanced features coming soon</p>
+                      </div>
+
+                      {/* Publish Button */}
+                      <button
+                        onClick={publishToSocial}
+                        disabled={publishing || selectedMedia.length === 0}
+                        className="w-full py-4 bg-gradient-to-r from-royal to-cobalt text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {publishing ? "Publishing..." : "Post Story to Instagram"}
+                      </button>
+
+                      {/* 24h Expiry Notice */}
+                      <div className="bg-royal/10 border border-royal/20 rounded-lg p-4">
+                        <p className="text-sm text-gray-300 text-center">
+                          Stories will be visible for 24 hours
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Preview Column */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+                      <div className="bg-black rounded-lg overflow-hidden max-w-xs mx-auto aspect-[9/16]">
+                        {selectedMedia.length > 0 ? (
+                          <div className="relative h-full">
+                            {selectedMedia[0].content_type?.includes('video') ? (
+                              <video
+                                src={selectedMedia[0].url}
+                                className="w-full h-full object-cover"
+                                muted
+                                loop
+                              />
+                            ) : (
+                              <img
+                                src={selectedMedia[0].url || selectedMedia[0].thumbnail_url}
+                                alt="Story preview"
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+
+                            {/* Story UI Overlay */}
+                            <div className="absolute top-0 left-0 right-0 p-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-intense to-cobalt border-2 border-white"></div>
+                                <span className="text-white font-semibold text-sm">Your Brand</span>
+                                <span className="text-white/70 text-xs">now</span>
+                              </div>
+                            </div>
+
+                            {/* Text Overlay */}
+                            {caption && (
+                              <div className="absolute inset-0 flex items-center justify-center p-8">
+                                <p className="text-white text-2xl font-bold text-center drop-shadow-lg">
+                                  {caption}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* 24h Timer */}
+                            <div className="absolute top-4 left-4 right-4 h-1 bg-white/30 rounded-full">
+                              <div className="h-full w-1/3 bg-white rounded-full"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-full flex items-center justify-center bg-gray-900">
+                            <p className="text-gray-400 text-sm px-4 text-center">Select vertical media for your story</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
