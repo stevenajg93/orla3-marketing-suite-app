@@ -86,6 +86,19 @@ export default function SocialManagerPage() {
   // X Studio state
   const [xPostType, setXPostType] = useState<"text" | "image" | "video">("text");
 
+  // Reddit Studio state
+  const [redditPostType, setRedditPostType] = useState<"text" | "link" | "image" | "video">("text");
+  const [redditSubreddit, setRedditSubreddit] = useState("");
+  const [redditTitle, setRedditTitle] = useState("");
+  const [redditLinkUrl, setRedditLinkUrl] = useState("");
+
+  // Tumblr Studio state
+  const [tumblrPostType, setTumblrPostType] = useState<"text" | "photo">("text");
+
+  // WordPress Studio state
+  const [wordpressTitle, setWordpressTitle] = useState("");
+  const [wordpressStatus, setWordpressStatus] = useState<"publish" | "draft">("draft");
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -859,6 +872,47 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "reddit") {
+        if (!redditSubreddit.trim()) {
+          alert('Please enter a subreddit name');
+          return;
+        }
+        if (!redditTitle.trim()) {
+          alert('Please add a post title');
+          return;
+        }
+        if (redditTitle.length > 300) {
+          alert('Reddit titles must be under 300 characters');
+          return;
+        }
+        if (redditPostType === "link" && !redditLinkUrl.trim()) {
+          alert('Please add a URL for your link post');
+          return;
+        }
+        if (redditPostType === "image" && selectedMedia.length === 0) {
+          alert('Please select an image');
+          return;
+        }
+        if (redditPostType === "video" && selectedMedia.length === 0) {
+          alert('Please select a video');
+          return;
+        }
+      }
+
+      if (studioPlatform === "tumblr") {
+        if (tumblrPostType === "photo" && selectedMedia.length === 0) {
+          alert('Please select a photo');
+          return;
+        }
+      }
+
+      if (studioPlatform === "wordpress") {
+        if (!wordpressTitle.trim()) {
+          alert('Please add a blog post title');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -959,6 +1013,30 @@ export default function SocialManagerPage() {
             payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
           }
           // Text-only posts don't need additional fields
+        } else if (mode === "studio" && platform === "reddit") {
+          payload.subreddit = redditSubreddit;
+          payload.title = redditTitle;
+          payload.content_type = redditPostType;
+
+          if (redditPostType === "text") {
+            // Text post - caption goes in the text field
+          } else if (redditPostType === "link") {
+            payload.link_url = redditLinkUrl;
+          } else if (redditPostType === "image") {
+            payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
+          } else if (redditPostType === "video") {
+            payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+          }
+        } else if (mode === "studio" && platform === "tumblr") {
+          payload.content_type = tumblrPostType;
+          if (tumblrPostType === "photo") {
+            payload.image_urls = [selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''];
+          }
+          // Text-only posts don't need additional fields
+        } else if (mode === "studio" && platform === "wordpress") {
+          payload.title = wordpressTitle;
+          payload.content = caption; // Caption becomes blog post content
+          payload.status = wordpressStatus;
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -3279,8 +3357,562 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* Reddit Studio */}
+            {studioPlatform === "reddit" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Post Type Selector */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: "text" as const, label: "Text" },
+                          { id: "link" as const, label: "Link" },
+                          { id: "image" as const, label: "Image" },
+                          { id: "video" as const, label: "Video" },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setRedditPostType(type.id)}
+                            className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
+                              redditPostType === type.id
+                                ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                                : "bg-white/10 text-gray-400 hover:bg-white/20"
+                            }`}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Subreddit */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Subreddit</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">r/</span>
+                        <input
+                          type="text"
+                          value={redditSubreddit}
+                          onChange={(e) => setRedditSubreddit(e.target.value)}
+                          placeholder="videography"
+                          className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cobalt focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Post Title */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Title</h3>
+                      <input
+                        type="text"
+                        value={redditTitle}
+                        onChange={(e) => setRedditTitle(e.target.value)}
+                        maxLength={300}
+                        placeholder="Post title (max 300 characters)"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cobalt focus:outline-none"
+                      />
+                      <div className="flex justify-between mt-2">
+                        <span className="text-sm text-gray-400">{redditTitle.length} / 300</span>
+                        {redditTitle.length > 300 && (
+                          <span className="text-sm text-gold-intense">Title too long</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Post Content / Link URL */}
+                    {redditPostType === "link" && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">Link URL</h3>
+                        <input
+                          type="url"
+                          value={redditLinkUrl}
+                          onChange={(e) => setRedditLinkUrl(e.target.value)}
+                          placeholder="https://example.com"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cobalt focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* Caption / Post Body */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                        {redditPostType === "text" ? "Post Text" : "Caption"}
+                      </h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder={redditPostType === "text" ? "Your post content..." : "Optional caption..."}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:border-cobalt focus:outline-none min-h-[120px]"
+                      />
+                    </div>
+
+                    {/* Media Selection */}
+                    {(redditPostType === "image" || redditPostType === "video") && (
+                      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-4">
+                          {redditPostType === "image" ? "Image" : "Video"}
+                        </h3>
+                        <div
+                          onClick={() => setShowMediaLibrary(true)}
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                        >
+                          {selectedMedia.length > 0 ? (
+                            <div className="space-y-3">
+                              {redditPostType === "image" && selectedMedia[0]?.content_type?.includes('image') && (
+                                <img
+                                  src={selectedMedia[0].url}
+                                  alt="Selected"
+                                  className="w-full max-h-48 object-cover rounded-lg mx-auto"
+                                />
+                              )}
+                              {redditPostType === "video" && selectedMedia[0]?.content_type?.includes('video') && (
+                                <video
+                                  src={selectedMedia[0].url}
+                                  className="w-full max-h-48 object-cover rounded-lg mx-auto"
+                                  controls
+                                />
+                              )}
+                              <p className="text-sm text-gray-400">Click to change</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-4xl text-gray-400">+</div>
+                              <p className="text-sm text-gray-400">Select from library</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || !redditSubreddit.trim() || !redditTitle.trim()}
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Posting..." : "Post to Reddit"}
+                    </button>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* Reddit-style Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden">
+                      <div className="p-4">
+                        {/* Upvote Section */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center gap-1">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                            <span className="text-sm font-bold text-gray-600">Vote</span>
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+
+                          <div className="flex-1">
+                            {/* Subreddit Header */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-bold text-gray-900">r/{redditSubreddit || "subreddit"}</span>
+                              <span className="text-xs text-gray-500">• Posted by u/ORLA³</span>
+                            </div>
+
+                            {/* Post Title */}
+                            <h4 className="text-lg font-bold text-gray-900 mb-2">
+                              {redditTitle || "Your post title appears here"}
+                            </h4>
+
+                            {/* Post Content */}
+                            {redditPostType === "text" && caption && (
+                              <p className="text-sm text-gray-700 mb-3 whitespace-pre-wrap">{caption}</p>
+                            )}
+
+                            {/* Link Preview */}
+                            {redditPostType === "link" && redditLinkUrl && (
+                              <div className="border border-gray-300 rounded-lg p-3 mb-3">
+                                <div className="w-full h-32 bg-gray-200 rounded mb-2"></div>
+                                <p className="text-xs text-gray-600 truncate">{redditLinkUrl}</p>
+                              </div>
+                            )}
+
+                            {/* Image Preview */}
+                            {redditPostType === "image" && selectedMedia.length > 0 && selectedMedia[0]?.content_type?.includes('image') && (
+                              <img
+                                src={selectedMedia[0].url}
+                                alt="Post"
+                                className="w-full rounded-lg mb-3"
+                              />
+                            )}
+
+                            {/* Video Preview */}
+                            {redditPostType === "video" && selectedMedia.length > 0 && selectedMedia[0]?.content_type?.includes('video') && (
+                              <video
+                                src={selectedMedia[0].url}
+                                className="w-full rounded-lg mb-3"
+                                controls
+                              />
+                            )}
+
+                            {/* Action Bar */}
+                            <div className="flex items-center gap-4 text-gray-500 text-sm">
+                              <button className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>Comments</span>
+                              </button>
+                              <button className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                                <span>Share</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tumblr Studio */}
+            {studioPlatform === "tumblr" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Panel - Composer */}
+                <div className="space-y-6">
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-6">Create Tumblr Post</h3>
+
+                    {/* Post Type Selector */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-3">Post Type</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setTumblrPostType("text")}
+                          className={`px-4 py-3 rounded-lg font-semibold transition ${
+                            tumblrPostType === "text"
+                              ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                              : "bg-white/10 text-gray-400 hover:bg-white/20"
+                          }`}
+                        >
+                          Text
+                        </button>
+                        <button
+                          onClick={() => setTumblrPostType("photo")}
+                          className={`px-4 py-3 rounded-lg font-semibold transition ${
+                            tumblrPostType === "photo"
+                              ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                              : "bg-white/10 text-gray-400 hover:bg-white/20"
+                          }`}
+                        >
+                          Photo
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Caption */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-2">
+                        Caption {tumblrPostType === "text" ? "(Post Content)" : "(Photo Caption)"}
+                      </label>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder={tumblrPostType === "text" ? "Write your Tumblr post..." : "Add a caption to your photo..."}
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gold resize-none"
+                        rows={8}
+                      />
+                    </div>
+
+                    {/* Media Selection for Photo Posts */}
+                    {tumblrPostType === "photo" && (
+                      <div className="mb-6">
+                        <label className="block text-sm font-semibold text-white mb-2">Photo</label>
+                        {selectedMedia.length > 0 ? (
+                          <div className="relative">
+                            <img
+                              src={selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''}
+                              alt="Selected"
+                              className="w-full h-48 object-cover rounded-lg border border-white/10"
+                            />
+                            <button
+                              onClick={() => setSelectedMedia([])}
+                              className="absolute top-2 right-2 bg-black/70 text-white px-3 py-1 rounded-lg text-sm hover:bg-black/90"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setActiveTab("media")}
+                            className="w-full px-4 py-8 bg-white/5 border-2 border-dashed border-white/20 rounded-lg text-gray-400 hover:bg-white/10 hover:border-gold transition"
+                          >
+                            Select photo from Media Library
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={handlePublish}
+                      disabled={isPublishing}
+                      className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {isPublishing ? "Publishing..." : "Publish to Tumblr"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Panel - Preview */}
+                <div className="space-y-6">
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-6">Preview</h3>
+
+                    {/* Tumblr-style Post Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden shadow-lg">
+                      {/* Blog Header */}
+                      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-gold to-gold-intense rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                            O
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900">orla3-blog</div>
+                            <div className="text-xs text-gray-500">Just now</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Post Content */}
+                      <div className="p-4 bg-white">
+                        {tumblrPostType === "photo" && selectedMedia.length > 0 && (
+                          <img
+                            src={selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''}
+                            alt="Post"
+                            className="w-full rounded-lg mb-3"
+                          />
+                        )}
+
+                        <div className="text-gray-900 whitespace-pre-wrap">
+                          {caption || (
+                            <span className="text-gray-400 italic">
+                              {tumblrPostType === "text" ? "Your post content will appear here..." : "Your caption will appear here..."}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Post Actions */}
+                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <button className="flex items-center gap-2 hover:text-gray-900 transition">
+                            <span>Notes</span>
+                          </button>
+                          <button className="flex items-center gap-2 hover:text-gray-900 transition">
+                            <span>Reblog</span>
+                          </button>
+                          <button className="flex items-center gap-2 hover:text-gray-900 transition">
+                            <span>Like</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Tags Section */}
+                      <div className="px-4 py-3 bg-white border-t border-gray-200">
+                        <div className="flex flex-wrap gap-2">
+                          <span className="text-xs text-gray-500">#orla3</span>
+                          <span className="text-xs text-gray-500">#marketing</span>
+                          <span className="text-xs text-gray-500">#automation</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* WordPress Studio */}
+            {studioPlatform === "wordpress" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Panel - Composer */}
+                <div className="space-y-6">
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-6">Create WordPress Post</h3>
+
+                    {/* Post Title */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-2">Post Title</label>
+                      <input
+                        type="text"
+                        value={wordpressTitle}
+                        onChange={(e) => setWordpressTitle(e.target.value)}
+                        placeholder="Enter your blog post title..."
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gold"
+                      />
+                    </div>
+
+                    {/* Post Content */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-2">Post Content</label>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="Write your blog post content..."
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gold resize-none"
+                        rows={12}
+                      />
+                    </div>
+
+                    {/* Featured Image */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-2">Featured Image (Optional)</label>
+                      {selectedMedia.length > 0 ? (
+                        <div className="relative">
+                          <img
+                            src={selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''}
+                            alt="Featured"
+                            className="w-full h-48 object-cover rounded-lg border border-white/10"
+                          />
+                          <button
+                            onClick={() => setSelectedMedia([])}
+                            className="absolute top-2 right-2 bg-black/70 text-white px-3 py-1 rounded-lg text-sm hover:bg-black/90"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setActiveTab("media")}
+                          className="w-full px-4 py-8 bg-white/5 border-2 border-dashed border-white/20 rounded-lg text-gray-400 hover:bg-white/10 hover:border-gold transition"
+                        >
+                          Select featured image from Media Library
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Publish Status */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-white mb-3">Publish Status</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setWordpressStatus("draft")}
+                          className={`px-4 py-3 rounded-lg font-semibold transition ${
+                            wordpressStatus === "draft"
+                              ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                              : "bg-white/10 text-gray-400 hover:bg-white/20"
+                          }`}
+                        >
+                          Save as Draft
+                        </button>
+                        <button
+                          onClick={() => setWordpressStatus("publish")}
+                          className={`px-4 py-3 rounded-lg font-semibold transition ${
+                            wordpressStatus === "publish"
+                              ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                              : "bg-white/10 text-gray-400 hover:bg-white/20"
+                          }`}
+                        >
+                          Publish Live
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={handlePublish}
+                      disabled={isPublishing}
+                      className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {isPublishing ? "Publishing..." : `${wordpressStatus === "publish" ? "Publish" : "Save Draft"} to WordPress`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Panel - Preview */}
+                <div className="space-y-6">
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-6">Preview</h3>
+
+                    {/* WordPress-style Blog Post Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden shadow-lg">
+                      {/* Featured Image */}
+                      {selectedMedia.length > 0 && (
+                        <img
+                          src={selectedMedia[0]?.url || selectedMedia[0]?.image_url || ''}
+                          alt="Featured"
+                          className="w-full h-64 object-cover"
+                        />
+                      )}
+
+                      {/* Post Content */}
+                      <div className="p-6">
+                        {/* Post Title */}
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                          {wordpressTitle || (
+                            <span className="text-gray-400 italic text-2xl">Your post title will appear here...</span>
+                          )}
+                        </h1>
+
+                        {/* Post Meta */}
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-6 pb-4 border-b border-gray-200">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-gold to-gold-intense rounded-full flex items-center justify-center text-white font-bold text-xs">
+                              O
+                            </div>
+                            <span className="font-semibold">ORLA³</span>
+                          </div>
+                          <span>•</span>
+                          <span>Just now</span>
+                          <span>•</span>
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            wordpressStatus === "publish"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {wordpressStatus === "publish" ? "Published" : "Draft"}
+                          </span>
+                        </div>
+
+                        {/* Post Body */}
+                        <div className="prose prose-lg max-w-none text-gray-700 whitespace-pre-wrap">
+                          {caption || (
+                            <span className="text-gray-400 italic">
+                              Your blog post content will appear here...
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Post Footer */}
+                      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <button className="hover:text-gray-900 transition">Share</button>
+                            <button className="hover:text-gray-900 transition">Comment</button>
+                            <button className="hover:text-gray-900 transition">Like</button>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Categories: Marketing, Automation
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && studioPlatform !== "linkedin" && studioPlatform !== "x" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && studioPlatform !== "linkedin" && studioPlatform !== "x" && studioPlatform !== "reddit" && studioPlatform !== "tumblr" && studioPlatform !== "wordpress" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
