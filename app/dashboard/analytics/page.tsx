@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { createApiClient } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 import { staggerContainer, staggerItem, fadeInUp, DURATION, EASE_PREMIUM } from '@/lib/motion';
 
 export default function AnalyticsPage() {
@@ -17,8 +17,6 @@ export default function AnalyticsPage() {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const api = createApiClient();
-
       // Fetch real post analytics
       const postsResponse = await api.get(`/analytics/posts?range=${timeRange}`);
       const recentPosts = postsResponse.posts || [];

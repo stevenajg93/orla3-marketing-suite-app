@@ -3663,7 +3663,7 @@ export default function SocialManagerPage() {
 
                     {/* Publish Button */}
                     <button
-                      onClick={handlePublish}
+                      onClick={publishToSocial}
                       disabled={publishing}
                       className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
                     >
@@ -3828,7 +3828,7 @@ export default function SocialManagerPage() {
 
                     {/* Publish Button */}
                     <button
-                      onClick={handlePublish}
+                      onClick={publishToSocial}
                       disabled={publishing}
                       className="w-full bg-gradient-to-r from-gold to-gold-intense text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition disabled:opacity-50"
                     >
