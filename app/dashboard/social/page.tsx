@@ -2386,7 +2386,7 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || !youtubeTitle.trim() || selectedMedia.length === 0 || !selectedMedia[0].content_type?.includes('video')}
-                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Uploading..." : `Upload ${isShort ? "Short" : "Video"} to YouTube`}
                     </button>
@@ -2441,22 +2441,21 @@ export default function SocialManagerPage() {
                       <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {[
-                          { id: "text" as const, label: "Text", icon: "T" },
-                          { id: "link" as const, label: "Link", icon: "🔗" },
-                          { id: "photo" as const, label: "Photo", icon: "📷" },
-                          { id: "video" as const, label: "Video", icon: "🎥" },
-                          { id: "album" as const, label: "Album", icon: "📚" },
+                          { id: "text" as const, label: "Text" },
+                          { id: "link" as const, label: "Link" },
+                          { id: "photo" as const, label: "Photo" },
+                          { id: "video" as const, label: "Video" },
+                          { id: "album" as const, label: "Album" },
                         ].map((type) => (
                           <button
                             key={type.id}
                             onClick={() => setFacebookPostType(type.id)}
-                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                            className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
                               facebookPostType === type.id
-                                ? "border-cobalt bg-cobalt/20 text-white"
-                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                                ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                                : "bg-white/10 text-gray-400 hover:bg-white/20"
                             }`}
                           >
-                            <div className="text-2xl mb-1">{type.icon}</div>
                             {type.label}
                           </button>
                         ))}
@@ -2564,7 +2563,7 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || !caption.trim()}
-                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Publishing..." : "Post to Facebook"}
                     </button>
@@ -2760,7 +2759,7 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || selectedMedia.length === 0 || !selectedMedia[0].content_type?.includes('video')}
-                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Uploading..." : "Post to TikTok"}
                     </button>
@@ -2804,7 +2803,9 @@ export default function SocialManagerPage() {
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
-                                  <span className="text-white text-xl">♥</span>
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                  </svg>
                                 </div>
                               </div>
                               <div className="text-center">
@@ -2817,7 +2818,9 @@ export default function SocialManagerPage() {
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
-                                  <span className="text-white text-xl">↗</span>
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                  </svg>
                                 </div>
                               </div>
                             </div>
@@ -2856,21 +2859,20 @@ export default function SocialManagerPage() {
                       <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { id: "text" as const, label: "Text", icon: "T" },
-                          { id: "image" as const, label: "Image", icon: "📷" },
-                          { id: "video" as const, label: "Video", icon: "🎥" },
-                          { id: "article" as const, label: "Article", icon: "📰" },
+                          { id: "text" as const, label: "Text" },
+                          { id: "image" as const, label: "Image" },
+                          { id: "video" as const, label: "Video" },
+                          { id: "article" as const, label: "Article" },
                         ].map((type) => (
                           <button
                             key={type.id}
                             onClick={() => setLinkedinPostType(type.id)}
-                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                            className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
                               linkedinPostType === type.id
-                                ? "border-cobalt bg-cobalt/20 text-white"
-                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                                ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                                : "bg-white/10 text-gray-400 hover:bg-white/20"
                             }`}
                           >
-                            <div className="text-2xl mb-1">{type.icon}</div>
                             {type.label}
                           </button>
                         ))}
@@ -2970,7 +2972,7 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || (linkedinPostType === "article" && !articleTitle.trim())}
-                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Publishing..." : "Post to LinkedIn"}
                     </button>
@@ -3079,20 +3081,19 @@ export default function SocialManagerPage() {
                       <h3 className="text-base sm:text-lg font-bold text-white mb-4">Post Type</h3>
                       <div className="grid grid-cols-3 gap-2">
                         {[
-                          { id: "text" as const, label: "Text", icon: "T" },
-                          { id: "image" as const, label: "Images", icon: "IMG" },
-                          { id: "video" as const, label: "Video", icon: "VID" },
+                          { id: "text" as const, label: "Text" },
+                          { id: "image" as const, label: "Images" },
+                          { id: "video" as const, label: "Video" },
                         ].map((type) => (
                           <button
                             key={type.id}
                             onClick={() => setXPostType(type.id)}
-                            className={`p-3 rounded-lg border-2 transition text-sm font-semibold ${
+                            className={`py-3 px-4 rounded-lg font-semibold transition text-sm ${
                               xPostType === type.id
-                                ? "border-white bg-white/20 text-white"
-                                : "border-white/20 bg-white/5 text-gray-400 hover:border-white/40"
+                                ? "bg-gradient-to-r from-gold-intense to-cobalt text-white"
+                                : "bg-white/10 text-gray-400 hover:bg-white/20"
                             }`}
                           >
-                            <div className="text-2xl mb-1">{type.icon}</div>
                             {type.label}
                           </button>
                         ))}
@@ -3188,7 +3189,7 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || (xPostType === "image" && selectedMedia.length === 0) || (xPostType === "video" && selectedMedia.length === 0)}
-                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-intense text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {publishing ? "Posting..." : "Post to X"}
                     </button>
