@@ -111,6 +111,12 @@ class PublishRequest(BaseModel):
     category_id: Optional[str] = "22"  # YouTube category (22 = People & Blogs)
     is_short: Optional[bool] = False  # YouTube Shorts flag
     thumbnail_url: Optional[str] = None  # YouTube custom thumbnail
+    # TikTok-specific fields
+    tiktok_privacy: Optional[str] = "SELF_ONLY"  # TikTok: PUBLIC_TO_EVERYONE, SELF_ONLY, MUTUAL_FOLLOW_FRIENDS
+    disable_duet: Optional[bool] = False  # TikTok: Disable duet feature
+    disable_comment: Optional[bool] = False  # TikTok: Disable comments
+    disable_stitch: Optional[bool] = False  # TikTok: Disable stitch feature
+    video_cover_timestamp_ms: Optional[int] = 1000  # TikTok: Cover frame timestamp
 
 class PublishResponse(BaseModel):
     success: bool
@@ -1128,7 +1134,12 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             publisher = TikTokPublisher(access_token=credentials['access_token'])
             publish_result = await publisher.publish_video(
                 caption=publish_request.caption,
-                video_url=publish_request.video_url
+                video_url=publish_request.video_url,
+                privacy_level=publish_request.tiktok_privacy or "SELF_ONLY",
+                disable_duet=publish_request.disable_duet or False,
+                disable_comment=publish_request.disable_comment or False,
+                disable_stitch=publish_request.disable_stitch or False,
+                video_cover_timestamp_ms=publish_request.video_cover_timestamp_ms or 1000
             )
             result.update(publish_result)
 
@@ -1596,25 +1607,40 @@ class FacebookPublisher:
 
 class TikTokPublisher:
     """
-    TikTok Direct Post API publisher
-    Requires: TikTok Access Token (OAuth 2.0)
-    Note: TikTok is video-only platform
+    TikTok Direct Post API v2 publisher
+    Supports: Video posts with full privacy and permission controls
+    Requires: TikTok OAuth 2.0 with video.publish scope
+    Note: TikTok is video-only platform (vertical 9:16 recommended)
     """
 
     def __init__(self, access_token: str):
         self.access_token = access_token
         self.base_url = "https://open.tiktokapis.com"
 
-    async def publish_video(self, caption: str, video_url: str) -> dict:
+    async def publish_video(
+        self,
+        caption: str,
+        video_url: str,
+        privacy_level: str = "SELF_ONLY",
+        disable_duet: bool = False,
+        disable_comment: bool = False,
+        disable_stitch: bool = False,
+        video_cover_timestamp_ms: int = 1000
+    ) -> dict:
         """
-        Publish video to TikTok using Direct Post API
+        Publish video to TikTok using Direct Post API with status polling
 
         Args:
             caption: Video caption (max 2200 chars)
             video_url: Public URL to video file
+            privacy_level: "PUBLIC_TO_EVERYONE", "SELF_ONLY", "MUTUAL_FOLLOW_FRIENDS"
+            disable_duet: Disable duet feature
+            disable_comment: Disable comments
+            disable_stitch: Disable stitch feature
+            video_cover_timestamp_ms: Timestamp for cover frame (milliseconds)
 
         Returns:
-            dict: {success: bool, post_id: str, error: str}
+            dict: {success: bool, post_id: str, post_url: str, message: str}
         """
         if not self.access_token:
             return {
@@ -1623,8 +1649,10 @@ class TikTokPublisher:
             }
 
         try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            async with httpx.AsyncClient(timeout=300.0) as client:  # 5 min timeout for video processing
                 # Step 1: Initialize video upload
+                logger.info(f"Initializing TikTok video upload from {video_url}")
+
                 init_response = await client.post(
                     f"{self.base_url}/v2/post/publish/video/init/",
                     headers={
@@ -1633,12 +1661,12 @@ class TikTokPublisher:
                     },
                     json={
                         "post_info": {
-                            "title": caption[:2200],  # Max 2200 chars
-                            "privacy_level": "SELF_ONLY",  # Options: PUBLIC_TO_EVERYONE, SELF_ONLY, MUTUAL_FOLLOW_FRIENDS
-                            "disable_duet": False,
-                            "disable_comment": False,
-                            "disable_stitch": False,
-                            "video_cover_timestamp_ms": 1000
+                            "title": caption[:2200],
+                            "privacy_level": privacy_level,
+                            "disable_duet": disable_duet,
+                            "disable_comment": disable_comment,
+                            "disable_stitch": disable_stitch,
+                            "video_cover_timestamp_ms": video_cover_timestamp_ms
                         },
                         "source_info": {
                             "source": "PULL_FROM_URL",
@@ -1648,10 +1676,12 @@ class TikTokPublisher:
                 )
 
                 if init_response.status_code != 200:
-                    logger.error(f"TikTok init failed: {init_response.status_code} - {init_response.text}")
+                    error_data = init_response.json() if init_response.content else {}
+                    error_message = error_data.get('error', {}).get('message', 'Unknown error')
+                    logger.error(f"TikTok init failed: {init_response.status_code} - {error_message}")
                     return {
                         "success": False,
-                        "error": f"TikTok upload init failed: {init_response.status_code}"
+                        "error": f"TikTok upload init failed: {error_message}"
                     }
 
                 init_data = init_response.json()
@@ -1663,15 +1693,66 @@ class TikTokPublisher:
                         "error": "Failed to get publish_id from TikTok"
                     }
 
-                # Step 2: Check publish status (TikTok processes video asynchronously)
-                # In production, you'd poll this endpoint until status is PUBLISH_COMPLETE
-                # For now, we return the publish_id
+                logger.info(f"TikTok publish_id received: {publish_id}")
 
+                # Step 2: Poll publish status (TikTok processes video asynchronously)
+                max_polls = 30  # Poll for up to 5 minutes (10 second intervals)
+                poll_count = 0
+
+                import asyncio
+
+                while poll_count < max_polls:
+                    await asyncio.sleep(10)  # Wait 10 seconds between polls
+                    poll_count += 1
+
+                    logger.info(f"Polling TikTok status (attempt {poll_count}/{max_polls})")
+
+                    status_response = await client.post(
+                        f"{self.base_url}/v2/post/publish/status/fetch/",
+                        headers={
+                            "Authorization": f"Bearer {self.access_token}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "publish_id": publish_id
+                        }
+                    )
+
+                    if status_response.status_code != 200:
+                        logger.warning(f"Status check failed: {status_response.status_code}")
+                        continue
+
+                    status_data = status_response.json()
+                    status = status_data.get('data', {}).get('status')
+
+                    logger.info(f"TikTok status: {status}")
+
+                    if status == "PUBLISH_COMPLETE":
+                        # Video successfully published
+                        return {
+                            "success": True,
+                            "post_id": publish_id,
+                            "post_url": "https://www.tiktok.com/@me",
+                            "message": "Video published successfully to TikTok"
+                        }
+
+                    elif status == "FAILED":
+                        # Publishing failed
+                        fail_reason = status_data.get('data', {}).get('fail_reason', 'Unknown error')
+                        return {
+                            "success": False,
+                            "error": f"TikTok publishing failed: {fail_reason}"
+                        }
+
+                    # Status is still PROCESSING_UPLOAD or PROCESSING_PUBLISH, continue polling
+
+                # Timeout after max polls
+                logger.warning(f"TikTok status polling timeout after {max_polls} attempts")
                 return {
-                    "success": True,
+                    "success": True,  # Still mark as success since upload initiated
                     "post_id": publish_id,
-                    "post_url": f"https://www.tiktok.com/",
-                    "message": "Video is being processed by TikTok. Check your TikTok profile in a few minutes."
+                    "post_url": "https://www.tiktok.com/@me",
+                    "message": "Video is processing. Check your TikTok profile in a few minutes."
                 }
 
         except httpx.TimeoutException:
@@ -1679,11 +1760,16 @@ class TikTokPublisher:
                 "success": False,
                 "error": "TikTok API timeout - video upload may take several minutes"
             }
+        except asyncio.CancelledError:
+            return {
+                "success": False,
+                "error": "Upload cancelled"
+            }
         except Exception as e:
             logger.error(f"TikTok publish error: {e}")
             return {
                 "success": False,
-                "error": str(e)
+                "error": f"TikTok error: {str(e)}"
             }
 
 # ============================================================================

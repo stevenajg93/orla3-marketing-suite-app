@@ -72,6 +72,12 @@ export default function SocialManagerPage() {
   const [facebookPostType, setFacebookPostType] = useState<"text" | "link" | "photo" | "video" | "album">("text");
   const [facebookLinkUrl, setFacebookLinkUrl] = useState("");
 
+  // TikTok Studio state
+  const [tiktokPrivacy, setTiktokPrivacy] = useState<"PUBLIC_TO_EVERYONE" | "SELF_ONLY" | "MUTUAL_FOLLOW_FRIENDS">("SELF_ONLY");
+  const [disableDuet, setDisableDuet] = useState(false);
+  const [disableComment, setDisableComment] = useState(false);
+  const [disableStitch, setDisableStitch] = useState(false);
+
   // Publishing state
   const [publishing, setPublishing] = useState(false);
   const [publishResults, setPublishResults] = useState<any[]>([]);
@@ -808,6 +814,13 @@ export default function SocialManagerPage() {
           return;
         }
       }
+
+      if (studioPlatform === "tiktok") {
+        if (selectedMedia.length === 0 || !selectedMedia[0]?.content_type?.includes('video')) {
+          alert('TikTok requires a video');
+          return;
+        }
+      }
     }
 
     setPublishing(true);
@@ -876,6 +889,13 @@ export default function SocialManagerPage() {
             // Photo album
             payload.image_urls = selectedMedia.map(m => m.url || m.image_url || '');
           }
+        } else if (mode === "studio" && platform === "tiktok") {
+          payload.content_type = "video";
+          payload.video_url = selectedMedia[0]?.url || selectedMedia[0]?.media_url || '';
+          payload.tiktok_privacy = tiktokPrivacy;
+          payload.disable_duet = disableDuet;
+          payload.disable_comment = disableComment;
+          payload.disable_stitch = disableStitch;
         } else {
           // Quick Post mode - use postType
           payload.content_type = postType;
@@ -2592,8 +2612,209 @@ export default function SocialManagerPage() {
               </div>
             )}
 
+            {/* TikTok Studio */}
+            {studioPlatform === "tiktok" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:space-y-6">
+                  {/* Compose Column */}
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Video Upload */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Video</h3>
+                      <div
+                        onClick={() => setShowMediaLibrary(true)}
+                        className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
+                      >
+                        {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                          <div className="space-y-3">
+                            <video
+                              src={selectedMedia[0].url}
+                              className="w-full max-w-xs mx-auto aspect-[9/16] object-cover rounded-lg"
+                              controls
+                            />
+                            <p className="text-sm text-gray-400">Click to change video</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="text-4xl text-gray-400">+</div>
+                            <p className="text-sm text-gray-400">Select vertical video from library</p>
+                            <p className="text-xs text-gray-500">9:16 aspect ratio recommended</p>
+                            <p className="text-xs text-gray-500">Max 60 seconds</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Caption */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Caption</h3>
+                      <textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="Describe your video..."
+                        rows={6}
+                        maxLength={2200}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cobalt resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-sm text-gray-400">{caption.length} / 2,200</span>
+                        {caption.length > 2200 && (
+                          <span className="text-sm text-red-400 font-semibold">- Over limit</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">Add hashtags to increase discoverability</p>
+                    </div>
+
+                    {/* Privacy Settings */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Privacy</h3>
+                      <select
+                        value={tiktokPrivacy}
+                        onChange={(e) => setTiktokPrivacy(e.target.value as typeof tiktokPrivacy)}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt"
+                      >
+                        <option value="SELF_ONLY">Private (Only You)</option>
+                        <option value="MUTUAL_FOLLOW_FRIENDS">Friends</option>
+                        <option value="PUBLIC_TO_EVERYONE">Public (Everyone)</option>
+                      </select>
+                    </div>
+
+                    {/* Permissions */}
+                    <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-4">Permissions</h3>
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={disableDuet}
+                            onChange={(e) => setDisableDuet(e.target.checked)}
+                            className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                          />
+                          <div>
+                            <span className="text-sm text-gray-300 block">Disable Duet</span>
+                            <span className="text-xs text-gray-500">Others can't create duets with your video</span>
+                          </div>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={disableStitch}
+                            onChange={(e) => setDisableStitch(e.target.checked)}
+                            className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                          />
+                          <div>
+                            <span className="text-sm text-gray-300 block">Disable Stitch</span>
+                            <span className="text-xs text-gray-500">Others can't stitch your video</span>
+                          </div>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={disableComment}
+                            onChange={(e) => setDisableComment(e.target.checked)}
+                            className="w-4 h-4 text-cobalt bg-white/10 border-white/20 rounded focus:ring-cobalt"
+                          />
+                          <div>
+                            <span className="text-sm text-gray-300 block">Disable Comments</span>
+                            <span className="text-xs text-gray-500">Turn off comments for this video</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Publish Button */}
+                    <button
+                      onClick={publishToSocial}
+                      disabled={publishing || selectedMedia.length === 0 || !selectedMedia[0].content_type?.includes('video')}
+                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {publishing ? "Uploading..." : "Post to TikTok"}
+                    </button>
+
+                    {/* Processing Notice */}
+                    <div className="bg-cobalt/10 border border-cobalt/20 rounded-lg p-4">
+                      <p className="text-sm text-gray-300 text-center">
+                        TikTok videos may take a few minutes to process after upload
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Preview Column */}
+                  <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-white/10">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-4">Preview</h3>
+
+                    {/* TikTok-style Preview */}
+                    <div className="bg-black rounded-lg overflow-hidden max-w-xs mx-auto">
+                      {selectedMedia.length > 0 && selectedMedia[0].content_type?.includes('video') ? (
+                        <div className="relative aspect-[9/16]">
+                          <video
+                            src={selectedMedia[0].url}
+                            className="w-full h-full object-cover"
+                            muted
+                            loop
+                          />
+
+                          {/* TikTok UI Overlay */}
+                          <div className="absolute inset-0 pointer-events-none">
+                            {/* Caption Overlay */}
+                            {caption && (
+                              <div className="absolute bottom-20 left-4 right-16 text-white">
+                                <p className="text-sm font-semibold mb-1">@yourhandle</p>
+                                <p className="text-sm">{caption.slice(0, 100)}{caption.length > 100 ? '...' : ''}</p>
+                              </div>
+                            )}
+
+                            {/* Right Side Actions */}
+                            <div className="absolute bottom-20 right-2 space-y-6">
+                              <div className="text-center">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cobalt to-royal border-2 border-white mb-1"></div>
+                                <p className="text-white text-xs">1.2K</p>
+                              </div>
+                              <div className="text-center">
+                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                                  <span className="text-white text-xl">♥</span>
+                                </div>
+                                <p className="text-white text-xs">Like</p>
+                              </div>
+                              <div className="text-center">
+                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                                  <span className="text-white text-xl">💬</span>
+                                </div>
+                                <p className="text-white text-xs">{disableComment ? 'Off' : '123'}</p>
+                              </div>
+                              <div className="text-center">
+                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                                  <span className="text-white text-xl">↗</span>
+                                </div>
+                                <p className="text-white text-xs">Share</p>
+                              </div>
+                            </div>
+
+                            {/* Privacy Indicator */}
+                            <div className="absolute top-4 right-4">
+                              <div className="bg-black/50 px-3 py-1 rounded-full">
+                                <span className="text-white text-xs">
+                                  {tiktokPrivacy === "PUBLIC_TO_EVERYONE" ? "🌍 Public" :
+                                   tiktokPrivacy === "MUTUAL_FOLLOW_FRIENDS" ? "👥 Friends" :
+                                   "🔒 Private"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="aspect-[9/16] bg-gray-900 flex items-center justify-center">
+                          <p className="text-gray-400 text-sm px-4 text-center">Upload a vertical video to see preview</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other platforms */}
-            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && (
+            {studioPlatform !== "instagram" && studioPlatform !== "youtube" && studioPlatform !== "facebook" && studioPlatform !== "tiktok" && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 border border-white/10 text-center">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">{studioPlatform} Studio</h3>
                 <p className="text-gray-400">Platform composer coming soon</p>
