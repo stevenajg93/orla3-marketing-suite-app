@@ -1531,10 +1531,6 @@ export default function SocialManagerPage() {
                             {/* Instagram header */}
                             <div className="flex items-center gap-3 mb-3">
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
-                              <div>
-                                <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
-                                <p className="text-xs text-gray-500">Sponsored</p>
-                              </div>
                             </div>
 
                             {/* Media preview */}
@@ -1554,12 +1550,11 @@ export default function SocialManagerPage() {
                             )}
 
                             {/* Instagram caption */}
-                            <div className="text-sm text-gray-900">
-                              <span className="font-semibold">Your Brand</span>{' '}
-                              <span className="whitespace-pre-wrap">
+                            {caption && (
+                              <div className="text-sm text-gray-900 whitespace-pre-wrap">
                                 {caption.length > 125 ? caption.substring(0, 125) + '... more' : caption}
-                              </span>
-                            </div>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -1568,16 +1563,14 @@ export default function SocialManagerPage() {
                             {/* LinkedIn header */}
                             <div className="flex items-center gap-3 mb-3">
                               <div className="w-12 h-12 rounded-full bg-cobalt"></div>
-                              <div>
-                                <p className="font-semibold text-gray-900 text-sm">Your Company</p>
-                                <p className="text-xs text-gray-500">Followers • Now</p>
-                              </div>
                             </div>
 
                             {/* LinkedIn caption */}
-                            <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
-                              {caption}
-                            </div>
+                            {caption && (
+                              <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                                {caption}
+                              </div>
+                            )}
 
                             {/* Media preview */}
                             {selectedMedia.length > 0 && (
@@ -1596,18 +1589,12 @@ export default function SocialManagerPage() {
                             <div className="flex gap-3">
                               <div className="w-12 h-12 rounded-full bg-slate-800"></div>
                               <div className="flex-1">
-                                <div className="flex items-center gap-1 mb-1">
-                                  <p className="font-bold text-gray-900 text-sm">Your Brand</p>
-                                  <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  <p className="text-gray-500 text-sm">@yourbrand</p>
-                                </div>
-
                                 {/* Tweet text */}
-                                <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
-                                  {caption}
-                                </div>
+                                {caption && (
+                                  <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                                    {caption}
+                                  </div>
+                                )}
 
                                 {/* Media preview */}
                                 {selectedMedia.length > 0 && (
@@ -1632,16 +1619,14 @@ export default function SocialManagerPage() {
                             {/* Facebook header */}
                             <div className="flex items-center gap-3 mb-3">
                               <div className="w-10 h-10 rounded-full bg-cobalt-600"></div>
-                              <div>
-                                <p className="font-semibold text-gray-900 text-sm">Your Page</p>
-                                <p className="text-xs text-gray-500">Just now • 🌎</p>
-                              </div>
                             </div>
 
                             {/* Facebook caption */}
-                            <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
-                              {caption}
-                            </div>
+                            {caption && (
+                              <div className="text-sm text-gray-900 mb-3 whitespace-pre-wrap">
+                                {caption}
+                              </div>
+                            )}
 
                             {/* Media preview */}
                             {selectedMedia.length > 0 && (
@@ -1838,10 +1823,6 @@ export default function SocialManagerPage() {
                           {/* Instagram header */}
                           <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
-                            <div>
-                              <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
-                              <p className="text-xs text-gray-500">Just now</p>
-                            </div>
                           </div>
 
                           {/* Media preview */}
@@ -1860,12 +1841,11 @@ export default function SocialManagerPage() {
                           )}
 
                           {/* Instagram caption */}
-                          <div className="text-sm text-gray-900">
-                            <span className="font-semibold">Your Brand</span>{" "}
-                            <span className="whitespace-pre-wrap">
-                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption || "Your caption will appear here..."}
-                            </span>
-                          </div>
+                          {caption && (
+                            <div className="text-sm text-gray-900 whitespace-pre-wrap">
+                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1972,10 +1952,6 @@ export default function SocialManagerPage() {
                           {/* Instagram header */}
                           <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
-                            <div>
-                              <p className="font-semibold text-gray-900 text-sm">Your Brand</p>
-                              <p className="text-xs text-gray-500">Just now</p>
-                            </div>
                           </div>
 
                           {/* Carousel Media Preview */}
@@ -2008,12 +1984,11 @@ export default function SocialManagerPage() {
                           )}
 
                           {/* Instagram caption */}
-                          <div className="text-sm text-gray-900">
-                            <span className="font-semibold">Your Brand</span>{" "}
-                            <span className="whitespace-pre-wrap">
-                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption || "Your carousel caption will appear here..."}
-                            </span>
-                          </div>
+                          {caption && (
+                            <div className="text-sm text-gray-900 whitespace-pre-wrap">
+                              {caption.length > 125 ? caption.substring(0, 125) + "... more" : caption}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2125,11 +2100,12 @@ export default function SocialManagerPage() {
                             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                               <div className="flex items-center gap-2 mb-2">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-intense to-cobalt"></div>
-                                <span className="text-white font-semibold text-sm">Your Brand</span>
                               </div>
-                              <p className="text-white text-sm line-clamp-2">
-                                {caption || "Your Reel caption will appear here..."}
-                              </p>
+                              {caption && (
+                                <p className="text-white text-sm line-clamp-2">
+                                  {caption}
+                                </p>
+                              )}
                             </div>
                           </div>
                         ) : (
@@ -2230,7 +2206,6 @@ export default function SocialManagerPage() {
                             <div className="absolute top-0 left-0 right-0 p-4">
                               <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-intense to-cobalt border-2 border-white"></div>
-                                <span className="text-white font-semibold text-sm">Your Brand</span>
                                 <span className="text-white/70 text-xs">now</span>
                               </div>
                             </div>
@@ -2598,10 +2573,6 @@ export default function SocialManagerPage() {
                       <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cobalt to-royal"></div>
-                          <div>
-                            <p className="font-semibold text-gray-900">Your Page</p>
-                            <p className="text-xs text-gray-500">Just now • Public</p>
-                          </div>
                         </div>
                       </div>
 
@@ -2815,7 +2786,6 @@ export default function SocialManagerPage() {
                             {/* Caption Overlay */}
                             {caption && (
                               <div className="absolute bottom-20 left-4 right-16 text-white">
-                                <p className="text-sm font-semibold mb-1">@yourhandle</p>
                                 <p className="text-sm">{caption.slice(0, 100)}{caption.length > 100 ? '...' : ''}</p>
                               </div>
                             )}
@@ -2824,25 +2794,22 @@ export default function SocialManagerPage() {
                             <div className="absolute bottom-20 right-2 space-y-6">
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cobalt to-royal border-2 border-white mb-1"></div>
-                                <p className="text-white text-xs">1.2K</p>
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
                                   <span className="text-white text-xl">♥</span>
                                 </div>
-                                <p className="text-white text-xs">Like</p>
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
                                   <span className="text-white text-xl">💬</span>
                                 </div>
-                                <p className="text-white text-xs">{disableComment ? 'Off' : '123'}</p>
+                                {disableComment && <p className="text-white text-xs">Off</p>}
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
                                   <span className="text-white text-xl">↗</span>
                                 </div>
-                                <p className="text-white text-xs">Share</p>
                               </div>
                             </div>
 
@@ -3011,9 +2978,7 @@ export default function SocialManagerPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cobalt to-royal"></div>
                           <div>
-                            <h4 className="font-semibold text-gray-900 text-sm">Your Name</h4>
-                            <p className="text-xs text-gray-600">Your Professional Title</p>
-                            <p className="text-xs text-gray-500">Just now • 🌍</p>
+                            <p className="text-xs text-gray-500">🌍</p>
                           </div>
                         </div>
                       </div>
@@ -3194,12 +3159,6 @@ export default function SocialManagerPage() {
                         <div className="flex gap-3 mb-3">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400"></div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-1 mb-1">
-                              <span className="font-bold text-white text-sm">Your Name</span>
-                              <span className="text-blue-400">✓</span>
-                              <span className="text-gray-500 text-sm">@yourhandle · Just now</span>
-                            </div>
-
                             {/* Post Text */}
                             {caption && (
                               <p className="text-white text-sm mb-3 whitespace-pre-wrap">{caption}</p>
@@ -3232,19 +3191,15 @@ export default function SocialManagerPage() {
                             <div className="flex items-center justify-between text-gray-500 pt-3 border-t border-gray-800">
                               <button className="flex items-center gap-2 hover:text-blue-400 transition">
                                 <span>💬</span>
-                                <span className="text-sm">123</span>
                               </button>
                               <button className="flex items-center gap-2 hover:text-green-400 transition">
                                 <span>🔄</span>
-                                <span className="text-sm">45</span>
                               </button>
                               <button className="flex items-center gap-2 hover:text-red-400 transition">
                                 <span>❤️</span>
-                                <span className="text-sm">678</span>
                               </button>
                               <button className="flex items-center gap-2 hover:text-blue-400 transition">
                                 <span>📊</span>
-                                <span className="text-sm">1.2K</span>
                               </button>
                               <button className="flex items-center gap-2 hover:text-blue-400 transition">
                                 <span>📤</span>
