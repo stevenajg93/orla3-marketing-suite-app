@@ -570,6 +570,123 @@ psql $DATABASE_URL -c "SELECT * FROM your_new_table LIMIT 5;"
 
 ---
 
+## 🎨 ORLA³ Brand Color Palette
+
+**CRITICAL**: All new development MUST use these approved colors only.
+
+### Official Brand Colors (Source: Brand Guidelines 02/2025)
+
+#### 6 Core Brand Colors (Use for All Branding & Marketing)
+
+**Main Colors: Gold** ✨ (Energy, Sun, Orla the Gold Lady)
+```
+Gold:         #dbb12a    C12 M29 Y100 K2.5
+Intense Gold: #ae8b0f    C26 M38 Y100 K15
+```
+**Use for**: Primary CTAs, highlights, achievements, energy, gradients
+
+**Additional Colors: Blue** 🔷 (Trust, Royalty, Balance)
+```
+Cobalt Blue:  #2d2e83    C99 M94 Y4 K0
+Royal Blue:   #29235c    C100 M100 Y29 K19
+```
+**Use for**: Trust elements, professionalism, secondary actions, Orla's royalty
+
+**Text & Background** ⚫⚪
+```
+Black:  #000000    Authority, Elegance
+White:  #ffffff    Purity, Clarity, Transparency, Innovation
+```
+
+#### Extended Palette: Neutral Grays (UI Functionality ONLY)
+
+**Purpose**: Text readability, borders, disabled states, backgrounds
+```
+Gray 50:   #f9fafb    (Very light backgrounds)
+Gray 100:  #f3f4f6    (Light backgrounds, hover states)
+Gray 200:  #e5e7eb    (Borders, dividers)
+Gray 300:  #d1d5db    (Disabled borders)
+Gray 400:  #9ca3af    (Placeholder text)
+Gray 500:  #6b7280    (Secondary text)
+Gray 600:  #4b5563    (Body text)
+Gray 700:  #374151    (Dark text)
+Gray 800:  #1f2937    (Very dark text)
+Gray 900:  #111827    (Near black)
+Slate 900: #0f172a    (App background gradient)
+```
+
+### ⚠️ CRITICAL RULES
+
+**DO:**
+- ✅ Use core 6 colors for ALL branding, marketing, logos, hero sections
+- ✅ Use grays for text, borders, disabled states, form elements
+- ✅ Use Tailwind classes: `bg-gold`, `text-cobalt`, `from-gold-intense to-cobalt`
+- ✅ Gradients: `bg-gradient-to-r from-gold to-gold-intense` (primary CTAs)
+- ✅ Gradients: `bg-gradient-to-r from-gold-intense to-cobalt` (selected states)
+
+**DON'T:**
+- ❌ NEVER use grays for branding, headers, CTAs, or brand-forward elements
+- ❌ NEVER use colors outside this palette (no red, green, blue, purple, etc.)
+- ❌ NEVER use random hex codes - always use Tailwind classes
+- ❌ NEVER add new color shades without approval
+
+### Code Examples
+
+**✅ CORRECT Usage:**
+```tsx
+// Primary CTA button
+<button className="bg-gradient-to-r from-gold to-gold-intense text-white font-bold">
+  Publish Now
+</button>
+
+// Selected state button
+<button className="bg-gradient-to-r from-gold-intense to-cobalt text-white">
+  Instagram
+</button>
+
+// Body text (UI element)
+<p className="text-gray-600">
+  This is readable body text
+</p>
+
+// Background gradient
+<div className="bg-gradient-to-br from-slate-900 via-royal to-slate-900">
+```
+
+**❌ WRONG Usage:**
+```tsx
+// ❌ Gray for branding (should be gold/cobalt/royal)
+<h1 className="text-gray-900">ORLA³</h1>
+
+// ❌ Red for errors (use intense gold or cobalt)
+<span className="text-red-500">Error</span>
+
+// ❌ Random hex code (use Tailwind class)
+<div style={{ backgroundColor: '#3D2B63' }}>
+
+// ❌ Unauthorized color
+<button className="bg-blue-500">Click Me</button>
+```
+
+### Quick Reference
+
+| Element Type | Color Choice |
+|--------------|-------------|
+| Primary CTA | `bg-gradient-to-r from-gold to-gold-intense` |
+| Selected State | `bg-gradient-to-r from-gold-intense to-cobalt` |
+| Secondary CTA | `bg-gradient-to-r from-cobalt to-royal` |
+| Brand Headlines | `text-white` or `text-gold` |
+| Body Text | `text-gray-600` or `text-gray-700` |
+| Borders | `border-white/20` or `border-gray-200` |
+| Disabled State | `bg-white/10 text-gray-400` |
+| Success Message | `text-gold` (achievement) |
+| Error/Warning | `text-gold-intense` (energy/attention) |
+| App Background | `bg-gradient-to-br from-slate-900 via-royal to-slate-900` |
+
+**Location**: Color definitions in `tailwind.config.ts`
+
+---
+
 ## 📝 Code Quality Standards
 
 ### Enforced Patterns

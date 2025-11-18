@@ -123,6 +123,51 @@ AI-powered marketing automation platform for videographers and creative professi
 - **Publishing**: 9 social platforms (8/9 live: Instagram, LinkedIn, Twitter/X, Facebook, YouTube, Reddit, Tumblr, WordPress; TikTok in review)
 - **Node**: v24.10.0, npm 11.6.0
 
+### 🎨 Brand Color Palette
+
+**Source**: Official ORLA³ Brand Guidelines (02/2025)
+
+#### Core Brand Colors (6 Colors - Use for All Branding)
+
+**Main Colors: Gold** (Energy, Sun, Orla the Gold Lady)
+- **Gold**: `#dbb12a` - C12 M29 Y100 K2.5
+  - Use for: Primary actions, highlights, energy
+- **Intense Gold**: `#ae8b0f` - C26 M38 Y100 K15
+  - Use for: Accents, gradients, emphasis
+
+**Additional Colors: Blue** (Trust, Royalty, Balance)
+- **Cobalt Blue**: `#2d2e83` - C99 M94 Y4 K0
+  - Use for: Trust elements, professionalism
+- **Royal Blue**: `#29235c` - C100 M100 Y29 K19
+  - Use for: Royalty, balance (Orla the princess)
+
+**Text & Background**
+- **Black**: `#000000` - Authority, Elegance
+- **White**: `#ffffff` - Purity, Clarity, Transparency, Innovation
+
+#### Extended Palette: Neutral Grays (UI Elements Only - Never for Branding)
+
+**Purpose**: Functional UI elements (text, borders, disabled states)
+- **Gray 50-900**: Used for readable text, borders, backgrounds
+- **Slate 900**: `#0f172a` - App background gradient
+
+**⚠️ IMPORTANT**:
+- Grays are for **UI functionality only** (text readability, borders, disabled states)
+- **Never use grays** for branding, marketing materials, or brand-forward elements
+- All brand-forward elements must use the 6 core colors only
+
+**Color Usage in Code**:
+```tsx
+// ✅ Correct - Brand colors for CTAs
+<button className="bg-gradient-to-r from-gold to-gold-intense">
+
+// ✅ Correct - Grays for UI text
+<p className="text-gray-600">
+
+// ❌ Wrong - Grays for branding
+<h1 className="text-gray-900">  // Should be text-white or text-black
+```
+
 ### Clean Architecture
 ```
 lib/

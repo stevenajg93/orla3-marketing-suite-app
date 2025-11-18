@@ -28,11 +28,11 @@ export default function CarouselMakerPage() {
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [saveMessage, setSaveMessage] = useState("");
   const [brandAssets, setBrandAssets] = useState<BrandAssets>({
-    brand_colors: ['#C8A530', '#3D2B63'], // Default fallback colors
+    brand_colors: ['#dbb12a', '#29235c'], // ORLA³ Brand: Gold + Royal Blue
     brand_fonts: [],
     logo_url: null,
-    primary_color: '#C8A530',
-    secondary_color: '#3D2B63'
+    primary_color: '#dbb12a',  // Gold
+    secondary_color: '#29235c'  // Royal Blue
   });
 
   const [formData, setFormData] = useState({
@@ -307,7 +307,7 @@ export default function CarouselMakerPage() {
             justifyContent: 'center',
             fontSize: `${36 * scale}px`,
             fontWeight: 700,
-            backgroundColor: brandAssets.primary_color || '#C8A530',
+            backgroundColor: brandAssets.primary_color || '#dbb12a',
             color: 'white',
           }}>
             {idx}
@@ -320,7 +320,7 @@ export default function CarouselMakerPage() {
             borderRadius: `${20 * scale}px`,
             fontSize: `${24 * scale}px`,
             fontWeight: 600,
-            backgroundColor: brandAssets.secondary_color || '#3D2B63',
+            backgroundColor: brandAssets.secondary_color || '#29235c',
             color: 'white',
           }}>
             {idx + 1}/{totalSlides}
@@ -352,7 +352,7 @@ export default function CarouselMakerPage() {
           <div style={{
             marginTop: `${30 * scale}px`,
             paddingTop: `${30 * scale}px`,
-            borderTop: `${4 * scale}px solid ${brandAssets.primary_color || '#C8A530'}`,
+            borderTop: `${4 * scale}px solid ${brandAssets.primary_color || '#dbb12a'}`,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -374,7 +374,7 @@ export default function CarouselMakerPage() {
               <div style={{
                 fontSize: `${28 * scale}px`,
                 fontWeight: 600,
-                color: brandAssets.primary_color || '#C8A530',
+                color: brandAssets.primary_color || '#dbb12a',
               }}>
                 ORLA³
               </div>
@@ -576,13 +576,13 @@ export default function CarouselMakerPage() {
                       {!isFirstSlide && (
                         <div className="h-full flex flex-col justify-center items-center p-10 text-center relative">
                           <div className="absolute top-6 left-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ backgroundColor: brandAssets.primary_color || '#C8A530', color: 'white' }}>
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ backgroundColor: brandAssets.primary_color || '#dbb12a', color: 'white' }}>
                               {idx}
                             </div>
                           </div>
 
                           <div className="absolute top-6 right-6">
-                            <div className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: brandAssets.secondary_color || '#3D2B63', color: 'white' }}>
+                            <div className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: brandAssets.secondary_color || '#29235c', color: 'white' }}>
                               {idx + 1}/{totalSlides}
                             </div>
                           </div>
@@ -604,7 +604,7 @@ export default function CarouselMakerPage() {
                           />
 
                           {isLastSlide && (
-                            <div className="mt-6 pt-6 border-t-2 flex flex-col items-center gap-2" style={{ borderColor: brandAssets.primary_color || '#C8A530' }}>
+                            <div className="mt-6 pt-6 border-t-2 flex flex-col items-center gap-2" style={{ borderColor: brandAssets.primary_color || '#dbb12a' }}>
                               {brandAssets.logo_url && (
                                 <img
                                   src={brandAssets.logo_url.startsWith('http') ? brandAssets.logo_url : `${config.apiUrl}/${brandAssets.logo_url}`}
@@ -617,7 +617,7 @@ export default function CarouselMakerPage() {
                                 />
                               )}
                               {!brandAssets.logo_url && (
-                                <p className="text-sm font-semibold" style={{ color: brandAssets.primary_color || '#C8A530' }}>ORLA³</p>
+                                <p className="text-sm font-semibold" style={{ color: brandAssets.primary_color || '#dbb12a' }}>ORLA³</p>
                               )}
                             </div>
                           )}
@@ -647,7 +647,7 @@ export default function CarouselMakerPage() {
                 onClick={handleExport}
                 disabled={exporting}
                 className="flex-1 py-3 rounded-lg text-white font-semibold transition disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #C8A530 0%, #E8C14D 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #dbb12a 0%, #ae8b0f 100%)' }}
               >
                 {exporting ? "Exporting..." : "Export All Slides"}
               </button>
