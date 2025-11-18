@@ -1300,8 +1300,9 @@ export default function SocialManagerPage() {
                 { id: "facebook" as Platform, name: "Facebook", color: "from-cobalt to-cobalt-600" },
                 { id: "x" as Platform, name: "X", color: "from-slate-800 to-slate-900" },
                 { id: "reddit" as Platform, name: "Reddit", color: "from-gold-intense to-gold" },
-                { id: "tumblr" as Platform, name: "Tumblr", color: "from-cobalt to-royal" },
-                { id: "wordpress" as Platform, name: "WordPress", color: "from-slate-700 to-slate-900" },
+                // Tumblr and WordPress coming soon
+                // { id: "tumblr" as Platform, name: "Tumblr", color: "from-cobalt to-royal" },
+                // { id: "wordpress" as Platform, name: "WordPress", color: "from-slate-700 to-slate-900" },
               ].map((platform) => (
                 <button
                   key={platform.id}
