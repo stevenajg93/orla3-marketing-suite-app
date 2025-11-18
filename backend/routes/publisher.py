@@ -1639,32 +1639,86 @@ async def publish_content(publish_request: PublishRequest, request: Request):
             result.update(publish_result)
 
         elif platform == "tumblr":
-            publisher = TumblrPublisher()
-            image_url = publish_request.image_urls[0] if publish_request.image_urls else None
-            publish_result = await publisher.publish_post(
-                caption=publish_request.caption,
-                image_url=image_url
-            )
-            result.update(publish_result)
+            # Get Tumblr blog name from metadata
+            import json
+            try:
+                metadata = credentials.get('service_metadata', {})
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                blog_name = meta_dict.get('blog_name', '')
+
+                if not blog_name:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="Tumblr blog name not found. Please reconnect your Tumblr account.",
+                        published_at=result["published_at"]
+                    )
+
+                publisher = TumblrPublisher(
+                    access_token=credentials['access_token'],
+                    blog_name=blog_name
+                )
+                image_url = publish_request.image_urls[0] if publish_request.image_urls else None
+                publish_result = await publisher.publish_post(
+                    caption=publish_request.caption,
+                    image_url=image_url
+                )
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"Tumblr publish error: {e}")
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error=f"Tumblr error: {str(e)}",
+                    published_at=result["published_at"]
+                )
 
         elif platform == "wordpress":
-            # Use provided title/content if available, otherwise extract from caption
-            title = publish_request.title
-            if not title:
-                # Extract from caption first line if no title provided
-                lines = publish_request.caption.split('\n')
-                title = lines[0][:100] if lines else "Untitled Post"
+            # Get WordPress site ID from metadata
+            import json
+            try:
+                metadata = credentials.get('service_metadata', {})
+                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                site_id = meta_dict.get('site_id', '')
 
-            content = publish_request.content or publish_request.caption
-            status = publish_request.status or "publish"  # Default to publish if not specified
+                if not site_id:
+                    return PublishResponse(
+                        success=False,
+                        platform=publish_request.platform,
+                        error="WordPress site ID not found. Please reconnect your WordPress account.",
+                        published_at=result["published_at"]
+                    )
 
-            publisher = WordPressPublisher()
-            publish_result = await publisher.publish_post(
-                title=title,
-                content=content,
-                status=status
-            )
-            result.update(publish_result)
+                # Use provided title/content if available, otherwise extract from caption
+                title = publish_request.title
+                if not title:
+                    # Extract from caption first line if no title provided
+                    lines = publish_request.caption.split('\n')
+                    title = lines[0][:100] if lines else "Untitled Post"
+
+                content = publish_request.content or publish_request.caption
+                status = publish_request.status or "publish"  # Default to publish if not specified
+
+                publisher = WordPressPublisher(
+                    access_token=credentials['access_token'],
+                    site_id=site_id
+                )
+                publish_result = await publisher.publish_post(
+                    title=title,
+                    content=content,
+                    status=status
+                )
+                result.update(publish_result)
+
+            except Exception as e:
+                logger.error(f"WordPress publish error: {e}")
+                return PublishResponse(
+                    success=False,
+                    platform=publish_request.platform,
+                    error=f"WordPress error: {str(e)}",
+                    published_at=result["published_at"]
+                )
 
         else:
             result["error"] = f"Platform {publish_request.platform} not supported"
@@ -2558,22 +2612,28 @@ class RedditPublisher:
 class TumblrPublisher:
     """
     Tumblr API publisher
-    Requires: Tumblr API Key, API Secret, OAuth Token
+    Requires: Tumblr OAuth 2.0 access token and blog name
+    Supports: Text posts, Photo posts
     """
-    
-    def __init__(self):
-        self.api_key = os.getenv("TUMBLR_API_KEY")
-        self.api_secret = os.getenv("TUMBLR_API_SECRET")
-        self.access_token = os.getenv("TUMBLR_ACCESS_TOKEN")
-        self.blog_name = os.getenv("TUMBLR_BLOG_NAME")
+
+    def __init__(self, access_token: str, blog_name: str):
+        """
+        Initialize with user's Tumblr OAuth credentials
+
+        Args:
+            access_token: User's Tumblr OAuth 2.0 access token
+            blog_name: User's Tumblr blog name (e.g., "myblog.tumblr.com" or "myblog")
+        """
+        self.access_token = access_token
+        self.blog_name = blog_name.replace('.tumblr.com', '')  # Remove .tumblr.com if present
         self.base_url = "https://api.tumblr.com/v2"
-    
+
     async def publish_post(self, caption: str, image_url: Optional[str] = None) -> dict:
         """Publish post to Tumblr"""
-        if not all([self.api_key, self.access_token, self.blog_name]):
+        if not self.access_token:
             return {
                 "success": False,
-                "error": "Tumblr credentials not configured. Add TUMBLR_API_KEY, TUMBLR_ACCESS_TOKEN, TUMBLR_BLOG_NAME to .env.local"
+                "error": "Tumblr not connected. Please connect your Tumblr account."
             }
         
         try:
@@ -2622,32 +2682,31 @@ class TumblrPublisher:
 
 class WordPressPublisher:
     """
-    WordPress.com API publisher (supports both WordPress.com and self-hosted with Jetpack)
-    Requires: WordPress.com OAuth Access Token OR WordPress site with Application Password
+    WordPress.com API publisher
+    Requires: WordPress.com OAuth 2.0 access token and site ID
+    Supports: Blog posts with publish/draft status
     """
 
-    def __init__(self):
-        self.site_url = os.getenv("WORDPRESS_SITE_URL")  # WordPress.com site or custom domain
-        self.access_token = os.getenv("WORDPRESS_ACCESS_TOKEN")  # WordPress.com OAuth token
-        self.username = os.getenv("WORDPRESS_USERNAME")
-        self.app_password = os.getenv("WORDPRESS_APP_PASSWORD")
-        self.site_id = os.getenv("WORDPRESS_SITE_ID")  # For WordPress.com API (e.g., sgillespiea7d7336966-wgdcj.wordpress.com)
+    def __init__(self, access_token: str, site_id: str):
+        """
+        Initialize with user's WordPress OAuth credentials
+
+        Args:
+            access_token: User's WordPress.com OAuth 2.0 access token
+            site_id: WordPress.com site ID (e.g., "myblog.wordpress.com")
+        """
+        self.access_token = access_token
+        self.site_id = site_id
 
     async def publish_post(self, title: str, content: str, status: str = "publish") -> dict:
         """Publish blog post to WordPress"""
+        if not self.access_token or not self.site_id:
+            return {
+                "success": False,
+                "error": "WordPress not connected. Please connect your WordPress account."
+            }
 
-        # Try WordPress.com OAuth API first (preferred for WordPress.com sites)
-        if self.access_token and self.site_id:
-            return await self._publish_via_wpcom_api(title, content, status)
-
-        # Fallback to WordPress REST API with app password (self-hosted or Jetpack)
-        if self.site_url and self.username and self.app_password:
-            return await self._publish_via_rest_api(title, content, status)
-
-        return {
-            "success": False,
-            "error": "WordPress not configured. Need either: (1) WORDPRESS_ACCESS_TOKEN + WORDPRESS_SITE_ID for WordPress.com, OR (2) WORDPRESS_SITE_URL + WORDPRESS_USERNAME + WORDPRESS_APP_PASSWORD for self-hosted"
-        }
+        return await self._publish_via_wpcom_api(title, content, status)
 
     async def _publish_via_wpcom_api(self, title: str, content: str, status: str) -> dict:
         """Publish via WordPress.com REST API (OAuth)"""
