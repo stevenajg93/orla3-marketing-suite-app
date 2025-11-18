@@ -1442,7 +1442,7 @@ export default function SocialManagerPage() {
                 <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">Schedule</h2>
                 <div className="flex gap-2 sm:gap-3 md:gap-4">
                   <input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="flex-1 px-3 sm:px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-cobalt" />
-                  <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "📤 Publishing..." : "📤 Post Now"}</button>
+                  <button onClick={publishToSocial} disabled={publishing} className="px-6 py-3 bg-gradient-to-r from-gold to-gold-intense hover:from-gold-600 hover:to-gold-intense rounded-lg text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">{publishing ? "Publishing..." : "Post Now"}</button>
                   
                   {publishMessage && (
                     <div className={`mt-4 p-3 sm:p-4 rounded-lg ${
@@ -2802,7 +2802,9 @@ export default function SocialManagerPage() {
                               </div>
                               <div className="text-center">
                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-1">
-                                  <span className="text-white text-xl">💬</span>
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                  </svg>
                                 </div>
                                 {disableComment && <p className="text-white text-xs">Off</p>}
                               </div>
@@ -2817,9 +2819,9 @@ export default function SocialManagerPage() {
                             <div className="absolute top-4 right-4">
                               <div className="bg-black/50 px-3 py-1 rounded-full">
                                 <span className="text-white text-xs">
-                                  {tiktokPrivacy === "PUBLIC_TO_EVERYONE" ? "🌍 Public" :
-                                   tiktokPrivacy === "MUTUAL_FOLLOW_FRIENDS" ? "👥 Friends" :
-                                   "🔒 Private"}
+                                  {tiktokPrivacy === "PUBLIC_TO_EVERYONE" ? "Public" :
+                                   tiktokPrivacy === "MUTUAL_FOLLOW_FRIENDS" ? "Friends" :
+                                   "Private"}
                                 </span>
                               </div>
                             </div>
@@ -2977,9 +2979,6 @@ export default function SocialManagerPage() {
                       <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cobalt to-royal"></div>
-                          <div>
-                            <p className="text-xs text-gray-500">🌍</p>
-                          </div>
                         </div>
                       </div>
 
@@ -3015,7 +3014,9 @@ export default function SocialManagerPage() {
                         {linkedinPostType === "article" && articleUrl && (
                           <div className="mt-3 border border-gray-200 rounded overflow-hidden">
                             <div className="bg-gray-100 h-32 flex items-center justify-center">
-                              <span className="text-4xl">📰</span>
+                              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                              </svg>
                             </div>
                             <div className="p-3 bg-gray-50">
                               <p className="text-xs text-gray-600">{articleUrl.replace(/^https?:\/\//, '').split('/')[0]}</p>
@@ -3028,20 +3029,28 @@ export default function SocialManagerPage() {
                       {/* Engagement Bar */}
                       <div className="border-t border-gray-200 px-4 py-2">
                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <button className="flex items-center gap-2 hover:text-cobalt">
-                            <span>👍</span>
+                          <button className="flex items-center gap-2 hover:text-cobalt transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                            </svg>
                             <span>Like</span>
                           </button>
-                          <button className="flex items-center gap-2 hover:text-cobalt">
-                            <span>💬</span>
+                          <button className="flex items-center gap-2 hover:text-cobalt transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
                             <span>Comment</span>
                           </button>
-                          <button className="flex items-center gap-2 hover:text-cobalt">
-                            <span>🔄</span>
+                          <button className="flex items-center gap-2 hover:text-cobalt transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
                             <span>Repost</span>
                           </button>
-                          <button className="flex items-center gap-2 hover:text-cobalt">
-                            <span>📤</span>
+                          <button className="flex items-center gap-2 hover:text-cobalt transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            </svg>
                             <span>Send</span>
                           </button>
                         </div>
@@ -3109,7 +3118,7 @@ export default function SocialManagerPage() {
                         </h3>
                         <div
                           onClick={() => setShowMediaLibrary(true)}
-                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-white transition"
+                          className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-cobalt transition"
                         >
                           {selectedMedia.length > 0 ? (
                             <div className="space-y-3">
@@ -3142,9 +3151,9 @@ export default function SocialManagerPage() {
                     <button
                       onClick={publishToSocial}
                       disabled={publishing || (xPostType === "image" && selectedMedia.length === 0)}
-                      className="w-full py-4 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 bg-gradient-to-r from-cobalt to-royal text-white font-bold rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {publishing ? "Posting..." : "Post"}
+                      {publishing ? "Posting..." : "Post to X"}
                     </button>
                   </div>
 
@@ -3189,20 +3198,30 @@ export default function SocialManagerPage() {
 
                             {/* Engagement Bar */}
                             <div className="flex items-center justify-between text-gray-500 pt-3 border-t border-gray-800">
-                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
-                                <span>💬</span>
+                              <button className="w-8 h-8 rounded-full hover:bg-blue-400/10 flex items-center justify-center transition">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
                               </button>
-                              <button className="flex items-center gap-2 hover:text-green-400 transition">
-                                <span>🔄</span>
+                              <button className="w-8 h-8 rounded-full hover:bg-green-400/10 flex items-center justify-center transition">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
                               </button>
-                              <button className="flex items-center gap-2 hover:text-red-400 transition">
-                                <span>❤️</span>
+                              <button className="w-8 h-8 rounded-full hover:bg-red-400/10 flex items-center justify-center transition">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
                               </button>
-                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
-                                <span>📊</span>
+                              <button className="w-8 h-8 rounded-full hover:bg-blue-400/10 flex items-center justify-center transition">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
                               </button>
-                              <button className="flex items-center gap-2 hover:text-blue-400 transition">
-                                <span>📤</span>
+                              <button className="w-8 h-8 rounded-full hover:bg-blue-400/10 flex items-center justify-center transition">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
                               </button>
                             </div>
                           </div>
@@ -3524,7 +3543,9 @@ export default function SocialManagerPage() {
                       </div>
                     ) : connectedProviders.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="text-5xl mb-4">☁️</div>
+                        <svg className="w-20 h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                        </svg>
                         <h3 className="text-xl font-bold text-white mb-2">No Cloud Storage Connected</h3>
                         <p className="text-gray-400 mb-4">Connect Google Drive, Dropbox, or OneDrive</p>
                         <button
@@ -3542,7 +3563,7 @@ export default function SocialManagerPage() {
                               onClick={() => { setCloudStorageProvider('google_drive'); loadDriveFiles(''); }}
                               className={`px-4 py-2 rounded-lg font-semibold transition ${cloudStorageProvider === 'google_drive' ? 'bg-cobalt text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                             >
-                              📁 Google Drive
+                              Google Drive
                             </button>
                           )}
                           {connectedProviders.includes('dropbox') && (
@@ -3550,7 +3571,7 @@ export default function SocialManagerPage() {
                               onClick={() => { setCloudStorageProvider('dropbox'); loadDropboxFiles(''); }}
                               className={`px-4 py-2 rounded-lg font-semibold transition ${cloudStorageProvider === 'dropbox' ? 'bg-cobalt text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                             >
-                              📦 Dropbox
+                              Dropbox
                             </button>
                           )}
                           {connectedProviders.includes('onedrive') && (
@@ -3558,7 +3579,7 @@ export default function SocialManagerPage() {
                               onClick={() => { setCloudStorageProvider('onedrive'); loadOnedriveFiles(''); }}
                               className={`px-4 py-2 rounded-lg font-semibold transition ${cloudStorageProvider === 'onedrive' ? 'bg-cobalt text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                             >
-                              🗂️ OneDrive
+                              OneDrive
                             </button>
                           )}
                         </div>
@@ -3571,7 +3592,9 @@ export default function SocialManagerPage() {
                                   <img src={file.thumbnail} alt={file.name} className="w-full aspect-square object-cover" />
                                 ) : (
                                   <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
-                                    <span className="text-4xl">📄</span>
+                                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
                                   </div>
                                 )}
                                 <div className="p-3">
@@ -3587,7 +3610,9 @@ export default function SocialManagerPage() {
                             {dropboxFiles.map((file: any) => (
                               <div key={file.id} onClick={() => handleMediaSelect(file)} className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-royal transition cursor-pointer">
                                 <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
-                                  <span className="text-4xl">📄</span>
+                                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  </svg>
                                 </div>
                                 <div className="p-3">
                                   <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
@@ -3602,7 +3627,9 @@ export default function SocialManagerPage() {
                             {onedriveFiles.map((file: any) => (
                               <div key={file.id} onClick={() => handleMediaSelect(file)} className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-cobalt transition cursor-pointer">
                                 <div className="aspect-square bg-gradient-to-br from-royal-900 to-slate-900 flex items-center justify-center">
-                                  <span className="text-4xl">📄</span>
+                                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  </svg>
                                 </div>
                                 <div className="p-3">
                                   <h4 className="text-white font-bold text-sm truncate">{file.name}</h4>
