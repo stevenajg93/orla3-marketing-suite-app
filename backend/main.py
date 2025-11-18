@@ -9,7 +9,7 @@ logger = setup_logger(__name__)
 app = FastAPI(
     title="Orla3 Marketing Automation API",
     description="AI-powered marketing content generation and automation",
-    version="1.0.0"
+    version="1.0.1"  # Updated to include Reddit, Tumblr, WordPress publishers
 )
 
 # CORS Configuration - Allow both local development and production
