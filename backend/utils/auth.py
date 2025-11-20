@@ -16,7 +16,15 @@ from logger import setup_logger
 logger = setup_logger(__name__)
 
 # JWT Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+# CRITICAL: JWT_SECRET must be set via environment variable
+# No fallback to prevent accidental insecure deployments
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError(
+        "JWT_SECRET environment variable not set. "
+        "Generate a secure secret with: openssl rand -hex 32"
+    )
+
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 days

@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 import uuid
 
@@ -36,16 +37,12 @@ class DraftCampaign(BaseModel):
     expires_hours: Optional[int] = 24  # Auto-cleanup after 24 hours
 
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
 
 def create_draft_campaigns_table():
     """Create draft_campaigns table if it doesn't exist (migration-safe)"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS draft_campaigns (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -69,7 +66,6 @@ def create_draft_campaigns_table():
         conn.rollback()
     finally:
         cur.close()
-        conn.close()
 
 
 # Initialize table on module load
@@ -112,7 +108,6 @@ def create_draft_campaign(campaign: DraftCampaign, request: Request):
         created_campaign = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(
             f"Created draft campaign {created_campaign['id']} for user {user_id} "
@@ -156,14 +151,12 @@ def get_draft_campaign(campaign_id: str, request: Request):
 
         if not campaign:
             cur.close()
-            conn.close()
             logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
             raise HTTPException(status_code=404, detail="Draft campaign not found or not owned by user")
 
         # Check if expired
         if campaign['expires_at'] < datetime.now():
             cur.close()
-            conn.close()
             logger.warning(f"Draft campaign expired for user {user_id}: {campaign_id}")
             raise HTTPException(status_code=404, detail="Draft campaign has expired")
 
@@ -178,7 +171,6 @@ def get_draft_campaign(campaign_id: str, request: Request):
             logger.info(f"Marked draft campaign {campaign_id} as consumed by user {user_id}")
 
         cur.close()
-        conn.close()
 
         logger.info(f"Retrieved draft campaign {campaign_id} for user {user_id}")
 
@@ -218,7 +210,6 @@ def delete_draft_campaign(campaign_id: str, request: Request):
         deleted_campaign = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         if not deleted_campaign:
             logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
@@ -260,7 +251,6 @@ def cleanup_expired_campaigns(request: Request):
 
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Cleaned up {deleted_count} expired draft campaigns for user {user_id}")
 

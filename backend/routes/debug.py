@@ -8,10 +8,7 @@ import httpx
 
 router = APIRouter()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/debug/cloud-storage")
 async def debug_cloud_storage(request: Request):
@@ -144,7 +141,6 @@ async def debug_cloud_storage(request: Request):
         results["errors"].append(f"Step 3 failed: {type(e).__name__}: {str(e)}")
     finally:
         cursor.close()
-        conn.close()
 
     return results
 
@@ -275,6 +271,5 @@ async def debug_user_data(email: str):
         result["errors"].append(f"{type(e).__name__}: {str(e)}")
     finally:
         cursor.close()
-        conn.close()
 
     return result

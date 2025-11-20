@@ -67,7 +67,6 @@ def get_user_oauth_token(user_id: str, platform: str):
 
         result = cursor.fetchone()
         cursor.close()
-        conn.close()
 
         if result:
             return {"access_token": result[0], "metadata": result[1]}

@@ -11,6 +11,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 
 router = APIRouter()
@@ -61,13 +62,6 @@ class AutoReplySettingsResponse(AutoReplySettings):
 # HELPER FUNCTIONS
 # ============================================================================
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-# ============================================================================
-# ENDPOINTS
-# ============================================================================
 
 @router.get("/settings", response_model=AutoReplySettingsResponse)
 async def get_auto_reply_settings(request: Request):
@@ -113,7 +107,6 @@ async def get_auto_reply_settings(request: Request):
             conn.commit()
 
         cur.close()
-        conn.close()
 
         return dict(settings)
 
@@ -194,7 +187,6 @@ async def update_auto_reply_settings(settings: AutoReplySettings, request: Reque
         updated_settings = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Updated auto-reply settings for user {user_id}")
 
@@ -240,7 +232,6 @@ async def toggle_auto_reply(request: Request):
 
         conn.commit()
         cur.close()
-        conn.close()
 
         enabled = result['enabled']
         logger.info(f"Toggled auto-reply for user {user_id}: {enabled}")

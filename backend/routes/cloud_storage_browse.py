@@ -14,60 +14,16 @@ from typing import Optional, List, Dict
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 from utils.auth_dependency import get_user_context
 
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-async def refresh_google_drive_token(refresh_token: str) -> dict:
-    """
-    Refresh Google Drive access token using refresh token
-
-    Returns:
-        dict with 'access_token' and 'expires_in' keys
-    """
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="No refresh token available. Please reconnect Google Drive.")
-
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://oauth2.googleapis.com/token",
-                data={
-                    "client_id": GOOGLE_CLIENT_ID,
-                    "client_secret": GOOGLE_CLIENT_SECRET,
-                    "refresh_token": refresh_token,
-                    "grant_type": "refresh_token"
-                }
-            )
-
-            if response.status_code != 200:
-                logger.error(f"Token refresh failed: {response.status_code} - {response.text}")
-                raise HTTPException(
-                    status_code=401,
-                    detail="Failed to refresh access token. Please reconnect Google Drive."
-                )
-
-            token_data = response.json()
-            logger.info("Successfully refreshed Google Drive access token")
-            return {
-                "access_token": token_data["access_token"],
-                "expires_in": token_data.get("expires_in", 3600)
-            }
-    except httpx.HTTPError as e:
-        logger.error(f"HTTP error refreshing token: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error refreshing token: {str(e)}")
 
 
 def update_access_token_in_db(user_id: str, organization_id: str, provider: str, new_access_token: str, expires_in: int):
@@ -104,7 +60,6 @@ def update_access_token_in_db(user_id: str, organization_id: str, provider: str,
 
     finally:
         cursor.close()
-        conn.close()
 
 
 def get_organization_cloud_connection(organization_id: str, provider: str, user_id: str = None):
@@ -180,7 +135,6 @@ def get_organization_cloud_connection(organization_id: str, provider: str, user_
 
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -851,7 +805,6 @@ async def save_folder_selection(request: Request, body: FolderSelectionRequest):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/folders/selected/{provider}")
@@ -896,7 +849,6 @@ async def get_selected_folders(request: Request, provider: str):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/folders/all/{provider}")

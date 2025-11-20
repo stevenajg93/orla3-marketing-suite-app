@@ -10,10 +10,7 @@ from datetime import datetime
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL)
 
 def check_user_data(email):
     """Check if user exists, has content, and has cloud storage connected"""
@@ -126,7 +123,6 @@ def check_user_data(email):
 
     finally:
         cursor.close()
-        conn.close()
 
     print(f"\n✅ Database check complete")
 

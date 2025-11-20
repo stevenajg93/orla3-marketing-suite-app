@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from lib.brand_asset_extractor import extract_brand_assets, find_logo_file, find_logo_from_database
 from lib.gcs_storage import upload_bytes_to_gcs, is_image_file, is_video_file
 from utils.auth import decode_token
@@ -30,8 +31,6 @@ UPLOAD_CATEGORIES = ["guidelines", "voice_samples", "logos", "target_audience_in
 for category in UPLOAD_CATEGORIES:
     Path(f"{BRAND_VOICE_DIR}/{category}").mkdir(parents=True, exist_ok=True)
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def get_user_from_token(request: Request):
     """Extract user_id from JWT token"""
@@ -68,7 +67,6 @@ def auto_extract_brand_assets(user_id: str):
 
         if not guidelines:
             cur.close()
-            conn.close()
             logger.info("No guidelines found for extraction")
             return
 
@@ -83,7 +81,6 @@ def auto_extract_brand_assets(user_id: str):
 
         if not all_text:
             cur.close()
-            conn.close()
             logger.warning("Could not extract text from guidelines")
             return
 
@@ -147,7 +144,6 @@ def auto_extract_brand_assets(user_id: str):
 
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info("✅ Brand assets auto-extracted and saved")
 
@@ -323,7 +319,6 @@ async def upload_brand_assets(
         
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Uploaded {len(files)} files to category: {category}")
 
@@ -366,7 +361,6 @@ async def list_brand_assets(request: Request, category: str = None):
         
         assets = cur.fetchall()
         cur.close()
-        conn.close()
         
         return {
             "assets": assets,
@@ -393,7 +387,6 @@ async def delete_brand_asset(asset_id: str, request: Request):
 
         if not asset:
             cur.close()
-            conn.close()
             raise HTTPException(status_code=404, detail="Asset not found")
 
         # Delete file from disk (only if it's a local file, not GCS URL)
@@ -404,7 +397,6 @@ async def delete_brand_asset(asset_id: str, request: Request):
         cur.execute("DELETE FROM brand_voice_assets WHERE id = %s AND user_id = %s", (asset_id, user_id))
         conn.commit()
         cur.close()
-        conn.close()
         
         logger.info(f"Deleted asset: {asset_id}")
         return {"success": True}
@@ -431,7 +423,6 @@ async def get_full_brand_context(request: Request):
         """, (user_id,))
         assets = cur.fetchall()
         cur.close()
-        conn.close()
         
         # Organize content by category
         context_by_category = {cat: [] for cat in UPLOAD_CATEGORIES}
@@ -576,7 +567,6 @@ async def import_from_drive(request: Request, file_id: str, filename: str, categ
         asset = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"🎉 Import complete: {filename}")
 

@@ -15,6 +15,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import (
     hash_password,
     verify_password,
@@ -36,7 +37,6 @@ from utils.email import (
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 # ============================================================================
 # PYDANTIC MODELS
@@ -86,10 +86,6 @@ class ChangePasswordRequest(BaseModel):
 # DATABASE HELPERS
 # ============================================================================
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
 
 def get_user_by_email(email: str):
     """Get user by email address"""
@@ -103,7 +99,6 @@ def get_user_by_email(email: str):
         return cur.fetchone()
     finally:
         cur.close()
-        conn.close()
 
 
 def get_user_by_id(user_id: str):
@@ -118,7 +113,6 @@ def get_user_by_id(user_id: str):
         return cur.fetchone()
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -173,10 +167,9 @@ async def register(request: RegisterRequest, req: Request):
     verification_expires = datetime.utcnow() + timedelta(days=7)
 
     # Create user
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             INSERT INTO users (
                 name, email, password_hash, organization_name, organization_slug,
@@ -254,7 +247,6 @@ async def register(request: RegisterRequest, req: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -292,7 +284,6 @@ async def login(request: LoginRequest, req: Request):
         ))
         conn.commit()
         cur.close()
-        conn.close()
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -316,7 +307,6 @@ async def login(request: LoginRequest, req: Request):
             )
             conn.commit()
             cur.close()
-            conn.close()
             user['is_locked'] = False
 
     # Check if account is active
@@ -357,7 +347,6 @@ async def login(request: LoginRequest, req: Request):
         )
         conn.commit()
         cur.close()
-        conn.close()
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -373,10 +362,9 @@ async def login(request: LoginRequest, req: Request):
     refresh_token = create_refresh_token(user_id=str(user['id']))
 
     # Store refresh token in database
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         ip_address = req.client.host if req.client else None
         user_agent = req.headers.get('user-agent')
         token_hash = hash_token(refresh_token)
@@ -426,7 +414,6 @@ async def login(request: LoginRequest, req: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -511,10 +498,9 @@ async def refresh_access_token(request: RefreshTokenRequest):
     user_id = payload.get('sub')
 
     # Check if refresh token exists and is not revoked
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         token_hash = hash_token(request.refresh_token)
 
         cur.execute("""
@@ -563,7 +549,6 @@ async def refresh_access_token(request: RefreshTokenRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -575,10 +560,9 @@ async def logout(request: RefreshTokenRequest):
     """
     Logout user by revoking refresh token
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         token_hash = hash_token(request.refresh_token)
 
         cur.execute("""
@@ -596,7 +580,6 @@ async def logout(request: RefreshTokenRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -634,10 +617,9 @@ async def resend_verification_email(request: ForgotPasswordRequest):
     verification_token = generate_verification_token()
     verification_expires = datetime.utcnow() + timedelta(days=7)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             UPDATE users
             SET verification_token = %s, verification_token_expires = %s
@@ -660,7 +642,6 @@ async def resend_verification_email(request: ForgotPasswordRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.post("/auth/verify-email")
@@ -668,10 +649,9 @@ async def verify_email(request: VerifyEmailRequest):
     """
     Verify user email with verification token
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT * FROM users
             WHERE verification_token = %s
@@ -709,7 +689,6 @@ async def verify_email(request: VerifyEmailRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -736,10 +715,9 @@ async def forgot_password(request: ForgotPasswordRequest):
     reset_token = generate_reset_token()
     reset_expires = datetime.utcnow() + timedelta(hours=1)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             UPDATE users
             SET reset_token = %s, reset_token_expires = %s
@@ -762,7 +740,6 @@ async def forgot_password(request: ForgotPasswordRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -782,10 +759,9 @@ async def reset_password(request: ResetPasswordRequest):
             detail=error_msg
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT * FROM users
             WHERE reset_token = %s
@@ -833,7 +809,6 @@ async def reset_password(request: ResetPasswordRequest):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -865,10 +840,9 @@ async def update_profile(request: UpdateProfileRequest, req: Request):
         )
 
     user_id = payload.get('sub')
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Build update query dynamically based on provided fields
         update_fields = []
         update_values = []
@@ -925,7 +899,6 @@ async def update_profile(request: UpdateProfileRequest, req: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -984,10 +957,9 @@ async def change_password(request: ChangePasswordRequest, req: Request):
     # Hash new password
     new_password_hash = hash_password(request.new_password)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Update password
         cur.execute("""
             UPDATE users
@@ -1021,7 +993,6 @@ async def change_password(request: ChangePasswordRequest, req: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -1070,10 +1041,9 @@ async def delete_account(req: Request):
             detail="User not found"
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Check if user is organization owner
         cur.execute("""
             SELECT o.id, o.name, o.current_user_count
@@ -1115,4 +1085,3 @@ async def delete_account(req: Request):
         )
     finally:
         cur.close()
-        conn.close()

@@ -193,7 +193,6 @@ def get_post_analytics(
             })
 
         cursor.close()
-        conn.close()
 
         return {"posts": transformed_posts}
 

@@ -10,6 +10,7 @@ from psycopg2.extras import RealDictCursor
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 import google.generativeai as genai
 from openai import OpenAI
 from utils.auth import decode_token
@@ -29,8 +30,6 @@ class CaptionRequest(BaseModel):
     hasMedia: bool
     mediaCount: int
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def get_user_from_request(request: Request) -> str:
     """Extract user_id from JWT token in Authorization header"""
@@ -54,7 +53,6 @@ def load_brand_strategy():
         cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
         strategy = cur.fetchone()
         cur.close()
-        conn.close()
         return dict(strategy) if strategy else None
     except Exception as e:
         logger.error(f"Error loading brand strategy: {e}")

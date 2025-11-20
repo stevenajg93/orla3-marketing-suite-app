@@ -19,12 +19,12 @@ import base64
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
 
 logger = setup_logger(__name__)
 router = APIRouter()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
@@ -142,10 +142,6 @@ class OAuthState(BaseModel):
     created_at: datetime
 
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
 
 def get_user_from_token(request: Request) -> str:
     """Extract user_id from JWT token"""
@@ -176,10 +172,9 @@ def generate_pkce_pair():
 
 def store_oauth_state(user_id: str, platform: str, state: str, code_verifier: Optional[str] = None):
     """Store OAuth state for CSRF protection (optionally with PKCE verifier)"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Store state temporarily (expires in 10 minutes)
         # Note: table uses 'provider' column name (from cloud storage OAuth)
         # code_verifier stored in metadata column as JSON
@@ -203,15 +198,13 @@ def store_oauth_state(user_id: str, platform: str, state: str, code_verifier: Op
         raise
     finally:
         cur.close()
-        conn.close()
 
 
 def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
     """Verify OAuth state and return user_id, platform, and optional code_verifier"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Note: table uses 'provider' column name (from cloud storage OAuth)
         cur.execute("""
             SELECT user_id, provider, metadata
@@ -245,7 +238,6 @@ def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
         return user_id, provider, code_verifier
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/get-auth-url/{platform}")
@@ -508,7 +500,6 @@ async def oauth_callback(platform: str, code: str, state: str):
                 raise HTTPException(status_code=500, detail="Failed to store credentials")
             finally:
                 cur.close()
-                conn.close()
 
             # Redirect back to frontend settings page
             return RedirectResponse(
@@ -651,10 +642,9 @@ async def disconnect_platform(platform: str, request: Request):
 
     user_id = get_user_from_token(request)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             UPDATE connected_services
             SET is_active = false, updated_at = NOW()
@@ -676,7 +666,6 @@ async def disconnect_platform(platform: str, request: Request):
         raise HTTPException(status_code=500, detail="Failed to disconnect platform")
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/status")
@@ -686,10 +675,9 @@ async def get_connection_status(request: Request):
     """
     user_id = get_user_from_token(request)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT service_type, service_id, is_active, token_expires_at, updated_at
             FROM connected_services
@@ -717,7 +705,6 @@ async def get_connection_status(request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/facebook/pages")
@@ -729,10 +716,9 @@ async def get_facebook_pages(request: Request):
     user_id = get_user_from_token(request)
 
     # Get user's Facebook OAuth credentials
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT access_token, service_metadata
             FROM connected_services
@@ -806,7 +792,6 @@ async def get_facebook_pages(request: Request):
         raise HTTPException(status_code=500, detail="Failed to fetch Facebook pages")
     finally:
         cur.close()
-        conn.close()
 
 
 @router.post("/facebook/select-page")
@@ -829,10 +814,9 @@ async def select_facebook_page(request: Request):
             detail="Missing page_id or page_access_token"
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         import json
 
         # Store selected page in metadata
@@ -872,4 +856,3 @@ async def select_facebook_page(request: Request):
         raise HTTPException(status_code=500, detail="Failed to select Facebook page")
     finally:
         cur.close()
-        conn.close()

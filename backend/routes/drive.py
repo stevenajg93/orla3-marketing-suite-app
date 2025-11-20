@@ -17,12 +17,12 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
 
 logger = setup_logger(__name__)
 router = APIRouter()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
@@ -34,10 +34,6 @@ class DriveFile(BaseModel):
     thumbnailLink: Optional[str] = None
     size: Optional[str] = None
 
-
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
 def get_user_from_token(request: Request) -> str:
@@ -82,10 +78,9 @@ async def refresh_google_drive_token(user_id: str, refresh_token: str) -> str:
         new_expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
         # Update token in database
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        try:
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
             cur.execute("""
                 UPDATE user_cloud_storage_tokens
                 SET access_token = %s,
@@ -105,7 +100,6 @@ async def refresh_google_drive_token(user_id: str, refresh_token: str) -> str:
             raise
         finally:
             cur.close()
-            conn.close()
 
 
 def get_drive_service(user_id: str):
@@ -113,10 +107,9 @@ def get_drive_service(user_id: str):
     Initialize Google Drive service for specific user
     Uses per-user OAuth tokens from database
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Get user's Google Drive tokens from database
         cur.execute("""
             SELECT access_token, refresh_token, token_expires_at
@@ -159,7 +152,6 @@ def get_drive_service(user_id: str):
         return None
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/videos")

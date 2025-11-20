@@ -186,4 +186,3 @@ async def get_user_context(
 
     finally:
         cursor.close()
-        conn.close()

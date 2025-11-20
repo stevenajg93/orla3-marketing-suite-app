@@ -4,11 +4,14 @@ User Context Middleware for Multi-Tenant Architecture
 This middleware handles user identification for all requests:
 - Validates JWT token from Authorization header
 - Extracts user_id from valid JWT
-- Falls back to System User (00000000-0000-0000-0000-000000000000) if no valid token
+- PUBLIC ROUTES: Falls back to System User if no valid token
+- PROTECTED ROUTES: Rejects requests with invalid/missing tokens (HTTP 401)
 - Adds user_id to request state for routes to access
+
+SECURITY: This middleware fails CLOSED - invalid tokens are rejected, not ignored.
 """
 
-from fastapi import Request
+from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 import uuid
 import sys
@@ -41,9 +44,12 @@ class UserContextMiddleware(BaseHTTPMiddleware):
     """
     Middleware to add user context to all requests
 
-    Priority:
-    1. JWT token from Authorization header
-    2. System User (for existing ORLA functionality and public routes)
+    Authentication Flow:
+    1. PUBLIC ROUTES: Allow without token, fallback to System User
+    2. PROTECTED ROUTES with valid JWT: Extract user_id and role
+    3. PROTECTED ROUTES with invalid/missing JWT: Return HTTP 401 (fail-closed)
+
+    Security: This middleware fails CLOSED to prevent unauthorized access.
     """
 
     async def dispatch(self, request: Request, call_next):
@@ -67,12 +73,30 @@ class UserContextMiddleware(BaseHTTPMiddleware):
                     user_role = payload.get('role', 'user')
                     logger.debug(f"Authenticated request from user: {user_id} (role: {user_role})")
                 except (ValueError, TypeError) as e:
-                    logger.warning(f"Invalid user ID in JWT: {payload.get('sub')}, using System User")
+                    logger.warning(f"Invalid user ID in JWT: {payload.get('sub')}")
+                    if not is_public_route:
+                        # Reject invalid user ID on protected routes
+                        raise HTTPException(
+                            status_code=401,
+                            detail="Invalid authentication credentials"
+                        )
+                    # Public routes can continue with System User
                     user_id = SYSTEM_USER_ID
                     user_role = 'system_admin'
             elif not is_public_route:
-                # Invalid or expired token on protected route - use System User but log warning
+                # CRITICAL FIX: Invalid or expired token on protected route - REJECT
                 logger.warning(f"Invalid or expired token on protected route: {request.url.path}")
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid or expired authentication token"
+                )
+        elif not is_public_route:
+            # CRITICAL FIX: No auth header on protected route - REJECT
+            logger.warning(f"Missing authentication on protected route: {request.url.path}")
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required"
+            )
 
         # Add user_id and role to request state
         request.state.user_id = user_id

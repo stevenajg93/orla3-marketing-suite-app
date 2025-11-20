@@ -9,6 +9,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -60,38 +61,12 @@ class CollaborationOutput(BaseModel):
     assignments: List[WorkflowAssignment]
     notifications: List[str]
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-async def get_current_user(request: Request):
-    """Extract user from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid authorization header"
-        )
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
-
-    return payload.get('sub')
-
 
 def get_user_organization(user_id: str):
     """Get user's current organization"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT om.organization_id, om.role, o.name, o.subscription_tier
             FROM organization_members om
@@ -103,7 +78,6 @@ def get_user_organization(user_id: str):
         return cur.fetchone()
     finally:
         cur.close()
-        conn.close()
 
 
 def validate_user_can_perform_action(org_role: str, next_action: str) -> bool:
@@ -164,10 +138,9 @@ async def manage_workflow(data: CollaborationInput, request: Request):
     logger.info(f"User {user_id} is {user_role} in organization {organization_id}")
 
     # Verify all users in the request belong to the same organization
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         user_ids = [u.id for u in data.users]
         if user_ids:
             # Check that all users are members of the organization
@@ -188,7 +161,6 @@ async def manage_workflow(data: CollaborationInput, request: Request):
                 )
     finally:
         cur.close()
-        conn.close()
 
     # All security checks passed - proceed with AI workflow
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

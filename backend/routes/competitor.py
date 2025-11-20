@@ -11,6 +11,7 @@ import httpx
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
 from utils.credits import deduct_credits, InsufficientCreditsError
 
@@ -44,8 +45,6 @@ class CompetitorData(BaseModel):
     last_analyzed: Optional[str] = None
     added_at: str
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def get_user_from_token(request: Request):
     """Extract user_id from JWT token"""
@@ -69,7 +68,6 @@ def load_brand_strategy(user_id: str):
         cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         strategy = cur.fetchone()
         cur.close()
-        conn.close()
         return dict(strategy) if strategy else None
     except Exception as e:
         logger.error(f"Error loading brand strategy: {e}")
@@ -177,7 +175,6 @@ async def add_competitor(request: Request, competitor: Competitor):
         competitor_data = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
         
         logger.info(f"Added competitor: {competitor.name}")
         return {"success": True, "competitor": competitor_data}
@@ -212,7 +209,6 @@ async def list_competitors(request: Request):
         
         competitors = cur.fetchall()
         cur.close()
-        conn.close()
         
         # Format response to match original structure
         formatted = []
@@ -259,7 +255,6 @@ async def delete_competitor(competitor_id: str, request: Request):
         cur.execute("DELETE FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
         conn.commit()
         cur.close()
-        conn.close()
         
         logger.info(f"Deleted competitor: {competitor_id}")
         return {"success": True}
@@ -305,7 +300,6 @@ async def analyze_competitor(competitor_id: str, request: Request):
 
         if not competitor:
             cur.close()
-            conn.close()
             raise HTTPException(status_code=404, detail="Competitor not found")
 
         competitor = dict(competitor)
@@ -447,7 +441,6 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
         
         conn.commit()
         cur.close()
-        conn.close()
         
         logger.info(f"✅ Analyzed competitor: {competitor['name']}")
         return {"success": True, "analysis": analysis}
@@ -470,7 +463,6 @@ async def get_insights(request: Request):
         cur.execute("SELECT * FROM competitors WHERE user_id = %s ORDER BY added_at DESC", (user_id,))
         competitors = cur.fetchall()
         cur.close()
-        conn.close()
 
         if not competitors:
             return {"insights": "No competitors added yet. Add competitors to get insights."}
@@ -557,7 +549,6 @@ async def get_competitor_summary(request: Request):
         """, (user_id,))
         competitors = cur.fetchall()
         cur.close()
-        conn.close()
         
         if not competitors:
             return {"success": False, "message": "No competitors added"}

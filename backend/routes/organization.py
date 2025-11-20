@@ -13,12 +13,12 @@ from datetime import datetime
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
 
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 # ============================================================================
 # PYDANTIC MODELS
@@ -38,38 +38,12 @@ class ChangeRoleRequest(BaseModel):
 # DATABASE HELPERS
 # ============================================================================
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-async def get_current_user(request: Request):
-    """Extract user from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid authorization header"
-        )
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
-
-    return payload.get('sub')
-
 
 def get_user_organization(user_id: str):
     """Get user's current organization"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Get user's organization membership
         cur.execute("""
             SELECT om.organization_id, om.role, o.name, o.subscription_tier,
@@ -84,15 +58,13 @@ def get_user_organization(user_id: str):
         return cur.fetchone()
     finally:
         cur.close()
-        conn.close()
 
 
 def check_permission(user_id: str, organization_id: str, required_role: str = 'admin'):
     """Check if user has required role in organization"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT role
             FROM organization_members
@@ -114,7 +86,6 @@ def check_permission(user_id: str, organization_id: str, required_role: str = 'a
         return user_level >= required_level
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -170,10 +141,9 @@ async def get_team_members(request: Request):
 
     organization_id = org_info['organization_id']
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT
                 u.id as user_id,
@@ -210,7 +180,6 @@ async def get_team_members(request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -257,10 +226,9 @@ async def invite_member(request_data: InviteMemberRequest, request: Request):
             detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}"
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Check if user already exists
         cur.execute("SELECT id, name FROM users WHERE email = %s", (request_data.email.lower(),))
         existing_user = cur.fetchone()
@@ -324,7 +292,6 @@ async def invite_member(request_data: InviteMemberRequest, request: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -365,10 +332,9 @@ async def change_member_role(request_data: ChangeRoleRequest, request: Request):
             detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}"
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Check target member exists and is not owner
         cur.execute("""
             SELECT role FROM organization_members
@@ -416,7 +382,6 @@ async def change_member_role(request_data: ChangeRoleRequest, request: Request):
         )
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -457,10 +422,9 @@ async def remove_member(member_user_id: str, request: Request):
             detail="Cannot remove yourself from the organization"
         )
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Check target member exists and is not owner
         cur.execute("""
             SELECT om.role, u.email
@@ -516,4 +480,3 @@ async def remove_member(member_user_id: str, request: Request):
         )
     finally:
         cur.close()
-        conn.close()

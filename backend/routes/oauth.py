@@ -15,6 +15,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 
 router = APIRouter()
@@ -27,16 +28,12 @@ oauth_states = {}
 # DATABASE HELPERS
 # ============================================================================
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(os.getenv("DATABASE_URL"))
 
 def save_social_account(platform: str, account_data: dict, user_id: str):
     """Save or update social account in database"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             INSERT INTO social_accounts (
                 user_id, platform, access_token, refresh_token, token_expires_at,
@@ -84,7 +81,6 @@ def save_social_account(platform: str, account_data: dict, user_id: str):
         raise
     finally:
         cur.close()
-        conn.close()
 
 # ============================================================================
 # LINKEDIN OAUTH
@@ -231,10 +227,9 @@ async def linkedin_oauth_callback(code: str, state: str):
 async def get_connected_accounts(request: Request):
     """Get all connected social media accounts for the current user"""
     user_id = get_user_id(request)
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT
                 id, platform, account_name, account_username,
@@ -268,16 +263,14 @@ async def get_connected_accounts(request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 @router.delete("/auth/accounts/{account_id}")
 async def disconnect_account(account_id: str, request: Request):
     """Disconnect a social media account (only if owned by current user)"""
     user_id = get_user_id(request)
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             UPDATE social_accounts
             SET is_active = false, updated_at = NOW()
@@ -299,16 +292,14 @@ async def disconnect_account(account_id: str, request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 @router.post("/auth/accounts/{account_id}/set-default")
 async def set_default_account(account_id: str, request: Request):
     """Set an account as the default for its platform (only if owned by current user)"""
     user_id = get_user_id(request)
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Get the account's platform (verify ownership)
         cur.execute(
             "SELECT platform FROM social_accounts WHERE id = %s AND user_id = %s",
@@ -345,4 +336,3 @@ async def set_default_account(account_id: str, request: Request):
 
     finally:
         cur.close()
-        conn.close()

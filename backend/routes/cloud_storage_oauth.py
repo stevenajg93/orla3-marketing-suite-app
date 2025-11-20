@@ -16,12 +16,12 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
 
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 # OAuth Configuration
@@ -51,10 +51,6 @@ DROPBOX_CONFIG = {
     "token_url": "https://api.dropboxapi.com/oauth2/token"
 }
 
-
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
 def get_user_from_token(request: Request):
@@ -104,10 +100,9 @@ async def connect_google_drive(request: Request, token: str = None):
     state = secrets.token_urlsafe(32)
 
     # Store state in session/database temporarily
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Store state with user_id (expires in 10 minutes)
         cur.execute("""
             INSERT INTO oauth_states (state, user_id, provider, expires_at)
@@ -135,7 +130,6 @@ async def connect_google_drive(request: Request, token: str = None):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/callback/google_drive")
@@ -149,10 +143,9 @@ async def google_drive_callback(code: str, state: str):
     import urllib.parse
     import json
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Verify state token
         cur.execute("""
             SELECT user_id FROM oauth_states
@@ -231,7 +224,6 @@ async def google_drive_callback(code: str, state: str):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -257,10 +249,9 @@ async def connect_onedrive(request: Request, token: str = None):
 
     state = secrets.token_urlsafe(32)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             INSERT INTO oauth_states (state, user_id, provider, expires_at)
             VALUES (%s, %s, %s, %s)
@@ -285,7 +276,6 @@ async def connect_onedrive(request: Request, token: str = None):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/callback/onedrive")
@@ -295,10 +285,9 @@ async def onedrive_callback(code: str, state: str):
     import urllib.parse
     import json
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Verify state
         cur.execute("""
             SELECT user_id FROM oauth_states
@@ -364,7 +353,6 @@ async def onedrive_callback(code: str, state: str):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -390,10 +378,9 @@ async def connect_dropbox(request: Request, token: str = None):
 
     state = secrets.token_urlsafe(32)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             INSERT INTO oauth_states (state, user_id, provider, expires_at)
             VALUES (%s, %s, %s, %s)
@@ -417,7 +404,6 @@ async def connect_dropbox(request: Request, token: str = None):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/callback/dropbox")
@@ -427,10 +413,9 @@ async def dropbox_callback(code: str, state: str):
     import urllib.parse
     import json
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Verify state
         cur.execute("""
             SELECT user_id FROM oauth_states
@@ -497,7 +482,6 @@ async def dropbox_callback(code: str, state: str):
 
     finally:
         cur.close()
-        conn.close()
 
 
 # ============================================================================
@@ -516,10 +500,9 @@ async def disconnect_cloud_storage(provider: str, request: Request):
     if provider not in ['google_drive', 'onedrive', 'dropbox']:
         raise HTTPException(status_code=400, detail="Invalid provider")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             DELETE FROM user_cloud_storage_tokens
             WHERE user_id = %s AND provider = %s
@@ -533,7 +516,6 @@ async def disconnect_cloud_storage(provider: str, request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.get("/cloud-storage/connections")
@@ -545,10 +527,9 @@ async def list_cloud_connections(request: Request):
     """
     user_id = get_user_from_token(request)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT provider, provider_email, connected_at, is_active,
                    token_expires_at, last_refreshed_at
@@ -566,7 +547,6 @@ async def list_cloud_connections(request: Request):
 
     finally:
         cur.close()
-        conn.close()
 
 
 @router.delete("/cloud-storage/disconnect/{provider}")
@@ -583,10 +563,9 @@ async def disconnect_cloud_storage(request: Request, provider: str):
     if provider not in ['google_drive', 'onedrive', 'dropbox']:
         raise HTTPException(status_code=400, detail="Invalid provider")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         # Get current tokens for revocation
         cur.execute("""
             SELECT access_token, refresh_token
@@ -637,7 +616,6 @@ async def disconnect_cloud_storage(request: Request, provider: str):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close()
-        conn.close()
 
 
 async def revoke_oauth_token(provider: str, access_token: str, refresh_token: str = None) -> bool:

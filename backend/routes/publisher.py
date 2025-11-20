@@ -12,19 +12,15 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 # ============================================================================
 # MULTI-TENANT AUTH HELPERS
 # ============================================================================
-
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
 def get_user_from_token(request: Request) -> str:
@@ -53,10 +49,9 @@ def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Di
     Returns:
         Dict with access_token and other service metadata, or None if not connected
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
         cur.execute("""
             SELECT
                 access_token,
@@ -84,7 +79,6 @@ def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Di
         return None
     finally:
         cur.close()
-        conn.close()
 
 
 router = APIRouter()

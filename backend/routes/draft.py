@@ -55,8 +55,6 @@ class DraftOutput(BaseModel):
     internal_links_used: Optional[list] = None
     sources: Optional[List[str]] = None
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def load_brand_strategy():
     """Load brand strategy from PostgreSQL"""
@@ -66,7 +64,6 @@ def load_brand_strategy():
         cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
         strategy = cur.fetchone()
         cur.close()
-        conn.close()
         return dict(strategy) if strategy else None
     except Exception as e:
         print(f"Error loading brand strategy: {e}")

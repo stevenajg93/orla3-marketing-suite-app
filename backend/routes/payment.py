@@ -16,6 +16,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from utils.auth import decode_token
 from utils.credits import add_credits
+from db_pool import get_db_connection  # Use connection pool
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -23,11 +24,7 @@ logger = setup_logger(__name__)
 # Stripe Configuration
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-DATABASE_URL = os.getenv("DATABASE_URL")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def get_user_from_token(request: Request):
     """Extract user_id from JWT token"""
@@ -43,194 +40,102 @@ def get_user_from_token(request: Request):
 
     return payload.get('sub')  # user_id
 
-# Pricing Plans (matches landing page pricing)
-PRICING_PLANS = {
-    "starter_monthly": {
-        "name": "Starter",
-        "price_id": os.getenv("STRIPE_STARTER_MONTHLY_PRICE_ID"),
-        "price": 99,
-        "currency": "GBP",
-        "interval": "month",
-        "credits": 500,
-        "features": [
-            "500 credits/month",
-            "~250 social captions or 100 blog posts",
-            "25 AI-generated ultra images",
-            "2 AI-generated videos (8-sec)",
-            "1 brand voice profile",
-            "9 social platform publishing",
-            "Content calendar",
-            "Basic competitor tracking",
-            "Credit rollover (up to 250)"
-        ]
-    },
-    "starter_annual": {
-        "name": "Starter (Annual)",
-        "price_id": os.getenv("STRIPE_STARTER_ANNUAL_PRICE_ID"),
-        "price": 990,
-        "currency": "GBP",
-        "interval": "year",
-        "credits": 500,
-        "features": [
-            "500 credits/month",
-            "2 months FREE (annual billing)",
-            "~250 social captions or 100 blog posts",
-            "25 AI-generated ultra images",
-            "2 AI-generated videos (8-sec)",
-            "1 brand voice profile",
-            "9 social platform publishing",
-            "Content calendar",
-            "Basic competitor tracking",
-            "Credit rollover (up to 250)"
-        ]
-    },
-    "professional_monthly": {
-        "name": "Professional",
-        "price_id": os.getenv("STRIPE_PRO_MONTHLY_PRICE_ID"),
-        "price": 249,
-        "currency": "GBP",
-        "interval": "month",
-        "credits": 2000,
-        "features": [
-            "2,000 credits/month",
-            "~1,000 social captions or 400 blog posts",
-            "100 AI-generated ultra images",
-            "10 AI-generated videos (8-sec)",
-            "3 brand voice profiles",
-            "9 social platform publishing",
-            "Auto-publishing & scheduling",
-            "Advanced competitor analysis (5 competitors)",
-            "Priority support",
-            "Credit rollover (up to 1,000)"
-        ]
-    },
-    "professional_annual": {
-        "name": "Professional (Annual)",
-        "price_id": os.getenv("STRIPE_PRO_ANNUAL_PRICE_ID"),
-        "price": 2490,
-        "currency": "GBP",
-        "interval": "year",
-        "credits": 2000,
-        "features": [
-            "2,000 credits/month",
-            "2 months FREE (annual billing)",
-            "~1,000 social captions or 400 blog posts",
-            "100 AI-generated ultra images",
-            "10 AI-generated videos (8-sec)",
-            "3 brand voice profiles",
-            "9 social platform publishing",
-            "Auto-publishing & scheduling",
-            "Advanced competitor analysis (5 competitors)",
-            "Priority support",
-            "Credit rollover (up to 1,000)"
-        ]
-    },
-    "business_monthly": {
-        "name": "Business",
-        "price_id": os.getenv("STRIPE_BUSINESS_MONTHLY_PRICE_ID"),
-        "price": 499,
-        "currency": "GBP",
-        "interval": "month",
-        "credits": 6000,
-        "features": [
-            "6,000 credits/month",
-            "~3,000 social captions or 1,200 blog posts",
-            "300 AI-generated ultra images",
-            "30 AI-generated videos (8-sec)",
-            "10 brand voice profiles",
-            "9 social platform publishing",
-            "Multi-user collaboration (5 seats)",
-            "Unlimited competitor tracking",
-            "API access",
-            "White-label options",
-            "Credit rollover (up to 3,000)"
-        ]
-    },
-    "business_annual": {
-        "name": "Business (Annual)",
-        "price_id": os.getenv("STRIPE_BUSINESS_ANNUAL_PRICE_ID"),
-        "price": 4990,
-        "currency": "GBP",
-        "interval": "year",
-        "credits": 6000,
-        "features": [
-            "6,000 credits/month",
-            "2 months FREE (annual billing)",
-            "~3,000 social captions or 1,200 blog posts",
-            "300 AI-generated ultra images",
-            "30 AI-generated videos (8-sec)",
-            "10 brand voice profiles",
-            "9 social platform publishing",
-            "Multi-user collaboration (5 seats)",
-            "Unlimited competitor tracking",
-            "API access",
-            "White-label options",
-            "Credit rollover (up to 3,000)"
-        ]
-    },
-    "enterprise": {
-        "name": "Enterprise",
-        "price_id": os.getenv("STRIPE_ENTERPRISE_PRICE_ID"),
-        "price": 999,
-        "currency": "GBP",
-        "interval": "month",
-        "credits": 20000,
-        "features": [
-            "20,000 credits/month",
-            "~10,000 social captions or 4,000 blog posts",
-            "1,000 AI-generated ultra images",
-            "100 AI-generated videos (8-sec)",
-            "Unlimited brand voices",
-            "9 social platform publishing",
-            "Unlimited team members",
-            "Dedicated account manager",
-            "Custom integrations",
-            "SLA guarantees",
-            "Full credit rollover (unlimited)"
-        ]
-    }
-}
+# ===================================================================
+# DATABASE-DRIVEN PRICING
+# Pricing now stored in subscription_plans and credit_packages tables
+# Migration: 013_pricing_tables.sql
+# ===================================================================
 
-# Credit Top-Up Packages (one-time purchases)
-CREDIT_PACKAGES = {
-    "credits_500": {
-        "name": "500 Credits",
-        "price_id": os.getenv("STRIPE_CREDITS_500_PRICE_ID"),
-        "price": 125,
-        "currency": "GBP",
-        "credits": 500,
-        "description": "Emergency credit top-up",
-        "price_per_credit": 0.25
-    },
-    "credits_1000": {
-        "name": "1,000 Credits",
-        "price_id": os.getenv("STRIPE_CREDITS_1000_PRICE_ID"),
-        "price": 200,
-        "currency": "GBP",
-        "credits": 1000,
-        "description": "Credit boost for campaigns",
-        "price_per_credit": 0.20
-    },
-    "credits_2500": {
-        "name": "2,500 Credits",
-        "price_id": os.getenv("STRIPE_CREDITS_2500_PRICE_ID"),
-        "price": 400,
-        "currency": "GBP",
-        "credits": 2500,
-        "description": "Big campaign pack",
-        "price_per_credit": 0.16,
-        "badge": "Best Value"
-    },
-    "credits_5000": {
-        "name": "5,000 Credits",
-        "price_id": os.getenv("STRIPE_CREDITS_5000_PRICE_ID"),
-        "price": 650,
-        "currency": "GBP",
-        "credits": 5000,
-        "description": "Major campaign pack",
-        "price_per_credit": 0.13
-    }
-}
+def get_pricing_plans_from_db():
+    """Fetch subscription plans from database"""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                SELECT plan_key, name, price, currency, interval, credits,
+                       stripe_price_id, features, is_active
+                FROM subscription_plans
+                WHERE is_active = true
+                ORDER BY sort_order
+            """)
+
+            rows = cur.fetchall()
+            plans = {}
+
+            for row in rows:
+                # Map Stripe price IDs from environment variables (backwards compatibility)
+                plan_key = row['plan_key']
+                env_key_map = {
+                    'starter_monthly': 'STRIPE_STARTER_MONTHLY_PRICE_ID',
+                    'starter_annual': 'STRIPE_STARTER_ANNUAL_PRICE_ID',
+                    'professional_monthly': 'STRIPE_PRO_MONTHLY_PRICE_ID',
+                    'professional_annual': 'STRIPE_PRO_ANNUAL_PRICE_ID',
+                    'business_monthly': 'STRIPE_BUSINESS_MONTHLY_PRICE_ID',
+                    'business_annual': 'STRIPE_BUSINESS_ANNUAL_PRICE_ID',
+                    'enterprise': 'STRIPE_ENTERPRISE_PRICE_ID'
+                }
+
+                plans[plan_key] = {
+                    "name": row['name'],
+                    "price_id": os.getenv(env_key_map.get(plan_key, '')) or row['stripe_price_id'],
+                    "price": row['price'],
+                    "currency": row['currency'],
+                    "interval": row['interval'],
+                    "credits": row['credits'],
+                    "features": row['features'] if row['features'] else []
+                }
+
+            return plans
+
+        finally:
+            cur.close()
+
+
+def get_credit_packages_from_db():
+    """Fetch credit packages from database"""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                SELECT package_key, name, price, currency, credits,
+                       stripe_price_id, description, badge, price_per_credit, is_active
+                FROM credit_packages
+                WHERE is_active = true
+                ORDER BY sort_order
+            """)
+
+            rows = cur.fetchall()
+            packages = {}
+
+            for row in rows:
+                # Map Stripe price IDs from environment variables (backwards compatibility)
+                package_key = row['package_key']
+                env_key_map = {
+                    'credits_500': 'STRIPE_CREDITS_500_PRICE_ID',
+                    'credits_1000': 'STRIPE_CREDITS_1000_PRICE_ID',
+                    'credits_2500': 'STRIPE_CREDITS_2500_PRICE_ID',
+                    'credits_5000': 'STRIPE_CREDITS_5000_PRICE_ID'
+                }
+
+                package_data = {
+                    "name": row['name'],
+                    "price_id": os.getenv(env_key_map.get(package_key, '')) or row['stripe_price_id'],
+                    "price": row['price'],
+                    "currency": row['currency'],
+                    "credits": row['credits'],
+                    "description": row['description'],
+                    "price_per_credit": float(row['price_per_credit']) if row['price_per_credit'] else 0
+                }
+
+                if row['badge']:
+                    package_data['badge'] = row['badge']
+
+                packages[package_key] = package_data
+
+            return packages
+
+        finally:
+            cur.close()
 
 
 class CheckoutRequest(BaseModel):
@@ -243,20 +148,30 @@ class CreditPurchaseRequest(BaseModel):
 
 @router.get("/payment/plans")
 async def get_pricing_plans():
-    """Get available pricing plans"""
-    return {
-        "success": True,
-        "plans": PRICING_PLANS
-    }
+    """Get available pricing plans (from database)"""
+    try:
+        plans = get_pricing_plans_from_db()
+        return {
+            "success": True,
+            "plans": plans
+        }
+    except Exception as e:
+        logger.error(f"Error fetching pricing plans: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch pricing plans")
 
 
 @router.get("/payment/credit-packages")
 async def get_credit_packages():
-    """Get available credit top-up packages"""
-    return {
-        "success": True,
-        "packages": CREDIT_PACKAGES
-    }
+    """Get available credit top-up packages (from database)"""
+    try:
+        packages = get_credit_packages_from_db()
+        return {
+            "success": True,
+            "packages": packages
+        }
+    except Exception as e:
+        logger.error(f"Error fetching credit packages: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch credit packages")
 
 
 @router.post("/payment/purchase-credits")
@@ -270,22 +185,24 @@ async def purchase_credits(data: CreditPurchaseRequest, request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        if data.package not in CREDIT_PACKAGES:
+        # Fetch packages from database
+        packages = get_credit_packages_from_db()
+
+        if data.package not in packages:
             raise HTTPException(status_code=400, detail="Invalid credit package selected")
 
-        package = CREDIT_PACKAGES[data.package]
+        package = packages[data.package]
         price_id = package["price_id"]
 
         if not price_id:
             raise HTTPException(status_code=500, detail=f"Price ID not configured for {data.package}")
 
         # Get user email
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT email, name, stripe_customer_id FROM users WHERE id = %s", (user_id,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT email, name, stripe_customer_id FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            cur.close()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -302,12 +219,11 @@ async def purchase_credits(data: CreditPurchaseRequest, request: Request):
             customer_id = customer.id
 
             # Save customer ID
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE users SET stripe_customer_id = %s WHERE id = %s", (customer_id, user_id))
-            conn.commit()
-            cur.close()
-            conn.close()
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute("UPDATE users SET stripe_customer_id = %s WHERE id = %s", (customer_id, user_id))
+                conn.commit()
+                cur.close()
 
         # Create Checkout Session for ONE-TIME payment
         checkout_session = stripe.checkout.Session.create(
@@ -355,22 +271,24 @@ async def create_checkout_session(data: CheckoutRequest, request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        if data.plan not in PRICING_PLANS:
+        # Fetch plans from database
+        plans = get_pricing_plans_from_db()
+
+        if data.plan not in plans:
             raise HTTPException(status_code=400, detail="Invalid plan selected")
 
-        plan = PRICING_PLANS[data.plan]
+        plan = plans[data.plan]
         price_id = plan["price_id"]
 
         if not price_id:
             raise HTTPException(status_code=500, detail=f"Price ID not configured for {data.plan} plan")
 
         # Get user email
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT email, name, stripe_customer_id FROM users WHERE id = %s", (user_id,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT email, name, stripe_customer_id FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            cur.close()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -387,12 +305,11 @@ async def create_checkout_session(data: CheckoutRequest, request: Request):
             customer_id = customer.id
 
             # Save customer ID
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE users SET stripe_customer_id = %s WHERE id = %s", (customer_id, user_id))
-            conn.commit()
-            cur.close()
-            conn.close()
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute("UPDATE users SET stripe_customer_id = %s WHERE id = %s", (customer_id, user_id))
+                conn.commit()
+                cur.close()
 
         # Create Checkout Session
         checkout_session = stripe.checkout.Session.create(
@@ -439,16 +356,15 @@ async def get_payment_status(request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT plan, subscription_status, stripe_subscription_id,
-                   subscription_started_at, subscription_ends_at
-            FROM users WHERE id = %s
-        """, (user_id,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT plan, subscription_status, stripe_subscription_id,
+                       subscription_started_at, subscription_ends_at
+                FROM users WHERE id = %s
+            """, (user_id,))
+            user = cur.fetchone()
+            cur.close()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -483,12 +399,11 @@ async def create_customer_portal_session(request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT stripe_customer_id FROM users WHERE id = %s", (user_id,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT stripe_customer_id FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+            cur.close()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -520,13 +435,15 @@ async def create_customer_portal_session(request: Request):
 @router.post("/payment/webhook")
 async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
     """
-    Handle Stripe webhooks
+    Handle Stripe webhooks with idempotency
 
     This endpoint receives events from Stripe when:
     - Payment succeeds
     - Subscription is created
     - Subscription is canceled
     - Payment fails
+
+    IDEMPOTENCY: Each event_id is processed exactly once to prevent zombie subscriptions.
     """
     try:
         payload = await request.body()
@@ -543,31 +460,82 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
             logger.error("❌ Invalid webhook signature")
             raise HTTPException(status_code=400, detail="Invalid signature")
 
+        event_id = event['id']
         event_type = event['type']
-        logger.info(f"📨 Received Stripe webhook: {event_type}")
+        logger.info(f"📨 Received Stripe webhook: {event_type} ({event_id})")
 
-        # Handle different event types
-        if event_type == 'checkout.session.completed':
-            session = event['data']['object']
-            await handle_checkout_success(session)
+        # IDEMPOTENCY CHECK: Skip if already processed
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT is_webhook_event_processed(%s)",
+                (event_id,)
+            )
+            already_processed = cur.fetchone()[0]
+            cur.close()
 
-        elif event_type == 'customer.subscription.created':
-            subscription = event['data']['object']
-            await handle_subscription_created(subscription)
+        if already_processed:
+            logger.info(f"⏭️  Skipping already processed event: {event_id}")
+            return {"success": True, "message": "Event already processed (idempotent skip)"}
 
-        elif event_type == 'customer.subscription.updated':
-            subscription = event['data']['object']
-            await handle_subscription_updated(subscription)
+        # Process the event
+        try:
+            # Handle different event types
+            user_id = None
 
-        elif event_type == 'customer.subscription.deleted':
-            subscription = event['data']['object']
-            await handle_subscription_canceled(subscription)
+            if event_type == 'checkout.session.completed':
+                session = event['data']['object']
+                user_id = session.get('metadata', {}).get('user_id')
+                await handle_checkout_success(session)
 
-        elif event_type == 'invoice.payment_failed':
-            invoice = event['data']['object']
-            await handle_payment_failed(invoice)
+            elif event_type == 'customer.subscription.created':
+                subscription = event['data']['object']
+                user_id = subscription.get('metadata', {}).get('user_id')
+                await handle_subscription_created(subscription)
 
-        return {"success": True}
+            elif event_type == 'customer.subscription.updated':
+                subscription = event['data']['object']
+                user_id = subscription.get('metadata', {}).get('user_id')
+                await handle_subscription_updated(subscription)
+
+            elif event_type == 'customer.subscription.deleted':
+                subscription = event['data']['object']
+                user_id = subscription.get('metadata', {}).get('user_id')
+                await handle_subscription_canceled(subscription)
+
+            elif event_type == 'invoice.payment_failed':
+                invoice = event['data']['object']
+                # user_id not easily available from invoice
+                await handle_payment_failed(invoice)
+
+            # Record successful processing
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT record_webhook_event(%s, %s, %s, %s, %s, %s)",
+                    (event_id, event_type, psycopg2.extras.Json(event), 'success', None, user_id)
+                )
+                conn.commit()
+                cur.close()
+
+            logger.info(f"✅ Successfully processed webhook: {event_id}")
+            return {"success": True, "event_id": event_id}
+
+        except Exception as processing_error:
+            # Record failed processing
+            error_message = str(processing_error)
+            logger.error(f"❌ Error processing webhook {event_id}: {error_message}")
+
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT record_webhook_event(%s, %s, %s, %s, %s, %s)",
+                    (event_id, event_type, psycopg2.extras.Json(event), 'error', error_message, user_id)
+                )
+                conn.commit()
+                cur.close()
+
+            raise processing_error
 
     except Exception as e:
         logger.error(f"❌ Webhook error: {str(e)}")
@@ -613,26 +581,24 @@ async def handle_checkout_success(session):
 
         logger.info(f"💳 Subscription checkout completed for user {user_id}: {plan} plan")
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    UPDATE users
+                    SET plan = %s,
+                        stripe_customer_id = %s,
+                        stripe_subscription_id = %s,
+                        subscription_status = 'active',
+                        subscription_started_at = NOW()
+                    WHERE id = %s
+                """, (plan, customer_id, subscription_id, user_id))
 
-        try:
-            cur.execute("""
-                UPDATE users
-                SET plan = %s,
-                    stripe_customer_id = %s,
-                    stripe_subscription_id = %s,
-                    subscription_status = 'active',
-                    subscription_started_at = NOW()
-                WHERE id = %s
-            """, (plan, customer_id, subscription_id, user_id))
+                conn.commit()
+                logger.info(f"✅ Updated user {user_id} to {plan} plan")
 
-            conn.commit()
-            logger.info(f"✅ Updated user {user_id} to {plan} plan")
-
-        finally:
-            cur.close()
-            conn.close()
+            finally:
+                cur.close()
 
 
 async def handle_subscription_created(subscription):
@@ -643,22 +609,20 @@ async def handle_subscription_created(subscription):
 
     logger.info(f"📝 Subscription created for user {user_id}: {subscription_id}")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE users
+                SET stripe_subscription_id = %s,
+                    subscription_status = %s
+                WHERE id = %s
+            """, (subscription_id, status, user_id))
 
-    try:
-        cur.execute("""
-            UPDATE users
-            SET stripe_subscription_id = %s,
-                subscription_status = %s
-            WHERE id = %s
-        """, (subscription_id, status, user_id))
+            conn.commit()
 
-        conn.commit()
-
-    finally:
-        cur.close()
-        conn.close()
+        finally:
+            cur.close()
 
 
 async def handle_subscription_updated(subscription):
@@ -669,21 +633,19 @@ async def handle_subscription_updated(subscription):
 
     logger.info(f"🔄 Subscription updated: {subscription_id} - Status: {status}")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE users
+                SET subscription_status = %s
+                WHERE stripe_customer_id = %s
+            """, (status, customer_id))
 
-    try:
-        cur.execute("""
-            UPDATE users
-            SET subscription_status = %s
-            WHERE stripe_customer_id = %s
-        """, (status, customer_id))
+            conn.commit()
 
-        conn.commit()
-
-    finally:
-        cur.close()
-        conn.close()
+        finally:
+            cur.close()
 
 
 async def handle_subscription_canceled(subscription):
@@ -692,22 +654,20 @@ async def handle_subscription_canceled(subscription):
 
     logger.info(f"❌ Subscription canceled for customer: {customer_id}")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE users
+                SET subscription_status = 'canceled',
+                    plan = 'free'
+                WHERE stripe_customer_id = %s
+            """, (customer_id,))
 
-    try:
-        cur.execute("""
-            UPDATE users
-            SET subscription_status = 'canceled',
-                plan = 'free'
-            WHERE stripe_customer_id = %s
-        """, (customer_id,))
+            conn.commit()
 
-        conn.commit()
-
-    finally:
-        cur.close()
-        conn.close()
+        finally:
+            cur.close()
 
 
 async def handle_payment_failed(invoice):
@@ -716,18 +676,16 @@ async def handle_payment_failed(invoice):
 
     logger.warning(f"⚠️  Payment failed for customer: {customer_id}")
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                UPDATE users
+                SET subscription_status = 'past_due'
+                WHERE stripe_customer_id = %s
+            """, (customer_id,))
 
-    try:
-        cur.execute("""
-            UPDATE users
-            SET subscription_status = 'past_due'
-            WHERE stripe_customer_id = %s
-        """, (customer_id,))
+            conn.commit()
 
-        conn.commit()
-
-    finally:
-        cur.close()
-        conn.close()
+        finally:
+            cur.close()

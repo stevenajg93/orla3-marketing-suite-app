@@ -13,50 +13,13 @@ import json
 from datetime import datetime, timedelta
 from utils.auth_dependency import get_current_user_id
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 
 router = APIRouter()
 logger = setup_logger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 
-def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-
-
-async def verify_super_admin(user_id: str = Depends(get_current_user_id)) -> str:
-    """
-    Verify user is a super admin
-    Raises 403 if user is not a super admin
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT is_super_admin
-            FROM users
-            WHERE id = %s
-        """, (user_id,))
-
-        result = cursor.fetchone()
-
-        if not result or not result['is_super_admin']:
-            raise HTTPException(
-                status_code=403,
-                detail="Unauthorized: Super admin access required"
-            )
-
-        return user_id
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# ============================================================================
-# PLATFORM STATISTICS
-# ============================================================================
 
 @router.get("/admin/stats/overview")
 async def get_platform_overview(admin_id: str = Depends(verify_super_admin)):
@@ -168,7 +131,6 @@ async def get_platform_overview(admin_id: str = Depends(verify_super_admin)):
 
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -272,7 +234,6 @@ async def list_all_users(
 
     finally:
         cursor.close()
-        conn.close()
 
 
 @router.get("/admin/users/{user_id}")
@@ -374,7 +335,6 @@ async def get_user_details(
 
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -430,7 +390,6 @@ async def grant_credits(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -476,7 +435,6 @@ async def update_account_status(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -533,7 +491,6 @@ async def list_all_organizations(
 
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -601,7 +558,6 @@ async def grant_super_admin(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 @router.post("/admin/super-admin/revoke")
@@ -665,7 +621,6 @@ async def revoke_super_admin(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 @router.delete("/admin/users/{user_id}")
@@ -753,7 +708,6 @@ async def delete_user(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
-        conn.close()
 
 
 # ============================================================================
@@ -798,4 +752,3 @@ async def get_audit_log(
 
     finally:
         cursor.close()
-        conn.close()

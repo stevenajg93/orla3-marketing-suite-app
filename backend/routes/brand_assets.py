@@ -6,6 +6,7 @@ from psycopg2.extras import RealDictCursor
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from lib.brand_asset_extractor import extract_brand_assets, find_logo_file, find_logo_from_database
 from pathlib import Path
 
@@ -16,8 +17,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set")
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/brand-assets")
 async def get_brand_assets():
@@ -40,7 +39,6 @@ async def get_brand_assets():
 
         brand_assets = cur.fetchone()
         cur.close()
-        conn.close()
 
         if not brand_assets:
             logger.warning("No brand strategy found - returning defaults")
@@ -89,7 +87,6 @@ async def extract_assets_from_guidelines():
 
         if not guidelines:
             cur.close()
-            conn.close()
             return {
                 "success": False,
                 "error": "No brand guidelines uploaded yet. Upload brand guidelines first."
@@ -106,7 +103,6 @@ async def extract_assets_from_guidelines():
 
         if not all_text:
             cur.close()
-            conn.close()
             return {
                 "success": False,
                 "error": "Could not extract text from guidelines"
@@ -149,7 +145,6 @@ async def extract_assets_from_guidelines():
 
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info("✅ Brand assets extracted and saved")
 
@@ -193,14 +188,12 @@ async def get_logo_file():
 
         if result and result['logo_url']:
             cur.close()
-            conn.close()
             return {"success": True, "logo_url": result['logo_url']}
 
         # If not in brand_strategy, look in brand_voice_assets (database)
         logo_url = find_logo_from_database(conn)
 
         cur.close()
-        conn.close()
 
         if logo_url:
             return {"success": True, "logo_url": logo_url}

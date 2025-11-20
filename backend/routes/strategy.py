@@ -21,8 +21,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set")
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def get_user_from_token(request: Request):
     """Extract user_id from JWT token"""
@@ -46,7 +44,6 @@ def load_brand_voice_assets(user_id: str):
         cur.execute("SELECT * FROM brand_voice_assets WHERE user_id = %s ORDER BY uploaded_at DESC", (user_id,))
         assets = cur.fetchall()
         cur.close()
-        conn.close()
         return assets
     except Exception as e:
         print(f"Error loading brand voice assets: {e}")
@@ -68,7 +65,6 @@ def load_competitor_summary(user_id: str):
         """, (user_id,))
         competitors = cur.fetchall()
         cur.close()
-        conn.close()
         
         if not competitors:
             return None
@@ -109,7 +105,6 @@ def load_brand_strategy(user_id: str):
         cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
         strategy = cur.fetchone()
         cur.close()
-        conn.close()
         return dict(strategy) if strategy else None
     except Exception as e:
         print(f"Error loading brand strategy: {e}")
@@ -396,7 +391,6 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
         
         conn.commit()
         cur.close()
-        conn.close()
         
         print("✅ Strategy saved to PostgreSQL")
         
@@ -469,7 +463,6 @@ async def get_next_keyword(request: Request):
             """, (user_id,))
             rows = cur.fetchall()
             cur.close()
-            conn.close()
 
             for row in rows:
                 existing_topics.append(row['title'])

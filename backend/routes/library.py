@@ -8,6 +8,7 @@ from datetime import datetime
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 
 router = APIRouter()
@@ -28,8 +29,6 @@ class ContentItem(BaseModel):
     tags: Optional[List[str]] = []
     media_url: Optional[str] = None
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/content")
 def get_library_content(request: Request, limit: int = 100, offset: int = 0):
@@ -71,7 +70,6 @@ def get_library_content(request: Request, limit: int = 100, offset: int = 0):
         )
         items = cur.fetchall()
         cur.close()
-        conn.close()
 
         logger.info(f"Loaded {len(items)}/{total} library items for user {user_id} (limit={limit}, offset={offset})")
         return {
@@ -110,7 +108,6 @@ def get_single_content(item_id: str, request: Request):
 
         item = cur.fetchone()
         cur.close()
-        conn.close()
 
         if not item:
             logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
@@ -158,7 +155,6 @@ def save_content(item: ContentItem, request: Request):
         saved_item = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Saved content to PostgreSQL for user {user_id}: {item.title}")
         return {"success": True, "item": saved_item}
@@ -202,7 +198,6 @@ def update_content(item_id: str, item: ContentItem, request: Request):
         updated_item = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         if not updated_item:
             logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
@@ -239,7 +234,6 @@ def delete_content(item_id: str, request: Request):
         deleted_item = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         if not deleted_item:
             logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")

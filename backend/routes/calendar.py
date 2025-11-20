@@ -9,6 +9,7 @@ import sys
 import httpx
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
+from db_pool import get_db_connection  # Use connection pool
 from middleware import get_user_id
 
 router = APIRouter()
@@ -31,8 +32,6 @@ class ContentItem(BaseModel):
     content: Optional[str] = None
     media_url: Optional[str] = None
 
-def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 @router.get("/events")
 def get_calendar_events(request: Request):
@@ -49,7 +48,6 @@ def get_calendar_events(request: Request):
 
         events = cur.fetchall()
         cur.close()
-        conn.close()
 
         logger.info(f"Loaded {len(events)} calendar events for user {user_id}")
         return {"events": events}
@@ -88,7 +86,6 @@ def create_event(item: ContentItem, request: Request):
         event = cur.fetchone()
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Created event for user {user_id}: {item.title}")
         return {"success": True, "event": event}
@@ -125,12 +122,10 @@ def update_event(event_id: str, item: ContentItem, request: Request):
 
         event = cur.fetchone()
         if not event:
-            conn.close()
             raise HTTPException(status_code=404, detail="Event not found or not owned by user")
 
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Updated event for user {user_id}: {event_id}")
         return {"success": True, "event": event}
@@ -155,12 +150,10 @@ def delete_event(event_id: str, request: Request):
 
         deleted_event = cur.fetchone()
         if not deleted_event:
-            conn.close()
             raise HTTPException(status_code=404, detail="Event not found or not owned by user")
 
         conn.commit()
         cur.close()
-        conn.close()
 
         logger.info(f"Deleted event for user {user_id}: {event_id}")
         return {"success": True}
@@ -193,7 +186,6 @@ async def publish_event_now(event_id: str, request: Request):
 
         if not event:
             cur.close()
-            conn.close()
             raise HTTPException(status_code=404, detail="Event not found or not owned by user")
 
         # Extract event data
@@ -247,7 +239,6 @@ async def publish_event_now(event_id: str, request: Request):
 
             conn.commit()
             cur.close()
-            conn.close()
 
             logger.info(f"Published event {event_id} for user {user_id}: {result.get('success')}")
 
@@ -289,7 +280,6 @@ async def publish_all_due_events(request: Request):
 
         due_events = cur.fetchall()
         cur.close()
-        conn.close()
 
         logger.info(f"Found {len(due_events)} due events for user {user_id}")
 
