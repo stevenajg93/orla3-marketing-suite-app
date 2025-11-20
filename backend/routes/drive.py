@@ -81,25 +81,25 @@ async def refresh_google_drive_token(user_id: str, refresh_token: str) -> str:
         with get_db_connection() as conn:
             cur = conn.cursor()
             try:
-            cur.execute("""
-                UPDATE user_cloud_storage_tokens
-                SET access_token = %s,
-                    token_expires_at = %s,
-                    last_refreshed_at = NOW(),
-                    updated_at = NOW()
-                WHERE user_id = %s AND provider = 'google_drive'
-            """, (new_access_token, new_expires_at, user_id))
+                cur.execute("""
+                    UPDATE user_cloud_storage_tokens
+                    SET access_token = %s,
+                        token_expires_at = %s,
+                        last_refreshed_at = NOW(),
+                        updated_at = NOW()
+                    WHERE user_id = %s AND provider = 'google_drive'
+                """, (new_access_token, new_expires_at, user_id))
 
-            conn.commit()
-            logger.info(f"Refreshed Google Drive token for user {user_id}")
+                conn.commit()
+                logger.info(f"Refreshed Google Drive token for user {user_id}")
 
-            return new_access_token
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"Error updating token: {e}")
-            raise
-        finally:
-            cur.close()
+                return new_access_token
+            except Exception as e:
+                conn.rollback()
+                logger.error(f"Error updating token: {e}")
+                raise
+            finally:
+                cur.close()
 
 
 def get_drive_service(user_id: str):
@@ -110,48 +110,48 @@ def get_drive_service(user_id: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Get user's Google Drive tokens from database
-        cur.execute("""
-            SELECT access_token, refresh_token, token_expires_at
-            FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = 'google_drive' AND is_active = true
-        """, (user_id,))
+            # Get user's Google Drive tokens from database
+            cur.execute("""
+                SELECT access_token, refresh_token, token_expires_at
+                FROM user_cloud_storage_tokens
+                WHERE user_id = %s AND provider = 'google_drive' AND is_active = true
+            """, (user_id,))
 
-        token_record = cur.fetchone()
+            token_record = cur.fetchone()
 
-        if not token_record:
-            logger.warning(f"No Google Drive connection for user {user_id}")
+            if not token_record:
+                logger.warning(f"No Google Drive connection for user {user_id}")
+                return None
+
+            access_token = token_record['access_token']
+            refresh_token = token_record['refresh_token']
+            token_expires_at = token_record['token_expires_at']
+
+            # Check if token is expired or about to expire (within 5 minutes)
+            from datetime import timedelta
+            if token_expires_at < datetime.utcnow() + timedelta(minutes=5):
+                logger.info(f"Token expired for user {user_id}, refreshing...")
+                # Need to use async, so we'll handle this in the route
+                # For now, try with existing token and let it fail
+                pass
+
+            # Build credentials
+            creds = Credentials(
+                token=access_token,
+                refresh_token=refresh_token,
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=GOOGLE_CLIENT_ID,
+                client_secret=GOOGLE_CLIENT_SECRET
+            )
+
+            service = build('drive', 'v3', credentials=creds)
+            return service
+
+        except Exception as e:
+            logger.error(f"Error initializing Drive service for user {user_id}: {e}")
             return None
-
-        access_token = token_record['access_token']
-        refresh_token = token_record['refresh_token']
-        token_expires_at = token_record['token_expires_at']
-
-        # Check if token is expired or about to expire (within 5 minutes)
-        from datetime import timedelta
-        if token_expires_at < datetime.utcnow() + timedelta(minutes=5):
-            logger.info(f"Token expired for user {user_id}, refreshing...")
-            # Need to use async, so we'll handle this in the route
-            # For now, try with existing token and let it fail
-            pass
-
-        # Build credentials
-        creds = Credentials(
-            token=access_token,
-            refresh_token=refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=GOOGLE_CLIENT_ID,
-            client_secret=GOOGLE_CLIENT_SECRET
-        )
-
-        service = build('drive', 'v3', credentials=creds)
-        return service
-
-    except Exception as e:
-        logger.error(f"Error initializing Drive service for user {user_id}: {e}")
-        return None
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/videos")
