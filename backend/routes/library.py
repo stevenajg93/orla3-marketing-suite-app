@@ -85,12 +85,57 @@ def get_library_content(request: Request, limit: int = 100, offset: int = 0):
         logger.error(f"Error loading library: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to load content: {str(e)}")
 
+@router.get("/content/{item_id}")
+def get_single_content(item_id: str, request: Request):
+    """
+    Get a single content item by ID.
+
+    Unlike the list endpoint, this returns the FULL content including the 'content' field.
+    Returns HTTP 200 on success, HTTP 404 if not found, HTTP 500 on database errors.
+    """
+    user_id = get_user_id(request)
+    # Convert UUID to string for PostgreSQL compatibility
+    user_id_str = str(user_id)
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Query for specific item with user_id filter for data isolation
+        cur.execute("""
+            SELECT id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
+            FROM content_library
+            WHERE id = %s AND user_id = %s
+        """, (item_id, user_id_str))
+
+        item = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not item:
+            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
+
+        logger.info(f"Retrieved content for user {user_id}: {item_id}")
+        return item
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve content: {str(e)}")
+
 @router.post("/content")
 def save_content(item: ContentItem, request: Request):
+    """
+    Create a new content item in the library.
+
+    Returns HTTP 201 on success, HTTP 500 on database errors.
+    """
+    user_id = get_user_id(request)
+    # Convert UUID to string for PostgreSQL compatibility
+    user_id_str = str(user_id)
+
     try:
-        user_id = get_user_id(request)
-        # Convert UUID to string for PostgreSQL compatibility
-        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -118,15 +163,21 @@ def save_content(item: ContentItem, request: Request):
         logger.info(f"Saved content to PostgreSQL for user {user_id}: {item.title}")
         return {"success": True, "item": saved_item}
     except Exception as e:
-        logger.error(f"Error saving content: {e}")
-        return {"success": False, "error": str(e)}
+        logger.error(f"Error saving content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to save content: {str(e)}")
 
 @router.patch("/content/{item_id}")
 def update_content(item_id: str, item: ContentItem, request: Request):
+    """
+    Update an existing content item.
+
+    Returns HTTP 200 on success, HTTP 404 if not found, HTTP 500 on database errors.
+    """
+    user_id = get_user_id(request)
+    # Convert UUID to string for PostgreSQL compatibility
+    user_id_str = str(user_id)
+
     try:
-        user_id = get_user_id(request)
-        # Convert UUID to string for PostgreSQL compatibility
-        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -149,28 +200,34 @@ def update_content(item_id: str, item: ContentItem, request: Request):
         ))
 
         updated_item = cur.fetchone()
-        if not updated_item:
-            conn.close()
-            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
-
         conn.commit()
         cur.close()
         conn.close()
+
+        if not updated_item:
+            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
 
         logger.info(f"Updated content in PostgreSQL for user {user_id}: {item_id}")
         return {"success": True, "item": updated_item}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating content: {e}")
-        return {"success": False, "error": str(e)}
+        logger.error(f"Error updating content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update content: {str(e)}")
 
 @router.delete("/content/{item_id}")
 def delete_content(item_id: str, request: Request):
+    """
+    Delete a content item from the library.
+
+    Returns HTTP 200 on success, HTTP 404 if not found, HTTP 500 on database errors.
+    """
+    user_id = get_user_id(request)
+    # Convert UUID to string for PostgreSQL compatibility
+    user_id_str = str(user_id)
+
     try:
-        user_id = get_user_id(request)
-        # Convert UUID to string for PostgreSQL compatibility
-        user_id_str = str(user_id)
         conn = get_db_connection()
         cur = conn.cursor()
 
@@ -180,17 +237,18 @@ def delete_content(item_id: str, request: Request):
         )
 
         deleted_item = cur.fetchone()
-        if not deleted_item:
-            conn.close()
-            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
-
         conn.commit()
         cur.close()
         conn.close()
+
+        if not deleted_item:
+            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
+
         logger.info(f"Deleted content from PostgreSQL for user {user_id}: {item_id}")
         return {"success": True}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting content: {e}")
-        return {"success": False, "error": str(e)}
+        logger.error(f"Error deleting content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete content: {str(e)}")

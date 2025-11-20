@@ -169,21 +169,44 @@ export default function BlogWriter() {
     const saved = await saveToLibrary();
 
     if (saved) {
-      // Store blog data in localStorage for social manager to pick up
-      localStorage.setItem('pendingBlogPost', JSON.stringify({
-        title: blog.title,
-        content: stripMarkdown(blog.body_md),
-        metadata: {
-          title: blog.title,
-          slug: blog.slug,
-          meta_description: blog.meta_description,
-          full_markdown: blog.body_md,
-          full_clean: stripMarkdown(blog.body_md)
-        }
-      }));
+      try {
+        // Create draft campaign on backend instead of localStorage
+        const response = await fetch(`${config.apiUrl}/draft-campaigns`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify({
+            campaign_type: 'blog_to_social',
+            data: {
+              title: blog.title,
+              content: stripMarkdown(blog.body_md),
+              metadata: {
+                title: blog.title,
+                slug: blog.slug,
+                meta_description: blog.meta_description,
+                full_markdown: blog.body_md,
+                full_clean: stripMarkdown(blog.body_md)
+              }
+            },
+            expires_hours: 24
+          })
+        });
 
-      // Navigate to social manager
-      router.push('/dashboard/social');
+        if (response.ok) {
+          const result = await response.json();
+          // Navigate to social manager with campaign ID
+          router.push(`/dashboard/social?campaign=${result.campaign_id}`);
+        } else {
+          setSaveMessage('Failed to create campaign');
+          setTimeout(() => setSaveMessage(''), 3000);
+        }
+      } catch (err) {
+        console.error('Error creating draft campaign:', err);
+        setSaveMessage('Failed to create campaign');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
     }
   };
 

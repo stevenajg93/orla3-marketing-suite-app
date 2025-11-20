@@ -32,7 +32,7 @@ app.add_middleware(
 # User Context Middleware - Adds user_id to all requests for multi-tenant architecture
 app.add_middleware(UserContextMiddleware)
 
-from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, brand_assets, strategy, calendar, library, competitor, ai_generation, oauth, auth, cloud_storage_oauth, cloud_storage_browse, social_auth, payment, credits, social_engagement, social_discovery, auto_reply_settings, debug, admin, organization, version
+from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, brand_assets, strategy, calendar, library, competitor, ai_generation, oauth, auth, cloud_storage_oauth, cloud_storage_browse, social_auth, payment, credits, social_engagement, social_discovery, auto_reply_settings, debug, admin, organization, version, draft_campaign
 app.include_router(version.router, tags=["version"])
 app.include_router(debug.router, tags=["debug"])
 app.include_router(admin.router, tags=["admin"])
@@ -62,6 +62,7 @@ app.include_router(library.router, prefix="/library", tags=["library"])
 app.include_router(competitor.router, prefix="/competitor", tags=["competitor"])
 app.include_router(ai_generation.router, prefix="/ai", tags=["ai-generation"])
 app.include_router(oauth.router, tags=["oauth"])
+app.include_router(draft_campaign.router, tags=["draft-campaigns"])
 
 @app.on_event("startup")
 async def startup_event():

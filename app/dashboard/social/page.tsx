@@ -192,30 +192,49 @@ export default function SocialManagerPage() {
     }
   };
 
-  // Check for pending blog post from Blog Writer on mount
+  // Check for pending blog post from Blog Writer via campaign ID in URL
   useEffect(() => {
-    const pendingBlog = localStorage.getItem('pendingBlogPost');
-    if (pendingBlog) {
-      try {
-        const blogData = JSON.parse(pendingBlog);
+    const loadCampaign = async () => {
+      // Get campaign ID from URL query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const campaignId = urlParams.get('campaign');
 
-        // Load content into caption
-        setCaption(blogData.content);
+      if (campaignId) {
+        try {
+          console.log('Loading draft campaign:', campaignId);
+          const response = await fetch(`${config.apiUrl}/draft-campaigns/${campaignId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+          });
 
-        // Store metadata for WordPress publishing
-        setBlogMetadata({
-          title: blogData.metadata.title,
-          content: blogData.metadata.full_markdown
-        });
+          if (response.ok) {
+            const campaign = await response.json();
+            const blogData = campaign.data;
 
-        // Clear localStorage
-        localStorage.removeItem('pendingBlogPost');
+            // Load content into caption
+            setCaption(blogData.content);
 
-        console.log('Loaded blog from Blog Writer:', blogData.title);
-      } catch (e) {
-        console.error('Failed to load pending blog post:', e);
+            // Store metadata for WordPress publishing
+            setBlogMetadata({
+              title: blogData.metadata.title,
+              content: blogData.metadata.full_markdown
+            });
+
+            console.log('Loaded blog from draft campaign:', blogData.title);
+
+            // Clean up URL (remove campaign parameter)
+            window.history.replaceState({}, '', '/dashboard/social');
+          } else {
+            console.error('Failed to load campaign:', response.status);
+          }
+        } catch (e) {
+          console.error('Failed to load draft campaign:', e);
+        }
       }
-    }
+    };
+
+    loadCampaign();
   }, []);
 
   // Load media library content and connected providers when modal opens
