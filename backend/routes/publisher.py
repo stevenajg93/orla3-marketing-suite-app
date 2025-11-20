@@ -52,21 +52,21 @@ def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Di
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT
-                access_token,
-                refresh_token,
-                token_expires_at,
-                service_id,
-                service_metadata,
-                is_active
-            FROM connected_services
-            WHERE user_id = %s AND service_type = %s AND is_active = true
-            ORDER BY connected_at DESC
-            LIMIT 1
-        """, (user_id, service_type))
+            cur.execute("""
+                SELECT
+                    access_token,
+                    refresh_token,
+                    token_expires_at,
+                    service_id,
+                    service_metadata,
+                    is_active
+                FROM connected_services
+                WHERE user_id = %s AND service_type = %s AND is_active = true
+                ORDER BY connected_at DESC
+                LIMIT 1
+            """, (user_id, service_type))
 
-        result = cur.fetchone()
+            result = cur.fetchone()
 
         if not result:
             logger.warning(f"No active {service_type} connection for user {user_id}")

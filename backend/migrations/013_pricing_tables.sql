@@ -78,7 +78,7 @@ CREATE TRIGGER credit_packages_updated
 
 -- Subscription Plans (from payment.py lines 47-192)
 INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credits, stripe_price_id, features, sort_order) VALUES
-('starter_monthly', 'Starter', 99, 'GBP', 'month', 500, '', ARRAY[
+('starter_monthly', 'Starter', 99, 'GBP', 'month', 500, '', to_jsonb(ARRAY[
     '500 credits/month',
     '~250 social captions or 100 blog posts',
     '25 AI-generated ultra images',
@@ -88,9 +88,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'Content calendar',
     'Basic competitor tracking',
     'Credit rollover (up to 250)'
-]::jsonb, 1),
+]), 1),
 
-('starter_annual', 'Starter (Annual)', 990, 'GBP', 'year', 500, '', ARRAY[
+('starter_annual', 'Starter (Annual)', 990, 'GBP', 'year', 500, '', to_jsonb(ARRAY[
     '500 credits/month',
     '2 months FREE (annual billing)',
     '~250 social captions or 100 blog posts',
@@ -101,9 +101,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'Content calendar',
     'Basic competitor tracking',
     'Credit rollover (up to 250)'
-]::jsonb, 2),
+]), 2),
 
-('professional_monthly', 'Professional', 249, 'GBP', 'month', 2000, '', ARRAY[
+('professional_monthly', 'Professional', 249, 'GBP', 'month', 2000, '', to_jsonb(ARRAY[
     '2,000 credits/month',
     '~1,000 social captions or 400 blog posts',
     '100 AI-generated ultra images',
@@ -114,9 +114,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'Advanced competitor analysis (5 competitors)',
     'Priority support',
     'Credit rollover (up to 1,000)'
-]::jsonb, 3),
+]), 3),
 
-('professional_annual', 'Professional (Annual)', 2490, 'GBP', 'year', 2000, '', ARRAY[
+('professional_annual', 'Professional (Annual)', 2490, 'GBP', 'year', 2000, '', to_jsonb(ARRAY[
     '2,000 credits/month',
     '2 months FREE (annual billing)',
     '~1,000 social captions or 400 blog posts',
@@ -128,9 +128,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'Advanced competitor analysis (5 competitors)',
     'Priority support',
     'Credit rollover (up to 1,000)'
-]::jsonb, 4),
+]), 4),
 
-('business_monthly', 'Business', 499, 'GBP', 'month', 6000, '', ARRAY[
+('business_monthly', 'Business', 499, 'GBP', 'month', 6000, '', to_jsonb(ARRAY[
     '6,000 credits/month',
     '~3,000 social captions or 1,200 blog posts',
     '300 AI-generated ultra images',
@@ -142,9 +142,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'API access',
     'White-label options',
     'Credit rollover (up to 3,000)'
-]::jsonb, 5),
+]), 5),
 
-('business_annual', 'Business (Annual)', 4990, 'GBP', 'year', 6000, '', ARRAY[
+('business_annual', 'Business (Annual)', 4990, 'GBP', 'year', 6000, '', to_jsonb(ARRAY[
     '6,000 credits/month',
     '2 months FREE (annual billing)',
     '~3,000 social captions or 1,200 blog posts',
@@ -157,9 +157,9 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'API access',
     'White-label options',
     'Credit rollover (up to 3,000)'
-]::jsonb, 6),
+]), 6),
 
-('enterprise', 'Enterprise', 999, 'GBP', 'month', 20000, '', ARRAY[
+('enterprise', 'Enterprise', 999, 'GBP', 'month', 20000, '', to_jsonb(ARRAY[
     '20,000 credits/month',
     '~10,000 social captions or 4,000 blog posts',
     '1,000 AI-generated ultra images',
@@ -171,7 +171,7 @@ INSERT INTO subscription_plans (plan_key, name, price, currency, interval, credi
     'Custom integrations',
     'SLA guarantees',
     'Full credit rollover (unlimited)'
-]::jsonb, 7);
+]), 7);
 
 -- Credit Packages (from payment.py lines 195-233)
 INSERT INTO credit_packages (package_key, name, price, currency, credits, stripe_price_id, description, badge, price_per_credit, sort_order) VALUES
