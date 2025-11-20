@@ -68,6 +68,16 @@ app.include_router(draft_campaign.router, tags=["draft-campaigns"])
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 Orla3 Marketing Automation API starting...")
+
+    # Initialize database connection pool
+    try:
+        from db_pool import init_connection_pool
+        init_connection_pool(minconn=2, maxconn=20)
+        logger.info("✅ Database connection pool initialized")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize connection pool: {e}")
+        raise  # Critical error - can't continue without database
+
     logger.info(f"✅ Frontend URL: {Config.FRONTEND_URL}")
     logger.info(f"✅ OpenAI API: {'Configured' if Config.OPENAI_API_KEY else 'Missing'}")
     logger.info(f"✅ Anthropic API: {'Configured' if Config.ANTHROPIC_API_KEY else 'Missing'}")
@@ -89,6 +99,16 @@ def read_root():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("🛑 Orla3 Marketing Automation API shutting down...")
+
+    # Close database connection pool
+    try:
+        from db_pool import close_all_connections
+        close_all_connections()
+        logger.info("✅ Database connection pool closed")
+    except Exception as e:
+        logger.error(f"❌ Error closing connection pool: {e}")
+
+    # Stop background scheduler
     try:
         from scheduler import stop_scheduler
         stop_scheduler()
