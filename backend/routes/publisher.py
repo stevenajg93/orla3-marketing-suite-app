@@ -68,17 +68,17 @@ def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Di
 
             result = cur.fetchone()
 
-        if not result:
-            logger.warning(f"No active {service_type} connection for user {user_id}")
+            if not result:
+                logger.warning(f"No active {service_type} connection for user {user_id}")
+                return None
+
+            return dict(result)
+
+        except Exception as e:
+            logger.error(f"Error fetching service credentials for user {user_id}: {e}")
             return None
-
-        return dict(result)
-
-    except Exception as e:
-        logger.error(f"Error fetching service credentials for user {user_id}: {e}")
-        return None
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 router = APIRouter()
