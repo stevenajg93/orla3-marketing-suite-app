@@ -244,16 +244,16 @@ async def get_connected_accounts(request: Request):
             accounts = []
             for row in cur.fetchall():
                 accounts.append({
-                    'id': str(row[0]),
-                    'platform': row[1],
-                    'account_name': row[2],
-                    'account_username': row[3],
-                    'account_email': row[4],
-                    'profile_image_url': row[5],
-                    'is_active': row[6],
-                    'is_default': row[7],
-                    'connected_at': row[8].isoformat() if row[8] else None,
-                    'last_used_at': row[9].isoformat() if row[9] else None
+                    'id': str(row['id']),
+                    'platform': row['platform'],
+                    'account_name': row['account_name'],
+                    'account_username': row['account_username'],
+                    'account_email': row['account_email'],
+                    'profile_image_url': row['profile_image_url'],
+                    'is_active': row['is_active'],
+                    'is_default': row['is_default'],
+                    'connected_at': row['connected_at'].isoformat() if row['connected_at'] else None,
+                    'last_used_at': row['last_used_at'].isoformat() if row['last_used_at'] else None
                 })
 
             return {
@@ -284,11 +284,11 @@ async def disconnect_account(account_id: str, request: Request):
                 raise HTTPException(status_code=404, detail="Account not found")
 
             conn.commit()
-            logger.info(f"🔌 Disconnected {result[0]} account: {result[1]}")
+            logger.info(f"🔌 Disconnected {result['platform']} account: {result['account_name']}")
 
             return {
                 'success': True,
-                'message': f'{result[0]} account disconnected successfully'
+                'message': f'{result["platform"]} account disconnected successfully'
             }
 
         finally:
@@ -311,7 +311,7 @@ async def set_default_account(account_id: str, request: Request):
             if not result:
                 raise HTTPException(status_code=404, detail="Account not found")
 
-            platform = result[0]
+            platform = result['platform']
 
             # Unset all defaults for this platform and user
             cur.execute("""

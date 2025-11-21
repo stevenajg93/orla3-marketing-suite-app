@@ -452,54 +452,53 @@ async def oauth_callback(platform: str, code: str, state: str):
             service_metadata = await get_platform_metadata(actual_platform, access_token)
 
             # Store tokens in database
-            conn = get_db_connection()
-            cur = conn.cursor()
-
             expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
 
-            try:
-                # Format service_name (e.g., "twitter" -> "Twitter")
-                service_name = actual_platform.capitalize()
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                try:
+                    # Format service_name (e.g., "twitter" -> "Twitter")
+                    service_name = actual_platform.capitalize()
 
-                # Convert metadata dict to JSON string
-                import json
-                metadata_json = json.dumps(service_metadata) if service_metadata else None
+                    # Convert metadata dict to JSON string
+                    import json
+                    metadata_json = json.dumps(service_metadata) if service_metadata else None
 
-                cur.execute("""
-                    INSERT INTO connected_services
-                    (user_id, service_type, service_name, service_id, access_token, refresh_token,
-                     token_expires_at, service_metadata, is_active)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, true)
-                    ON CONFLICT (user_id, service_type)
-                    DO UPDATE SET
-                        service_name = EXCLUDED.service_name,
-                        service_id = EXCLUDED.service_id,
-                        access_token = EXCLUDED.access_token,
-                        refresh_token = EXCLUDED.refresh_token,
-                        token_expires_at = EXCLUDED.token_expires_at,
-                        service_metadata = EXCLUDED.service_metadata,
-                        is_active = true,
-                        updated_at = NOW()
-                """, (
-                    user_id,
-                    actual_platform,
-                    service_name,
-                    service_id,
-                    access_token,
-                    refresh_token,
-                    expires_at,
-                    metadata_json  # service_metadata as JSON
-                ))
+                    cur.execute("""
+                        INSERT INTO connected_services
+                        (user_id, service_type, service_name, service_id, access_token, refresh_token,
+                         token_expires_at, service_metadata, is_active)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, true)
+                        ON CONFLICT (user_id, service_type)
+                        DO UPDATE SET
+                            service_name = EXCLUDED.service_name,
+                            service_id = EXCLUDED.service_id,
+                            access_token = EXCLUDED.access_token,
+                            refresh_token = EXCLUDED.refresh_token,
+                            token_expires_at = EXCLUDED.token_expires_at,
+                            service_metadata = EXCLUDED.service_metadata,
+                            is_active = true,
+                            updated_at = NOW()
+                    """, (
+                        user_id,
+                        actual_platform,
+                        service_name,
+                        service_id,
+                        access_token,
+                        refresh_token,
+                        expires_at,
+                        metadata_json  # service_metadata as JSON
+                    ))
 
-                conn.commit()
-                logger.info(f"Stored {actual_platform} tokens for user {user_id}")
+                    conn.commit()
+                    logger.info(f"Stored {actual_platform} tokens for user {user_id}")
 
-            except Exception as e:
-                conn.rollback()
-                logger.error(f"Failed to store tokens: {e}")
-                raise HTTPException(status_code=500, detail="Failed to store credentials")
-            finally:
-                cur.close()
+                except Exception as e:
+                    conn.rollback()
+                    logger.error(f"Failed to store tokens: {e}")
+                    raise HTTPException(status_code=500, detail="Failed to store credentials")
+                finally:
+                    cur.close()
 
             # Redirect back to frontend settings page
             return RedirectResponse(
