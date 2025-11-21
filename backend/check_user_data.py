@@ -10,18 +10,19 @@ from datetime import datetime
 
 load_dotenv()
 
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def check_user_data(email):
     """Check if user exists, has content, and has cloud storage connected"""
-    conn = get_db_connection()
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
         # Find user
         print(f"\n🔍 Searching for user: {email}")
         cursor.execute("""
-            SELECT id, email, full_name, role, current_organization_id, created_at
+            SELECT id, email, full_name, role, current_organization_id, created_at,
+                   email_verified, is_super_admin, account_status
             FROM users
             WHERE email = %s
         """, (email,))
@@ -36,6 +37,9 @@ def check_user_data(email):
         print(f"   Name: {user['full_name']}")
         print(f"   Role: {user['role']}")
         print(f"   Org ID: {user['current_organization_id']}")
+        print(f"   Email Verified: {user['email_verified']}")
+        print(f"   Super Admin: {user['is_super_admin']}")
+        print(f"   Account Status: {user['account_status']}")
         print(f"   Created: {user['created_at']}")
 
         user_id = str(user['id'])

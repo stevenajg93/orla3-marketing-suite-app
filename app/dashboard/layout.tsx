@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useCredits } from '@/lib/hooks/useCredits';
 import CreditPurchaseModal from '@/components/CreditPurchaseModal';
 import PageTransition from '@/components/PageTransition';
+import { RequireAuth } from '@/components/RequireAuth';
 
 export default function DashboardLayout({
   children,
@@ -26,8 +27,9 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
-      {/* Top Navigation Bar */}
+    <RequireAuth>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-royal-800 to-slate-900">
+        {/* Top Navigation Bar */}
       <nav className="border-b border-white/10 backdrop-blur-lg bg-white/5 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
@@ -457,6 +459,7 @@ export default function DashboardLayout({
           // Credits will auto-refresh via webhook
         }}
       />
-    </div>
+      </div>
+    </RequireAuth>
   );
 }
