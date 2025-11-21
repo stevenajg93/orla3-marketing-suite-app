@@ -89,30 +89,30 @@ class ChangePasswordRequest(BaseModel):
 
 def get_user_by_email(email: str):
     """Get user by email address"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute(
-            "SELECT * FROM users WHERE email = %s",
-            (email.lower(),)
-        )
-        return cur.fetchone()
-    finally:
-        cur.close()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "SELECT * FROM users WHERE email = %s",
+                (email.lower(),)
+            )
+            return cur.fetchone()
+        finally:
+            cur.close()
 
 
 def get_user_by_id(user_id: str):
     """Get user by ID"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute(
-            "SELECT * FROM users WHERE id = %s",
-            (user_id,)
-        )
-        return cur.fetchone()
-    finally:
-        cur.close()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "SELECT * FROM users WHERE id = %s",
+                (user_id,)
+            )
+            return cur.fetchone()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -267,23 +267,25 @@ async def login(request: LoginRequest, req: Request):
 
     if not user:
         # Log failed attempt (no user_id since user doesn't exist)
-        conn = get_db_connection()
-        cur = conn.cursor()
-        ip_address = req.client.host if req.client else None
-        user_agent = req.headers.get('user-agent')
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                ip_address = req.client.host if req.client else None
+                user_agent = req.headers.get('user-agent')
 
-        cur.execute("""
-            INSERT INTO audit_log (
-                event_type, event_status, ip_address, user_agent, error_message,
-                metadata
-            ) VALUES (%s, %s, %s, %s, %s, %s)
-        """, (
-            'login', 'failure', ip_address, user_agent,
-            'User not found',
-            {'email': request.email}
-        ))
-        conn.commit()
-        cur.close()
+                cur.execute("""
+                    INSERT INTO audit_log (
+                        event_type, event_status, ip_address, user_agent, error_message,
+                        metadata
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    'login', 'failure', ip_address, user_agent,
+                    'User not found',
+                    {'email': request.email}
+                ))
+                conn.commit()
+            finally:
+                cur.close()
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -299,14 +301,16 @@ async def login(request: LoginRequest, req: Request):
             )
         else:
             # Unlock if lock period expired
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute(
-                "UPDATE users SET is_locked = false, locked_until = NULL, failed_login_attempts = 0 WHERE id = %s",
-                (user['id'],)
-            )
-            conn.commit()
-            cur.close()
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                try:
+                    cur.execute(
+                        "UPDATE users SET is_locked = false, locked_until = NULL, failed_login_attempts = 0 WHERE id = %s",
+                        (user['id'],)
+                    )
+                    conn.commit()
+                finally:
+                    cur.close()
             user['is_locked'] = False
 
     # Check if account is active
@@ -336,17 +340,19 @@ async def login(request: LoginRequest, req: Request):
     # Verify password
     if not verify_password(request.password, user['password_hash']):
         # Record failed login
-        conn = get_db_connection()
-        cur = conn.cursor()
-        ip_address = req.client.host if req.client else None
-        user_agent = req.headers.get('user-agent')
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                ip_address = req.client.host if req.client else None
+                user_agent = req.headers.get('user-agent')
 
-        cur.execute(
-            "SELECT record_login_attempt(%s, %s, %s, %s, %s)",
-            (user['id'], False, ip_address, user_agent, 'Invalid password')
-        )
-        conn.commit()
-        cur.close()
+                cur.execute(
+                    "SELECT record_login_attempt(%s, %s, %s, %s, %s)",
+                    (user['id'], False, ip_address, user_agent, 'Invalid password')
+                )
+                conn.commit()
+            finally:
+                cur.close()
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
