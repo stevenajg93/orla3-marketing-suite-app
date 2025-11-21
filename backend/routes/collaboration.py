@@ -67,17 +67,17 @@ def get_user_organization(user_id: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT om.organization_id, om.role, o.name, o.subscription_tier
-            FROM organization_members om
-            JOIN organizations o ON om.organization_id = o.id
-            WHERE om.user_id = %s AND om.is_active = true
-            LIMIT 1
-        """, (user_id,))
+            cur.execute("""
+                SELECT om.organization_id, om.role, o.name, o.subscription_tier
+                FROM organization_members om
+                JOIN organizations o ON om.organization_id = o.id
+                WHERE om.user_id = %s AND om.is_active = true
+                LIMIT 1
+            """, (user_id,))
 
-        return cur.fetchone()
-    finally:
-        cur.close()
+            return cur.fetchone()
+        finally:
+            cur.close()
 
 
 def validate_user_can_perform_action(org_role: str, next_action: str) -> bool:
@@ -141,26 +141,26 @@ async def manage_workflow(data: CollaborationInput, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        user_ids = [u.id for u in data.users]
-        if user_ids:
-            # Check that all users are members of the organization
-            cur.execute("""
-                SELECT user_id
-                FROM organization_members
-                WHERE organization_id = %s AND user_id = ANY(%s) AND is_active = true
-            """, (str(organization_id), user_ids))
+            user_ids = [u.id for u in data.users]
+            if user_ids:
+                # Check that all users are members of the organization
+                cur.execute("""
+                    SELECT user_id
+                    FROM organization_members
+                    WHERE organization_id = %s AND user_id = ANY(%s) AND is_active = true
+                """, (str(organization_id), user_ids))
 
-            valid_users = {row['user_id'] for row in cur.fetchall()}
-            invalid_users = set(user_ids) - valid_users
+                valid_users = {row['user_id'] for row in cur.fetchall()}
+                invalid_users = set(user_ids) - valid_users
 
-            if invalid_users:
-                logger.warning(f"User {user_id} attempted to access users outside their organization: {invalid_users}")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Some users are not in your organization: {list(invalid_users)}"
-                )
-    finally:
-        cur.close()
+                if invalid_users:
+                    logger.warning(f"User {user_id} attempted to access users outside their organization: {invalid_users}")
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Some users are not in your organization: {list(invalid_users)}"
+                    )
+        finally:
+            cur.close()
 
     # All security checks passed - proceed with AI workflow
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

@@ -44,20 +44,20 @@ def get_user_organization(user_id: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Get user's organization membership
-        cur.execute("""
-            SELECT om.organization_id, om.role, o.name, o.subscription_tier,
-                   o.max_users, o.current_user_count
-            FROM organization_members om
-            JOIN organizations o ON om.organization_id = o.id
-            JOIN users u ON om.user_id = u.id
-            WHERE u.id = %s AND om.is_active = true
-            LIMIT 1
-        """, (user_id,))
+            # Get user's organization membership
+            cur.execute("""
+                SELECT om.organization_id, om.role, o.name, o.subscription_tier,
+                       o.max_users, o.current_user_count
+                FROM organization_members om
+                JOIN organizations o ON om.organization_id = o.id
+                JOIN users u ON om.user_id = u.id
+                WHERE u.id = %s AND om.is_active = true
+                LIMIT 1
+            """, (user_id,))
 
-        return cur.fetchone()
-    finally:
-        cur.close()
+            return cur.fetchone()
+        finally:
+            cur.close()
 
 
 def check_permission(user_id: str, organization_id: str, required_role: str = 'admin'):
@@ -65,27 +65,27 @@ def check_permission(user_id: str, organization_id: str, required_role: str = 'a
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT role
-            FROM organization_members
-            WHERE user_id = %s AND organization_id = %s AND is_active = true
-        """, (user_id, organization_id))
+            cur.execute("""
+                SELECT role
+                FROM organization_members
+                WHERE user_id = %s AND organization_id = %s AND is_active = true
+            """, (user_id, organization_id))
 
-        member = cur.fetchone()
-        if not member:
-            return False
+            member = cur.fetchone()
+            if not member:
+                return False
 
-        role = member['role']
+            role = member['role']
 
-        # Role hierarchy: owner > admin > member > viewer
-        role_hierarchy = {'viewer': 0, 'member': 1, 'admin': 2, 'owner': 3}
+            # Role hierarchy: owner > admin > member > viewer
+            role_hierarchy = {'viewer': 0, 'member': 1, 'admin': 2, 'owner': 3}
 
-        user_level = role_hierarchy.get(role, 0)
-        required_level = role_hierarchy.get(required_role, 0)
+            user_level = role_hierarchy.get(role, 0)
+            required_level = role_hierarchy.get(required_role, 0)
 
-        return user_level >= required_level
-    finally:
-        cur.close()
+            return user_level >= required_level
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -144,42 +144,42 @@ async def get_team_members(request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT
-                u.id as user_id,
-                u.email,
-                u.name,
-                om.role,
-                om.joined_at,
-                u.last_login_at,
-                om.is_active
-            FROM organization_members om
-            JOIN users u ON om.user_id = u.id
-            WHERE om.organization_id = %s
-            ORDER BY
-                CASE om.role
-                    WHEN 'owner' THEN 1
-                    WHEN 'admin' THEN 2
-                    WHEN 'member' THEN 3
-                    WHEN 'viewer' THEN 4
-                END,
-                om.joined_at ASC
-        """, (organization_id,))
+            cur.execute("""
+                SELECT
+                    u.id as user_id,
+                    u.email,
+                    u.name,
+                    om.role,
+                    om.joined_at,
+                    u.last_login_at,
+                    om.is_active
+                FROM organization_members om
+                JOIN users u ON om.user_id = u.id
+                WHERE om.organization_id = %s
+                ORDER BY
+                    CASE om.role
+                        WHEN 'owner' THEN 1
+                        WHEN 'admin' THEN 2
+                        WHEN 'member' THEN 3
+                        WHEN 'viewer' THEN 4
+                    END,
+                    om.joined_at ASC
+            """, (organization_id,))
 
-        members = cur.fetchall()
+            members = cur.fetchall()
 
-        return [{
-            "user_id": str(m['user_id']),
-            "email": m['email'],
-            "name": m['name'],
-            "role": m['role'],
-            "joined_at": m['joined_at'].isoformat() if m['joined_at'] else None,
-            "last_login_at": m['last_login_at'].isoformat() if m['last_login_at'] else None,
-            "is_active": m['is_active']
-        } for m in members]
+            return [{
+                "user_id": str(m['user_id']),
+                "email": m['email'],
+                "name": m['name'],
+                "role": m['role'],
+                "joined_at": m['joined_at'].isoformat() if m['joined_at'] else None,
+                "last_login_at": m['last_login_at'].isoformat() if m['last_login_at'] else None,
+                "is_active": m['is_active']
+            } for m in members]
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -229,69 +229,69 @@ async def invite_member(request_data: InviteMemberRequest, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Check if user already exists
-        cur.execute("SELECT id, name FROM users WHERE email = %s", (request_data.email.lower(),))
-        existing_user = cur.fetchone()
+            # Check if user already exists
+            cur.execute("SELECT id, name FROM users WHERE email = %s", (request_data.email.lower(),))
+            existing_user = cur.fetchone()
 
-        if existing_user:
-            # Check if already in organization
-            cur.execute("""
-                SELECT id FROM organization_members
-                WHERE organization_id = %s AND user_id = %s
-            """, (organization_id, existing_user['id']))
+            if existing_user:
+                # Check if already in organization
+                cur.execute("""
+                    SELECT id FROM organization_members
+                    WHERE organization_id = %s AND user_id = %s
+                """, (organization_id, existing_user['id']))
 
-            if cur.fetchone():
+                if cur.fetchone():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="User is already a member of this organization"
+                    )
+
+                # Add existing user to organization
+                cur.execute("""
+                    INSERT INTO organization_members (organization_id, user_id, role, is_active, joined_at, invited_by)
+                    VALUES (%s, %s, %s, true, NOW(), %s)
+                """, (organization_id, existing_user['id'], request_data.role, user_id))
+
+                # Update organization user count
+                cur.execute("""
+                    UPDATE organizations
+                    SET current_user_count = current_user_count + 1
+                    WHERE id = %s
+                """, (organization_id,))
+
+                conn.commit()
+
+                logger.info(f"Added existing user {request_data.email} to organization {organization_id}")
+
+                return {
+                    "success": True,
+                    "message": f"{existing_user['name']} has been added to your organization",
+                    "user_id": str(existing_user['id'])
+                }
+
+            else:
+                # For new users, we would typically:
+                # 1. Create a pending invitation record
+                # 2. Send an invitation email
+                # 3. User signs up and is automatically added to organization
+
+                # For now, return error indicating user doesn't exist
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="User is already a member of this organization"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"No user found with email {request_data.email}. They must create an account first."
                 )
 
-            # Add existing user to organization
-            cur.execute("""
-                INSERT INTO organization_members (organization_id, user_id, role, is_active, joined_at, invited_by)
-                VALUES (%s, %s, %s, true, NOW(), %s)
-            """, (organization_id, existing_user['id'], request_data.role, user_id))
-
-            # Update organization user count
-            cur.execute("""
-                UPDATE organizations
-                SET current_user_count = current_user_count + 1
-                WHERE id = %s
-            """, (organization_id,))
-
-            conn.commit()
-
-            logger.info(f"Added existing user {request_data.email} to organization {organization_id}")
-
-            return {
-                "success": True,
-                "message": f"{existing_user['name']} has been added to your organization",
-                "user_id": str(existing_user['id'])
-            }
-
-        else:
-            # For new users, we would typically:
-            # 1. Create a pending invitation record
-            # 2. Send an invitation email
-            # 3. User signs up and is automatically added to organization
-
-            # For now, return error indicating user doesn't exist
+        except HTTPException:
+            raise
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Invite member error: {e}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No user found with email {request_data.email}. They must create an account first."
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to invite member"
             )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Invite member error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to invite member"
-        )
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -310,78 +310,78 @@ async def change_member_role(request_data: ChangeRoleRequest, request: Request):
     org_info = get_user_organization(user_id)
 
     if not org_info:
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No organization found for user"
-        )
+            )
 
     organization_id = org_info['organization_id']
 
     # Check permission (must be admin or owner)
     if not check_permission(user_id, organization_id, 'admin'):
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins and owners can change roles"
-        )
+            )
 
     # Validate role
     valid_roles = ['viewer', 'member', 'admin']
     if request_data.role not in valid_roles:
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}"
-        )
+            )
 
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Check target member exists and is not owner
-        cur.execute("""
-            SELECT role FROM organization_members
-            WHERE organization_id = %s AND user_id = %s
-        """, (organization_id, request_data.user_id))
+            # Check target member exists and is not owner
+            cur.execute("""
+                SELECT role FROM organization_members
+                WHERE organization_id = %s AND user_id = %s
+            """, (organization_id, request_data.user_id))
 
-        target_member = cur.fetchone()
+            target_member = cur.fetchone()
 
-        if not target_member:
+            if not target_member:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Member not found in organization"
+                )
+
+            if target_member['role'] == 'owner':
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot change owner role"
+                )
+
+            # Update role
+            cur.execute("""
+                UPDATE organization_members
+                SET role = %s
+                WHERE organization_id = %s AND user_id = %s
+            """, (request_data.role, organization_id, request_data.user_id))
+
+            conn.commit()
+
+            logger.info(f"Changed role for user {request_data.user_id} to {request_data.role} in org {organization_id}")
+
+            return {
+                "success": True,
+                "message": f"Role updated to {request_data.role}"
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Change role error: {e}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Member not found in organization"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to change role"
             )
-
-        if target_member['role'] == 'owner':
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot change owner role"
-            )
-
-        # Update role
-        cur.execute("""
-            UPDATE organization_members
-            SET role = %s
-            WHERE organization_id = %s AND user_id = %s
-        """, (request_data.role, organization_id, request_data.user_id))
-
-        conn.commit()
-
-        logger.info(f"Changed role for user {request_data.user_id} to {request_data.role} in org {organization_id}")
-
-        return {
-            "success": True,
-            "message": f"Role updated to {request_data.role}"
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Change role error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to change role"
-        )
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -401,82 +401,82 @@ async def remove_member(member_user_id: str, request: Request):
     org_info = get_user_organization(user_id)
 
     if not org_info:
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No organization found for user"
-        )
+            )
 
     organization_id = org_info['organization_id']
 
     # Check permission (must be admin or owner)
     if not check_permission(user_id, organization_id, 'admin'):
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins and owners can remove members"
-        )
+            )
 
     # Cannot remove yourself
     if member_user_id == user_id:
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot remove yourself from the organization"
-        )
+            )
 
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Check target member exists and is not owner
-        cur.execute("""
-            SELECT om.role, u.email
-            FROM organization_members om
-            JOIN users u ON om.user_id = u.id
-            WHERE om.organization_id = %s AND om.user_id = %s
-        """, (organization_id, member_user_id))
+            # Check target member exists and is not owner
+            cur.execute("""
+                SELECT om.role, u.email
+                FROM organization_members om
+                JOIN users u ON om.user_id = u.id
+                WHERE om.organization_id = %s AND om.user_id = %s
+            """, (organization_id, member_user_id))
 
-        target_member = cur.fetchone()
+            target_member = cur.fetchone()
 
-        if not target_member:
+            if not target_member:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Member not found in organization"
+                )
+
+            if target_member['role'] == 'owner':
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot remove organization owner"
+                )
+
+            # Remove member
+            cur.execute("""
+                DELETE FROM organization_members
+                WHERE organization_id = %s AND user_id = %s
+            """, (organization_id, member_user_id))
+
+            # Update organization user count
+            cur.execute("""
+                UPDATE organizations
+                SET current_user_count = current_user_count - 1
+                WHERE id = %s
+            """, (organization_id,))
+
+            conn.commit()
+
+            logger.info(f"Removed user {member_user_id} from organization {organization_id}")
+
+            return {
+                "success": True,
+                "message": f"{target_member['email']} has been removed from the organization"
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Remove member error: {e}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Member not found in organization"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to remove member"
             )
-
-        if target_member['role'] == 'owner':
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot remove organization owner"
-            )
-
-        # Remove member
-        cur.execute("""
-            DELETE FROM organization_members
-            WHERE organization_id = %s AND user_id = %s
-        """, (organization_id, member_user_id))
-
-        # Update organization user count
-        cur.execute("""
-            UPDATE organizations
-            SET current_user_count = current_user_count - 1
-            WHERE id = %s
-        """, (organization_id,))
-
-        conn.commit()
-
-        logger.info(f"Removed user {member_user_id} from organization {organization_id}")
-
-        return {
-            "success": True,
-            "message": f"{target_member['email']} has been removed from the organization"
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Remove member error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to remove member"
-        )
-    finally:
-        cur.close()
+        finally:
+            cur.close()

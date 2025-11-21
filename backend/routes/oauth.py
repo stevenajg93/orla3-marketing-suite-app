@@ -34,53 +34,53 @@ def save_social_account(platform: str, account_data: dict, user_id: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            INSERT INTO social_accounts (
-                user_id, platform, access_token, refresh_token, token_expires_at,
-                account_name, account_id, account_username, account_email,
-                profile_image_url, account_metadata, is_default
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
-            ON CONFLICT (platform, account_id) DO UPDATE SET
-                user_id = EXCLUDED.user_id,
-                access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
-                token_expires_at = EXCLUDED.token_expires_at,
-                account_name = EXCLUDED.account_name,
-                account_username = EXCLUDED.account_username,
-                account_email = EXCLUDED.account_email,
-                profile_image_url = EXCLUDED.profile_image_url,
-                account_metadata = EXCLUDED.account_metadata,
-                is_active = true,
-                updated_at = NOW()
-            RETURNING id
-        """, (
-            user_id,
-            platform,
-            account_data['access_token'],
-            account_data.get('refresh_token'),
-            account_data.get('expires_at'),
-            account_data['account_name'],
-            account_data['account_id'],
-            account_data.get('account_username'),
-            account_data.get('account_email'),
-            account_data.get('profile_image_url'),
-            account_data.get('metadata', {}),
-            account_data.get('is_default', False)
-        ))
+            cur.execute("""
+                INSERT INTO social_accounts (
+                    user_id, platform, access_token, refresh_token, token_expires_at,
+                    account_name, account_id, account_username, account_email,
+                    profile_image_url, account_metadata, is_default
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                ON CONFLICT (platform, account_id) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    token_expires_at = EXCLUDED.token_expires_at,
+                    account_name = EXCLUDED.account_name,
+                    account_username = EXCLUDED.account_username,
+                    account_email = EXCLUDED.account_email,
+                    profile_image_url = EXCLUDED.profile_image_url,
+                    account_metadata = EXCLUDED.account_metadata,
+                    is_active = true,
+                    updated_at = NOW()
+                RETURNING id
+            """, (
+                user_id,
+                platform,
+                account_data['access_token'],
+                account_data.get('refresh_token'),
+                account_data.get('expires_at'),
+                account_data['account_name'],
+                account_data['account_id'],
+                account_data.get('account_username'),
+                account_data.get('account_email'),
+                account_data.get('profile_image_url'),
+                account_data.get('metadata', {}),
+                account_data.get('is_default', False)
+            ))
 
-        account_id = cur.fetchone()[0]
-        conn.commit()
-        logger.info(f"✅ Saved {platform} account: {account_data['account_name']} (ID: {account_id})")
-        return account_id
+            account_id = cur.fetchone()[0]
+            conn.commit()
+            logger.info(f"✅ Saved {platform} account: {account_data['account_name']} (ID: {account_id})")
+            return account_id
 
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Failed to save {platform} account: {e}")
-        raise
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to save {platform} account: {e}")
+            raise
+        finally:
+            cur.close()
 
 # ============================================================================
 # LINKEDIN OAUTH
@@ -230,39 +230,39 @@ async def get_connected_accounts(request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT
-                id, platform, account_name, account_username,
-                account_email, profile_image_url, is_active,
-                is_default, connected_at, last_used_at
-            FROM social_accounts
-            WHERE user_id = %s AND is_active = true
-            ORDER BY platform, is_default DESC, connected_at DESC
-        """, (str(user_id),))
+            cur.execute("""
+                SELECT
+                    id, platform, account_name, account_username,
+                    account_email, profile_image_url, is_active,
+                    is_default, connected_at, last_used_at
+                FROM social_accounts
+                WHERE user_id = %s AND is_active = true
+                ORDER BY platform, is_default DESC, connected_at DESC
+            """, (str(user_id),))
 
-        accounts = []
-        for row in cur.fetchall():
-            accounts.append({
-                'id': str(row[0]),
-                'platform': row[1],
-                'account_name': row[2],
-                'account_username': row[3],
-                'account_email': row[4],
-                'profile_image_url': row[5],
-                'is_active': row[6],
-                'is_default': row[7],
-                'connected_at': row[8].isoformat() if row[8] else None,
-                'last_used_at': row[9].isoformat() if row[9] else None
-            })
+            accounts = []
+            for row in cur.fetchall():
+                accounts.append({
+                    'id': str(row[0]),
+                    'platform': row[1],
+                    'account_name': row[2],
+                    'account_username': row[3],
+                    'account_email': row[4],
+                    'profile_image_url': row[5],
+                    'is_active': row[6],
+                    'is_default': row[7],
+                    'connected_at': row[8].isoformat() if row[8] else None,
+                    'last_used_at': row[9].isoformat() if row[9] else None
+                })
 
-        return {
-            'success': True,
-            'accounts': accounts,
-            'total': len(accounts)
-        }
+            return {
+                'success': True,
+                'accounts': accounts,
+                'total': len(accounts)
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 @router.delete("/auth/accounts/{account_id}")
 async def disconnect_account(account_id: str, request: Request):
@@ -271,27 +271,27 @@ async def disconnect_account(account_id: str, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            UPDATE social_accounts
-            SET is_active = false, updated_at = NOW()
-            WHERE id = %s AND user_id = %s
-            RETURNING platform, account_name
-        """, (account_id, str(user_id)))
+            cur.execute("""
+                UPDATE social_accounts
+                SET is_active = false, updated_at = NOW()
+                WHERE id = %s AND user_id = %s
+                RETURNING platform, account_name
+            """, (account_id, str(user_id)))
 
-        result = cur.fetchone()
-        if not result:
-            raise HTTPException(status_code=404, detail="Account not found")
+            result = cur.fetchone()
+            if not result:
+                raise HTTPException(status_code=404, detail="Account not found")
 
-        conn.commit()
-        logger.info(f"🔌 Disconnected {result[0]} account: {result[1]}")
+            conn.commit()
+            logger.info(f"🔌 Disconnected {result[0]} account: {result[1]}")
 
-        return {
-            'success': True,
-            'message': f'{result[0]} account disconnected successfully'
-        }
+            return {
+                'success': True,
+                'message': f'{result[0]} account disconnected successfully'
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 @router.post("/auth/accounts/{account_id}/set-default")
 async def set_default_account(account_id: str, request: Request):
@@ -300,39 +300,39 @@ async def set_default_account(account_id: str, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Get the account's platform (verify ownership)
-        cur.execute(
-            "SELECT platform FROM social_accounts WHERE id = %s AND user_id = %s",
-            (account_id, str(user_id))
-        )
-        result = cur.fetchone()
+            # Get the account's platform (verify ownership)
+            cur.execute(
+                "SELECT platform FROM social_accounts WHERE id = %s AND user_id = %s",
+                (account_id, str(user_id))
+            )
+            result = cur.fetchone()
 
-        if not result:
-            raise HTTPException(status_code=404, detail="Account not found")
+            if not result:
+                raise HTTPException(status_code=404, detail="Account not found")
 
-        platform = result[0]
+            platform = result[0]
 
-        # Unset all defaults for this platform and user
-        cur.execute("""
-            UPDATE social_accounts
-            SET is_default = false
-            WHERE platform = %s AND user_id = %s
-        """, (platform, str(user_id)))
+            # Unset all defaults for this platform and user
+            cur.execute("""
+                UPDATE social_accounts
+                SET is_default = false
+                WHERE platform = %s AND user_id = %s
+            """, (platform, str(user_id)))
 
-        # Set this account as default
-        cur.execute("""
-            UPDATE social_accounts
-            SET is_default = true, updated_at = NOW()
-            WHERE id = %s AND user_id = %s
-        """, (account_id, str(user_id)))
+            # Set this account as default
+            cur.execute("""
+                UPDATE social_accounts
+                SET is_default = true, updated_at = NOW()
+                WHERE id = %s AND user_id = %s
+            """, (account_id, str(user_id)))
 
-        conn.commit()
-        logger.info(f"⭐ Set default {platform} account: {account_id}")
+            conn.commit()
+            logger.info(f"⭐ Set default {platform} account: {account_id}")
 
-        return {
-            'success': True,
-            'message': f'Default {platform} account updated'
-        }
+            return {
+                'success': True,
+                'message': f'Default {platform} account updated'
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()

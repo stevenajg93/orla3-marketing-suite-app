@@ -103,33 +103,33 @@ async def connect_google_drive(request: Request, token: str = None):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Store state with user_id (expires in 10 minutes)
-        cur.execute("""
-            INSERT INTO oauth_states (state, user_id, provider, expires_at)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
-        """, (state, user_id, 'google_drive', datetime.utcnow() + timedelta(minutes=10)))
-        conn.commit()
+            # Store state with user_id (expires in 10 minutes)
+            cur.execute("""
+                INSERT INTO oauth_states (state, user_id, provider, expires_at)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
+            """, (state, user_id, 'google_drive', datetime.utcnow() + timedelta(minutes=10)))
+            conn.commit()
 
-        # Build OAuth URL
-        params = {
-            'client_id': GOOGLE_DRIVE_CONFIG['client_id'],
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/google_drive",
-            'response_type': 'code',
-            'scope': ' '.join(GOOGLE_DRIVE_CONFIG['scopes']),
-            'access_type': 'offline',
-            'prompt': 'consent',
-            'state': state
-        }
+            # Build OAuth URL
+            params = {
+                'client_id': GOOGLE_DRIVE_CONFIG['client_id'],
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/google_drive",
+                'response_type': 'code',
+                'scope': ' '.join(GOOGLE_DRIVE_CONFIG['scopes']),
+                'access_type': 'offline',
+                'prompt': 'consent',
+                'state': state
+            }
 
-        auth_url = f"{GOOGLE_DRIVE_CONFIG['auth_url']}?{urlencode(params)}"
+            auth_url = f"{GOOGLE_DRIVE_CONFIG['auth_url']}?{urlencode(params)}"
 
-        logger.info(f"🔐 Google Drive OAuth initiated for user {user_id}")
+            logger.info(f"🔐 Google Drive OAuth initiated for user {user_id}")
 
-        return RedirectResponse(url=auth_url)
+            return RedirectResponse(url=auth_url)
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/cloud-storage/callback/google_drive")
@@ -146,84 +146,84 @@ async def google_drive_callback(code: str, state: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Verify state token
-        cur.execute("""
-            SELECT user_id FROM oauth_states
-            WHERE state = %s AND provider = 'google_drive' AND expires_at > NOW()
-        """, (state,))
+            # Verify state token
+            cur.execute("""
+                SELECT user_id FROM oauth_states
+                WHERE state = %s AND provider = 'google_drive' AND expires_at > NOW()
+            """, (state,))
 
-        state_record = cur.fetchone()
-        if not state_record:
-            raise HTTPException(status_code=400, detail="Invalid or expired state token")
+            state_record = cur.fetchone()
+            if not state_record:
+                raise HTTPException(status_code=400, detail="Invalid or expired state token")
 
-        user_id = state_record['user_id']
+            user_id = state_record['user_id']
 
-        # Exchange code for tokens
-        data = {
-            'client_id': GOOGLE_DRIVE_CONFIG['client_id'],
-            'client_secret': GOOGLE_DRIVE_CONFIG['client_secret'],
-            'code': code,
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/google_drive",
-            'grant_type': 'authorization_code'
-        }
+            # Exchange code for tokens
+            data = {
+                'client_id': GOOGLE_DRIVE_CONFIG['client_id'],
+                'client_secret': GOOGLE_DRIVE_CONFIG['client_secret'],
+                'code': code,
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/google_drive",
+                'grant_type': 'authorization_code'
+            }
 
-        encoded_data = urllib.parse.urlencode(data).encode('utf-8')
-        req = urllib.request.Request(GOOGLE_DRIVE_CONFIG['token_url'], data=encoded_data, method='POST')
+            encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+            req = urllib.request.Request(GOOGLE_DRIVE_CONFIG['token_url'], data=encoded_data, method='POST')
 
-        with urllib.request.urlopen(req) as response:
-            tokens = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(req) as response:
+                tokens = json.loads(response.read().decode('utf-8'))
 
-        # Get user email from Google
-        user_info_url = f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={tokens['access_token']}"
-        req = urllib.request.Request(user_info_url)
-        with urllib.request.urlopen(req) as response:
-            user_info = json.loads(response.read().decode('utf-8'))
+            # Get user email from Google
+            user_info_url = f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={tokens['access_token']}"
+            req = urllib.request.Request(user_info_url)
+            with urllib.request.urlopen(req) as response:
+                user_info = json.loads(response.read().decode('utf-8'))
 
-        provider_email = user_info.get('email')
+            provider_email = user_info.get('email')
 
-        # Get user's organization_id
-        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
-        org_record = cur.fetchone()
-        organization_id = org_record['current_organization_id'] if org_record else None
+            # Get user's organization_id
+            cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+            org_record = cur.fetchone()
+            organization_id = org_record['current_organization_id'] if org_record else None
 
-        # Store tokens in database
-        from datetime import timezone
-        expires_at = datetime.now(timezone.utc) + timedelta(seconds=tokens.get('expires_in', 3600))
+            # Store tokens in database
+            from datetime import timezone
+            expires_at = datetime.now(timezone.utc) + timedelta(seconds=tokens.get('expires_in', 3600))
 
-        cur.execute("""
-            INSERT INTO user_cloud_storage_tokens (
-                user_id, organization_id, provider, provider_email, access_token, refresh_token,
-                token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), true)
-            ON CONFLICT (user_id, provider) DO UPDATE SET
-                access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
-                token_expires_at = EXCLUDED.token_expires_at,
-                provider_email = EXCLUDED.provider_email,
-                organization_id = EXCLUDED.organization_id,
-                is_active = true,
-                updated_at = NOW()
-        """, (
-            user_id, organization_id, 'google_drive', provider_email,
-            tokens['access_token'], tokens['refresh_token'], expires_at
-        ))
+            cur.execute("""
+                INSERT INTO user_cloud_storage_tokens (
+                    user_id, organization_id, provider, provider_email, access_token, refresh_token,
+                    token_expires_at, connected_at, is_active
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), true)
+                ON CONFLICT (user_id, provider) DO UPDATE SET
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    token_expires_at = EXCLUDED.token_expires_at,
+                    provider_email = EXCLUDED.provider_email,
+                    organization_id = EXCLUDED.organization_id,
+                    is_active = true,
+                    updated_at = NOW()
+            """, (
+                user_id, organization_id, 'google_drive', provider_email,
+                tokens['access_token'], tokens['refresh_token'], expires_at
+            ))
 
-        # Delete used state token
-        cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
+            # Delete used state token
+            cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"✅ Google Drive connected for user {user_id}: {provider_email}")
+            logger.info(f"✅ Google Drive connected for user {user_id}: {provider_email}")
 
-        # Redirect back to frontend settings page
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=google_drive")
+            # Redirect back to frontend settings page
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=google_drive")
 
-    except Exception as e:
-        logger.error(f"❌ Google Drive OAuth error: {str(e)}")
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
+        except Exception as e:
+            logger.error(f"❌ Google Drive OAuth error: {str(e)}")
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -252,30 +252,30 @@ async def connect_onedrive(request: Request, token: str = None):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            INSERT INTO oauth_states (state, user_id, provider, expires_at)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
-        """, (state, user_id, 'onedrive', datetime.utcnow() + timedelta(minutes=10)))
-        conn.commit()
+            cur.execute("""
+                INSERT INTO oauth_states (state, user_id, provider, expires_at)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
+            """, (state, user_id, 'onedrive', datetime.utcnow() + timedelta(minutes=10)))
+            conn.commit()
 
-        params = {
-            'client_id': ONEDRIVE_CONFIG['client_id'],
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/onedrive",
-            'response_type': 'code',
-            'scope': ' '.join(ONEDRIVE_CONFIG['scopes']),
-            'response_mode': 'query',
-            'state': state
-        }
+            params = {
+                'client_id': ONEDRIVE_CONFIG['client_id'],
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/onedrive",
+                'response_type': 'code',
+                'scope': ' '.join(ONEDRIVE_CONFIG['scopes']),
+                'response_mode': 'query',
+                'state': state
+            }
 
-        auth_url = f"{ONEDRIVE_CONFIG['auth_url']}?{urlencode(params)}"
+            auth_url = f"{ONEDRIVE_CONFIG['auth_url']}?{urlencode(params)}"
 
-        logger.info(f"🔐 OneDrive OAuth initiated for user {user_id}")
+            logger.info(f"🔐 OneDrive OAuth initiated for user {user_id}")
 
-        return RedirectResponse(url=auth_url)
+            return RedirectResponse(url=auth_url)
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/cloud-storage/callback/onedrive")
@@ -288,71 +288,71 @@ async def onedrive_callback(code: str, state: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Verify state
-        cur.execute("""
-            SELECT user_id FROM oauth_states
-            WHERE state = %s AND provider = 'onedrive' AND expires_at > NOW()
-        """, (state,))
+            # Verify state
+            cur.execute("""
+                SELECT user_id FROM oauth_states
+                WHERE state = %s AND provider = 'onedrive' AND expires_at > NOW()
+            """, (state,))
 
-        state_record = cur.fetchone()
-        if not state_record:
-            raise HTTPException(status_code=400, detail="Invalid or expired state token")
+            state_record = cur.fetchone()
+            if not state_record:
+                raise HTTPException(status_code=400, detail="Invalid or expired state token")
 
-        user_id = state_record['user_id']
+            user_id = state_record['user_id']
 
-        # Exchange code for tokens
-        data = {
-            'client_id': ONEDRIVE_CONFIG['client_id'],
-            'client_secret': ONEDRIVE_CONFIG['client_secret'],
-            'code': code,
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/onedrive",
-            'grant_type': 'authorization_code'
-        }
+            # Exchange code for tokens
+            data = {
+                'client_id': ONEDRIVE_CONFIG['client_id'],
+                'client_secret': ONEDRIVE_CONFIG['client_secret'],
+                'code': code,
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/onedrive",
+                'grant_type': 'authorization_code'
+            }
 
-        encoded_data = urllib.parse.urlencode(data).encode('utf-8')
-        req = urllib.request.Request(ONEDRIVE_CONFIG['token_url'], data=encoded_data, method='POST')
+            encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+            req = urllib.request.Request(ONEDRIVE_CONFIG['token_url'], data=encoded_data, method='POST')
 
-        with urllib.request.urlopen(req) as response:
-            tokens = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(req) as response:
+                tokens = json.loads(response.read().decode('utf-8'))
 
-        # Get user's organization_id
-        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
-        org_record = cur.fetchone()
-        organization_id = org_record['current_organization_id'] if org_record else None
+            # Get user's organization_id
+            cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+            org_record = cur.fetchone()
+            organization_id = org_record['current_organization_id'] if org_record else None
 
-        expires_at = datetime.utcnow() + timedelta(seconds=tokens.get('expires_in', 3600))
+            expires_at = datetime.utcnow() + timedelta(seconds=tokens.get('expires_in', 3600))
 
-        # Store tokens
-        cur.execute("""
-            INSERT INTO user_cloud_storage_tokens (
-                user_id, organization_id, provider, access_token, refresh_token,
-                token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
-            ON CONFLICT (user_id, provider) DO UPDATE SET
-                access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
-                token_expires_at = EXCLUDED.token_expires_at,
-                organization_id = EXCLUDED.organization_id,
-                is_active = true,
-                updated_at = NOW()
-        """, (
-            user_id, organization_id, 'onedrive',
-            tokens['access_token'], tokens['refresh_token'], expires_at
-        ))
+            # Store tokens
+            cur.execute("""
+                INSERT INTO user_cloud_storage_tokens (
+                    user_id, organization_id, provider, access_token, refresh_token,
+                    token_expires_at, connected_at, is_active
+                ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
+                ON CONFLICT (user_id, provider) DO UPDATE SET
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    token_expires_at = EXCLUDED.token_expires_at,
+                    organization_id = EXCLUDED.organization_id,
+                    is_active = true,
+                    updated_at = NOW()
+            """, (
+                user_id, organization_id, 'onedrive',
+                tokens['access_token'], tokens['refresh_token'], expires_at
+            ))
 
-        cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
-        conn.commit()
+            cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
+            conn.commit()
 
-        logger.info(f"✅ OneDrive connected for user {user_id}")
+            logger.info(f"✅ OneDrive connected for user {user_id}")
 
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=onedrive")
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=onedrive")
 
-    except Exception as e:
-        logger.error(f"❌ OneDrive OAuth error: {str(e)}")
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
+        except Exception as e:
+            logger.error(f"❌ OneDrive OAuth error: {str(e)}")
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -381,29 +381,29 @@ async def connect_dropbox(request: Request, token: str = None):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            INSERT INTO oauth_states (state, user_id, provider, expires_at)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
-        """, (state, user_id, 'dropbox', datetime.utcnow() + timedelta(minutes=10)))
-        conn.commit()
+            cur.execute("""
+                INSERT INTO oauth_states (state, user_id, provider, expires_at)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (state) DO UPDATE SET user_id = EXCLUDED.user_id
+            """, (state, user_id, 'dropbox', datetime.utcnow() + timedelta(minutes=10)))
+            conn.commit()
 
-        params = {
-            'client_id': DROPBOX_CONFIG['app_key'],
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/dropbox",
-            'response_type': 'code',
-            'token_access_type': 'offline',
-            'state': state
-        }
+            params = {
+                'client_id': DROPBOX_CONFIG['app_key'],
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/dropbox",
+                'response_type': 'code',
+                'token_access_type': 'offline',
+                'state': state
+            }
 
-        auth_url = f"{DROPBOX_CONFIG['auth_url']}?{urlencode(params)}"
+            auth_url = f"{DROPBOX_CONFIG['auth_url']}?{urlencode(params)}"
 
-        logger.info(f"🔐 Dropbox OAuth initiated for user {user_id}")
+            logger.info(f"🔐 Dropbox OAuth initiated for user {user_id}")
 
-        return RedirectResponse(url=auth_url)
+            return RedirectResponse(url=auth_url)
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/cloud-storage/callback/dropbox")
@@ -416,72 +416,72 @@ async def dropbox_callback(code: str, state: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Verify state
-        cur.execute("""
-            SELECT user_id FROM oauth_states
-            WHERE state = %s AND provider = 'dropbox' AND expires_at > NOW()
-        """, (state,))
+            # Verify state
+            cur.execute("""
+                SELECT user_id FROM oauth_states
+                WHERE state = %s AND provider = 'dropbox' AND expires_at > NOW()
+            """, (state,))
 
-        state_record = cur.fetchone()
-        if not state_record:
-            raise HTTPException(status_code=400, detail="Invalid or expired state token")
+            state_record = cur.fetchone()
+            if not state_record:
+                raise HTTPException(status_code=400, detail="Invalid or expired state token")
 
-        user_id = state_record['user_id']
+            user_id = state_record['user_id']
 
-        # Exchange code for tokens
-        data = {
-            'code': code,
-            'grant_type': 'authorization_code',
-            'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/dropbox",
-            'client_id': DROPBOX_CONFIG['app_key'],
-            'client_secret': DROPBOX_CONFIG['app_secret']
-        }
+            # Exchange code for tokens
+            data = {
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': f"{os.getenv('BACKEND_URL')}/cloud-storage/callback/dropbox",
+                'client_id': DROPBOX_CONFIG['app_key'],
+                'client_secret': DROPBOX_CONFIG['app_secret']
+            }
 
-        encoded_data = urllib.parse.urlencode(data).encode('utf-8')
-        req = urllib.request.Request(DROPBOX_CONFIG['token_url'], data=encoded_data, method='POST')
+            encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+            req = urllib.request.Request(DROPBOX_CONFIG['token_url'], data=encoded_data, method='POST')
 
-        with urllib.request.urlopen(req) as response:
-            tokens = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(req) as response:
+                tokens = json.loads(response.read().decode('utf-8'))
 
-        # Get user's organization_id
-        cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
-        org_record = cur.fetchone()
-        organization_id = org_record['current_organization_id'] if org_record else None
+            # Get user's organization_id
+            cur.execute("SELECT current_organization_id FROM users WHERE id = %s", (user_id,))
+            org_record = cur.fetchone()
+            organization_id = org_record['current_organization_id'] if org_record else None
 
-        # Dropbox tokens don't have expiry, set to 4 hours (typical)
-        expires_at = datetime.utcnow() + timedelta(hours=4)
+            # Dropbox tokens don't have expiry, set to 4 hours (typical)
+            expires_at = datetime.utcnow() + timedelta(hours=4)
 
-        # Store tokens
-        cur.execute("""
-            INSERT INTO user_cloud_storage_tokens (
-                user_id, organization_id, provider, access_token, refresh_token,
-                token_expires_at, connected_at, is_active
-            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
-            ON CONFLICT (user_id, provider) DO UPDATE SET
-                access_token = EXCLUDED.access_token,
-                refresh_token = EXCLUDED.refresh_token,
-                token_expires_at = EXCLUDED.token_expires_at,
-                organization_id = EXCLUDED.organization_id,
-                is_active = true,
-                updated_at = NOW()
-        """, (
-            user_id, organization_id, 'dropbox',
-            tokens['access_token'], tokens.get('refresh_token', ''), expires_at
-        ))
+            # Store tokens
+            cur.execute("""
+                INSERT INTO user_cloud_storage_tokens (
+                    user_id, organization_id, provider, access_token, refresh_token,
+                    token_expires_at, connected_at, is_active
+                ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), true)
+                ON CONFLICT (user_id, provider) DO UPDATE SET
+                    access_token = EXCLUDED.access_token,
+                    refresh_token = EXCLUDED.refresh_token,
+                    token_expires_at = EXCLUDED.token_expires_at,
+                    organization_id = EXCLUDED.organization_id,
+                    is_active = true,
+                    updated_at = NOW()
+            """, (
+                user_id, organization_id, 'dropbox',
+                tokens['access_token'], tokens.get('refresh_token', ''), expires_at
+            ))
 
-        cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
-        conn.commit()
+            cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
+            conn.commit()
 
-        logger.info(f"✅ Dropbox connected for user {user_id}")
+            logger.info(f"✅ Dropbox connected for user {user_id}")
 
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=dropbox")
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?cloud_connected=dropbox")
 
-    except Exception as e:
-        logger.error(f"❌ Dropbox OAuth error: {str(e)}")
-        return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
+        except Exception as e:
+            logger.error(f"❌ Dropbox OAuth error: {str(e)}")
+            return RedirectResponse(url=f"{FRONTEND_URL}/dashboard/settings?error=oauth_failed")
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -503,19 +503,19 @@ async def disconnect_cloud_storage(provider: str, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            DELETE FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = %s
-        """, (user_id, provider))
+            cur.execute("""
+                DELETE FROM user_cloud_storage_tokens
+                WHERE user_id = %s AND provider = %s
+            """, (user_id, provider))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"🔌 {provider} disconnected for user {user_id}")
+            logger.info(f"🔌 {provider} disconnected for user {user_id}")
 
-        return {"success": True, "message": f"{provider} disconnected"}
+            return {"success": True, "message": f"{provider} disconnected"}
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/cloud-storage/connections")
@@ -530,23 +530,23 @@ async def list_cloud_connections(request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT provider, provider_email, connected_at, is_active,
-                   token_expires_at, last_refreshed_at
-            FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND is_active = true
-            ORDER BY connected_at DESC
-        """, (user_id,))
+            cur.execute("""
+                SELECT provider, provider_email, connected_at, is_active,
+                       token_expires_at, last_refreshed_at
+                FROM user_cloud_storage_tokens
+                WHERE user_id = %s AND is_active = true
+                ORDER BY connected_at DESC
+            """, (user_id,))
 
-        connections = cur.fetchall()
+            connections = cur.fetchall()
 
-        return {
-            "success": True,
-            "connections": [dict(conn) for conn in connections]
-        }
+            return {
+                "success": True,
+                "connections": [dict(conn) for conn in connections]
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.delete("/cloud-storage/disconnect/{provider}")
@@ -566,56 +566,56 @@ async def disconnect_cloud_storage(request: Request, provider: str):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Get current tokens for revocation
-        cur.execute("""
-            SELECT access_token, refresh_token
-            FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = %s AND is_active = true
-            LIMIT 1
-        """, (user_id, provider))
+            # Get current tokens for revocation
+            cur.execute("""
+                SELECT access_token, refresh_token
+                FROM user_cloud_storage_tokens
+                WHERE user_id = %s AND provider = %s AND is_active = true
+                LIMIT 1
+            """, (user_id, provider))
 
-        result = cur.fetchone()
+            result = cur.fetchone()
 
-        if not result:
-            raise HTTPException(status_code=404, detail=f"{provider} not connected")
+            if not result:
+                raise HTTPException(status_code=404, detail=f"{provider} not connected")
 
-        access_token = result['access_token']
-        refresh_token = result.get('refresh_token')
+            access_token = result['access_token']
+            refresh_token = result.get('refresh_token')
 
-        # Revoke tokens with provider
-        revocation_success = await revoke_oauth_token(provider, access_token, refresh_token)
+            # Revoke tokens with provider
+            revocation_success = await revoke_oauth_token(provider, access_token, refresh_token)
 
-        if revocation_success:
-            logger.info(f"✅ OAuth tokens revoked for {provider} (user {user_id})")
-        else:
-            logger.warning(f"⚠️ Token revocation failed for {provider}, but continuing disconnect")
+            if revocation_success:
+                logger.info(f"✅ OAuth tokens revoked for {provider} (user {user_id})")
+            else:
+                logger.warning(f"⚠️ Token revocation failed for {provider}, but continuing disconnect")
 
-        # Mark as inactive in database (even if revocation failed - user can retry)
-        cur.execute("""
-            UPDATE user_cloud_storage_tokens
-            SET is_active = false, updated_at = NOW()
-            WHERE user_id = %s AND provider = %s
-        """, (user_id, provider))
+            # Mark as inactive in database (even if revocation failed - user can retry)
+            cur.execute("""
+                UPDATE user_cloud_storage_tokens
+                SET is_active = false, updated_at = NOW()
+                WHERE user_id = %s AND provider = %s
+            """, (user_id, provider))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"🔌 {provider} disconnected for user {user_id}")
+            logger.info(f"🔌 {provider} disconnected for user {user_id}")
 
-        return {
-            "success": True,
-            "message": f"Disconnected from {provider}",
-            "provider": provider,
-            "token_revoked": revocation_success
-        }
+            return {
+                "success": True,
+                "message": f"Disconnected from {provider}",
+                "provider": provider,
+                "token_revoked": revocation_success
+            }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error disconnecting {provider}: {e}")
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error disconnecting {provider}: {e}")
+            conn.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            cur.close()
 
 
 async def revoke_oauth_token(provider: str, access_token: str, refresh_token: str = None) -> bool:

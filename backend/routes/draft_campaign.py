@@ -43,29 +43,29 @@ def create_draft_campaigns_table():
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS draft_campaigns (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                user_id UUID NOT NULL,
-                campaign_type VARCHAR(100) NOT NULL,
-                data JSONB NOT NULL,
-                expires_at TIMESTAMPTZ NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-                consumed BOOLEAN DEFAULT FALSE,
-                consumed_at TIMESTAMPTZ
-            );
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS draft_campaigns (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL,
+                    campaign_type VARCHAR(100) NOT NULL,
+                    data JSONB NOT NULL,
+                    expires_at TIMESTAMPTZ NOT NULL,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    consumed BOOLEAN DEFAULT FALSE,
+                    consumed_at TIMESTAMPTZ
+                );
 
-            CREATE INDEX IF NOT EXISTS idx_draft_campaigns_user_id ON draft_campaigns(user_id);
-            CREATE INDEX IF NOT EXISTS idx_draft_campaigns_expires_at ON draft_campaigns(expires_at);
-            CREATE INDEX IF NOT EXISTS idx_draft_campaigns_consumed ON draft_campaigns(consumed);
-        """)
-        conn.commit()
-        logger.info("Draft campaigns table initialized")
-    except Exception as e:
-        logger.error(f"Error creating draft_campaigns table: {e}")
-        conn.rollback()
-    finally:
-        cur.close()
+                CREATE INDEX IF NOT EXISTS idx_draft_campaigns_user_id ON draft_campaigns(user_id);
+                CREATE INDEX IF NOT EXISTS idx_draft_campaigns_expires_at ON draft_campaigns(expires_at);
+                CREATE INDEX IF NOT EXISTS idx_draft_campaigns_consumed ON draft_campaigns(consumed);
+            """)
+            conn.commit()
+            logger.info("Draft campaigns table initialized")
+        except Exception as e:
+            logger.error(f"Error creating draft_campaigns table: {e}")
+            conn.rollback()
+        finally:
+            cur.close()
 
 
 # Initialize table on module load

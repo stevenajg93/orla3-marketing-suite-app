@@ -175,29 +175,29 @@ def store_oauth_state(user_id: str, platform: str, state: str, code_verifier: Op
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Store state temporarily (expires in 10 minutes)
-        # Note: table uses 'provider' column name (from cloud storage OAuth)
-        # code_verifier stored in metadata column as JSON
-        metadata = None
-        if code_verifier:
-            import json
-            metadata = json.dumps({"code_verifier": code_verifier})
+            # Store state temporarily (expires in 10 minutes)
+            # Note: table uses 'provider' column name (from cloud storage OAuth)
+            # code_verifier stored in metadata column as JSON
+            metadata = None
+            if code_verifier:
+                import json
+                metadata = json.dumps({"code_verifier": code_verifier})
 
-        cur.execute("""
-            INSERT INTO oauth_states (user_id, provider, state, expires_at, metadata)
-            VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes', %s)
-            ON CONFLICT (state)
-            DO UPDATE SET expires_at = EXCLUDED.expires_at, metadata = EXCLUDED.metadata
-        """, (user_id, platform, state, metadata))
+            cur.execute("""
+                INSERT INTO oauth_states (user_id, provider, state, expires_at, metadata)
+                VALUES (%s, %s, %s, NOW() + INTERVAL '10 minutes', %s)
+                ON CONFLICT (state)
+                DO UPDATE SET expires_at = EXCLUDED.expires_at, metadata = EXCLUDED.metadata
+            """, (user_id, platform, state, metadata))
 
-        conn.commit()
-        logger.info(f"Stored OAuth state for user {user_id}, platform {platform}")
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Failed to store OAuth state: {e}")
-        raise
-    finally:
-        cur.close()
+            conn.commit()
+            logger.info(f"Stored OAuth state for user {user_id}, platform {platform}")
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to store OAuth state: {e}")
+            raise
+        finally:
+            cur.close()
 
 
 def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
@@ -205,39 +205,39 @@ def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Note: table uses 'provider' column name (from cloud storage OAuth)
-        cur.execute("""
-            SELECT user_id, provider, metadata
-            FROM oauth_states
-            WHERE state = %s AND expires_at > NOW()
-        """, (state,))
+            # Note: table uses 'provider' column name (from cloud storage OAuth)
+            cur.execute("""
+                SELECT user_id, provider, metadata
+                FROM oauth_states
+                WHERE state = %s AND expires_at > NOW()
+            """, (state,))
 
-        result = cur.fetchone()
+            result = cur.fetchone()
 
-        if not result:
-            raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
+            if not result:
+                raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
 
-        user_id = result['user_id']
-        provider = result['provider']
-        metadata = result.get('metadata')
+            user_id = result['user_id']
+            provider = result['provider']
+            metadata = result.get('metadata')
 
-        # Extract code_verifier from metadata if present
-        code_verifier = None
-        if metadata:
-            import json
-            try:
-                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
-                code_verifier = meta_dict.get("code_verifier")
-            except:
-                pass
+            # Extract code_verifier from metadata if present
+            code_verifier = None
+            if metadata:
+                import json
+                try:
+                    meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                    code_verifier = meta_dict.get("code_verifier")
+                except:
+                    pass
 
-        # Delete used state
-        cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
-        conn.commit()
+            # Delete used state
+            cur.execute("DELETE FROM oauth_states WHERE state = %s", (state,))
+            conn.commit()
 
-        return user_id, provider, code_verifier
-    finally:
-        cur.close()
+            return user_id, provider, code_verifier
+        finally:
+            cur.close()
 
 
 @router.get("/get-auth-url/{platform}")
@@ -645,27 +645,27 @@ async def disconnect_platform(platform: str, request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            UPDATE connected_services
-            SET is_active = false, updated_at = NOW()
-            WHERE user_id = %s AND service_type = %s
-        """, (user_id, platform))
+            cur.execute("""
+                UPDATE connected_services
+                SET is_active = false, updated_at = NOW()
+                WHERE user_id = %s AND service_type = %s
+            """, (user_id, platform))
 
-        conn.commit()
+            conn.commit()
 
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"{platform} connection not found")
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail=f"{platform} connection not found")
 
-        logger.info(f"Disconnected {platform} for user {user_id}")
+            logger.info(f"Disconnected {platform} for user {user_id}")
 
-        return {"success": True, "message": f"{platform.title()} disconnected successfully"}
+            return {"success": True, "message": f"{platform.title()} disconnected successfully"}
 
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Failed to disconnect {platform}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to disconnect platform")
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to disconnect {platform}: {e}")
+            raise HTTPException(status_code=500, detail="Failed to disconnect platform")
+        finally:
+            cur.close()
 
 
 @router.get("/status")
@@ -678,33 +678,33 @@ async def get_connection_status(request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT service_type, service_id, is_active, token_expires_at, updated_at
-            FROM connected_services
-            WHERE user_id = %s AND is_active = true
-        """, (user_id,))
+            cur.execute("""
+                SELECT service_type, service_id, is_active, token_expires_at, updated_at
+                FROM connected_services
+                WHERE user_id = %s AND is_active = true
+            """, (user_id,))
 
-        connections = cur.fetchall()
+            connections = cur.fetchall()
 
-        # Build status dict
-        status = {}
-        for conn_data in connections:
-            status[conn_data['service_type']] = {
-                "connected": True,
-                "service_id": conn_data['service_id'],
-                "expires_at": conn_data['token_expires_at'].isoformat() if conn_data['token_expires_at'] else None,
-                "updated_at": conn_data['updated_at'].isoformat()
-            }
+            # Build status dict
+            status = {}
+            for conn_data in connections:
+                status[conn_data['service_type']] = {
+                    "connected": True,
+                    "service_id": conn_data['service_id'],
+                    "expires_at": conn_data['token_expires_at'].isoformat() if conn_data['token_expires_at'] else None,
+                    "updated_at": conn_data['updated_at'].isoformat()
+                }
 
-        # Add disconnected platforms
-        for platform in PLATFORM_CONFIG.keys():
-            if platform not in status:
-                status[platform] = {"connected": False}
+            # Add disconnected platforms
+            for platform in PLATFORM_CONFIG.keys():
+                if platform not in status:
+                    status[platform] = {"connected": False}
 
-        return {"success": True, "connections": status}
+            return {"success": True, "connections": status}
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.get("/facebook/pages")
@@ -719,79 +719,79 @@ async def get_facebook_pages(request: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT access_token, service_metadata
-            FROM connected_services
-            WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
-        """, (user_id,))
+            cur.execute("""
+                SELECT access_token, service_metadata
+                FROM connected_services
+                WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
+            """, (user_id,))
 
-        result = cur.fetchone()
+            result = cur.fetchone()
 
-        if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="No active Facebook connection. Please connect your Facebook account first."
-            )
-
-        access_token = result['access_token']
-        metadata = result.get('service_metadata')
-
-        # Get selected page from metadata
-        import json
-        selected_page_id = None
-        if metadata:
-            try:
-                meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
-                selected_page_id = meta_dict.get('selected_page_id')
-            except:
-                pass
-
-        # Fetch user's Facebook Pages
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://graph.facebook.com/v18.0/me/accounts",
-                params={"access_token": access_token}
-            )
-
-            if response.status_code != 200:
-                logger.error(f"Failed to fetch Facebook pages: {response.text}")
+            if not result:
                 raise HTTPException(
-                    status_code=500,
-                    detail="Failed to fetch Facebook pages from Meta"
+                    status_code=404,
+                    detail="No active Facebook connection. Please connect your Facebook account first."
                 )
 
-            pages_data = response.json()
-            pages = pages_data.get("data", [])
+            access_token = result['access_token']
+            metadata = result.get('service_metadata')
 
-            # Format pages for frontend
-            formatted_pages = []
-            for page in pages:
-                page_id = page.get("id")
-                formatted_pages.append({
-                    "id": page_id,
-                    "name": page.get("name"),
-                    "access_token": page.get("access_token"),  # Page-specific token
-                    "category": page.get("category"),
-                    "tasks": page.get("tasks", []),  # Permissions for this page
-                    "selected": page_id == selected_page_id  # Mark selected page
-                })
+            # Get selected page from metadata
+            import json
+            selected_page_id = None
+            if metadata:
+                try:
+                    meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
+                    selected_page_id = meta_dict.get('selected_page_id')
+                except:
+                    pass
 
-            logger.info(f"Fetched {len(formatted_pages)} Facebook pages for user {user_id}")
+            # Fetch user's Facebook Pages
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://graph.facebook.com/v18.0/me/accounts",
+                    params={"access_token": access_token}
+                )
 
-            return {
-                "success": True,
-                "pages": formatted_pages,
-                "count": len(formatted_pages),
-                "selected_page_id": selected_page_id
-            }
+                if response.status_code != 200:
+                    logger.error(f"Failed to fetch Facebook pages: {response.text}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to fetch Facebook pages from Meta"
+                    )
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching Facebook pages: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch Facebook pages")
-    finally:
-        cur.close()
+                pages_data = response.json()
+                pages = pages_data.get("data", [])
+
+                # Format pages for frontend
+                formatted_pages = []
+                for page in pages:
+                    page_id = page.get("id")
+                    formatted_pages.append({
+                        "id": page_id,
+                        "name": page.get("name"),
+                        "access_token": page.get("access_token"),  # Page-specific token
+                        "category": page.get("category"),
+                        "tasks": page.get("tasks", []),  # Permissions for this page
+                        "selected": page_id == selected_page_id  # Mark selected page
+                    })
+
+                logger.info(f"Fetched {len(formatted_pages)} Facebook pages for user {user_id}")
+
+                return {
+                    "success": True,
+                    "pages": formatted_pages,
+                    "count": len(formatted_pages),
+                    "selected_page_id": selected_page_id
+                }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching Facebook pages: {e}")
+            raise HTTPException(status_code=500, detail="Failed to fetch Facebook pages")
+        finally:
+            cur.close()
 
 
 @router.post("/facebook/select-page")
@@ -809,50 +809,50 @@ async def select_facebook_page(request: Request):
     page_name = body.get('page_name')
 
     if not page_id or not page_access_token:
-        raise HTTPException(
+            raise HTTPException(
             status_code=400,
             detail="Missing page_id or page_access_token"
-        )
+            )
 
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        import json
+            import json
 
-        # Store selected page in metadata
-        metadata = json.dumps({
-            "selected_page_id": page_id,
-            "selected_page_name": page_name,
-            "page_access_token": page_access_token
-        })
+            # Store selected page in metadata
+            metadata = json.dumps({
+                "selected_page_id": page_id,
+                "selected_page_name": page_name,
+                "page_access_token": page_access_token
+            })
 
-        cur.execute("""
-            UPDATE connected_services
-            SET service_metadata = %s, updated_at = NOW()
-            WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
-        """, (metadata, user_id))
+            cur.execute("""
+                UPDATE connected_services
+                SET service_metadata = %s, updated_at = NOW()
+                WHERE user_id = %s AND service_type = 'facebook' AND is_active = true
+            """, (metadata, user_id))
 
-        if cur.rowcount == 0:
-            raise HTTPException(
-                status_code=404,
-                detail="No active Facebook connection found"
-            )
+            if cur.rowcount == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No active Facebook connection found"
+                )
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"Selected Facebook page {page_id} for user {user_id}")
+            logger.info(f"Selected Facebook page {page_id} for user {user_id}")
 
-        return {
-            "success": True,
-            "message": f"Selected page: {page_name}",
-            "page_id": page_id
-        }
+            return {
+                "success": True,
+                "message": f"Selected page: {page_name}",
+                "page_id": page_id
+            }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Error selecting Facebook page: {e}")
-        raise HTTPException(status_code=500, detail="Failed to select Facebook page")
-    finally:
-        cur.close()
+        except HTTPException:
+            raise
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Error selecting Facebook page: {e}")
+            raise HTTPException(status_code=500, detail="Failed to select Facebook page")
+        finally:
+            cur.close()

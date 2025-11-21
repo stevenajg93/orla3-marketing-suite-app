@@ -170,83 +170,83 @@ async def register(request: RegisterRequest, req: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            INSERT INTO users (
-                name, email, password_hash, organization_name, organization_slug,
-                role, plan, is_active, email_verified,
-                verification_token, verification_token_expires,
-                created_at
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            cur.execute("""
+                INSERT INTO users (
+                    name, email, password_hash, organization_name, organization_slug,
+                    role, plan, is_active, email_verified,
+                    verification_token, verification_token_expires,
+                    created_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING id, name, email, organization_name, role, plan, created_at
+            """, (
+                request.name,
+                request.email.lower(),
+                password_hash,
+                request.organization_name,
+                org_slug,
+                'user',  # Default role
+                'free',  # Default plan
+                True,
+                False,  # Email not verified yet
+                verification_token,
+                verification_expires,
+                datetime.utcnow()
+            ))
+
+            user = cur.fetchone()
+            conn.commit()
+
+            # Log registration event
+            ip_address = req.client.host if req.client else None
+            user_agent = req.headers.get('user-agent')
+
+            cur.execute("""
+                INSERT INTO audit_log (
+                    user_id, event_type, event_status, ip_address, user_agent
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user['id'], 'register', 'success', ip_address, user_agent
+            ))
+            conn.commit()
+
+            logger.info(f"✅ New user registered: {request.email} (ID: {user['id']})")
+
+            # Send verification email
+            send_verification_email(request.email, verification_token)
+
+            return {
+                "success": True,
+                "message": "Registration successful. Please check your email to verify your account.",
+                "user": {
+                    "id": str(user['id']),
+                    "name": user['name'],
+                    "email": user['email'],
+                    "organization_name": user['organization_name'],
+                    "role": user['role'],
+                    "plan": user['plan']
+                },
+                # For development: include verification token
+                "verification_token": verification_token if os.getenv("ENVIRONMENT") == "development" else None
+            }
+
+        except psycopg2.IntegrityError as e:
+            conn.rollback()
+            logger.error(f"Registration error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email or organization name already exists"
             )
-            RETURNING id, name, email, organization_name, role, plan, created_at
-        """, (
-            request.name,
-            request.email.lower(),
-            password_hash,
-            request.organization_name,
-            org_slug,
-            'user',  # Default role
-            'free',  # Default plan
-            True,
-            False,  # Email not verified yet
-            verification_token,
-            verification_expires,
-            datetime.utcnow()
-        ))
-
-        user = cur.fetchone()
-        conn.commit()
-
-        # Log registration event
-        ip_address = req.client.host if req.client else None
-        user_agent = req.headers.get('user-agent')
-
-        cur.execute("""
-            INSERT INTO audit_log (
-                user_id, event_type, event_status, ip_address, user_agent
-            ) VALUES (%s, %s, %s, %s, %s)
-        """, (
-            user['id'], 'register', 'success', ip_address, user_agent
-        ))
-        conn.commit()
-
-        logger.info(f"✅ New user registered: {request.email} (ID: {user['id']})")
-
-        # Send verification email
-        send_verification_email(request.email, verification_token)
-
-        return {
-            "success": True,
-            "message": "Registration successful. Please check your email to verify your account.",
-            "user": {
-                "id": str(user['id']),
-                "name": user['name'],
-                "email": user['email'],
-                "organization_name": user['organization_name'],
-                "role": user['role'],
-                "plan": user['plan']
-            },
-            # For development: include verification token
-            "verification_token": verification_token if os.getenv("ENVIRONMENT") == "development" else None
-        }
-
-    except psycopg2.IntegrityError as e:
-        conn.rollback()
-        logger.error(f"Registration error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or organization name already exists"
-        )
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Registration error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
-        )
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Registration error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Registration failed"
+            )
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -365,55 +365,55 @@ async def login(request: LoginRequest, req: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        ip_address = req.client.host if req.client else None
-        user_agent = req.headers.get('user-agent')
-        token_hash = hash_token(refresh_token)
-        expires_at = datetime.utcnow() + timedelta(days=30)
+            ip_address = req.client.host if req.client else None
+            user_agent = req.headers.get('user-agent')
+            token_hash = hash_token(refresh_token)
+            expires_at = datetime.utcnow() + timedelta(days=30)
 
-        cur.execute("""
-            INSERT INTO refresh_tokens (
-                user_id, token_hash, expires_at, ip_address, user_agent
-            ) VALUES (%s, %s, %s, %s, %s)
-        """, (
-            user['id'], token_hash, expires_at, ip_address, user_agent
-        ))
+            cur.execute("""
+                INSERT INTO refresh_tokens (
+                    user_id, token_hash, expires_at, ip_address, user_agent
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user['id'], token_hash, expires_at, ip_address, user_agent
+            ))
 
-        # Record successful login
-        cur.execute(
-            "SELECT record_login_attempt(%s, %s, %s, %s, %s)",
-            (user['id'], True, ip_address, user_agent, None)
-        )
+            # Record successful login
+            cur.execute(
+                "SELECT record_login_attempt(%s, %s, %s, %s, %s)",
+                (user['id'], True, ip_address, user_agent, None)
+            )
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"✅ User logged in: {user['email']} (ID: {user['id']})")
+            logger.info(f"✅ User logged in: {user['email']} (ID: {user['id']})")
 
-        return {
-            "success": True,
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-            "user": {
-                "id": str(user['id']),
-                "name": user['name'],
-                "email": user['email'],
-                "organization_name": user['organization_name'],
-                "role": user['role'],
-                "plan": user['plan'],
-                "email_verified": user['email_verified'],
-                "is_super_admin": user.get('is_super_admin', False)
+            return {
+                "success": True,
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+                "user": {
+                    "id": str(user['id']),
+                    "name": user['name'],
+                    "email": user['email'],
+                    "organization_name": user['organization_name'],
+                    "role": user['role'],
+                    "plan": user['plan'],
+                    "email_verified": user['email_verified'],
+                    "is_super_admin": user.get('is_super_admin', False)
+                }
             }
-        }
 
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Login error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
-        )
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Login error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Login failed"
+            )
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -501,54 +501,54 @@ async def refresh_access_token(request: RefreshTokenRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        token_hash = hash_token(request.refresh_token)
+            token_hash = hash_token(request.refresh_token)
 
-        cur.execute("""
-            SELECT * FROM refresh_tokens
-            WHERE token_hash = %s AND user_id = %s
-              AND is_revoked = false AND expires_at > NOW()
-        """, (token_hash, user_id))
+            cur.execute("""
+                SELECT * FROM refresh_tokens
+                WHERE token_hash = %s AND user_id = %s
+                  AND is_revoked = false AND expires_at > NOW()
+            """, (token_hash, user_id))
 
-        refresh_token_record = cur.fetchone()
+            refresh_token_record = cur.fetchone()
 
-        if not refresh_token_record:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token revoked or expired"
+            if not refresh_token_record:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh token revoked or expired"
+                )
+
+            # Get user
+            user = get_user_by_id(user_id)
+
+            if not user or not user['is_active']:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found or inactive"
+                )
+
+            # Create new access token
+            access_token = create_access_token(
+                user_id=str(user['id']),
+                email=user['email'],
+                role=user['role']
             )
 
-        # Get user
-        user = get_user_by_id(user_id)
+            # Update last_used_at
+            cur.execute("""
+                UPDATE refresh_tokens
+                SET last_used_at = NOW()
+                WHERE token_hash = %s
+            """, (token_hash,))
+            conn.commit()
 
-        if not user or not user['is_active']:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive"
-            )
+            return {
+                "success": True,
+                "access_token": access_token,
+                "token_type": "bearer"
+            }
 
-        # Create new access token
-        access_token = create_access_token(
-            user_id=str(user['id']),
-            email=user['email'],
-            role=user['role']
-        )
-
-        # Update last_used_at
-        cur.execute("""
-            UPDATE refresh_tokens
-            SET last_used_at = NOW()
-            WHERE token_hash = %s
-        """, (token_hash,))
-        conn.commit()
-
-        return {
-            "success": True,
-            "access_token": access_token,
-            "token_type": "bearer"
-        }
-
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -563,23 +563,23 @@ async def logout(request: RefreshTokenRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        token_hash = hash_token(request.refresh_token)
+            token_hash = hash_token(request.refresh_token)
 
-        cur.execute("""
-            UPDATE refresh_tokens
-            SET is_revoked = true, revoked_at = NOW()
-            WHERE token_hash = %s
-        """, (token_hash,))
+            cur.execute("""
+                UPDATE refresh_tokens
+                SET is_revoked = true, revoked_at = NOW()
+                WHERE token_hash = %s
+            """, (token_hash,))
 
-        conn.commit()
+            conn.commit()
 
-        return {
-            "success": True,
-            "message": "Logged out successfully"
-        }
+            return {
+                "success": True,
+                "message": "Logged out successfully"
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -620,28 +620,28 @@ async def resend_verification_email(request: ForgotPasswordRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            UPDATE users
-            SET verification_token = %s, verification_token_expires = %s
-            WHERE id = %s
-        """, (verification_token, verification_expires, user['id']))
+            cur.execute("""
+                UPDATE users
+                SET verification_token = %s, verification_token_expires = %s
+                WHERE id = %s
+            """, (verification_token, verification_expires, user['id']))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"📧 Verification email resent to: {request.email}")
+            logger.info(f"📧 Verification email resent to: {request.email}")
 
-        # Send verification email
-        send_verification_email(request.email, verification_token)
+            # Send verification email
+            send_verification_email(request.email, verification_token)
 
-        return {
-            "success": True,
-            "message": "If the email exists and is unverified, a verification link has been sent",
-            # For development: include verification token
-            "verification_token": verification_token if os.getenv("ENVIRONMENT") == "development" else None
-        }
+            return {
+                "success": True,
+                "message": "If the email exists and is unverified, a verification link has been sent",
+                # For development: include verification token
+                "verification_token": verification_token if os.getenv("ENVIRONMENT") == "development" else None
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 @router.post("/auth/verify-email")
@@ -652,43 +652,43 @@ async def verify_email(request: VerifyEmailRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT * FROM users
-            WHERE verification_token = %s
-              AND verification_token_expires > NOW()
-        """, (request.token,))
+            cur.execute("""
+                SELECT * FROM users
+                WHERE verification_token = %s
+                  AND verification_token_expires > NOW()
+            """, (request.token,))
 
-        user = cur.fetchone()
+            user = cur.fetchone()
 
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired verification token"
-            )
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid or expired verification token"
+                )
 
-        # Mark email as verified
-        cur.execute("""
-            UPDATE users
-            SET email_verified = true,
-                verification_token = NULL,
-                verification_token_expires = NULL
-            WHERE id = %s
-        """, (user['id'],))
+            # Mark email as verified
+            cur.execute("""
+                UPDATE users
+                SET email_verified = true,
+                    verification_token = NULL,
+                    verification_token_expires = NULL
+                WHERE id = %s
+            """, (user['id'],))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"✅ Email verified: {user['email']}")
+            logger.info(f"✅ Email verified: {user['email']}")
 
-        # Send welcome email
-        send_welcome_email(user['email'], user['name'])
+            # Send welcome email
+            send_welcome_email(user['email'], user['name'])
 
-        return {
-            "success": True,
-            "message": "Email verified successfully"
-        }
+            return {
+                "success": True,
+                "message": "Email verified successfully"
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -718,28 +718,28 @@ async def forgot_password(request: ForgotPasswordRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            UPDATE users
-            SET reset_token = %s, reset_token_expires = %s
-            WHERE id = %s
-        """, (reset_token, reset_expires, user['id']))
+            cur.execute("""
+                UPDATE users
+                SET reset_token = %s, reset_token_expires = %s
+                WHERE id = %s
+            """, (reset_token, reset_expires, user['id']))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"🔑 Password reset requested: {request.email}")
+            logger.info(f"🔑 Password reset requested: {request.email}")
 
-        # Send reset email
-        send_password_reset_email(request.email, reset_token)
+            # Send reset email
+            send_password_reset_email(request.email, reset_token)
 
-        return {
-            "success": True,
-            "message": "If the email exists, a password reset link has been sent",
-            # For development: include reset token
-            "reset_token": reset_token if os.getenv("ENVIRONMENT") == "development" else None
-        }
+            return {
+                "success": True,
+                "message": "If the email exists, a password reset link has been sent",
+                # For development: include reset token
+                "reset_token": reset_token if os.getenv("ENVIRONMENT") == "development" else None
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -762,53 +762,53 @@ async def reset_password(request: ResetPasswordRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        cur.execute("""
-            SELECT * FROM users
-            WHERE reset_token = %s
-              AND reset_token_expires > NOW()
-        """, (request.token,))
+            cur.execute("""
+                SELECT * FROM users
+                WHERE reset_token = %s
+                  AND reset_token_expires > NOW()
+            """, (request.token,))
 
-        user = cur.fetchone()
+            user = cur.fetchone()
 
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired reset token"
-            )
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid or expired reset token"
+                )
 
-        # Hash new password
-        password_hash = hash_password(request.new_password)
+            # Hash new password
+            password_hash = hash_password(request.new_password)
 
-        # Update password and clear reset token
-        cur.execute("""
-            UPDATE users
-            SET password_hash = %s,
-                reset_token = NULL,
-                reset_token_expires = NULL,
-                failed_login_attempts = 0,
-                is_locked = false,
-                locked_until = NULL
-            WHERE id = %s
-        """, (password_hash, user['id']))
+            # Update password and clear reset token
+            cur.execute("""
+                UPDATE users
+                SET password_hash = %s,
+                    reset_token = NULL,
+                    reset_token_expires = NULL,
+                    failed_login_attempts = 0,
+                    is_locked = false,
+                    locked_until = NULL
+                WHERE id = %s
+            """, (password_hash, user['id']))
 
-        # Revoke all refresh tokens (force re-login)
-        cur.execute("""
-            UPDATE refresh_tokens
-            SET is_revoked = true, revoked_at = NOW()
-            WHERE user_id = %s AND is_revoked = false
-        """, (user['id'],))
+            # Revoke all refresh tokens (force re-login)
+            cur.execute("""
+                UPDATE refresh_tokens
+                SET is_revoked = true, revoked_at = NOW()
+                WHERE user_id = %s AND is_revoked = false
+            """, (user['id'],))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"🔑 Password reset successful: {user['email']}")
+            logger.info(f"🔑 Password reset successful: {user['email']}")
 
-        return {
-            "success": True,
-            "message": "Password reset successfully. Please log in with your new password."
-        }
+            return {
+                "success": True,
+                "message": "Password reset successfully. Please log in with your new password."
+            }
 
-    finally:
-        cur.close()
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -843,62 +843,62 @@ async def update_profile(request: UpdateProfileRequest, req: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Build update query dynamically based on provided fields
-        update_fields = []
-        update_values = []
+            # Build update query dynamically based on provided fields
+            update_fields = []
+            update_values = []
 
-        if request.name is not None:
-            update_fields.append("name = %s")
-            update_values.append(request.name)
+            if request.name is not None:
+                update_fields.append("name = %s")
+                update_values.append(request.name)
 
-        if request.timezone is not None:
-            update_fields.append("timezone = %s")
-            update_values.append(request.timezone)
+            if request.timezone is not None:
+                update_fields.append("timezone = %s")
+                update_values.append(request.timezone)
 
-        if request.profile_image_url is not None:
-            update_fields.append("profile_image_url = %s")
-            update_values.append(request.profile_image_url)
+            if request.profile_image_url is not None:
+                update_fields.append("profile_image_url = %s")
+                update_values.append(request.profile_image_url)
 
-        if not update_fields:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No fields to update"
-            )
+            if not update_fields:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No fields to update"
+                )
 
-        # Add updated_at timestamp
-        update_fields.append("updated_at = NOW()")
-        update_values.append(user_id)
+            # Add updated_at timestamp
+            update_fields.append("updated_at = NOW()")
+            update_values.append(user_id)
 
-        # Execute update
-        query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s RETURNING *"
-        cur.execute(query, update_values)
-        updated_user = cur.fetchone()
+            # Execute update
+            query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s RETURNING *"
+            cur.execute(query, update_values)
+            updated_user = cur.fetchone()
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"Profile updated for user: {updated_user['email']}")
+            logger.info(f"Profile updated for user: {updated_user['email']}")
 
-        return {
-            "success": True,
-            "message": "Profile updated successfully",
-            "user": {
-                "id": str(updated_user['id']),
-                "name": updated_user['name'],
-                "email": updated_user['email'],
-                "timezone": updated_user.get('timezone'),
-                "profile_image_url": updated_user.get('profile_image_url')
+            return {
+                "success": True,
+                "message": "Profile updated successfully",
+                "user": {
+                    "id": str(updated_user['id']),
+                    "name": updated_user['name'],
+                    "email": updated_user['email'],
+                    "timezone": updated_user.get('timezone'),
+                    "profile_image_url": updated_user.get('profile_image_url')
+                }
             }
-        }
 
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Profile update error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update profile"
-        )
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Profile update error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile"
+            )
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -960,39 +960,39 @@ async def change_password(request: ChangePasswordRequest, req: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Update password
-        cur.execute("""
-            UPDATE users
-            SET password_hash = %s,
-                updated_at = NOW()
-            WHERE id = %s
-        """, (new_password_hash, user_id))
+            # Update password
+            cur.execute("""
+                UPDATE users
+                SET password_hash = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (new_password_hash, user_id))
 
-        # Revoke all refresh tokens (force re-login on all devices)
-        cur.execute("""
-            UPDATE refresh_tokens
-            SET is_revoked = true, revoked_at = NOW()
-            WHERE user_id = %s AND is_revoked = false
-        """, (user_id,))
+            # Revoke all refresh tokens (force re-login on all devices)
+            cur.execute("""
+                UPDATE refresh_tokens
+                SET is_revoked = true, revoked_at = NOW()
+                WHERE user_id = %s AND is_revoked = false
+            """, (user_id,))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"Password changed for user: {user['email']}")
+            logger.info(f"Password changed for user: {user['email']}")
 
-        return {
-            "success": True,
-            "message": "Password changed successfully. Please log in again on all devices."
-        }
+            return {
+                "success": True,
+                "message": "Password changed successfully. Please log in again on all devices."
+            }
 
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Password change error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to change password"
-        )
-    finally:
-        cur.close()
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Password change error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to change password"
+            )
+        finally:
+            cur.close()
 
 
 # ============================================================================
@@ -1044,44 +1044,44 @@ async def delete_account(req: Request):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-        # Check if user is organization owner
-        cur.execute("""
-            SELECT o.id, o.name, o.current_user_count
-            FROM organizations o
-            JOIN organization_members om ON o.id = om.organization_id
-            WHERE om.user_id = %s AND om.role = 'owner'
-        """, (user_id,))
+            # Check if user is organization owner
+            cur.execute("""
+                SELECT o.id, o.name, o.current_user_count
+                FROM organizations o
+                JOIN organization_members om ON o.id = om.organization_id
+                WHERE om.user_id = %s AND om.role = 'owner'
+            """, (user_id,))
 
-        owned_orgs = cur.fetchall()
+            owned_orgs = cur.fetchall()
 
-        # If user owns organizations with other members, prevent deletion
-        for org in owned_orgs:
-            if org['current_user_count'] > 1:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Cannot delete account. You own organization '{org['name']}' with {org['current_user_count']} members. Please transfer ownership or remove other members first."
-                )
+            # If user owns organizations with other members, prevent deletion
+            for org in owned_orgs:
+                if org['current_user_count'] > 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Cannot delete account. You own organization '{org['name']}' with {org['current_user_count']} members. Please transfer ownership or remove other members first."
+                    )
 
-        # Delete user (CASCADE will handle related records)
-        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+            # Delete user (CASCADE will handle related records)
+            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
 
-        conn.commit()
+            conn.commit()
 
-        logger.info(f"Account deleted: {user['email']} (ID: {user_id})")
+            logger.info(f"Account deleted: {user['email']} (ID: {user_id})")
 
-        return {
-            "success": True,
-            "message": "Account permanently deleted"
-        }
+            return {
+                "success": True,
+                "message": "Account permanently deleted"
+            }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Account deletion error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete account"
-        )
-    finally:
-        cur.close()
+        except HTTPException:
+            raise
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Account deletion error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete account"
+            )
+        finally:
+            cur.close()
