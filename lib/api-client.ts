@@ -58,23 +58,35 @@ export async function apiRequest<T = any>(
     });
 
     if (!response.ok) {
-      // If 401 Unauthorized, token might be expired
-      if (response.status === 401) {
-        // TODO: Attempt token refresh
-        // For now, just clear invalid tokens
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-        }
-      }
-
       // Try to get error message from response body
       let errorMessage = response.statusText;
+      let errorData: any = null;
       try {
-        const errorData = await response.json();
+        errorData = await response.json();
         errorMessage = errorData.detail || errorData.message || errorMessage;
       } catch {
         // If JSON parsing fails, use statusText
+      }
+
+      // If 401 Unauthorized AND it's a JWT auth error (not OAuth/Drive errors)
+      if (response.status === 401) {
+        // Only clear tokens if it's an actual JWT authentication failure
+        // Don't clear for Google Drive OAuth errors or other 401s
+        const isJwtAuthError =
+          errorMessage?.includes('Invalid or expired token') ||
+          errorMessage?.includes('Missing authorization token') ||
+          errorMessage?.includes('Missing or invalid authorization header') ||
+          endpoint === '/auth/me'; // Always clear on /auth/me failure
+
+        if (isJwtAuthError && typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+
+          // Redirect to login if on a protected page
+          if (window.location.pathname.startsWith('/dashboard')) {
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+          }
+        }
       }
 
       throw new ApiError(
