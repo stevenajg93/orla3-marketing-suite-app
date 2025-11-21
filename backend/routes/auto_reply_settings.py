@@ -71,44 +71,44 @@ async def get_auto_reply_settings(request: Request):
     """
     try:
         user_id = str(get_user_id(request))
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Try to get existing settings
+                cur.execute("""
+                    SELECT
+                        id, user_id, enabled, platforms,
+                        reply_to_questions, reply_to_mentions, reply_to_all_comments,
+                        reply_to_positive, reply_to_neutral, reply_to_negative,
+                        reply_tone, reply_length, custom_instructions,
+                        max_replies_per_hour, min_reply_interval_minutes,
+                        last_check_at, created_at, updated_at
+                    FROM auto_reply_settings
+                    WHERE user_id = %s
+                """, (user_id,))
 
-        # Try to get existing settings
-        cur.execute("""
-            SELECT
-                id, user_id, enabled, platforms,
-                reply_to_questions, reply_to_mentions, reply_to_all_comments,
-                reply_to_positive, reply_to_neutral, reply_to_negative,
-                reply_tone, reply_length, custom_instructions,
-                max_replies_per_hour, min_reply_interval_minutes,
-                last_check_at, created_at, updated_at
-            FROM auto_reply_settings
-            WHERE user_id = %s
-        """, (user_id,))
+                settings = cur.fetchone()
 
-        settings = cur.fetchone()
+                # Create default settings if none exist
+                if not settings:
+                    cur.execute("""
+                        INSERT INTO auto_reply_settings (user_id, enabled, platforms)
+                        VALUES (%s, false, '[]'::jsonb)
+                        RETURNING
+                            id, user_id, enabled, platforms,
+                            reply_to_questions, reply_to_mentions, reply_to_all_comments,
+                            reply_to_positive, reply_to_neutral, reply_to_negative,
+                            reply_tone, reply_length, custom_instructions,
+                            max_replies_per_hour, min_reply_interval_minutes,
+                            last_check_at, created_at, updated_at
+                    """, (user_id,))
 
-        # Create default settings if none exist
-        if not settings:
-            cur.execute("""
-                INSERT INTO auto_reply_settings (user_id, enabled, platforms)
-                VALUES (%s, false, '[]'::jsonb)
-                RETURNING
-                    id, user_id, enabled, platforms,
-                    reply_to_questions, reply_to_mentions, reply_to_all_comments,
-                    reply_to_positive, reply_to_neutral, reply_to_negative,
-                    reply_tone, reply_length, custom_instructions,
-                    max_replies_per_hour, min_reply_interval_minutes,
-                    last_check_at, created_at, updated_at
-            """, (user_id,))
+                    settings = cur.fetchone()
+                    conn.commit()
 
-            settings = cur.fetchone()
-            conn.commit()
-
-        cur.close()
-
-        return dict(settings)
+                return dict(settings)
+            finally:
+                cur.close()
 
     except Exception as e:
         logger.error(f"Error fetching auto-reply settings: {e}")
@@ -123,78 +123,79 @@ async def update_auto_reply_settings(settings: AutoReplySettings, request: Reque
     """
     try:
         user_id = str(get_user_id(request))
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Upsert settings
+                cur.execute("""
+                    INSERT INTO auto_reply_settings (
+                        user_id, enabled, platforms,
+                        reply_to_questions, reply_to_mentions, reply_to_all_comments,
+                        reply_to_positive, reply_to_neutral, reply_to_negative,
+                        reply_tone, reply_length, custom_instructions,
+                        max_replies_per_hour, min_reply_interval_minutes,
+                        updated_at
+                    )
+                    VALUES (
+                        %s, %s, %s::jsonb,
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s,
+                        NOW()
+                    )
+                    ON CONFLICT (user_id)
+                    DO UPDATE SET
+                        enabled = EXCLUDED.enabled,
+                        platforms = EXCLUDED.platforms,
+                        reply_to_questions = EXCLUDED.reply_to_questions,
+                        reply_to_mentions = EXCLUDED.reply_to_mentions,
+                        reply_to_all_comments = EXCLUDED.reply_to_all_comments,
+                        reply_to_positive = EXCLUDED.reply_to_positive,
+                        reply_to_neutral = EXCLUDED.reply_to_neutral,
+                        reply_to_negative = EXCLUDED.reply_to_negative,
+                        reply_tone = EXCLUDED.reply_tone,
+                        reply_length = EXCLUDED.reply_length,
+                        custom_instructions = EXCLUDED.custom_instructions,
+                        max_replies_per_hour = EXCLUDED.max_replies_per_hour,
+                        min_reply_interval_minutes = EXCLUDED.min_reply_interval_minutes,
+                        updated_at = NOW()
+                    RETURNING
+                        id, user_id, enabled, platforms,
+                        reply_to_questions, reply_to_mentions, reply_to_all_comments,
+                        reply_to_positive, reply_to_neutral, reply_to_negative,
+                        reply_tone, reply_length, custom_instructions,
+                        max_replies_per_hour, min_reply_interval_minutes,
+                        last_check_at, created_at, updated_at
+                """, (
+                    user_id,
+                    settings.enabled,
+                    str(settings.platforms),  # Convert list to JSON string
+                    settings.reply_to_questions,
+                    settings.reply_to_mentions,
+                    settings.reply_to_all_comments,
+                    settings.reply_to_positive,
+                    settings.reply_to_neutral,
+                    settings.reply_to_negative,
+                    settings.reply_tone,
+                    settings.reply_length,
+                    settings.custom_instructions,
+                    settings.max_replies_per_hour,
+                    settings.min_reply_interval_minutes
+                ))
 
-        # Upsert settings
-        cur.execute("""
-            INSERT INTO auto_reply_settings (
-                user_id, enabled, platforms,
-                reply_to_questions, reply_to_mentions, reply_to_all_comments,
-                reply_to_positive, reply_to_neutral, reply_to_negative,
-                reply_tone, reply_length, custom_instructions,
-                max_replies_per_hour, min_reply_interval_minutes,
-                updated_at
-            )
-            VALUES (
-                %s, %s, %s::jsonb,
-                %s, %s, %s,
-                %s, %s, %s,
-                %s, %s, %s,
-                %s, %s,
-                NOW()
-            )
-            ON CONFLICT (user_id)
-            DO UPDATE SET
-                enabled = EXCLUDED.enabled,
-                platforms = EXCLUDED.platforms,
-                reply_to_questions = EXCLUDED.reply_to_questions,
-                reply_to_mentions = EXCLUDED.reply_to_mentions,
-                reply_to_all_comments = EXCLUDED.reply_to_all_comments,
-                reply_to_positive = EXCLUDED.reply_to_positive,
-                reply_to_neutral = EXCLUDED.reply_to_neutral,
-                reply_to_negative = EXCLUDED.reply_to_negative,
-                reply_tone = EXCLUDED.reply_tone,
-                reply_length = EXCLUDED.reply_length,
-                custom_instructions = EXCLUDED.custom_instructions,
-                max_replies_per_hour = EXCLUDED.max_replies_per_hour,
-                min_reply_interval_minutes = EXCLUDED.min_reply_interval_minutes,
-                updated_at = NOW()
-            RETURNING
-                id, user_id, enabled, platforms,
-                reply_to_questions, reply_to_mentions, reply_to_all_comments,
-                reply_to_positive, reply_to_neutral, reply_to_negative,
-                reply_tone, reply_length, custom_instructions,
-                max_replies_per_hour, min_reply_interval_minutes,
-                last_check_at, created_at, updated_at
-        """, (
-            user_id,
-            settings.enabled,
-            str(settings.platforms),  # Convert list to JSON string
-            settings.reply_to_questions,
-            settings.reply_to_mentions,
-            settings.reply_to_all_comments,
-            settings.reply_to_positive,
-            settings.reply_to_neutral,
-            settings.reply_to_negative,
-            settings.reply_tone,
-            settings.reply_length,
-            settings.custom_instructions,
-            settings.max_replies_per_hour,
-            settings.min_reply_interval_minutes
-        ))
+                updated_settings = cur.fetchone()
+                conn.commit()
 
-        updated_settings = cur.fetchone()
-        conn.commit()
-        cur.close()
+                logger.info(f"Updated auto-reply settings for user {user_id}")
 
-        logger.info(f"Updated auto-reply settings for user {user_id}")
-
-        return {
-            "success": True,
-            "message": "Auto-reply settings updated",
-            "settings": dict(updated_settings)
-        }
+                return {
+                    "success": True,
+                    "message": "Auto-reply settings updated",
+                    "settings": dict(updated_settings)
+                }
+            finally:
+                cur.close()
 
     except Exception as e:
         logger.error(f"Error updating auto-reply settings: {e}")
@@ -208,39 +209,40 @@ async def toggle_auto_reply(request: Request):
     """
     try:
         user_id = str(get_user_id(request))
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Toggle enabled status
+                cur.execute("""
+                    UPDATE auto_reply_settings
+                    SET enabled = NOT enabled, updated_at = NOW()
+                    WHERE user_id = %s
+                    RETURNING enabled
+                """, (user_id,))
 
-        # Toggle enabled status
-        cur.execute("""
-            UPDATE auto_reply_settings
-            SET enabled = NOT enabled, updated_at = NOW()
-            WHERE user_id = %s
-            RETURNING enabled
-        """, (user_id,))
+                result = cur.fetchone()
 
-        result = cur.fetchone()
+                if not result:
+                    # Create default settings with enabled = true
+                    cur.execute("""
+                        INSERT INTO auto_reply_settings (user_id, enabled)
+                        VALUES (%s, true)
+                        RETURNING enabled
+                    """, (user_id,))
+                    result = cur.fetchone()
 
-        if not result:
-            # Create default settings with enabled = true
-            cur.execute("""
-                INSERT INTO auto_reply_settings (user_id, enabled)
-                VALUES (%s, true)
-                RETURNING enabled
-            """, (user_id,))
-            result = cur.fetchone()
+                conn.commit()
 
-        conn.commit()
-        cur.close()
+                enabled = result['enabled']
+                logger.info(f"Toggled auto-reply for user {user_id}: {enabled}")
 
-        enabled = result['enabled']
-        logger.info(f"Toggled auto-reply for user {user_id}: {enabled}")
-
-        return {
-            "success": True,
-            "enabled": enabled,
-            "message": f"Auto-reply {'enabled' if enabled else 'disabled'}"
-        }
+                return {
+                    "success": True,
+                    "enabled": enabled,
+                    "message": f"Auto-reply {'enabled' if enabled else 'disabled'}"
+                }
+            finally:
+                cur.close()
 
     except Exception as e:
         logger.error(f"Error toggling auto-reply: {e}")

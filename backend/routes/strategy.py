@@ -39,12 +39,14 @@ def get_user_from_token(request: Request):
 def load_brand_voice_assets(user_id: str):
     """Load all uploaded brand voice assets from PostgreSQL for a specific user"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_voice_assets WHERE user_id = %s ORDER BY uploaded_at DESC", (user_id,))
-        assets = cur.fetchall()
-        cur.close()
-        return assets
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * FROM brand_voice_assets WHERE user_id = %s ORDER BY uploaded_at DESC", (user_id,))
+                assets = cur.fetchall()
+                return assets
+            finally:
+                cur.close()
     except Exception as e:
         print(f"Error loading brand voice assets: {e}")
         return []
@@ -52,47 +54,48 @@ def load_brand_voice_assets(user_id: str):
 def load_competitor_summary(user_id: str):
     """Load competitor marketing insights summary from PostgreSQL for a specific user"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Get all competitors with their analyses for this user
+                cur.execute("""
+                    SELECT c.*, ca.*
+                    FROM competitors c
+                    LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+                    WHERE c.user_id = %s
+                    ORDER BY c.added_at DESC
+                """, (user_id,))
+                competitors = cur.fetchall()
 
-        # Get all competitors with their analyses for this user
-        cur.execute("""
-            SELECT c.*, ca.*
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at DESC
-        """, (user_id,))
-        competitors = cur.fetchall()
-        cur.close()
-        
-        if not competitors:
-            return None
-        
-        # Build summary
-        analyzed = [c for c in competitors if c.get('marketing_they_do_well')]
-        
-        if not analyzed:
-            return None
-        
-        summary = {
-            'total': len(competitors),
-            'analyzed': len(analyzed),
-            'competitors': []
-        }
-        
-        for comp in analyzed:
-            summary['competitors'].append({
-                'name': comp['name'],
-                'threat_level': comp.get('threat_level', 'unknown'),
-                'marketing_they_do_well': comp.get('marketing_they_do_well', []),
-                'content_gaps': comp.get('gaps_they_miss', []),  # Database uses gaps_they_miss
-                'positioning_messaging': comp.get('positioning_messaging', ''),
-                'content_opportunities': comp.get('content_opportunities', [])
-            })
-        
-        return summary
-        
+                if not competitors:
+                    return None
+
+                # Build summary
+                analyzed = [c for c in competitors if c.get('marketing_they_do_well')]
+
+                if not analyzed:
+                    return None
+
+                summary = {
+                    'total': len(competitors),
+                    'analyzed': len(analyzed),
+                    'competitors': []
+                }
+
+                for comp in analyzed:
+                    summary['competitors'].append({
+                        'name': comp['name'],
+                        'threat_level': comp.get('threat_level', 'unknown'),
+                        'marketing_they_do_well': comp.get('marketing_they_do_well', []),
+                        'content_gaps': comp.get('gaps_they_miss', []),  # Database uses gaps_they_miss
+                        'positioning_messaging': comp.get('positioning_messaging', ''),
+                        'content_opportunities': comp.get('content_opportunities', [])
+                    })
+
+                return summary
+            finally:
+                cur.close()
+
     except Exception as e:
         print(f"Error loading competitor summary: {e}")
         return None
@@ -100,12 +103,14 @@ def load_competitor_summary(user_id: str):
 def load_brand_strategy(user_id: str):
     """Load brand strategy from PostgreSQL for a specific user"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
-        strategy = cur.fetchone()
-        cur.close()
-        return dict(strategy) if strategy else None
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
+                strategy = cur.fetchone()
+                return dict(strategy) if strategy else None
+            finally:
+                cur.close()
     except Exception as e:
         print(f"Error loading brand strategy: {e}")
         return None
@@ -364,35 +369,36 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
             strategy_text = strategy_text.split("```")[1].split("```")[0].strip()
         
         strategy = json.loads(strategy_text)
-        
+
         # Save strategy to PostgreSQL
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Delete old strategy for this user
+                cur.execute("DELETE FROM brand_strategy WHERE user_id = %s", (user_id,))
 
-        # Delete old strategy for this user
-        cur.execute("DELETE FROM brand_strategy WHERE user_id = %s", (user_id,))
+                # Insert new strategy
+                cur.execute("""
+                    INSERT INTO brand_strategy (
+                        user_id, brand_voice, messaging_pillars, language_patterns,
+                        dos_and_donts, target_audience, content_themes, competitive_positioning
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    PgJson(strategy.get('brand_voice', {})),
+                    strategy.get('messaging_pillars', []),
+                    PgJson(strategy.get('language_patterns', {})),
+                    PgJson(strategy.get('dos_and_donts', {})),
+                    PgJson(strategy.get('target_audience', {})),
+                    strategy.get('content_themes', []),
+                    PgJson(strategy.get('competitive_positioning', {}))
+                ))
 
-        # Insert new strategy
-        cur.execute("""
-            INSERT INTO brand_strategy (
-                user_id, brand_voice, messaging_pillars, language_patterns,
-                dos_and_donts, target_audience, content_themes, competitive_positioning
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            user_id,
-            PgJson(strategy.get('brand_voice', {})),
-            strategy.get('messaging_pillars', []),
-            PgJson(strategy.get('language_patterns', {})),
-            PgJson(strategy.get('dos_and_donts', {})),
-            PgJson(strategy.get('target_audience', {})),
-            strategy.get('content_themes', []),
-            PgJson(strategy.get('competitive_positioning', {}))
-        ))
-        
-        conn.commit()
-        cur.close()
-        
-        print("✅ Strategy saved to PostgreSQL")
+                conn.commit()
+
+                print("✅ Strategy saved to PostgreSQL")
+            finally:
+                cur.close()
         
         return {
             "success": True,
@@ -452,22 +458,24 @@ async def get_next_keyword(request: Request):
         # Query existing blog posts to avoid duplicates
         existing_topics = []
         try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("""
-                SELECT title, tags
-                FROM content_library
-                WHERE user_id = %s AND content_type = 'blog'
-                ORDER BY created_at DESC
-                LIMIT 20
-            """, (user_id,))
-            rows = cur.fetchall()
-            cur.close()
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                try:
+                    cur.execute("""
+                        SELECT title, tags
+                        FROM content_library
+                        WHERE user_id = %s AND content_type = 'blog'
+                        ORDER BY created_at DESC
+                        LIMIT 20
+                    """, (user_id,))
+                    rows = cur.fetchall()
 
-            for row in rows:
-                existing_topics.append(row['title'])
-                if row['tags']:
-                    existing_topics.extend(row['tags'])
+                    for row in rows:
+                        existing_topics.append(row['title'])
+                        if row['tags']:
+                            existing_topics.extend(row['tags'])
+                finally:
+                    cur.close()
         except Exception as e:
             print(f"Error loading existing topics: {e}")
 

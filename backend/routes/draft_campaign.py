@@ -87,38 +87,39 @@ def create_draft_campaign(campaign: DraftCampaign, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Calculate expiration
+                expires_at = datetime.now() + timedelta(hours=campaign.expires_hours)
 
-        # Calculate expiration
-        expires_at = datetime.now() + timedelta(hours=campaign.expires_hours)
+                # Insert campaign
+                cur.execute("""
+                    INSERT INTO draft_campaigns (user_id, campaign_type, data, expires_at)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id, user_id, campaign_type, data, expires_at, created_at, consumed
+                """, (
+                    user_id_str,
+                    campaign.campaign_type,
+                    psycopg2.extras.Json(campaign.data),
+                    expires_at
+                ))
 
-        # Insert campaign
-        cur.execute("""
-            INSERT INTO draft_campaigns (user_id, campaign_type, data, expires_at)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, user_id, campaign_type, data, expires_at, created_at, consumed
-        """, (
-            user_id_str,
-            campaign.campaign_type,
-            psycopg2.extras.Json(campaign.data),
-            expires_at
-        ))
+                created_campaign = cur.fetchone()
+                conn.commit()
 
-        created_campaign = cur.fetchone()
-        conn.commit()
-        cur.close()
+                logger.info(
+                    f"Created draft campaign {created_campaign['id']} for user {user_id} "
+                    f"(type: {campaign.campaign_type}, expires: {expires_at})"
+                )
 
-        logger.info(
-            f"Created draft campaign {created_campaign['id']} for user {user_id} "
-            f"(type: {campaign.campaign_type}, expires: {expires_at})"
-        )
-
-        return {
-            "success": True,
-            "campaign_id": str(created_campaign['id']),
-            "expires_at": created_campaign['expires_at'].isoformat()
-        }
+                return {
+                    "success": True,
+                    "campaign_id": str(created_campaign['id']),
+                    "expires_at": created_campaign['expires_at'].isoformat()
+                }
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error creating draft campaign: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create draft campaign: {str(e)}")
@@ -137,50 +138,48 @@ def get_draft_campaign(campaign_id: str, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Query campaign with user_id filter and expiration check
+                cur.execute("""
+                    SELECT id, user_id, campaign_type, data, expires_at, created_at, consumed, consumed_at
+                    FROM draft_campaigns
+                    WHERE id = %s AND user_id = %s
+                """, (campaign_id, user_id_str))
 
-        # Query campaign with user_id filter and expiration check
-        cur.execute("""
-            SELECT id, user_id, campaign_type, data, expires_at, created_at, consumed, consumed_at
-            FROM draft_campaigns
-            WHERE id = %s AND user_id = %s
-        """, (campaign_id, user_id_str))
+                campaign = cur.fetchone()
 
-        campaign = cur.fetchone()
+                if not campaign:
+                    logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
+                    raise HTTPException(status_code=404, detail="Draft campaign not found or not owned by user")
 
-        if not campaign:
-            cur.close()
-            logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
-            raise HTTPException(status_code=404, detail="Draft campaign not found or not owned by user")
+                # Check if expired
+                if campaign['expires_at'] < datetime.now():
+                    logger.warning(f"Draft campaign expired for user {user_id}: {campaign_id}")
+                    raise HTTPException(status_code=404, detail="Draft campaign has expired")
 
-        # Check if expired
-        if campaign['expires_at'] < datetime.now():
-            cur.close()
-            logger.warning(f"Draft campaign expired for user {user_id}: {campaign_id}")
-            raise HTTPException(status_code=404, detail="Draft campaign has expired")
+                # Mark as consumed if not already
+                if not campaign['consumed']:
+                    cur.execute("""
+                        UPDATE draft_campaigns
+                        SET consumed = TRUE, consumed_at = NOW()
+                        WHERE id = %s
+                    """, (campaign_id,))
+                    conn.commit()
+                    logger.info(f"Marked draft campaign {campaign_id} as consumed by user {user_id}")
 
-        # Mark as consumed if not already
-        if not campaign['consumed']:
-            cur.execute("""
-                UPDATE draft_campaigns
-                SET consumed = TRUE, consumed_at = NOW()
-                WHERE id = %s
-            """, (campaign_id,))
-            conn.commit()
-            logger.info(f"Marked draft campaign {campaign_id} as consumed by user {user_id}")
+                logger.info(f"Retrieved draft campaign {campaign_id} for user {user_id}")
 
-        cur.close()
-
-        logger.info(f"Retrieved draft campaign {campaign_id} for user {user_id}")
-
-        return {
-            "id": str(campaign['id']),
-            "campaign_type": campaign['campaign_type'],
-            "data": campaign['data'],
-            "created_at": campaign['created_at'].isoformat(),
-            "expires_at": campaign['expires_at'].isoformat()
-        }
+                return {
+                    "id": str(campaign['id']),
+                    "campaign_type": campaign['campaign_type'],
+                    "data": campaign['data'],
+                    "created_at": campaign['created_at'].isoformat(),
+                    "expires_at": campaign['expires_at'].isoformat()
+                }
+            finally:
+                cur.close()
     except HTTPException:
         raise
     except Exception as e:
@@ -199,24 +198,25 @@ def delete_draft_campaign(campaign_id: str, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute(
+                    "DELETE FROM draft_campaigns WHERE id = %s AND user_id = %s RETURNING id",
+                    (campaign_id, user_id_str)
+                )
 
-        cur.execute(
-            "DELETE FROM draft_campaigns WHERE id = %s AND user_id = %s RETURNING id",
-            (campaign_id, user_id_str)
-        )
+                deleted_campaign = cur.fetchone()
+                conn.commit()
 
-        deleted_campaign = cur.fetchone()
-        conn.commit()
-        cur.close()
+                if not deleted_campaign:
+                    logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
+                    raise HTTPException(status_code=404, detail="Draft campaign not found or not owned by user")
 
-        if not deleted_campaign:
-            logger.warning(f"Draft campaign not found or not owned by user {user_id}: {campaign_id}")
-            raise HTTPException(status_code=404, detail="Draft campaign not found or not owned by user")
-
-        logger.info(f"Deleted draft campaign {campaign_id} for user {user_id}")
-        return {"success": True}
+                logger.info(f"Deleted draft campaign {campaign_id} for user {user_id}")
+                return {"success": True}
+            finally:
+                cur.close()
     except HTTPException:
         raise
     except Exception as e:
@@ -236,28 +236,29 @@ def cleanup_expired_campaigns(request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Delete expired campaigns for this user
+                cur.execute("""
+                    DELETE FROM draft_campaigns
+                    WHERE user_id = %s AND expires_at < NOW()
+                    RETURNING id
+                """, (user_id_str,))
 
-        # Delete expired campaigns for this user
-        cur.execute("""
-            DELETE FROM draft_campaigns
-            WHERE user_id = %s AND expires_at < NOW()
-            RETURNING id
-        """, (user_id_str,))
+                deleted_campaigns = cur.fetchall()
+                deleted_count = len(deleted_campaigns)
 
-        deleted_campaigns = cur.fetchall()
-        deleted_count = len(deleted_campaigns)
+                conn.commit()
 
-        conn.commit()
-        cur.close()
+                logger.info(f"Cleaned up {deleted_count} expired draft campaigns for user {user_id}")
 
-        logger.info(f"Cleaned up {deleted_count} expired draft campaigns for user {user_id}")
-
-        return {
-            "success": True,
-            "deleted_count": deleted_count
-        }
+                return {
+                    "success": True,
+                    "deleted_count": deleted_count
+                }
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error cleaning up expired campaigns: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to cleanup expired campaigns: {str(e)}")

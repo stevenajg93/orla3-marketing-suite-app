@@ -28,38 +28,37 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 def update_access_token_in_db(user_id: str, organization_id: str, provider: str, new_access_token: str, expires_in: int):
     """Update access token in database after refresh"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            from datetime import datetime, timedelta, timezone
+            new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
-    try:
-        from datetime import datetime, timedelta, timezone
-        new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+            # Try updating organization-level token first
+            if organization_id:
+                cursor.execute("""
+                    UPDATE user_cloud_storage_tokens
+                    SET access_token = %s, token_expires_at = %s
+                    WHERE organization_id = %s AND provider = %s AND is_active = true
+                """, (new_access_token, new_expires_at, str(organization_id), provider))
 
-        # Try updating organization-level token first
-        if organization_id:
+                if cursor.rowcount > 0:
+                    conn.commit()
+                    logger.info(f"Updated org-level token for org {organization_id}")
+                    return
+
+            # Fallback to user-level token
             cursor.execute("""
                 UPDATE user_cloud_storage_tokens
                 SET access_token = %s, token_expires_at = %s
-                WHERE organization_id = %s AND provider = %s AND is_active = true
-            """, (new_access_token, new_expires_at, str(organization_id), provider))
+                WHERE user_id = %s AND provider = %s AND is_active = true
+            """, (new_access_token, new_expires_at, str(user_id), provider))
 
-            if cursor.rowcount > 0:
-                conn.commit()
-                logger.info(f"Updated org-level token for org {organization_id}")
-                return
+            conn.commit()
+            logger.info(f"Updated user-level token for user {user_id}")
 
-        # Fallback to user-level token
-        cursor.execute("""
-            UPDATE user_cloud_storage_tokens
-            SET access_token = %s, token_expires_at = %s
-            WHERE user_id = %s AND provider = %s AND is_active = true
-        """, (new_access_token, new_expires_at, str(user_id), provider))
-
-        conn.commit()
-        logger.info(f"Updated user-level token for user {user_id}")
-
-    finally:
-        cursor.close()
+        finally:
+            cursor.close()
 
 
 def get_organization_cloud_connection(organization_id: str, provider: str, user_id: str = None):
@@ -69,36 +68,14 @@ def get_organization_cloud_connection(organization_id: str, provider: str, user_
     Organization-level cloud storage ensures all team members access the same shared drive.
     Fallback to user_id for legacy connections created before multi-tenant migration.
     """
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
 
-    # Convert to string to avoid UUID adapter errors
-    org_id_str = str(organization_id)
+        # Convert to string to avoid UUID adapter errors
+        org_id_str = str(organization_id)
 
-    try:
-        # Try organization-level connection first
-        cursor.execute("""
-            SELECT
-                access_token,
-                refresh_token,
-                token_expires_at,
-                provider_email,
-                storage_type,
-                drive_id,
-                metadata
-            FROM user_cloud_storage_tokens
-            WHERE organization_id = %s
-              AND provider = %s
-              AND is_active = true
-            ORDER BY connected_at DESC
-            LIMIT 1
-        """, (org_id_str, provider))
-
-        connection = cursor.fetchone()
-
-        # Fallback to user-level connection if no org connection found
-        if not connection and user_id:
-            logger.warning(f"No org-level {provider} found for org {org_id_str}, trying user-level for user {user_id}")
+        try:
+            # Try organization-level connection first
             cursor.execute("""
                 SELECT
                     access_token,
@@ -109,32 +86,54 @@ def get_organization_cloud_connection(organization_id: str, provider: str, user_
                     drive_id,
                     metadata
                 FROM user_cloud_storage_tokens
-                WHERE user_id = %s
+                WHERE organization_id = %s
                   AND provider = %s
                   AND is_active = true
                 ORDER BY connected_at DESC
                 LIMIT 1
-            """, (str(user_id), provider))
+            """, (org_id_str, provider))
+
             connection = cursor.fetchone()
 
-        if not connection:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No active {provider} connection found. Please connect {provider} first."
-            )
+            # Fallback to user-level connection if no org connection found
+            if not connection and user_id:
+                logger.warning(f"No org-level {provider} found for org {org_id_str}, trying user-level for user {user_id}")
+                cursor.execute("""
+                    SELECT
+                        access_token,
+                        refresh_token,
+                        token_expires_at,
+                        provider_email,
+                        storage_type,
+                        drive_id,
+                        metadata
+                    FROM user_cloud_storage_tokens
+                    WHERE user_id = %s
+                      AND provider = %s
+                      AND is_active = true
+                    ORDER BY connected_at DESC
+                    LIMIT 1
+                """, (str(user_id), provider))
+                connection = cursor.fetchone()
 
-        # Convert to dict
-        connection = dict(connection)
+            if not connection:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No active {provider} connection found. Please connect {provider} first."
+                )
 
-        # Extract selected_folders from metadata if available
-        metadata = connection.get('metadata', {}) or {}
-        connection['selected_folders'] = metadata.get('selected_folders', [])
+            # Convert to dict
+            connection = dict(connection)
 
-        logger.info(f"Cloud connection loaded for organization {org_id_str}: provider={provider}, storage_type={connection.get('storage_type', 'personal')}")
-        return connection
+            # Extract selected_folders from metadata if available
+            metadata = connection.get('metadata', {}) or {}
+            connection['selected_folders'] = metadata.get('selected_folders', [])
 
-    finally:
-        cursor.close()
+            logger.info(f"Cloud connection loaded for organization {org_id_str}: provider={provider}, storage_type={connection.get('storage_type', 'personal')}")
+            return connection
+
+        finally:
+            cursor.close()
 
 
 # ============================================================================
@@ -772,39 +771,42 @@ async def save_folder_selection(request: Request, body: FolderSelectionRequest):
     if body.provider not in ['dropbox', 'onedrive', 'google_drive']:
         raise HTTPException(status_code=400, detail="Invalid provider")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
-        # Update selected_folders in database
-        cursor.execute("""
-            UPDATE user_cloud_storage_tokens
-            SET selected_folders = %s, updated_at = NOW()
-            WHERE user_id = %s AND provider = %s
-        """, (json.dumps(body.selected_folders), user_id, body.provider))
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                # Update selected_folders in database
+                cursor.execute("""
+                    UPDATE user_cloud_storage_tokens
+                    SET selected_folders = %s, updated_at = NOW()
+                    WHERE user_id = %s AND provider = %s
+                """, (json.dumps(body.selected_folders), user_id, body.provider))
 
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"{body.provider} not connected")
+                if cursor.rowcount == 0:
+                    raise HTTPException(status_code=404, detail=f"{body.provider} not connected")
 
-        conn.commit()
+                conn.commit()
 
-        logger.info(f"✅ Folder selections saved for {body.provider}: {len(body.selected_folders)} folders")
+                logger.info(f"✅ Folder selections saved for {body.provider}: {len(body.selected_folders)} folders")
 
-        return {
-            "success": True,
-            "message": f"Saved {len(body.selected_folders)} folder selections",
-            "provider": body.provider,
-            "folder_count": len(body.selected_folders)
-        }
+                return {
+                    "success": True,
+                    "message": f"Saved {len(body.selected_folders)} folder selections",
+                    "provider": body.provider,
+                    "folder_count": len(body.selected_folders)
+                }
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error saving folder selections: {e}")
+                conn.rollback()
+                raise HTTPException(status_code=500, detail=str(e))
+            finally:
+                cursor.close()
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error saving folder selections: {e}")
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
 
 
 @router.get("/cloud-storage/folders/selected/{provider}")
@@ -817,38 +819,41 @@ async def get_selected_folders(request: Request, provider: str):
     if provider not in ['dropbox', 'onedrive', 'google_drive']:
         raise HTTPException(status_code=400, detail="Invalid provider")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
-        cursor.execute("""
-            SELECT selected_folders
-            FROM user_cloud_storage_tokens
-            WHERE user_id = %s AND provider = %s AND is_active = true
-            LIMIT 1
-        """, (user_id, provider))
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT selected_folders
+                    FROM user_cloud_storage_tokens
+                    WHERE user_id = %s AND provider = %s AND is_active = true
+                    LIMIT 1
+                """, (user_id, provider))
 
-        result = cursor.fetchone()
+                result = cursor.fetchone()
 
-        if not result:
-            raise HTTPException(status_code=404, detail=f"{provider} not connected")
+                if not result:
+                    raise HTTPException(status_code=404, detail=f"{provider} not connected")
 
-        selected_folders = result['selected_folders'] if result['selected_folders'] else []
+                selected_folders = result['selected_folders'] if result['selected_folders'] else []
 
-        return {
-            "success": True,
-            "provider": provider,
-            "selected_folders": selected_folders,
-            "has_restrictions": len(selected_folders) > 0
-        }
+                return {
+                    "success": True,
+                    "provider": provider,
+                    "selected_folders": selected_folders,
+                    "has_restrictions": len(selected_folders) > 0
+                }
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error getting selected folders: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+            finally:
+                cursor.close()
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting selected folders: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
 
 
 @router.get("/cloud-storage/folders/all/{provider}")

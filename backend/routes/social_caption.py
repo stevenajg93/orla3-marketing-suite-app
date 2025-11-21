@@ -48,12 +48,14 @@ def get_user_from_request(request: Request) -> str:
 def load_brand_strategy():
     """Load brand strategy from PostgreSQL"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
-        strategy = cur.fetchone()
-        cur.close()
-        return dict(strategy) if strategy else None
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * FROM brand_strategy ORDER BY created_at DESC LIMIT 1")
+                strategy = cur.fetchone()
+                return dict(strategy) if strategy else None
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error loading brand strategy: {e}")
         return None
