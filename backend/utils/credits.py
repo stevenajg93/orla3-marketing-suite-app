@@ -3,13 +3,12 @@ Credit Management Utility
 Handles credit deduction, checking, and tracking
 """
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from typing import Dict, Optional
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from db_pool import get_db_connection
+from typing import Dict, Optional
 import json
-
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Credit costs for different operations
 CREDIT_COSTS = {
@@ -50,42 +49,40 @@ def get_user_credits(user_id: str) -> Dict:
             "last_reset": "2024-01-15T10:00:00"
         }
     """
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                SELECT
+                    credit_balance as balance,
+                    monthly_credit_allocation as monthly_allocation,
+                    total_credits_used as total_used,
+                    total_credits_purchased as total_purchased,
+                    last_credit_reset_at as last_reset
+                FROM users
+                WHERE id = %s
+            """, (user_id,))
 
-    cur.execute("""
-        SELECT
-            credit_balance as balance,
-            monthly_credit_allocation as monthly_allocation,
-            total_credits_used as total_used,
-            total_credits_purchased as total_purchased,
-            last_credit_reset_at as last_reset
-        FROM users
-        WHERE id = %s
-    """, (user_id,))
+            result = cur.fetchone()
 
-    result = cur.fetchone()
-    cur.close()
-    conn.close()
+            if not result:
+                raise ValueError(f"User not found: {user_id}")
 
-    if not result:
-        raise ValueError(f"User not found: {user_id}")
-
-    return dict(result)
+            return dict(result)
+        finally:
+            cur.close()
 
 
 def check_sufficient_credits(user_id: str, required_credits: int) -> bool:
     """Check if user has enough credits"""
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
-
-    cur.execute("SELECT has_sufficient_credits(%s, %s)", (user_id, required_credits))
-    has_credits = cur.fetchone()[0]
-
-    cur.close()
-    conn.close()
-
-    return has_credits
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT has_sufficient_credits(%s, %s)", (user_id, required_credits))
+            has_credits = cur.fetchone()[0]
+            return has_credits
+        finally:
+            cur.close()
 
 
 def deduct_credits(
@@ -122,57 +119,54 @@ def deduct_credits(
     if credits == 0:
         raise ValueError(f"Invalid operation type: {operation_type}")
 
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            # Check if user has enough credits
+            if not check_sufficient_credits(user_id, credits):
+                credit_info = get_user_credits(user_id)
+                raise InsufficientCreditsError(credits, credit_info['balance'])
 
-    try:
-        # Check if user has enough credits
-        if not check_sufficient_credits(user_id, credits):
+            # Deduct credits using database function
+            cur.execute("""
+                SELECT record_credit_transaction(
+                    %s::uuid,
+                    'spent'::varchar,
+                    %s::integer,
+                    %s::varchar,
+                    %s::jsonb,
+                    %s::text
+                ) as transaction_id
+            """, (
+                user_id,
+                -credits,  # Negative for deduction
+                operation_type,
+                json.dumps(operation_details) if operation_details else None,
+                description or f"Used {credits} credits for {operation_type}"
+            ))
+
+            transaction_id = cur.fetchone()['transaction_id']
+            conn.commit()
+
+            # Get updated balance
             credit_info = get_user_credits(user_id)
-            raise InsufficientCreditsError(credits, credit_info['balance'])
 
-        # Deduct credits using database function
-        cur.execute("""
-            SELECT record_credit_transaction(
-                %s::uuid,
-                'spent'::varchar,
-                %s::integer,
-                %s::varchar,
-                %s::jsonb,
-                %s::text
-            ) as transaction_id
-        """, (
-            user_id,
-            -credits,  # Negative for deduction
-            operation_type,
-            json.dumps(operation_details) if operation_details else None,
-            description or f"Used {credits} credits for {operation_type}"
-        ))
+            return {
+                "transaction_id": str(transaction_id),
+                "credits_deducted": credits,
+                "balance_after": credit_info['balance'],
+                "operation_type": operation_type
+            }
 
-        transaction_id = cur.fetchone()['transaction_id']
-        conn.commit()
-
-        # Get updated balance
-        credit_info = get_user_credits(user_id)
-
-        return {
-            "transaction_id": str(transaction_id),
-            "credits_deducted": credits,
-            "balance_after": credit_info['balance'],
-            "operation_type": operation_type
-        }
-
-    except psycopg2.Error as e:
-        conn.rollback()
-        # Check if it's an insufficient credits error from the database
-        if "Insufficient credits" in str(e):
-            credit_info = get_user_credits(user_id)
-            raise InsufficientCreditsError(credits, credit_info['balance'])
-        raise
-
-    finally:
-        cur.close()
-        conn.close()
+        except Exception as e:
+            conn.rollback()
+            # Check if it's an insufficient credits error from the database
+            if "Insufficient credits" in str(e):
+                credit_info = get_user_credits(user_id)
+                raise InsufficientCreditsError(credits, credit_info['balance'])
+            raise
+        finally:
+            cur.close()
 
 
 def add_credits(
@@ -190,67 +184,63 @@ def add_credits(
     - Refunds
     - Manual adjustments
     """
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                SELECT record_credit_transaction(
+                    %s::uuid,
+                    %s::varchar,
+                    %s::integer,
+                    NULL,
+                    %s::jsonb,
+                    %s::text
+                ) as transaction_id
+            """, (
+                user_id,
+                transaction_type,
+                credits,
+                json.dumps({"stripe_payment_intent_id": stripe_payment_intent_id}) if stripe_payment_intent_id else None,
+                description or f"Added {credits} credits"
+            ))
 
-    try:
-        cur.execute("""
-            SELECT record_credit_transaction(
-                %s::uuid,
-                %s::varchar,
-                %s::integer,
-                NULL,
-                %s::jsonb,
-                %s::text
-            ) as transaction_id
-        """, (
-            user_id,
-            transaction_type,
-            credits,
-            json.dumps({"stripe_payment_intent_id": stripe_payment_intent_id}) if stripe_payment_intent_id else None,
-            description or f"Added {credits} credits"
-        ))
+            transaction_id = cur.fetchone()['transaction_id']
+            conn.commit()
 
-        transaction_id = cur.fetchone()['transaction_id']
-        conn.commit()
+            credit_info = get_user_credits(user_id)
 
-        credit_info = get_user_credits(user_id)
-
-        return {
-            "transaction_id": str(transaction_id),
-            "credits_added": credits,
-            "balance_after": credit_info['balance'],
-            "transaction_type": transaction_type
-        }
-
-    finally:
-        cur.close()
-        conn.close()
+            return {
+                "transaction_id": str(transaction_id),
+                "credits_added": credits,
+                "balance_after": credit_info['balance'],
+                "transaction_type": transaction_type
+            }
+        finally:
+            cur.close()
 
 
 def get_credit_history(user_id: str, limit: int = 50) -> list:
     """Get user's credit transaction history"""
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    cur = conn.cursor()
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                SELECT
+                    id,
+                    transaction_type,
+                    amount,
+                    balance_after,
+                    operation_type,
+                    operation_details,
+                    description,
+                    created_at
+                FROM credit_transactions
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+                LIMIT %s
+            """, (user_id, limit))
 
-    cur.execute("""
-        SELECT
-            id,
-            transaction_type,
-            amount,
-            balance_after,
-            operation_type,
-            operation_details,
-            description,
-            created_at
-        FROM credit_transactions
-        WHERE user_id = %s
-        ORDER BY created_at DESC
-        LIMIT %s
-    """, (user_id, limit))
-
-    transactions = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return [dict(tx) for tx in transactions]
+            transactions = cur.fetchall()
+            return [dict(tx) for tx in transactions]
+        finally:
+            cur.close()
