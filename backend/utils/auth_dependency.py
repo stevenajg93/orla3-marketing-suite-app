@@ -8,13 +8,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Dict
 import sys
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
 
 security = HTTPBearer()
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 async def get_current_user_id(
@@ -150,43 +147,43 @@ async def get_user_context(
     Raises:
         HTTPException: If user has no organization or invalid state
     """
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    cursor = conn.cursor()
+    from db_pool import get_db_connection
 
-    try:
-        # Get user's current organization and role
-        cursor.execute("""
-            SELECT
-                u.current_organization_id,
-                om.role
-            FROM users u
-            LEFT JOIN organization_members om ON om.user_id = u.id
-                AND om.organization_id = u.current_organization_id
-            WHERE u.id = %s
-        """, (user_id,))
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            # Get user's current organization and role
+            cursor.execute("""
+                SELECT
+                    u.current_organization_id,
+                    om.role
+                FROM users u
+                LEFT JOIN organization_members om ON om.user_id = u.id
+                    AND om.organization_id = u.current_organization_id
+                WHERE u.id = %s
+            """, (user_id,))
 
-        result = cursor.fetchone()
+            result = cursor.fetchone()
 
-        # Allow legacy users without organizations (for backwards compatibility)
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="User not found in database",
-            )
+            # Allow legacy users without organizations (for backwards compatibility)
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="User not found in database",
+                )
 
-        organization_id = result['current_organization_id']
-        role = result['role']
+            organization_id = result['current_organization_id']
+            role = result['role']
 
-        # For users without organization (legacy/free users), use NULL organization_id
-        return {
-            "user_id": user_id,
-            "organization_id": str(organization_id) if organization_id else None,
-            "role": role or "member"  # Default to member if no role found
-        }
+            # For users without organization (legacy/free users), use NULL organization_id
+            return {
+                "user_id": user_id,
+                "organization_id": str(organization_id) if organization_id else None,
+                "role": role or "member"  # Default to member if no role found
+            }
 
-    finally:
-        cursor.close()
-        conn.close()
+        finally:
+            cursor.close()
 
 
 async def verify_super_admin(user_id: str = Depends(get_current_user_id)) -> str:
