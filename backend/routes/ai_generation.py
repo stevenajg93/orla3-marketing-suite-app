@@ -14,6 +14,37 @@ from lib.gcs_storage import upload_bytes_to_gcs
 logger = setup_logger(__name__)
 router = APIRouter()
 
+@router.get("/test-gcp-auth")
+async def test_gcp_auth():
+    """Test GCP OAuth2 authentication without making actual API calls"""
+    try:
+        if not all([GCP_CLIENT_ID, GCP_CLIENT_SECRET, GCP_REFRESH_TOKEN]):
+            return {
+                "success": False,
+                "error": "GCP credentials not configured",
+                "details": {
+                    "GCP_CLIENT_ID": bool(GCP_CLIENT_ID),
+                    "GCP_CLIENT_SECRET": bool(GCP_CLIENT_SECRET),
+                    "GCP_REFRESH_TOKEN": bool(GCP_REFRESH_TOKEN)
+                }
+            }
+
+        # Try to get access token
+        access_token = get_access_token()
+
+        return {
+            "success": True,
+            "message": "GCP OAuth2 authentication successful",
+            "token_preview": access_token[:50] + "..." if access_token else None
+        }
+    except Exception as e:
+        logger.error(f"GCP auth test failed: {type(e).__name__}: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": f"{type(e).__name__}: {str(e)}",
+            "error_type": type(e).__name__
+        }
+
 # Load OAuth2 credentials from environment
 GCP_CLIENT_ID = os.getenv("GCP_CLIENT_ID")
 GCP_CLIENT_SECRET = os.getenv("GCP_CLIENT_SECRET")
@@ -260,10 +291,12 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
         raise  # Re-raise HTTP exceptions
 
     except Exception as e:
-        logger.error(f"❌ Image generation error: {str(e)}", exc_info=True)
+        error_type = type(e).__name__
+        error_msg = str(e) if str(e) else "Unknown error"
+        logger.error(f"❌ Image generation error ({error_type}): {error_msg}", exc_info=True)
         return ImageGenerateResponse(
             success=False,
-            error=f"Image generation failed: {str(e)}"
+            error=f"Image generation failed ({error_type}): {error_msg}"
         )
 
 @router.post("/generate-video-veo", response_model=VideoGenerateResponse)
