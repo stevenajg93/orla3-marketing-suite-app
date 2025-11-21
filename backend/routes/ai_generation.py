@@ -278,50 +278,76 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
                     else:
                         logger.error(f"❌ Unexpected predictions type: {type(predictions)}")
 
-                # Extract image from response
-                if "predictions" not in data:
-                    logger.error(f"❌ No predictions in response: {list(data.keys())}")
+                # Extract image from response - with detailed error handling
+                try:
+                    if "predictions" not in data:
+                        logger.error(f"❌ No predictions in response: {list(data.keys())}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"No images generated. Response keys: {list(data.keys())}"
+                        )
+
+                    predictions = data["predictions"]
+                    logger.info(f"📊 Got predictions - type: {type(predictions).__name__}, value sample: {str(predictions)[:200]}")
+
+                    # Handle both list and dict responses
+                    if isinstance(predictions, dict):
+                        logger.error(f"❌ Predictions is a dict, not a list. Keys: {list(predictions.keys())}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"API returned dict instead of list. Keys: {list(predictions.keys())}"
+                        )
+
+                    if not isinstance(predictions, list):
+                        logger.error(f"❌ Predictions is not a list: {type(predictions).__name__}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"API returned {type(predictions).__name__} instead of list"
+                        )
+
+                    if len(predictions) == 0:
+                        logger.error(f"❌ Predictions list is empty")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error="API returned empty predictions list"
+                        )
+
+                    # Get first prediction - this should be safe now
+                    logger.info(f"📊 Accessing predictions[0] from list of {len(predictions)} items")
+                    prediction = predictions[0]
+                    logger.info(f"📊 Prediction type: {type(prediction).__name__}, keys: {list(prediction.keys()) if isinstance(prediction, dict) else 'N/A'}")
+
+                    # Image is in bytesBase64Encoded field
+                    if not isinstance(prediction, dict):
+                        logger.error(f"❌ Prediction is not a dict: {type(prediction).__name__}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"Prediction item is {type(prediction).__name__}, expected dict"
+                        )
+
+                    if "bytesBase64Encoded" not in prediction:
+                        logger.error(f"❌ No bytesBase64Encoded in response: {list(prediction.keys())}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"Missing bytesBase64Encoded. Available keys: {list(prediction.keys())}"
+                        )
+
+                    image_base64 = prediction["bytesBase64Encoded"]
+                    logger.info(f"✅ Image generated successfully ({len(image_base64)} chars)")
+
                     return ImageGenerateResponse(
-                        success=False,
-                        error="No images generated. Response missing predictions."
+                        success=True,
+                        image_data=f"data:image/png;base64,{image_base64}",
+                        image_url=None
                     )
 
-                predictions = data["predictions"]
-
-                # Handle both list and dict responses
-                if isinstance(predictions, dict):
-                    logger.error(f"❌ Predictions is a dict, not a list. Keys: {list(predictions.keys())}")
+                except KeyError as ke:
+                    import traceback
+                    logger.error(f"❌ KeyError during predictions parsing: {ke}\nData: {str(data)[:500]}\n{traceback.format_exc()}")
                     return ImageGenerateResponse(
                         success=False,
-                        error=f"Unexpected response format: predictions is a dict with keys {list(predictions.keys())}"
+                        error=f"KeyError parsing API response: {ke}. Data keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}"
                     )
-
-                if not isinstance(predictions, list) or len(predictions) == 0:
-                    logger.error(f"❌ Predictions is empty or wrong type: {type(predictions)}")
-                    return ImageGenerateResponse(
-                        success=False,
-                        error=f"Empty or invalid predictions: {type(predictions)}"
-                    )
-
-                # Get first prediction
-                prediction = predictions[0]
-
-                # Image is in bytesBase64Encoded field
-                if "bytesBase64Encoded" not in prediction:
-                    logger.error(f"❌ No bytesBase64Encoded in response: {list(prediction.keys())}")
-                    return ImageGenerateResponse(
-                        success=False,
-                        error=f"Unexpected response format. Keys: {list(prediction.keys())}"
-                    )
-
-                image_base64 = prediction["bytesBase64Encoded"]
-                logger.info(f"✅ Image generated successfully ({len(image_base64)} chars)")
-
-                return ImageGenerateResponse(
-                    success=True,
-                    image_data=f"data:image/png;base64,{image_base64}",
-                    image_url=None
-                )
 
             elif response.status_code == 403:
                 error_text = response.text
@@ -362,10 +388,22 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
     except HTTPException:
         raise  # Re-raise HTTP exceptions
 
+    except KeyError as ke:
+        # Specific handling for KeyError to get more details
+        import traceback
+        tb = traceback.format_exc()
+        logger.error(f"❌ KeyError in image generation: key={ke}, traceback:\n{tb}")
+        return ImageGenerateResponse(
+            success=False,
+            error=f"Image generation failed (KeyError): key={ke}. This usually means the API response format was unexpected. Check Railway logs for full traceback."
+        )
+
     except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
         error_type = type(e).__name__
         error_msg = str(e) if str(e) else "Unknown error"
-        logger.error(f"❌ Image generation error ({error_type}): {error_msg}", exc_info=True)
+        logger.error(f"❌ Image generation error ({error_type}): {error_msg}\nTraceback:\n{tb}")
         return ImageGenerateResponse(
             success=False,
             error=f"Image generation failed ({error_type}): {error_msg}"
