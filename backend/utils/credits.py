@@ -83,9 +83,9 @@ def check_sufficient_credits(user_id: str, required_credits: int) -> bool:
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-            cur.execute("SELECT has_sufficient_credits(%s, %s)", (user_id, required_credits))
-            has_credits = cur.fetchone()[0]
-            return has_credits
+            cur.execute("SELECT has_sufficient_credits(%s, %s) as has_credits", (user_id, required_credits))
+            result = cur.fetchone()
+            return result['has_credits'] if result else False
         finally:
             cur.close()
 

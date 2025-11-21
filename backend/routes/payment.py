@@ -468,10 +468,11 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
         with get_db_connection() as conn:
             cur = conn.cursor()
             cur.execute(
-                "SELECT is_webhook_event_processed(%s)",
+                "SELECT is_webhook_event_processed(%s) as is_processed",
                 (event_id,)
             )
-            already_processed = cur.fetchone()[0]
+            result = cur.fetchone()
+            already_processed = result['is_processed'] if result else False
             cur.close()
 
         if already_processed:

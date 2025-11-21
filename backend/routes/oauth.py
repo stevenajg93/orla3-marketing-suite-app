@@ -70,7 +70,8 @@ def save_social_account(platform: str, account_data: dict, user_id: str):
                 account_data.get('is_default', False)
             ))
 
-            account_id = cur.fetchone()[0]
+            result = cur.fetchone()
+            account_id = result['id'] if result else None
             conn.commit()
             logger.info(f"✅ Saved {platform} account: {account_data['account_name']} (ID: {account_id})")
             return account_id
