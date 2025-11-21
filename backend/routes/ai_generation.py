@@ -263,6 +263,11 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
 
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"📦 Response data keys: {list(data.keys())}")
+
+                # Log predictions structure
+                if "predictions" in data:
+                    logger.info(f"📊 Predictions type: {type(data['predictions'])}, length: {len(data['predictions']) if hasattr(data['predictions'], '__len__') else 'N/A'}")
 
                 # Extract image from response
                 if "predictions" in data and len(data["predictions"]) > 0:
@@ -309,7 +314,12 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
 
             else:
                 error_text = response.text
-                logger.error(f"❌ Request failed: {response.status_code} - {error_text}")
+                logger.error(f"❌ Request failed: {response.status_code} - {error_text[:500]}")
+                try:
+                    error_data = response.json()
+                    logger.error(f"❌ Error JSON: {error_data}")
+                except:
+                    pass
                 return ImageGenerateResponse(
                     success=False,
                     error=f"Image generation failed (HTTP {response.status_code}): {error_text[:200]}"
