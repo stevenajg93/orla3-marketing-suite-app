@@ -48,37 +48,38 @@ def get_library_content(request: Request, limit: int = 100, offset: int = 0):
         user_id = get_user_id(request)
         # Convert UUID to string for PostgreSQL compatibility
         user_id_str = str(user_id)
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Get total count
+                cur.execute(
+                    "SELECT COUNT(*) as total FROM content_library WHERE user_id = %s",
+                    (user_id_str,)
+                )
+                total = cur.fetchone()['total']
 
-        # Get total count
-        cur.execute(
-            "SELECT COUNT(*) as total FROM content_library WHERE user_id = %s",
-            (user_id_str,)
-        )
-        total = cur.fetchone()['total']
+                # Get paginated items WITHOUT the large 'content' field to reduce response size
+                cur.execute(
+                    """SELECT id, user_id, title, content_type, status, platform, tags,
+                              media_url, created_at
+                       FROM content_library
+                       WHERE user_id = %s
+                       ORDER BY created_at DESC
+                       LIMIT %s OFFSET %s""",
+                    (user_id_str, limit, offset)
+                )
+                items = cur.fetchall()
 
-        # Get paginated items WITHOUT the large 'content' field to reduce response size
-        cur.execute(
-            """SELECT id, user_id, title, content_type, status, platform, tags,
-                      media_url, created_at
-               FROM content_library
-               WHERE user_id = %s
-               ORDER BY created_at DESC
-               LIMIT %s OFFSET %s""",
-            (user_id_str, limit, offset)
-        )
-        items = cur.fetchall()
-        cur.close()
-
-        logger.info(f"Loaded {len(items)}/{total} library items for user {user_id} (limit={limit}, offset={offset})")
-        return {
-            "items": items,
-            "total": total,
-            "limit": limit,
-            "offset": offset,
-            "has_more": (offset + len(items)) < total
-        }
+                logger.info(f"Loaded {len(items)}/{total} library items for user {user_id} (limit={limit}, offset={offset})")
+                return {
+                    "items": items,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset,
+                    "has_more": (offset + len(items)) < total
+                }
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error loading library: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to load content: {str(e)}")
@@ -96,25 +97,26 @@ def get_single_content(item_id: str, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Query for specific item with user_id filter for data isolation
+                cur.execute("""
+                    SELECT id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
+                    FROM content_library
+                    WHERE id = %s AND user_id = %s
+                """, (item_id, user_id_str))
 
-        # Query for specific item with user_id filter for data isolation
-        cur.execute("""
-            SELECT id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
-            FROM content_library
-            WHERE id = %s AND user_id = %s
-        """, (item_id, user_id_str))
+                item = cur.fetchone()
 
-        item = cur.fetchone()
-        cur.close()
+                if not item:
+                    logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+                    raise HTTPException(status_code=404, detail="Content not found or not owned by user")
 
-        if not item:
-            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
-            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
-
-        logger.info(f"Retrieved content for user {user_id}: {item_id}")
-        return item
+                logger.info(f"Retrieved content for user {user_id}: {item_id}")
+                return item
+            finally:
+                cur.close()
     except HTTPException:
         raise
     except Exception as e:
@@ -133,31 +135,32 @@ def save_content(item: ContentItem, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    INSERT INTO content_library (user_id, title, content_type, content, status, platform, tags, media_url, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
+                """, (
+                    user_id_str,
+                    item.title,
+                    item.content_type,
+                    item.content,
+                    item.status,
+                    item.platform,
+                    item.tags or [],
+                    item.media_url,
+                    datetime.now()
+                ))
 
-        cur.execute("""
-            INSERT INTO content_library (user_id, title, content_type, content, status, platform, tags, media_url, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
-        """, (
-            user_id_str,
-            item.title,
-            item.content_type,
-            item.content,
-            item.status,
-            item.platform,
-            item.tags or [],
-            item.media_url,
-            datetime.now()
-        ))
+                saved_item = cur.fetchone()
+                conn.commit()
 
-        saved_item = cur.fetchone()
-        conn.commit()
-        cur.close()
-
-        logger.info(f"Saved content to PostgreSQL for user {user_id}: {item.title}")
-        return {"success": True, "item": saved_item}
+                logger.info(f"Saved content to PostgreSQL for user {user_id}: {item.title}")
+                return {"success": True, "item": saved_item}
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error saving content: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to save content: {str(e)}")
@@ -174,37 +177,38 @@ def update_content(item_id: str, item: ContentItem, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    UPDATE content_library
+                    SET title = %s, content_type = %s, content = %s, status = %s,
+                        platform = %s, tags = %s, media_url = %s
+                    WHERE id = %s AND user_id = %s
+                    RETURNING id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
+                """, (
+                    item.title,
+                    item.content_type,
+                    item.content,
+                    item.status,
+                    item.platform,
+                    item.tags or [],
+                    item.media_url,
+                    item_id,
+                    user_id_str
+                ))
 
-        cur.execute("""
-            UPDATE content_library
-            SET title = %s, content_type = %s, content = %s, status = %s,
-                platform = %s, tags = %s, media_url = %s
-            WHERE id = %s AND user_id = %s
-            RETURNING id, user_id, title, content_type, content, status, platform, tags, media_url, created_at
-        """, (
-            item.title,
-            item.content_type,
-            item.content,
-            item.status,
-            item.platform,
-            item.tags or [],
-            item.media_url,
-            item_id,
-            user_id_str
-        ))
+                updated_item = cur.fetchone()
+                conn.commit()
 
-        updated_item = cur.fetchone()
-        conn.commit()
-        cur.close()
+                if not updated_item:
+                    logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+                    raise HTTPException(status_code=404, detail="Content not found or not owned by user")
 
-        if not updated_item:
-            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
-            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
-
-        logger.info(f"Updated content in PostgreSQL for user {user_id}: {item_id}")
-        return {"success": True, "item": updated_item}
+                logger.info(f"Updated content in PostgreSQL for user {user_id}: {item_id}")
+                return {"success": True, "item": updated_item}
+            finally:
+                cur.close()
     except HTTPException:
         raise
     except Exception as e:
@@ -223,24 +227,25 @@ def delete_content(item_id: str, request: Request):
     user_id_str = str(user_id)
 
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute(
+                    "DELETE FROM content_library WHERE id = %s AND user_id = %s RETURNING id",
+                    (item_id, user_id_str)
+                )
 
-        cur.execute(
-            "DELETE FROM content_library WHERE id = %s AND user_id = %s RETURNING id",
-            (item_id, user_id_str)
-        )
+                deleted_item = cur.fetchone()
+                conn.commit()
 
-        deleted_item = cur.fetchone()
-        conn.commit()
-        cur.close()
+                if not deleted_item:
+                    logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
+                    raise HTTPException(status_code=404, detail="Content not found or not owned by user")
 
-        if not deleted_item:
-            logger.warning(f"Content not found or not owned by user {user_id}: {item_id}")
-            raise HTTPException(status_code=404, detail="Content not found or not owned by user")
-
-        logger.info(f"Deleted content from PostgreSQL for user {user_id}: {item_id}")
-        return {"success": True}
+                logger.info(f"Deleted content from PostgreSQL for user {user_id}: {item_id}")
+                return {"success": True}
+            finally:
+                cur.close()
     except HTTPException:
         raise
     except Exception as e:
