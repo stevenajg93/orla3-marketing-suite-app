@@ -1,5 +1,83 @@
 # ORLA³ Marketing Suite - Developer Handoff
 
+## 🚨 FIRST COURSE OF ACTION (November 21, 2025 Code Assessment)
+
+A comprehensive code assessment was conducted on November 21, 2025. The following issues were identified and should be addressed in priority order:
+
+### Phase 1 - Critical Security Fixes (Do First)
+
+| Priority | Issue | File | Fix |
+|----------|-------|------|-----|
+| 1 | **SQL Injection Risk** | `backend/routes/admin.py:177` | Use `psycopg2.sql` module for dynamic WHERE clauses |
+| 2 | **JWT Secret Fallback** | `backend/config.py:54` | Remove default value `"your-secret-key-change-in-production-PLEASE"` |
+| 3 | **Connection Pool Leaks** | `backend/routes/competitor.py` (7 locations) | Convert to `with get_db_connection() as conn:` pattern |
+| 4 | **Error Details Exposed** | 17+ backend routes | Log errors internally, return generic messages to clients |
+| 5 | **Bare Except Clauses** | 8 backend files | Replace `except:` with specific exceptions |
+| 6 | **Unsafe Redirects** | `lib/api-client.ts`, `app/dashboard/layout.tsx` | Create safe redirect utility with URL validation |
+
+### Phase 2 - High Priority Architectural (Next Sprint)
+
+| Priority | Issue | File | Fix |
+|----------|-------|------|-----|
+| 1 | **Monolithic Component** | `app/dashboard/social/page.tsx` (4,849 lines) | Break into 8-10 smaller components |
+| 2 | **No Memoization** | All large frontend components | Add `React.memo()`, `useMemo()`, `useCallback()` |
+| 3 | **State Explosion** | 60+ `useState` in single components | Refactor to `useReducer` pattern |
+| 4 | **Missing Error Boundaries** | Frontend pages | Add React Error Boundaries |
+| 5 | **Token Expiration** | `backend/routes/publisher.py` | Validate OAuth token expiry before API calls |
+| 6 | **Request Tracing** | All backend routes | Add request ID middleware for debugging |
+
+### Phase 3 - Medium Priority Quality (Future)
+
+- Replace hardcoded email feature toggles (`s.gillespie@gecslabs.com`) with role-based checks
+- Consolidate all API calls to use centralized `api` client (remove raw `fetch()` calls)
+- Remove 156 `console.log` statements from frontend
+- Add JSDoc comments to public functions
+- Implement logging utility to replace console statements
+- Add password special character requirement in `utils/auth.py`
+
+### Quick Reference - Connection Pool Fix Pattern
+```python
+# BEFORE (broken - connection leak):
+conn = get_db_connection()
+cur = conn.cursor()
+# ... queries ...
+cur.close()
+# Missing: connection never returned to pool!
+
+# AFTER (correct):
+with get_db_connection() as conn:
+    cur = conn.cursor()
+    try:
+        # ... queries ...
+    finally:
+        cur.close()
+```
+
+### Quick Reference - Safe Redirect Utility
+```typescript
+// Create in lib/utils/redirect.ts
+const SAFE_PATHS = ['/dashboard', '/login', '/signup', '/admin'];
+
+export function safeRedirect(path: string) {
+  if (SAFE_PATHS.some(p => path.startsWith(p))) {
+    window.location.href = path;
+  } else {
+    window.location.href = '/dashboard';
+  }
+}
+```
+
+### Assessment Summary
+| Category | Backend | Frontend | Total |
+|----------|---------|----------|-------|
+| Critical | 6 | 3 | **9** |
+| High | 6 | 5 | **11** |
+| Medium | 8 | 7 | **15** |
+| Low | 5 | 5 | **10** |
+| **Total** | **25** | **20** | **45** |
+
+---
+
 ## 🎯 PROJECT OVERVIEW
 
 **Orla³ Marketing Suite** is a production-ready, AI-powered marketing automation platform for videographers and creative professionals. Built with clean architecture principles, zero technical debt, and immaculate environment management.
@@ -1117,15 +1195,24 @@ curl https://orla3-marketing-suite-app-production.up.railway.app/
 6. **A/B Testing**: Test multiple content variations
 7. **Advanced Reporting**: ROI tracking and performance dashboards
 
-### Technical Debt: NONE ✅
-- ✅ Clean architecture with centralized config
-- ✅ Zero hardcoded URLs or credentials
-- ✅ No double JSON parsing
-- ✅ Proper error handling with logging
-- ✅ Type-safe API client with TypeScript guards
-- ✅ No 'any' types - all properly typed
-- ✅ No duplicate files
-- ✅ Secure environment variable pattern throughout
+### Technical Debt: 45 Issues Identified (Nov 21, 2025 Assessment)
+See **"FIRST COURSE OF ACTION"** section at top of document for full prioritized list.
+
+**Highlights:**
+- 🔴 6 Critical security issues (SQL injection risk, JWT fallback, connection leaks)
+- 🟠 11 High priority architectural issues (monolithic components, no memoization)
+- 🟡 15 Medium priority code quality issues
+- 🟢 10 Low priority style/documentation issues
+
+**What's Working Well:**
+- ✅ Connection pooling architecture (db_pool.py) is solid
+- ✅ RealDictCursor migration complete
+- ✅ JWT authentication flow is secure
+- ✅ Multi-tenant OAuth 2.0 implementation is comprehensive
+- ✅ Credit system with PostgreSQL functions is well-designed
+- ✅ TypeScript strict mode enabled
+- ✅ Centralized API client design is good
+- ✅ No XSS vulnerabilities
 
 ---
 
@@ -1180,6 +1267,13 @@ For questions about this codebase:
 
 ---
 
-**Last Updated**: November 14, 2025
-**Architecture Version**: 6.0 (8/9 Social Platforms + 3-Provider Cloud Storage + OAuth 2.0 Multi-Tenant + Payment & Credit System + Brand Compliance)
-**Status**: ✅ Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage (Google Drive, Dropbox, OneDrive) with folder-level privacy, Stripe payments, credit management, OAuth 2.0 multi-tenant architecture, PKCE security, brand guideline compliance, and zero technical debt
+**Last Updated**: November 21, 2025
+**Architecture Version**: 7.0 (Code Assessment + Security Fixes + Connection Pool Migration)
+**Status**: Production-ready with 8/9 social platforms live (TikTok in review), 3-provider cloud storage, Stripe payments, credit management, OAuth 2.0 multi-tenant architecture. **45 technical debt items identified** - see "FIRST COURSE OF ACTION" section for prioritized fix list.
+
+**Recent Session Work (Nov 20-21, 2025):**
+- Fixed RealDictCursor compatibility issues (KeyError: 0 bugs)
+- Fixed Facebook OAuth connection (context manager issue)
+- Fixed admin.py connection pool migration (10 functions)
+- YouTube OAuth verification submitted (pending Google approval)
+- Comprehensive code assessment completed
