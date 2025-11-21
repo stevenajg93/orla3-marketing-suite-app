@@ -186,3 +186,49 @@ async def get_user_context(
 
     finally:
         cursor.close()
+        conn.close()
+
+
+async def verify_super_admin(user_id: str = Depends(get_current_user_id)) -> str:
+    """
+    Verify that the authenticated user is a super admin
+
+    Usage in routes:
+    ```python
+    from utils.auth_dependency import verify_super_admin
+
+    @router.get("/admin/my-route")
+    async def admin_route(admin_id: str = Depends(verify_super_admin)):
+        # Only super admins can access this
+        pass
+    ```
+
+    Returns:
+        str: The user_id (UUID) if user is super admin
+
+    Raises:
+        HTTPException: If user is not a super admin
+    """
+    from db_pool import get_db_connection
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT is_super_admin
+                FROM users
+                WHERE id = %s
+            """, (user_id,))
+
+            result = cursor.fetchone()
+
+            if not result or not result['is_super_admin']:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Super admin access required"
+                )
+
+            return user_id
+
+        finally:
+            cursor.close()

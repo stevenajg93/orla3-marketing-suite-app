@@ -11,7 +11,7 @@ from psycopg2.extras import RealDictCursor
 import os
 import json
 from datetime import datetime, timedelta
-from utils.auth_dependency import get_current_user_id
+from utils.auth_dependency import get_current_user_id, verify_super_admin
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
 
