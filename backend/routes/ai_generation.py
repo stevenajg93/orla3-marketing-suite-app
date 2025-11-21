@@ -279,56 +279,49 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
                         logger.error(f"❌ Unexpected predictions type: {type(predictions)}")
 
                 # Extract image from response
-                if "predictions" in data:
-                    predictions = data["predictions"]
-
-                    # Handle both list and dict responses
-                    if isinstance(predictions, list) and len(predictions) > 0:
-                        prediction = predictions[0]
-                    elif isinstance(predictions, dict):
-                        logger.error(f"❌ Predictions is a dict, not a list. Keys: {list(predictions.keys())}")
-                        return ImageGenerateResponse(
-                            success=False,
-                            error=f"Unexpected response format: predictions is a dict with keys {list(predictions.keys())}"
-                        )
-                    else:
-                        logger.error(f"❌ Predictions is empty or wrong type: {type(predictions)}")
-                        return ImageGenerateResponse(
-                            success=False,
-                            error=f"Empty or invalid predictions: {type(predictions)}"
-                        )
-                else:
-                    logger.error(f"❌ No predictions in response: {data.keys()}")
+                if "predictions" not in data:
+                    logger.error(f"❌ No predictions in response: {list(data.keys())}")
                     return ImageGenerateResponse(
                         success=False,
                         error="No images generated. Response missing predictions."
                     )
 
-                if "predictions" in data and isinstance(data["predictions"], list) and len(data["predictions"]) > 0:
-                    prediction = data["predictions"][0]
+                predictions = data["predictions"]
 
-                    # Image is in bytesBase64Encoded field
-                    if "bytesBase64Encoded" in prediction:
-                        image_base64 = prediction["bytesBase64Encoded"]
-                        logger.info(f"✅ Image generated successfully ({len(image_base64)} chars)")
-
-                        return ImageGenerateResponse(
-                            success=True,
-                            image_data=f"data:image/png;base64,{image_base64}",
-                            image_url=None
-                        )
-                    else:
-                        logger.error(f"❌ No bytesBase64Encoded in response: {prediction.keys()}")
-                        return ImageGenerateResponse(
-                            success=False,
-                            error=f"Unexpected response format. Keys: {list(prediction.keys())}"
-                        )
-                else:
-                    logger.error(f"❌ No predictions in response: {data.keys()}")
+                # Handle both list and dict responses
+                if isinstance(predictions, dict):
+                    logger.error(f"❌ Predictions is a dict, not a list. Keys: {list(predictions.keys())}")
                     return ImageGenerateResponse(
                         success=False,
-                        error="No images generated. Response missing predictions."
+                        error=f"Unexpected response format: predictions is a dict with keys {list(predictions.keys())}"
                     )
+
+                if not isinstance(predictions, list) or len(predictions) == 0:
+                    logger.error(f"❌ Predictions is empty or wrong type: {type(predictions)}")
+                    return ImageGenerateResponse(
+                        success=False,
+                        error=f"Empty or invalid predictions: {type(predictions)}"
+                    )
+
+                # Get first prediction
+                prediction = predictions[0]
+
+                # Image is in bytesBase64Encoded field
+                if "bytesBase64Encoded" not in prediction:
+                    logger.error(f"❌ No bytesBase64Encoded in response: {list(prediction.keys())}")
+                    return ImageGenerateResponse(
+                        success=False,
+                        error=f"Unexpected response format. Keys: {list(prediction.keys())}"
+                    )
+
+                image_base64 = prediction["bytesBase64Encoded"]
+                logger.info(f"✅ Image generated successfully ({len(image_base64)} chars)")
+
+                return ImageGenerateResponse(
+                    success=True,
+                    image_data=f"data:image/png;base64,{image_base64}",
+                    image_url=None
+                )
 
             elif response.status_code == 403:
                 error_text = response.text
