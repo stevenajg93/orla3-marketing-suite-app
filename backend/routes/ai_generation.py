@@ -267,10 +267,44 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
 
                 # Log predictions structure
                 if "predictions" in data:
-                    logger.info(f"📊 Predictions type: {type(data['predictions'])}, length: {len(data['predictions']) if hasattr(data['predictions'], '__len__') else 'N/A'}")
+                    predictions = data["predictions"]
+                    logger.info(f"📊 Predictions type: {type(predictions)}")
+
+                    # Check if it's a list or dict
+                    if isinstance(predictions, list):
+                        logger.info(f"📊 Predictions is a list with {len(predictions)} items")
+                    elif isinstance(predictions, dict):
+                        logger.info(f"📊 Predictions is a dict with keys: {list(predictions.keys())}")
+                    else:
+                        logger.error(f"❌ Unexpected predictions type: {type(predictions)}")
 
                 # Extract image from response
-                if "predictions" in data and len(data["predictions"]) > 0:
+                if "predictions" in data:
+                    predictions = data["predictions"]
+
+                    # Handle both list and dict responses
+                    if isinstance(predictions, list) and len(predictions) > 0:
+                        prediction = predictions[0]
+                    elif isinstance(predictions, dict):
+                        logger.error(f"❌ Predictions is a dict, not a list. Keys: {list(predictions.keys())}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"Unexpected response format: predictions is a dict with keys {list(predictions.keys())}"
+                        )
+                    else:
+                        logger.error(f"❌ Predictions is empty or wrong type: {type(predictions)}")
+                        return ImageGenerateResponse(
+                            success=False,
+                            error=f"Empty or invalid predictions: {type(predictions)}"
+                        )
+                else:
+                    logger.error(f"❌ No predictions in response: {data.keys()}")
+                    return ImageGenerateResponse(
+                        success=False,
+                        error="No images generated. Response missing predictions."
+                    )
+
+                if "predictions" in data and isinstance(data["predictions"], list) and len(data["predictions"]) > 0:
                     prediction = data["predictions"][0]
 
                     # Image is in bytesBase64Encoded field
