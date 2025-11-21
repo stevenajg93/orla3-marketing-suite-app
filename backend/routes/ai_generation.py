@@ -29,20 +29,41 @@ async def test_gcp_auth():
                 }
             }
 
-        # Try to get access token
-        access_token = get_access_token()
+        # Test directly without get_access_token() to avoid HTTPException
+        from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request as GoogleAuthRequest
+
+        credentials = Credentials(
+            token=None,
+            refresh_token=GCP_REFRESH_TOKEN,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=GCP_CLIENT_ID,
+            client_secret=GCP_CLIENT_SECRET,
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+
+        credentials.refresh(GoogleAuthRequest())
 
         return {
             "success": True,
             "message": "GCP OAuth2 authentication successful",
-            "token_preview": access_token[:50] + "..." if access_token else None
+            "token_preview": credentials.token[:50] + "..." if credentials.token else "NO TOKEN",
+            "token_length": len(credentials.token) if credentials.token else 0
         }
     except Exception as e:
-        logger.error(f"GCP auth test failed: {type(e).__name__}: {str(e)}", exc_info=True)
+        error_type = type(e).__name__
+        error_msg = str(e) if str(e) else repr(e)
+        error_details = {
+            "message": error_msg,
+            "type": error_type,
+            "args": str(e.args) if hasattr(e, 'args') else None
+        }
+        logger.error(f"GCP auth test failed: {error_type}: {error_msg}", exc_info=True)
         return {
             "success": False,
-            "error": f"{type(e).__name__}: {str(e)}",
-            "error_type": type(e).__name__
+            "error": error_msg,
+            "error_type": error_type,
+            "details": error_details
         }
 
 # Load OAuth2 credentials from environment
