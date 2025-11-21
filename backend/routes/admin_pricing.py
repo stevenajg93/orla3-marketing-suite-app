@@ -3,7 +3,7 @@ Admin Pricing Management API
 Allows super admins to manage subscription plans and credit packages
 """
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from typing import Optional, List
 import psycopg2
@@ -12,7 +12,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
-from middleware.user_context import get_current_user
+from utils.auth_dependency import get_current_user_id
 from db_pool import get_db_connection  # Use connection pool
 import json
 
@@ -20,9 +20,8 @@ router = APIRouter()
 logger = setup_logger(__name__)
 
 
-async def require_super_admin(request: Request):
+async def require_super_admin(user_id: str = Depends(get_current_user_id)):
     """Ensure user is a super admin"""
-    user_id = await get_current_user(request)
 
     with get_db_connection() as conn:
         cur = conn.cursor()
