@@ -81,6 +81,8 @@ def get_access_token() -> str:
     This function exchanges the refresh token for a new access token.
     """
     try:
+        logger.info("🔐 Attempting to refresh GCP access token...")
+
         # Create credentials from refresh token
         credentials = Credentials(
             token=None,
@@ -91,17 +93,29 @@ def get_access_token() -> str:
             scopes=['https://www.googleapis.com/auth/cloud-platform']
         )
 
+        logger.info("🔄 Calling credentials.refresh()...")
         # Refresh to get a new access token
         credentials.refresh(GoogleAuthRequest())
 
-        logger.info("✅ Got fresh access token from OAuth2")
+        if not credentials.token:
+            logger.error("❌ Token refresh succeeded but token is None")
+            raise HTTPException(
+                status_code=503,
+                detail="Token refresh succeeded but received no token"
+            )
+
+        logger.info(f"✅ Got fresh access token from OAuth2 (length: {len(credentials.token)})")
         return credentials.token
 
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Failed to get access token: {str(e)}", exc_info=True)
+        error_type = type(e).__name__
+        error_msg = str(e) if str(e) else repr(e)
+        logger.error(f"❌ Failed to get access token ({error_type}): {error_msg}", exc_info=True)
         raise HTTPException(
             status_code=503,
-            detail=f"Failed to authenticate with Google Cloud: {str(e)}"
+            detail=f"Failed to authenticate with Google Cloud ({error_type}): {error_msg}"
         )
 
 class ImageGenerateRequest(BaseModel):
