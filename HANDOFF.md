@@ -1,12 +1,12 @@
 # ORLA³ Marketing Suite - Production Handoff Document
 
-**Date:** November 20, 2025
-**Status:** ✅ PRODUCTION READY - Code Quality Refactor Complete
-**Version:** 1.0.2
+**Date:** November 22, 2025
+**Status:** ✅ PRODUCTION READY - Security Hardening Complete
+**Version:** 1.0.3
 **Live URL:** https://marketing.orla3.com
 **Admin Portal:** https://marketing.orla3.com/admin
 **Backend API:** https://orla3-marketing-suite-app-production.up.railway.app
-**Latest Commit:** 397cdb1 - Code Quality Refactor (5 Critical Fixes)
+**Latest Commit:** 4e323db - Security Hardening (Auth Dependency Refactor)
 
 ---
 
@@ -286,38 +286,41 @@ These 5 issues were in their reviews but we already fixed them:
 #### ⚠️ **Remaining Valid Issues (Prioritized)**
 
 **CRITICAL (Fix Before Customer Launch):**
-1. **Auth Middleware Fail-Open** (`backend/middleware/user_context.py:73-76`)
-   - Invalid tokens on protected routes proceed with system_admin privileges
-   - Estimated fix: 30 minutes
+1. ✅ **Auth Middleware Fail-Open** - **FIXED** (November 2025)
+   - `backend/middleware/user_context.py` now fails CLOSED
+   - Invalid/missing tokens on protected routes return HTTP 401
+   - Lines 86-99 properly reject unauthenticated requests
 
-2. **JWT Secret Insecure Fallback** (`backend/config.py:54`, `backend/utils/auth.py:19`)
-   - App silently uses insecure default if env var missing
-   - Should crash instead of defaulting
-   - Estimated fix: 15 minutes
+2. ✅ **JWT Secret Insecure Fallback** - **FIXED** (November 2025)
+   - `backend/config.py:56` - No fallback value for JWT_SECRET
+   - `backend/config.py:72-74` - Validates minimum 32 character length
+   - `backend/utils/auth.py:21-26` - Raises ValueError if JWT_SECRET not set (app crashes)
 
 **HIGH (Next Sprint):**
-3. **Zombie Subscription Problem** (`backend/routes/admin.py:735`)
-   - Deleted users remain billed on Stripe forever
-   - Need to cancel Stripe subscription before DB deletion
-   - Estimated fix: 2-3 hours
+3. ✅ **No Connection Pooling** - **FIXED** (November 2025)
+   - `backend/db_pool.py` implements ThreadedConnectionPool (min=2, max=20)
+   - All routes use centralized `get_db_connection()` context manager
+   - Automatic connection return to pool
 
-4. **No Connection Pooling** (Pattern across all routes)
-   - Each request opens new DB connection
-   - Will exhaust PostgreSQL limits at ~50-100 concurrent users
-   - Estimated fix: 3-4 hours
+4. ✅ **Hardcoded Pricing** - **FIXED** (November 2025)
+   - `backend/migrations/013_pricing_tables.sql` - Database tables for plans/packages
+   - `backend/routes/admin_pricing.py` - Full admin API for price management
+   - `backend/routes/payment.py` - Now reads from `subscription_plans` table
+   - Price change history audit trail included
 
-5. **Hardcoded Pricing** (`backend/routes/payment.py:47-100+`)
-   - Cannot change prices without code deployment
-   - Need database-backed pricing with admin UI
-   - Estimated fix: 6-8 hours
+5. ✅ **Zombie Subscription Problem** - **FIXED** (November 22, 2025)
+   - `backend/routes/admin.py:635-741` - `delete_user` now cancels Stripe subscription first
+   - Calls `stripe.Subscription.cancel()` before database deletion
+   - Handles edge cases: already-canceled subscriptions, Stripe errors
+   - Audit log includes `subscription_canceled` status
 
 **MEDIUM (Technical Debt):**
-6. **Auth Tokens in localStorage** (Frontend)
+6. ⚠️ **Auth Tokens in localStorage** (Frontend)
    - Vulnerable to XSS attacks
    - Should use HttpOnly cookies
    - Estimated fix: 1-2 days
 
-7. **No Automated Testing**
+7. ⚠️ **No Automated Testing**
    - No pytest/Jest test suite
    - No CI/CD pre-deployment testing
    - Estimated fix: 1 week
@@ -1431,8 +1434,8 @@ git push origin feature/your-feature-name
 
 ---
 
-**Document Version:** 2.0
-**Last Updated:** November 16, 2025
+**Document Version:** 2.1
+**Last Updated:** November 22, 2025
 **Prepared By:** Claude Code AI Assistant
 **Validated By:** Steven Gillespie (s.gillespie@gecslabs.com)
 

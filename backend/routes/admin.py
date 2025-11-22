@@ -11,6 +11,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import sql
 import os
 import json
+import stripe
 from datetime import datetime, timedelta
 from utils.auth_dependency import get_current_user_id, verify_super_admin
 from logger import setup_logger
@@ -18,6 +19,9 @@ from db_pool import get_db_connection  # Use connection pool
 
 router = APIRouter()
 logger = setup_logger(__name__)
+
+# Initialize Stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 
 
@@ -638,6 +642,7 @@ async def delete_user(
 
     WARNING: This is a destructive action that cannot be undone.
     Deletes:
+    - Stripe subscription (canceled immediately)
     - User account
     - All content library items
     - All credit transactions
@@ -655,9 +660,9 @@ async def delete_user(
                     detail="Cannot delete your own account"
                 )
 
-            # Get user info for audit log
+            # Get user info including Stripe subscription ID
             cursor.execute("""
-                SELECT email, name, plan, credit_balance
+                SELECT email, name, plan, credit_balance, stripe_subscription_id
                 FROM users
                 WHERE id = %s
             """, (user_id,))
@@ -665,6 +670,25 @@ async def delete_user(
             user = cursor.fetchone()
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
+
+            # CRITICAL: Cancel Stripe subscription BEFORE deleting user
+            # This prevents "zombie subscriptions" where deleted users continue to be billed
+            stripe_subscription_id = user.get('stripe_subscription_id')
+            subscription_canceled = False
+
+            if stripe_subscription_id:
+                try:
+                    stripe.Subscription.cancel(stripe_subscription_id)
+                    subscription_canceled = True
+                    logger.info(f"Canceled Stripe subscription {stripe_subscription_id} for user {user['email']}")
+                except stripe.error.InvalidRequestError as e:
+                    # Subscription may already be canceled or doesn't exist
+                    logger.warning(f"Could not cancel subscription {stripe_subscription_id}: {str(e)}")
+                    subscription_canceled = False
+                except stripe.error.StripeError as e:
+                    # Log but don't block deletion - we don't want orphaned DB records
+                    logger.error(f"Stripe error canceling subscription {stripe_subscription_id}: {str(e)}")
+                    subscription_canceled = False
 
             # Log to audit trail BEFORE deletion
             cursor.execute("""
@@ -679,7 +703,9 @@ async def delete_user(
                     'email': user['email'],
                     'name': user['name'],
                     'plan': user['plan'],
-                    'credit_balance': user['credit_balance']
+                    'credit_balance': user['credit_balance'],
+                    'stripe_subscription_id': stripe_subscription_id,
+                    'subscription_canceled': subscription_canceled
                 })
             ))
 
@@ -701,7 +727,8 @@ async def delete_user(
                 "success": True,
                 "user_id": user_id,
                 "email": user['email'],
-                "message": "User permanently deleted"
+                "message": "User permanently deleted",
+                "subscription_canceled": subscription_canceled
             }
 
         except HTTPException:
