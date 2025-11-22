@@ -1,5 +1,7 @@
 import os
+from urllib.parse import urlparse
 from dotenv import load_dotenv
+from fastapi.responses import RedirectResponse
 
 load_dotenv()
 
@@ -74,3 +76,36 @@ class Config:
         return True
 
 Config.validate()
+
+
+def safe_redirect(path: str, fallback_path: str = "/dashboard") -> RedirectResponse:
+    """
+    Create a safe redirect response that only allows redirects to the configured FRONTEND_URL.
+
+    Prevents open redirect vulnerabilities by:
+    1. Only allowing relative paths (starting with /)
+    2. Always prepending the configured FRONTEND_URL
+    3. Falling back to a safe default if the path is invalid
+
+    Args:
+        path: The path to redirect to (must start with /)
+        fallback_path: The path to use if the provided path is invalid
+
+    Returns:
+        RedirectResponse to the validated URL
+    """
+    frontend_url = Config.FRONTEND_URL.rstrip('/')
+
+    # Validate the path - must start with / and not contain protocol markers
+    if not path or not path.startswith('/'):
+        path = fallback_path
+
+    # Prevent protocol-relative URLs (//evil.com) and data/javascript URLs
+    if path.startswith('//') or ':' in path.split('/')[0]:
+        path = fallback_path
+
+    # Ensure no newlines or carriage returns (header injection prevention)
+    if '\n' in path or '\r' in path:
+        path = fallback_path
+
+    return RedirectResponse(url=f"{frontend_url}{path}")
