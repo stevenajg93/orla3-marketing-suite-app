@@ -3,7 +3,7 @@ Cloud Storage OAuth Routes
 Handles OAuth authentication for Google Drive, OneDrive, and Dropbox
 """
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from fastapi.responses import RedirectResponse
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -18,6 +18,7 @@ from config import Config
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -489,13 +490,12 @@ async def dropbox_callback(code: str, state: str):
 # ============================================================================
 
 @router.delete("/cloud-storage/disconnect/{provider}")
-async def disconnect_cloud_storage(provider: str, request: Request):
+async def disconnect_cloud_storage(provider: str, user_id: str = Depends(get_current_user_id)):
     """
     Disconnect a cloud storage provider
 
     Removes OAuth tokens from database
     """
-    user_id = get_user_from_token(request)
 
     if provider not in ['google_drive', 'onedrive', 'dropbox']:
         raise HTTPException(status_code=400, detail="Invalid provider")
@@ -519,13 +519,12 @@ async def disconnect_cloud_storage(provider: str, request: Request):
 
 
 @router.get("/cloud-storage/connections")
-async def list_cloud_connections(request: Request):
+async def list_cloud_connections(user_id: str = Depends(get_current_user_id)):
     """
     List user's cloud storage connections
 
     Returns connected providers with metadata
     """
-    user_id = get_user_from_token(request)
 
     with get_db_connection() as conn:
         cur = conn.cursor()
@@ -550,14 +549,13 @@ async def list_cloud_connections(request: Request):
 
 
 @router.delete("/cloud-storage/disconnect/{provider}")
-async def disconnect_cloud_storage(request: Request, provider: str):
+async def disconnect_cloud_storage_secure(provider: str, user_id: str = Depends(get_current_user_id)):
     """
     Disconnect a cloud storage provider
 
     SECURITY: Revokes OAuth tokens with the provider to truly remove access
     Then marks as inactive in database
     """
-    user_id = get_user_from_token(request)
 
     # Validate provider
     if provider not in ['google_drive', 'onedrive', 'dropbox']:

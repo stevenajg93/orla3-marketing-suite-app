@@ -3,7 +3,7 @@ Social Media OAuth Routes - Multi-Platform Authentication
 Handles OAuth flows for all 9 supported social platforms
 """
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
 from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 
 logger = setup_logger(__name__)
 router = APIRouter()
@@ -142,22 +143,6 @@ class OAuthState(BaseModel):
     created_at: datetime
 
 
-
-def get_user_from_token(request: Request) -> str:
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
-
-
 def generate_pkce_pair():
     """Generate PKCE code_verifier and code_challenge for Twitter OAuth"""
     # Generate random code_verifier (43-128 characters)
@@ -241,7 +226,7 @@ def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
 
 
 @router.get("/get-auth-url/{platform}")
-async def get_auth_url(platform: str, request: Request):
+async def get_auth_url(platform: str, user_id: str = Depends(get_current_user_id)):
     """
     Get OAuth authorization URL for a platform (requires JWT auth)
     Frontend should call this, then redirect to the returned URL
@@ -256,9 +241,6 @@ async def get_auth_url(platform: str, request: Request):
             status_code=500,
             detail=f"{platform.title()} OAuth credentials not configured"
         )
-
-    # Get user_id from JWT token (this is why we need this endpoint)
-    user_id = get_user_from_token(request)
 
     # Generate CSRF state token
     state = secrets.token_urlsafe(32)
@@ -306,7 +288,7 @@ async def get_auth_url(platform: str, request: Request):
 
 
 @router.get("/connect/{platform}")
-async def connect_platform(platform: str, request: Request):
+async def connect_platform(platform: str, user_id: str = Depends(get_current_user_id)):
     """
     Initiate OAuth flow for a social platform (legacy endpoint)
     Use /get-auth-url instead for better security with JWT auth
@@ -321,9 +303,6 @@ async def connect_platform(platform: str, request: Request):
             status_code=500,
             detail=f"{platform.title()} OAuth credentials not configured"
         )
-
-    # Get user_id from token
-    user_id = get_user_from_token(request)
 
     # Generate CSRF state token
     state = secrets.token_urlsafe(32)
@@ -632,14 +611,12 @@ async def get_platform_metadata(platform: str, access_token: str) -> Optional[Di
 
 
 @router.post("/disconnect/{platform}")
-async def disconnect_platform(platform: str, request: Request):
+async def disconnect_platform(platform: str, user_id: str = Depends(get_current_user_id)):
     """
     Disconnect a social platform
     """
     if platform not in PLATFORM_CONFIG:
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
-
-    user_id = get_user_from_token(request)
 
     with get_db_connection() as conn:
         cur = conn.cursor()
@@ -668,11 +645,10 @@ async def disconnect_platform(platform: str, request: Request):
 
 
 @router.get("/status")
-async def get_connection_status(request: Request):
+async def get_connection_status(user_id: str = Depends(get_current_user_id)):
     """
     Get connection status for all platforms
     """
-    user_id = get_user_from_token(request)
 
     with get_db_connection() as conn:
         cur = conn.cursor()
@@ -707,12 +683,11 @@ async def get_connection_status(request: Request):
 
 
 @router.get("/facebook/pages")
-async def get_facebook_pages(request: Request):
+async def get_facebook_pages(user_id: str = Depends(get_current_user_id)):
     """
     Get list of Facebook Pages the user manages
     Requires active Facebook OAuth connection with pages_show_list permission
     """
-    user_id = get_user_from_token(request)
 
     # Get user's Facebook OAuth credentials
     with get_db_connection() as conn:
@@ -794,12 +769,11 @@ async def get_facebook_pages(request: Request):
 
 
 @router.post("/facebook/select-page")
-async def select_facebook_page(request: Request):
+async def select_facebook_page(request: Request, user_id: str = Depends(get_current_user_id)):
     """
     Select which Facebook Page to use for publishing
     Stores page credentials in service_metadata
     """
-    user_id = get_user_from_token(request)
 
     # Get page_id and page_access_token from request body
     body = await request.json()

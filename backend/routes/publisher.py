@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Literal, Dict
 import os
@@ -10,7 +10,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
 
@@ -21,21 +21,6 @@ logger = setup_logger(__name__)
 # ============================================================================
 # MULTI-TENANT AUTH HELPERS
 # ============================================================================
-
-
-def get_user_from_token(request: Request) -> str:
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 
 def get_user_service_credentials(user_id: str, service_type: str) -> Optional[Dict]:
@@ -1202,7 +1187,7 @@ class TwitterPublisher:
 # ============================================================================
 
 @router.post("/publish", response_model=PublishResponse)
-async def publish_content(publish_request: PublishRequest, request: Request):
+async def publish_content(publish_request: PublishRequest, user_id: str = Depends(get_current_user_id)):
     """
     Universal publishing endpoint supporting all platforms
     Routes to appropriate platform publisher based on request
@@ -1210,8 +1195,6 @@ async def publish_content(publish_request: PublishRequest, request: Request):
     MULTI-TENANT: Requires JWT authentication, publishes to user's connected accounts only
     """
 
-    # Extract user_id from JWT token
-    user_id = get_user_from_token(request)
     logger.info(f"Publishing to {publish_request.platform} for user {user_id}")
 
     # Validate character limits BEFORE attempting to publish
@@ -1729,15 +1712,12 @@ async def publish_content(publish_request: PublishRequest, request: Request):
         )
 
 @router.get("/status")
-async def check_publisher_status(request: Request):
+async def check_publisher_status(user_id: str = Depends(get_current_user_id)):
     """
     Check which social platforms the user has connected
 
     MULTI-TENANT: Returns only the authenticated user's connected platforms
     """
-
-    # Extract user_id from JWT token
-    user_id = get_user_from_token(request)
     logger.info(f"Checking publisher status for user {user_id}")
 
     # List of platforms to check

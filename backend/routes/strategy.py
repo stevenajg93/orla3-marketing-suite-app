@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from anthropic import Anthropic
 import json
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 from openai import OpenAI
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 from utils.credits import deduct_credits, InsufficientCreditsError
 
 router = APIRouter()
@@ -21,20 +21,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set")
 
-
-def get_user_from_token(request: Request):
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 def load_brand_voice_assets(user_id: str):
     """Load all uploaded brand voice assets from PostgreSQL for a specific user"""
@@ -166,12 +152,11 @@ def extract_text_from_file(file_path: str) -> str:
         return f"Error reading file: {str(e)}"
 
 @router.post("/analyze")
-async def analyze_brand_voice(request: Request, include_competitors: bool = True):
+async def analyze_brand_voice(include_competitors: bool = True, user_id: str = Depends(get_current_user_id)):
     """
     Analyze brand voice assets and optionally include competitive MARKETING intelligence
     """
     try:
-        user_id = get_user_from_token(request)
 
         # Check and deduct credits BEFORE generating strategy (10 credits)
         try:
@@ -423,9 +408,8 @@ CRITICAL: Return ONLY the JSON object, nothing else."""
         }
 
 @router.get("/current")
-async def get_current_strategy(request: Request):
+async def get_current_strategy(user_id: str = Depends(get_current_user_id)):
     """Get the current brand strategy from PostgreSQL"""
-    user_id = get_user_from_token(request)
     strategy = load_brand_strategy(user_id)
     
     if not strategy:
@@ -440,10 +424,9 @@ async def get_current_strategy(request: Request):
     }
 
 @router.get("/next-keyword")
-async def get_next_keyword(request: Request):
+async def get_next_keyword(user_id: str = Depends(get_current_user_id)):
     """Get the next strategic keyword to write about based on brand strategy"""
     try:
-        user_id = get_user_from_token(request)
         strategy = load_brand_strategy(user_id)
 
         if not strategy:
@@ -553,10 +536,9 @@ Return ONLY valid JSON (no markdown):
         }
 
 @router.post("/market-research")
-async def market_research(request: Request, data: dict):
+async def market_research(data: dict, user_id: str = Depends(get_current_user_id)):
     """Analyze market for a given keyword"""
     try:
-        user_id = get_user_from_token(request)
         keyword = data.get('keyword', '')
         strategy = load_brand_strategy(user_id)
         client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

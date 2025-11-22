@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import List
 import os
@@ -14,7 +14,7 @@ from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
 from lib.brand_asset_extractor import extract_brand_assets, find_logo_file, find_logo_from_database
 from lib.gcs_storage import upload_bytes_to_gcs, is_image_file, is_video_file
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -31,20 +31,6 @@ UPLOAD_CATEGORIES = ["guidelines", "voice_samples", "logos", "target_audience_in
 for category in UPLOAD_CATEGORIES:
     Path(f"{BRAND_VOICE_DIR}/{category}").mkdir(parents=True, exist_ok=True)
 
-
-def get_user_from_token(request: Request):
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 def auto_extract_brand_assets(user_id: str):
     """
@@ -239,13 +225,12 @@ def resolve_drive_shortcut(service, file_id):
 
 @router.post("/upload")
 async def upload_brand_assets(
-    request: Request,
     files: List[UploadFile] = File(...),
-    category: str = "guidelines"
+    category: str = "guidelines",
+    user_id: str = Depends(get_current_user_id)
 ):
     """Upload brand voice training files"""
     try:
-        user_id = get_user_from_token(request)
 
         if category not in UPLOAD_CATEGORIES:
             raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of: {UPLOAD_CATEGORIES}")
@@ -336,10 +321,9 @@ async def upload_brand_assets(
         raise HTTPException(status_code=500, detail="Failed to upload brand assets")
 
 @router.get("/assets")
-async def list_brand_assets(request: Request, category: str = None):
+async def list_brand_assets(category: str = None, user_id: str = Depends(get_current_user_id)):
     """List all brand voice assets, optionally filtered by category"""
     try:
-        user_id = get_user_from_token(request)
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -377,10 +361,9 @@ async def list_brand_assets(request: Request, category: str = None):
         raise HTTPException(status_code=500, detail="Failed to list brand assets")
 
 @router.delete("/assets/{asset_id}")
-async def delete_brand_asset(asset_id: str, request: Request):
+async def delete_brand_asset(asset_id: str, user_id: str = Depends(get_current_user_id)):
     """Delete a brand voice asset"""
     try:
-        user_id = get_user_from_token(request)
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -412,10 +395,9 @@ async def delete_brand_asset(asset_id: str, request: Request):
         raise HTTPException(status_code=500, detail="Failed to delete brand asset")
 
 @router.get("/context/full")
-async def get_full_brand_context(request: Request):
+async def get_full_brand_context(user_id: str = Depends(get_current_user_id)):
     """Get complete brand context from all assets for AI training"""
     try:
-        user_id = get_user_from_token(request)
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -484,10 +466,9 @@ and authentic communication style. Write content that matches this voice natural
         raise HTTPException(status_code=500, detail="Failed to get brand context")
 
 @router.post("/import-from-drive")
-async def import_from_drive(request: Request, file_id: str, filename: str, category: str):
+async def import_from_drive(file_id: str, filename: str, category: str, user_id: str = Depends(get_current_user_id)):
     """Import a file from Google Drive into brand voice assets"""
     try:
-        user_id = get_user_from_token(request)
 
         if category not in UPLOAD_CATEGORIES:
             raise HTTPException(status_code=400, detail=f"Invalid category")
