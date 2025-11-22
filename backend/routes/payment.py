@@ -3,7 +3,7 @@ Stripe Payment Integration
 Handles subscription creation, webhooks, and payment status
 """
 
-from fastapi import APIRouter, HTTPException, Request, Header
+from fastapi import APIRouter, HTTPException, Request, Header, Depends
 from pydantic import BaseModel
 from typing import Optional
 import stripe
@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 from utils.credits import add_credits
 from db_pool import get_db_connection  # Use connection pool
 
@@ -25,20 +25,6 @@ logger = setup_logger(__name__)
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
-def get_user_from_token(request: Request):
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 # ===================================================================
 # DATABASE-DRIVEN PRICING
@@ -175,7 +161,7 @@ async def get_credit_packages():
 
 
 @router.post("/payment/purchase-credits")
-async def purchase_credits(data: CreditPurchaseRequest, request: Request):
+async def purchase_credits(data: CreditPurchaseRequest, user_id: str = Depends(get_current_user_id)):
     """
     Create Stripe checkout session for credit purchase (one-time payment)
 
@@ -183,7 +169,6 @@ async def purchase_credits(data: CreditPurchaseRequest, request: Request):
     credits to the user's balance immediately after payment.
     """
     try:
-        user_id = get_user_from_token(request)
 
         # Fetch packages from database
         packages = get_credit_packages_from_db()
@@ -264,14 +249,13 @@ async def purchase_credits(data: CreditPurchaseRequest, request: Request):
 
 
 @router.post("/payment/create-checkout")
-async def create_checkout_session(data: CheckoutRequest, request: Request):
+async def create_checkout_session(data: CheckoutRequest, user_id: str = Depends(get_current_user_id)):
     """
     Create Stripe checkout session for a plan
 
     This redirects the user to Stripe's hosted checkout page
     """
     try:
-        user_id = get_user_from_token(request)
 
         # Fetch plans from database
         plans = get_pricing_plans_from_db()
@@ -355,10 +339,9 @@ async def create_checkout_session(data: CheckoutRequest, request: Request):
 
 
 @router.get("/payment/status")
-async def get_payment_status(request: Request):
+async def get_payment_status(user_id: str = Depends(get_current_user_id)):
     """Get current user's payment/subscription status"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -392,7 +375,7 @@ async def get_payment_status(request: Request):
 
 
 @router.post("/payment/create-portal-session")
-async def create_customer_portal_session(request: Request):
+async def create_customer_portal_session(user_id: str = Depends(get_current_user_id)):
     """
     Create Stripe Customer Portal session
 
@@ -403,7 +386,6 @@ async def create_customer_portal_session(request: Request):
     - Update subscription
     """
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
