@@ -9,6 +9,7 @@ import sys
 from typing import Generator, Dict, Any
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from contextlib import contextmanager
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,6 +27,63 @@ from httpx import AsyncClient, ASGITransport
 
 
 # ============================================================================
+# MOCK DATABASE CONNECTION MANAGER
+# ============================================================================
+
+class MockCursor:
+    """Mock database cursor for testing"""
+    def __init__(self):
+        self.fetchone_value = None
+        self.fetchall_value = []
+        self._execute_calls = []
+
+    def execute(self, query, params=None):
+        self._execute_calls.append((query, params))
+
+    def fetchone(self):
+        return self.fetchone_value
+
+    def fetchall(self):
+        return self.fetchall_value
+
+    def close(self):
+        pass
+
+
+class MockConnection:
+    """Mock database connection for testing"""
+    def __init__(self):
+        self._cursor = MockCursor()
+
+    def cursor(self):
+        return self._cursor
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+
+# Global mock connection for tests to configure
+_mock_connection = MockConnection()
+
+
+def _mock_get_db_connection():
+    """Mock get_db_connection that returns our mock connection"""
+    @contextmanager
+    def _inner():
+        yield _mock_connection
+    return _inner()
+
+
+# ============================================================================
 # APP FIXTURES
 # ============================================================================
 
@@ -35,8 +93,9 @@ def app():
     Create FastAPI app instance for testing.
     Uses session scope for efficiency - app created once per test session.
     """
-    # Mock the database pool before importing main
-    with patch('db_pool.init_connection_pool'), \
+    # Patch db_pool.get_db_connection BEFORE importing main
+    with patch('db_pool.get_db_connection', _mock_get_db_connection), \
+         patch('db_pool.init_connection_pool'), \
          patch('db_pool.close_all_connections'), \
          patch('scheduler.start_scheduler'), \
          patch('scheduler.stop_scheduler'):
@@ -63,6 +122,16 @@ async def async_client(app) -> Generator[AsyncClient, None, None]:
         base_url="http://test"
     ) as ac:
         yield ac
+
+
+@pytest.fixture
+def mock_db_cursor():
+    """
+    Get access to the mock cursor for configuring test responses.
+    Reset cursor state before each test.
+    """
+    _mock_connection._cursor = MockCursor()
+    return _mock_connection._cursor
 
 
 # ============================================================================
