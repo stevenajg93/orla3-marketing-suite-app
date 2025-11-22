@@ -48,7 +48,7 @@ def migrate_brand_voice_assets():
         for asset in assets:
             try:
                 uploaded_at = datetime.fromisoformat(asset.get("uploaded_at","").replace("Z","+00:00"))
-            except:
+            except (ValueError, AttributeError):
                 uploaded_at = datetime.now()
             
             filename = asset.get("filename", "")
@@ -104,7 +104,7 @@ def migrate_content():
         for item in items:
             try:
                 created_at = datetime.fromisoformat(item.get("created_at","").replace("Z","+00:00"))
-            except:
+            except (ValueError, AttributeError):
                 created_at = datetime.now()
             
             cur.execute("""
@@ -145,7 +145,7 @@ def migrate_calendar():
         for event in events:
             try:
                 scheduled_date = datetime.fromisoformat(event.get("scheduled_date","").replace("Z","+00:00"))
-            except:
+            except (ValueError, AttributeError):
                 continue
             
             status = event.get("status", "draft")
@@ -191,11 +191,11 @@ def migrate_competitors():
         for comp in competitors:
             try:
                 last_analyzed = datetime.fromisoformat(comp.get("last_analyzed","").replace("Z","+00:00"))
-            except:
+            except (ValueError, AttributeError):
                 last_analyzed = None
             try:
                 added_at = datetime.fromisoformat(comp.get("added_at","").replace("Z","+00:00"))
-            except:
+            except (ValueError, AttributeError):
                 added_at = datetime.now()
             
             cur.execute("""

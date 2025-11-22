@@ -45,7 +45,7 @@ async def get_unsplash_image(keyword: str) -> str:
             data = response.json()
             if data.get("results"):
                 return data["results"][0]["urls"]["regular"]
-    except:
+    except Exception:
         pass
     
     return "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200"

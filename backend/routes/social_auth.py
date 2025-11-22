@@ -228,7 +228,7 @@ def verify_oauth_state(state: str) -> tuple[str, str, Optional[str]]:
                 try:
                     meta_dict = json.loads(metadata) if isinstance(metadata, str) else metadata
                     code_verifier = meta_dict.get("code_verifier")
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):
                     pass
 
             # Delete used state

@@ -371,7 +371,7 @@ async def generate_image(image_request: ImageGenerateRequest, request: Request):
                 try:
                     error_data = response.json()
                     logger.error(f"❌ Error JSON: {error_data}")
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):
                     pass
                 return ImageGenerateResponse(
                     success=False,

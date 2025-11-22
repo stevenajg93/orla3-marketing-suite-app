@@ -199,7 +199,7 @@ async def publish_event_now(event_id: str, request: Request):
         if event.get('notes'):
             try:
                 notes_data = json.loads(event['notes']) if isinstance(event['notes'], str) else event['notes']
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):
                 pass
 
         # Call the publisher endpoint

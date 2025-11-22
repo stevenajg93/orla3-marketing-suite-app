@@ -372,7 +372,7 @@ async def process_user_auto_replies(user_settings: Dict, cursor, conn):
     if isinstance(platforms, str):
         try:
             platforms = json.loads(platforms)
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):
             platforms = []
 
     logger.info(f"Processing auto-replies for user {user_id}, platforms: {platforms}")
@@ -407,7 +407,7 @@ async def process_user_auto_replies(user_settings: Dict, cursor, conn):
         if isinstance(metadata, str):
             try:
                 metadata = json.loads(metadata)
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):
                 metadata = {}
 
         # Fetch comments based on platform

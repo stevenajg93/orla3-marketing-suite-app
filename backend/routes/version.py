@@ -9,14 +9,14 @@ def get_git_commit():
     """Get current git commit hash"""
     try:
         return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-    except:
+    except Exception:
         return "unknown"
 
 def get_git_branch():
     """Get current git branch"""
     try:
         return subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
-    except:
+    except Exception:
         return "unknown"
 
 @router.get("/version")
