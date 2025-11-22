@@ -28,3 +28,8 @@ email-validator==2.3.0
 resend==2.19.0
 stripe==11.1.1
 APScheduler==3.10.4
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+httpx==0.25.2
