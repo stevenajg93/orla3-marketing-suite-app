@@ -1001,7 +1001,12 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 text-center text-gray-500">
-            <p>&copy; 2024 ORLA³ Studio. All rights reserved.</p>
+            <p className="mb-2">&copy; 2025 ORLA³ Studio. All rights reserved.</p>
+            <p className="text-sm">
+              <Link href="/privacy" className="hover:text-white transition underline">Privacy Policy</Link>
+              {" • "}
+              <Link href="/terms" className="hover:text-white transition underline">Terms of Service</Link>
+            </p>
           </div>
         </div>
       </footer>
