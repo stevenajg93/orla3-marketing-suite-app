@@ -2,11 +2,11 @@
 
 **Date:** November 22, 2025
 **Status:** ✅ PRODUCTION READY - Security Hardening Complete
-**Version:** 1.0.3
+**Version:** 1.0.4
 **Live URL:** https://marketing.orla3.com
 **Admin Portal:** https://marketing.orla3.com/admin
 **Backend API:** https://orla3-marketing-suite-app-production.up.railway.app
-**Latest Commit:** 4e323db - Security Hardening (Auth Dependency Refactor)
+**Latest Commit:** 1cabe59 - Zombie Subscription Fix (Stripe cancellation on user delete)
 
 ---
 
@@ -1434,7 +1434,7 @@ git push origin feature/your-feature-name
 
 ---
 
-**Document Version:** 2.1
+**Document Version:** 2.2
 **Last Updated:** November 22, 2025
 **Prepared By:** Claude Code AI Assistant
 **Validated By:** Steven Gillespie (s.gillespie@gecslabs.com)
