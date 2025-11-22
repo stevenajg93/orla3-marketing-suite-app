@@ -13,6 +13,8 @@ app = FastAPI(
 )
 
 # CORS Configuration - Allow both local development and production
+# allow_credentials=True is REQUIRED for HttpOnly cookie authentication
+# Note: When using credentials, allow_origins cannot be "*" - must be explicit list
 allowed_origins = [
     "http://localhost:3000",  # Local development
     "https://orla3-marketing-suite-app.vercel.app",  # Production Vercel
@@ -22,7 +24,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=True,  # Required for sending/receiving HttpOnly cookies
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"],

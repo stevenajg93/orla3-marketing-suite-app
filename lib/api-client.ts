@@ -1,6 +1,11 @@
 /**
  * API Client
  * Centralized HTTP client for all backend API calls
+ *
+ * Authentication uses HttpOnly cookies for security:
+ * - Tokens are set/cleared by the backend via Set-Cookie headers
+ * - All requests include credentials to send cookies cross-origin
+ * - No localStorage token storage (XSS protection)
  */
 
 import { config } from './config';
@@ -14,14 +19,6 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
-}
-
-/**
- * Get JWT access token from localStorage
- */
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('access_token');
 }
 
 /**
@@ -39,22 +36,17 @@ export async function apiRequest<T = any>(
     console.log(`[API] ${options?.method || 'GET'} ${url}`);
   }
 
-  // Get access token and add to headers
-  const token = getAccessToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options?.headers,
   };
 
-  // Add Authorization header if token exists
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   try {
+    // Include credentials to send/receive HttpOnly cookies
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Send cookies with cross-origin requests
     });
 
     if (!response.ok) {
@@ -69,20 +61,17 @@ export async function apiRequest<T = any>(
       }
 
       // If 401 Unauthorized AND it's a JWT auth error (not OAuth/Drive errors)
+      // With HttpOnly cookies, tokens are cleared by the backend via Set-Cookie
+      // We only need to redirect to login on auth failures
       if (response.status === 401) {
-        // Only clear tokens if it's an actual JWT authentication failure
-        // Don't clear for Google Drive OAuth errors or other 401s
         const isJwtAuthError =
           errorMessage?.includes('Invalid or expired token') ||
-          errorMessage?.includes('Missing authorization token') ||
-          errorMessage?.includes('Missing or invalid authorization header') ||
-          endpoint === '/auth/me'; // Always clear on /auth/me failure
+          errorMessage?.includes('Missing or invalid authorization') ||
+          endpoint === '/auth/me';
 
         if (isJwtAuthError && typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-
           // Redirect to login if on a protected page
+          // Backend has already cleared cookies via logout endpoint if needed
           if (window.location.pathname.startsWith('/dashboard')) {
             window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
           }

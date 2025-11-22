@@ -33,6 +33,11 @@ from utils.email import (
     send_password_reset_email,
     send_welcome_email
 )
+from utils.cookies import (
+    set_access_token_cookie,
+    set_refresh_token_cookie,
+    clear_auth_cookies
+)
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -254,13 +259,14 @@ async def register(request: RegisterRequest, req: Request):
 # ============================================================================
 
 @router.post("/auth/login")
-async def login(request: LoginRequest, req: Request):
+async def login(request: LoginRequest, req: Request, response: Response):
     """
     Authenticate user and return JWT tokens
 
     Returns:
-    - Access token (1 hour expiry)
-    - Refresh token (30 days expiry)
+    - Access token (1 hour expiry) - set in HttpOnly cookie
+    - Refresh token (30 days expiry) - set in HttpOnly cookie
+    - User data in response body
     """
     # Get user
     user = get_user_by_email(request.email)
@@ -394,10 +400,12 @@ async def login(request: LoginRequest, req: Request):
 
             logger.info(f"✅ User logged in: {user['email']} (ID: {user['id']})")
 
+            # Set tokens in HttpOnly cookies
+            set_access_token_cookie(response, access_token)
+            set_refresh_token_cookie(response, refresh_token)
+
             return {
                 "success": True,
-                "access_token": access_token,
-                "refresh_token": refresh_token,
                 "token_type": "bearer",
                 "user": {
                     "id": str(user['id']),
@@ -431,17 +439,25 @@ async def get_current_user(request: Request):
     """
     Get current authenticated user info
 
-    Requires: Bearer token in Authorization header
+    Reads token from:
+    1. HttpOnly cookie (preferred, more secure)
+    2. Authorization header (fallback for API clients)
     """
-    # Get token from Authorization header
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
+    # Try to get token from cookie first (HttpOnly cookie approach)
+    token = request.cookies.get('access_token')
+
+    # Fallback to Authorization header for API clients/backward compatibility
+    if not token:
+        auth_header = request.headers.get('authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.replace('Bearer ', '')
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid authorization header"
+            detail="Missing or invalid authorization"
         )
 
-    token = auth_header.replace('Bearer ', '')
     payload = decode_token(token)
 
     if not payload:
@@ -484,16 +500,32 @@ async def get_current_user(request: Request):
 # ============================================================================
 
 @router.post("/auth/refresh")
-async def refresh_access_token(request: RefreshTokenRequest):
+async def refresh_access_token(request: Request, response: Response, body: RefreshTokenRequest = None):
     """
     Refresh access token using refresh token
 
+    Reads refresh token from:
+    1. HttpOnly cookie (preferred)
+    2. Request body (fallback)
+
     Returns:
-    - New access token
-    - Same refresh token (until it expires)
+    - New access token (set in HttpOnly cookie)
     """
+    # Try to get refresh token from cookie first
+    refresh_token = request.cookies.get('refresh_token')
+
+    # Fallback to request body for API clients
+    if not refresh_token and body:
+        refresh_token = body.refresh_token
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing refresh token"
+        )
+
     # Decode refresh token
-    payload = decode_token(request.refresh_token)
+    payload = decode_token(refresh_token)
 
     if not payload or payload.get('type') != 'refresh':
         raise HTTPException(
@@ -507,7 +539,7 @@ async def refresh_access_token(request: RefreshTokenRequest):
     with get_db_connection() as conn:
         cur = conn.cursor()
         try:
-            token_hash = hash_token(request.refresh_token)
+            token_hash = hash_token(refresh_token)
 
             cur.execute("""
                 SELECT * FROM refresh_tokens
@@ -547,9 +579,11 @@ async def refresh_access_token(request: RefreshTokenRequest):
             """, (token_hash,))
             conn.commit()
 
+            # Set new access token in HttpOnly cookie
+            set_access_token_cookie(response, access_token)
+
             return {
                 "success": True,
-                "access_token": access_token,
                 "token_type": "bearer"
             }
 
@@ -562,30 +596,45 @@ async def refresh_access_token(request: RefreshTokenRequest):
 # ============================================================================
 
 @router.post("/auth/logout")
-async def logout(request: RefreshTokenRequest):
+async def logout(request: Request, response: Response, body: RefreshTokenRequest = None):
     """
-    Logout user by revoking refresh token
+    Logout user by revoking refresh token and clearing cookies
+
+    Reads refresh token from:
+    1. HttpOnly cookie (preferred)
+    2. Request body (fallback)
     """
-    with get_db_connection() as conn:
-        cur = conn.cursor()
-        try:
-            token_hash = hash_token(request.refresh_token)
+    # Try to get refresh token from cookie first
+    refresh_token = request.cookies.get('refresh_token')
 
-            cur.execute("""
-                UPDATE refresh_tokens
-                SET is_revoked = true, revoked_at = NOW()
-                WHERE token_hash = %s
-            """, (token_hash,))
+    # Fallback to request body for API clients
+    if not refresh_token and body:
+        refresh_token = body.refresh_token
 
-            conn.commit()
+    # Revoke token in database if we have one
+    if refresh_token:
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                token_hash = hash_token(refresh_token)
 
-            return {
-                "success": True,
-                "message": "Logged out successfully"
-            }
+                cur.execute("""
+                    UPDATE refresh_tokens
+                    SET is_revoked = true, revoked_at = NOW()
+                    WHERE token_hash = %s
+                """, (token_hash,))
 
-        finally:
-            cur.close()
+                conn.commit()
+            finally:
+                cur.close()
+
+    # Always clear cookies on logout
+    clear_auth_cookies(response)
+
+    return {
+        "success": True,
+        "message": "Logged out successfully"
+    }
 
 
 # ============================================================================

@@ -1,6 +1,7 @@
 """
 FastAPI Authentication Dependency
 Provides a standard way to extract and validate user_id from JWT tokens
+Supports both HttpOnly cookies (preferred) and Authorization header (fallback)
 """
 
 from fastapi import Depends, HTTPException, status, Request
@@ -11,14 +12,37 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.auth import decode_token
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
+
+
+def get_token_from_request(request: Request, credentials: Optional[HTTPAuthorizationCredentials]) -> Optional[str]:
+    """
+    Extract JWT token from request, checking cookie first then header.
+
+    Priority:
+    1. HttpOnly cookie (preferred, more secure)
+    2. Authorization header (fallback for API clients)
+    """
+    # Try cookie first (HttpOnly cookie approach)
+    token = request.cookies.get('access_token')
+
+    # Fallback to Authorization header
+    if not token and credentials:
+        token = credentials.credentials
+
+    return token
 
 
 async def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> str:
     """
     Extract and validate user_id from JWT token
+
+    Reads token from:
+    1. HttpOnly cookie (preferred, more secure)
+    2. Authorization header (fallback for API clients)
 
     Usage in routes:
     ```python
@@ -36,7 +60,15 @@ async def get_current_user_id(
     Raises:
         HTTPException: If token is missing, invalid, or expired
     """
-    token = credentials.credentials
+    token = get_token_from_request(request, credentials)
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     payload = decode_token(token)
 
     if not payload:
@@ -62,6 +94,10 @@ def get_user_from_request(request: Request) -> Optional[str]:
     """
     Alternative method: Extract user_id from Request object
 
+    Reads token from:
+    1. HttpOnly cookie (preferred, more secure)
+    2. Authorization header (fallback for API clients)
+
     Usage:
     ```python
     @router.get("/my-route")
@@ -74,12 +110,18 @@ def get_user_from_request(request: Request) -> Optional[str]:
     Returns:
         Optional[str]: The user_id if valid token exists, None otherwise
     """
-    auth_header = request.headers.get('authorization')
+    # Try cookie first (HttpOnly cookie approach)
+    token = request.cookies.get('access_token')
 
-    if not auth_header or not auth_header.startswith('Bearer '):
+    # Fallback to Authorization header
+    if not token:
+        auth_header = request.headers.get('authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.replace('Bearer ', '')
+
+    if not token:
         return None
 
-    token = auth_header.replace('Bearer ', '')
     payload = decode_token(token)
 
     if not payload:
@@ -89,10 +131,15 @@ def get_user_from_request(request: Request) -> Optional[str]:
 
 
 async def get_optional_user_id(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[str]:
     """
     Get user_id from JWT token if present, but don't require authentication
+
+    Reads token from:
+    1. HttpOnly cookie (preferred, more secure)
+    2. Authorization header (fallback for API clients)
 
     Useful for endpoints that behave differently for authenticated vs unauthenticated users
 
@@ -109,10 +156,11 @@ async def get_optional_user_id(
     Returns:
         Optional[str]: The user_id if valid token exists, None otherwise
     """
-    if not credentials:
+    token = get_token_from_request(request, credentials)
+
+    if not token:
         return None
 
-    token = credentials.credentials
     payload = decode_token(token)
 
     if not payload:

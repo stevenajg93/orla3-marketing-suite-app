@@ -34,25 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage and validate token on mount
+  // Check authentication state on mount via HttpOnly cookie
+  // The cookie is sent automatically with credentials: 'include'
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        try {
-          const response = await api.get('/auth/me');
-          if (response.success) {
-            setUser(response.user);
-          } else {
-            // Invalid token, clear it
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-          }
-        } catch (error) {
-          console.error('Failed to validate token:', error);
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+      try {
+        // This request will include the HttpOnly cookie automatically
+        const response = await api.get('/auth/me');
+        if (response.success) {
+          setUser(response.user);
         }
+      } catch (error) {
+        // No valid session - user is not logged in
+        // HttpOnly cookies are managed by the backend
+        console.debug('No active session');
       }
       setLoading(false);
     };
@@ -62,14 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      // Login sets HttpOnly cookies via Set-Cookie headers
       const response = await api.post('/auth/login', { email, password });
 
       if (response.success) {
-        // Store tokens
-        localStorage.setItem('access_token', response.access_token);
-        localStorage.setItem('refresh_token', response.refresh_token);
-
-        // Set user
+        // HttpOnly cookies are automatically set by the backend
+        // Set user state from response
         setUser(response.user);
       } else {
         throw new Error(response.detail || 'Login failed');
@@ -112,16 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        await api.post('/auth/logout', { refresh_token: refreshToken });
-      }
+      // Logout clears HttpOnly cookies via Set-Cookie headers
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear tokens and user state regardless of API call success
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      // Clear user state - cookies are cleared by the backend
       setUser(null);
     }
   };
