@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2 import sql
 import os
 import json
 from datetime import datetime, timedelta
@@ -155,26 +156,30 @@ async def list_all_users(
     with get_db_connection() as conn:
         cursor = conn.cursor()
         try:
-            # Build query with filters
+            # Build query with filters using safe SQL composition
             where_clauses = []
             params = []
 
             if search:
-                where_clauses.append("(u.email ILIKE %s OR u.name ILIKE %s)")
+                where_clauses.append(sql.SQL("(u.email ILIKE %s OR u.name ILIKE %s)"))
                 params.extend([f"%{search}%", f"%{search}%"])
 
             if status:
-                where_clauses.append("u.account_status = %s")
+                where_clauses.append(sql.SQL("u.account_status = %s"))
                 params.append(status)
 
             if plan:
-                where_clauses.append("u.plan = %s")
+                where_clauses.append(sql.SQL("u.plan = %s"))
                 params.append(plan)
 
-            where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+            # Build WHERE clause safely
+            if where_clauses:
+                where_sql = sql.SQL("WHERE ") + sql.SQL(" AND ").join(where_clauses)
+            else:
+                where_sql = sql.SQL("")
 
-            # Get users with organization info
-            cursor.execute(f"""
+            # Get users with organization info using safe SQL composition
+            base_query = sql.SQL("""
                 SELECT
                     u.id,
                     u.email,
@@ -206,19 +211,23 @@ async def list_all_users(
                 FROM users u
                 LEFT JOIN organizations o ON u.current_organization_id = o.id
                 LEFT JOIN organization_members om ON om.user_id = u.id AND om.organization_id = o.id
-                {where_sql}
+                {where_clause}
                 ORDER BY u.created_at DESC
                 LIMIT %s OFFSET %s
-            """, params + [limit, offset])
+            """).format(where_clause=where_sql)
+
+            cursor.execute(base_query, params + [limit, offset])
 
             users = [dict(row) for row in cursor.fetchall()]
 
-            # Get total count
-            cursor.execute(f"""
+            # Get total count using safe SQL composition
+            count_query = sql.SQL("""
                 SELECT COUNT(*)
                 FROM users u
-                {where_sql}
-            """, params)
+                {where_clause}
+            """).format(where_clause=where_sql)
+
+            cursor.execute(count_query, params)
 
             total_count = cursor.fetchone()['count']
 

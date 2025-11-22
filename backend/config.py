@@ -51,17 +51,26 @@ class Config:
     WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
 
     # JWT Authentication
-    JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production-PLEASE")
+    JWT_SECRET = os.getenv("JWT_SECRET")
     JWT_ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
     REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 days
-    
+
     @classmethod
     def validate(cls):
-        required = {"OPENAI_API_KEY": cls.OPENAI_API_KEY, "ANTHROPIC_API_KEY": cls.ANTHROPIC_API_KEY}
+        required = {
+            "OPENAI_API_KEY": cls.OPENAI_API_KEY,
+            "ANTHROPIC_API_KEY": cls.ANTHROPIC_API_KEY,
+            "JWT_SECRET": cls.JWT_SECRET
+        }
         missing = [key for key, value in required.items() if not value]
         if missing:
-            raise ValueError(f"Missing: {', '.join(missing)}")
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+
+        # Ensure JWT_SECRET is not a weak/default value
+        if cls.JWT_SECRET and len(cls.JWT_SECRET) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters long for security")
+
         return True
 
 Config.validate()

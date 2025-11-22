@@ -63,12 +63,14 @@ def get_user_from_token(request: Request):
 def load_brand_strategy(user_id: str):
     """Load brand strategy from PostgreSQL for a specific user"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
-        strategy = cur.fetchone()
-        cur.close()
-        return dict(strategy) if strategy else None
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * FROM brand_strategy WHERE user_id = %s ORDER BY created_at DESC LIMIT 1", (user_id,))
+                strategy = cur.fetchone()
+                return dict(strategy) if strategy else None
+            finally:
+                cur.close()
     except Exception as e:
         logger.error(f"Error loading brand strategy: {e}")
         return None
@@ -157,31 +159,32 @@ async def add_competitor(request: Request, competitor: Competitor):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    INSERT INTO competitors (user_id, name, industry, location, social_handles)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id, name, industry, location, social_handles, added_at
+                """, (
+                    user_id,
+                    competitor.name,
+                    competitor.industry,
+                    competitor.location,
+                    PgJson(competitor.handles.dict())
+                ))
 
-        cur.execute("""
-            INSERT INTO competitors (user_id, name, industry, location, social_handles)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id, name, industry, location, social_handles, added_at
-        """, (
-            user_id,
-            competitor.name,
-            competitor.industry,
-            competitor.location,
-            PgJson(competitor.handles.dict())
-        ))
-        
-        competitor_data = cur.fetchone()
-        conn.commit()
-        cur.close()
-        
-        logger.info(f"Added competitor: {competitor.name}")
-        return {"success": True, "competitor": competitor_data}
-        
+                competitor_data = cur.fetchone()
+                conn.commit()
+
+                logger.info(f"Added competitor: {competitor.name}")
+                return {"success": True, "competitor": competitor_data}
+            finally:
+                cur.close()
+
     except Exception as e:
         logger.error(f"Error adding competitor: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to add competitor")
 
 @router.get("/list")
 async def list_competitors(request: Request):
@@ -189,58 +192,59 @@ async def list_competitors(request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    SELECT
+                        c.*,
+                        ca.marketing_they_do_well,
+                        ca.gaps_they_miss as content_gaps,
+                        ca.positioning_messaging,
+                        ca.content_opportunities,
+                        ca.threat_level,
+                        ca.strategic_summary
+                    FROM competitors c
+                    LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+                    WHERE c.user_id = %s
+                    ORDER BY c.added_at DESC
+                """, (user_id,))
 
-        cur.execute("""
-            SELECT
-                c.*,
-                ca.marketing_they_do_well,
-                ca.gaps_they_miss as content_gaps,
-                ca.positioning_messaging,
-                ca.content_opportunities,
-                ca.threat_level,
-                ca.strategic_summary
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at DESC
-        """, (user_id,))
-        
-        competitors = cur.fetchall()
-        cur.close()
-        
-        # Format response to match original structure
-        formatted = []
-        for comp in competitors:
-            comp_dict = dict(comp)
-            
-            # Build analysis object if data exists
-            if comp_dict.get('marketing_they_do_well'):
-                comp_dict['analysis'] = {
-                    'marketing_they_do_well': comp_dict.pop('marketing_they_do_well'),
-                    'content_gaps': comp_dict.pop('content_gaps'),
-                    'positioning_messaging': comp_dict.pop('positioning_messaging'),
-                    'content_opportunities': comp_dict.pop('content_opportunities'),
-                    'threat_level': comp_dict.pop('threat_level'),
-                    'strategic_summary': comp_dict.pop('strategic_summary')
-                }
-            else:
-                comp_dict['analysis'] = None
-                comp_dict.pop('marketing_they_do_well', None)
-                comp_dict.pop('content_gaps', None)
-                comp_dict.pop('positioning_messaging', None)
-                comp_dict.pop('content_opportunities', None)
-                comp_dict.pop('threat_level', None)
-                comp_dict.pop('strategic_summary', None)
-            
-            formatted.append(comp_dict)
-        
-        return {"competitors": formatted}
-        
+                competitors = cur.fetchall()
+
+                # Format response to match original structure
+                formatted = []
+                for comp in competitors:
+                    comp_dict = dict(comp)
+
+                    # Build analysis object if data exists
+                    if comp_dict.get('marketing_they_do_well'):
+                        comp_dict['analysis'] = {
+                            'marketing_they_do_well': comp_dict.pop('marketing_they_do_well'),
+                            'content_gaps': comp_dict.pop('content_gaps'),
+                            'positioning_messaging': comp_dict.pop('positioning_messaging'),
+                            'content_opportunities': comp_dict.pop('content_opportunities'),
+                            'threat_level': comp_dict.pop('threat_level'),
+                            'strategic_summary': comp_dict.pop('strategic_summary')
+                        }
+                    else:
+                        comp_dict['analysis'] = None
+                        comp_dict.pop('marketing_they_do_well', None)
+                        comp_dict.pop('content_gaps', None)
+                        comp_dict.pop('positioning_messaging', None)
+                        comp_dict.pop('content_opportunities', None)
+                        comp_dict.pop('threat_level', None)
+                        comp_dict.pop('strategic_summary', None)
+
+                    formatted.append(comp_dict)
+
+                return {"competitors": formatted}
+            finally:
+                cur.close()
+
     except Exception as e:
         logger.error(f"Error listing competitors: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to list competitors")
 
 @router.delete("/{competitor_id}")
 async def delete_competitor(competitor_id: str, request: Request):
@@ -248,20 +252,21 @@ async def delete_competitor(competitor_id: str, request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Delete competitor (cascade will delete analysis) - security: ensure user owns this competitor
+                cur.execute("DELETE FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
+                conn.commit()
 
-        # Delete competitor (cascade will delete analysis) - security: ensure user owns this competitor
-        cur.execute("DELETE FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
-        conn.commit()
-        cur.close()
-        
-        logger.info(f"Deleted competitor: {competitor_id}")
-        return {"success": True}
-        
+                logger.info(f"Deleted competitor: {competitor_id}")
+                return {"success": True}
+            finally:
+                cur.close()
+
     except Exception as e:
         logger.error(f"Error deleting competitor: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to delete competitor")
 
 @router.post("/{competitor_id}/analyze")
 async def analyze_competitor(competitor_id: str, request: Request):
@@ -291,53 +296,52 @@ async def analyze_competitor(competitor_id: str, request: Request):
                 }
             )
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                # Get competitor (security: ensure user owns this competitor)
+                cur.execute("SELECT * FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
+                competitor = cur.fetchone()
 
-        # Get competitor (security: ensure user owns this competitor)
-        cur.execute("SELECT * FROM competitors WHERE id = %s AND user_id = %s", (competitor_id, user_id))
-        competitor = cur.fetchone()
+                if not competitor:
+                    raise HTTPException(status_code=404, detail="Competitor not found")
 
-        if not competitor:
-            cur.close()
-            raise HTTPException(status_code=404, detail="Competitor not found")
+                competitor = dict(competitor)
 
-        competitor = dict(competitor)
+                # Load brand strategy for context
+                brand_strategy = load_brand_strategy(user_id)
 
-        # Load brand strategy for context
-        brand_strategy = load_brand_strategy(user_id)
-        
-        brand_context = ""
-        if brand_strategy:
-            brand_context = f"""
+                brand_context = ""
+                if brand_strategy:
+                    brand_context = f"""
 OUR BRAND (Orla³):
 - Voice: {brand_strategy['brand_voice']['tone'] if isinstance(brand_strategy.get('brand_voice'), dict) else 'Professional'}
 - Pillars: {', '.join(brand_strategy.get('messaging_pillars', []))}
 - Target: {brand_strategy['target_audience']['primary'] if isinstance(brand_strategy.get('target_audience'), dict) else 'Creative professionals'}
 """
-        
-        # Call Claude API
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        
-        # Automatically research with Perplexity
-        logger.info(f"🔍 Researching {competitor['name']} with Perplexity AI...")
-        perplexity_research = await research_competitor_with_perplexity(
-            competitor['name'],
-            competitor.get('social_handles', {})
-        )
 
-        content_context = ""
-        if perplexity_research:
-            content_context = f"""
+                # Call Claude API
+                client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+                # Automatically research with Perplexity
+                logger.info(f"🔍 Researching {competitor['name']} with Perplexity AI...")
+                perplexity_research = await research_competitor_with_perplexity(
+                    competitor['name'],
+                    competitor.get('social_handles', {})
+                )
+
+                content_context = ""
+                if perplexity_research:
+                    content_context = f"""
 
 COMPETITOR RESEARCH (Real-time from Perplexity AI):
 {perplexity_research}
 """
-            logger.info(f"✅ Perplexity research complete - {len(perplexity_research)} chars")
-        else:
-            logger.warning(f"⚠️ Perplexity research failed - analysis will be limited")
+                    logger.info(f"✅ Perplexity research complete - {len(perplexity_research)} chars")
+                else:
+                    logger.warning(f"⚠️ Perplexity research failed - analysis will be limited")
 
-        prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
+                prompt = f"""You are a CONTENT MARKETING analyst for Orla³, a videographer marketplace.
 
 {brand_context}
 
@@ -365,91 +369,92 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
   "strategic_summary": "2-3 sentence MARKETING strategy summary"
 }}"""
 
-        logger.info(f"Calling Claude API for {competitor['name']}...")
-        
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        analysis_text = message.content[0].text
-        
-        logger.info(f"Claude response received: {len(analysis_text)} chars")
-        
-        # Parse JSON
-        try:
-            analysis = extract_json_from_text(analysis_text)
-            logger.info(f"Successfully parsed JSON with keys: {list(analysis.keys())}")
-        except Exception as parse_error:
-            logger.error(f"Failed to parse competitor analysis as JSON: {parse_error}")
-            analysis = {
-                "insights": analysis_text,
-                "threat_level": "unknown",
-                "strategic_summary": "Analysis format error - please re-analyze"
-            }
-        
-        # Save or update analysis in PostgreSQL
-        # Check if analysis exists
-        cur.execute("SELECT id FROM competitor_analyses WHERE competitor_id = %s", (competitor_id,))
-        existing = cur.fetchone()
-        
-        if existing:
-            # Update existing
-            cur.execute("""
-                UPDATE competitor_analyses
-                SET marketing_they_do_well = %s,
-                    gaps_they_miss = %s,
-                    positioning_messaging = %s,
-                    content_opportunities = %s,
-                    threat_level = %s,
-                    strategic_summary = %s,
-                    raw_analysis = %s,
-                    updated_at = NOW()
-                WHERE competitor_id = %s
-            """, (
-                analysis.get('marketing_they_do_well', []),
-                analysis.get('content_gaps', []),
-                analysis.get('positioning_messaging'),
-                analysis.get('content_opportunities', []),
-                analysis.get('threat_level', 'unknown'),
-                analysis.get('strategic_summary'),
-                PgJson(analysis),
-                competitor_id
-            ))
-        else:
-            # Insert new
-            cur.execute("""
-                INSERT INTO competitor_analyses (
-                    competitor_id, marketing_they_do_well, gaps_they_miss,
-                    positioning_messaging, content_opportunities,
-                    threat_level, strategic_summary, raw_analysis
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                competitor_id,
-                analysis.get('marketing_they_do_well', []),
-                analysis.get('content_gaps', []),
-                analysis.get('positioning_messaging'),
-                analysis.get('content_opportunities', []),
-                analysis.get('threat_level', 'unknown'),
-                analysis.get('strategic_summary'),
-                PgJson(analysis)
-            ))
-        
-        # Update competitor last_analyzed timestamp
-        cur.execute("UPDATE competitors SET last_analyzed = NOW() WHERE id = %s", (competitor_id,))
-        
-        conn.commit()
-        cur.close()
-        
-        logger.info(f"✅ Analyzed competitor: {competitor['name']}")
-        return {"success": True, "analysis": analysis}
-        
+                logger.info(f"Calling Claude API for {competitor['name']}...")
+
+                message = client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=2048,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                analysis_text = message.content[0].text
+
+                logger.info(f"Claude response received: {len(analysis_text)} chars")
+
+                # Parse JSON
+                try:
+                    analysis = extract_json_from_text(analysis_text)
+                    logger.info(f"Successfully parsed JSON with keys: {list(analysis.keys())}")
+                except Exception as parse_error:
+                    logger.error(f"Failed to parse competitor analysis as JSON: {parse_error}")
+                    analysis = {
+                        "insights": analysis_text,
+                        "threat_level": "unknown",
+                        "strategic_summary": "Analysis format error - please re-analyze"
+                    }
+
+                # Save or update analysis in PostgreSQL
+                # Check if analysis exists
+                cur.execute("SELECT id FROM competitor_analyses WHERE competitor_id = %s", (competitor_id,))
+                existing = cur.fetchone()
+
+                if existing:
+                    # Update existing
+                    cur.execute("""
+                        UPDATE competitor_analyses
+                        SET marketing_they_do_well = %s,
+                            gaps_they_miss = %s,
+                            positioning_messaging = %s,
+                            content_opportunities = %s,
+                            threat_level = %s,
+                            strategic_summary = %s,
+                            raw_analysis = %s,
+                            updated_at = NOW()
+                        WHERE competitor_id = %s
+                    """, (
+                        analysis.get('marketing_they_do_well', []),
+                        analysis.get('content_gaps', []),
+                        analysis.get('positioning_messaging'),
+                        analysis.get('content_opportunities', []),
+                        analysis.get('threat_level', 'unknown'),
+                        analysis.get('strategic_summary'),
+                        PgJson(analysis),
+                        competitor_id
+                    ))
+                else:
+                    # Insert new
+                    cur.execute("""
+                        INSERT INTO competitor_analyses (
+                            competitor_id, marketing_they_do_well, gaps_they_miss,
+                            positioning_messaging, content_opportunities,
+                            threat_level, strategic_summary, raw_analysis
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        competitor_id,
+                        analysis.get('marketing_they_do_well', []),
+                        analysis.get('content_gaps', []),
+                        analysis.get('positioning_messaging'),
+                        analysis.get('content_opportunities', []),
+                        analysis.get('threat_level', 'unknown'),
+                        analysis.get('strategic_summary'),
+                        PgJson(analysis)
+                    ))
+
+                # Update competitor last_analyzed timestamp
+                cur.execute("UPDATE competitors SET last_analyzed = NOW() WHERE id = %s", (competitor_id,))
+
+                conn.commit()
+
+                logger.info(f"✅ Analyzed competitor: {competitor['name']}")
+                return {"success": True, "analysis": analysis}
+            finally:
+                cur.close()
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error analyzing competitor: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to analyze competitor")
 
 @router.get("/insights")
 async def get_insights(request: Request):
@@ -457,19 +462,20 @@ async def get_insights(request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        cur.execute("SELECT * FROM competitors WHERE user_id = %s ORDER BY added_at DESC", (user_id,))
-        competitors = cur.fetchall()
-        cur.close()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * FROM competitors WHERE user_id = %s ORDER BY added_at DESC", (user_id,))
+                competitors = cur.fetchall()
+            finally:
+                cur.close()
 
         if not competitors:
             return {"insights": "No competitors added yet. Add competitors to get insights."}
 
         # Load brand strategy
         brand_strategy = load_brand_strategy(user_id)
-        
+
         brand_context = ""
         if brand_strategy:
             brand_context = f"""
@@ -478,14 +484,14 @@ OUR BRAND (Orla³):
 - Pillars: {', '.join(brand_strategy.get('messaging_pillars', []))}
 - Target: {brand_strategy['target_audience']['primary'] if isinstance(brand_strategy.get('target_audience'), dict) else 'Creative professionals'}
 """
-        
+
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        
+
         competitor_summary = "\n".join([
             f"- {c['name']}: {c.get('industry', 'Unknown industry')}"
             for c in competitors
         ])
-        
+
         prompt = f"""You are a CONTENT MARKETING strategist for Orla³.
 
 {brand_context}
@@ -522,14 +528,14 @@ Be specific and tactical about CONTENT & MARKETING only."""
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
         insights = message.content[0].text
-        
+
         return {"success": True, "insights": insights, "competitor_count": len(competitors)}
-        
+
     except Exception as e:
         logger.error(f"Error getting insights: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get insights")
 
 @router.get("/summary")
 async def get_competitor_summary(request: Request):
@@ -537,28 +543,29 @@ async def get_competitor_summary(request: Request):
     try:
         user_id = get_user_from_token(request)
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    SELECT c.*, ca.*
+                    FROM competitors c
+                    LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
+                    WHERE c.user_id = %s
+                    ORDER BY c.added_at DESC
+                """, (user_id,))
+                competitors = cur.fetchall()
+            finally:
+                cur.close()
 
-        cur.execute("""
-            SELECT c.*, ca.*
-            FROM competitors c
-            LEFT JOIN competitor_analyses ca ON c.id = ca.competitor_id
-            WHERE c.user_id = %s
-            ORDER BY c.added_at DESC
-        """, (user_id,))
-        competitors = cur.fetchall()
-        cur.close()
-        
         if not competitors:
             return {"success": False, "message": "No competitors added"}
-        
+
         # Filter analyzed competitors
         analyzed = [c for c in competitors if c.get('marketing_they_do_well')]
-        
+
         if not analyzed:
             return {"success": False, "message": "No competitors analyzed yet"}
-        
+
         # Aggregate insights
         summary = {
             "total_competitors": len(competitors),
@@ -573,38 +580,38 @@ async def get_competitor_summary(request: Request):
                 "minimal": []
             }
         }
-        
+
         for comp in analyzed:
             comp_name = comp['name']
-            
+
             # Aggregate what they do well (marketing)
             if comp.get('marketing_they_do_well'):
                 for item in comp['marketing_they_do_well']:
                     summary['marketing_they_do_well'].append(f"{comp_name}: {item}")
-            
+
             # Aggregate content gaps
             if comp.get('gaps_they_miss'):
                 for gap in comp['gaps_they_miss']:
                     summary['content_gaps'].append(gap)
-            
+
             # Aggregate content opportunities
             if comp.get('content_opportunities'):
                 summary['content_opportunities'].extend(comp['content_opportunities'])
-            
+
             # Positioning messaging
             if comp.get('positioning_messaging'):
                 summary['positioning_opportunities'].append({
                     'competitor': comp_name,
                     'positioning': comp['positioning_messaging']
                 })
-            
+
             # Threat level
             threat = comp.get('threat_level', 'unknown')
             if threat in summary['threat_assessment']:
                 summary['threat_assessment'][threat].append(comp_name)
-        
+
         return {"success": True, "summary": summary}
-        
+
     except Exception as e:
         logger.error(f"Error getting competitor summary: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get competitor summary")
