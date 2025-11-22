@@ -150,5 +150,7 @@ async def get_drive_file_url(file_id: str):
             "thumbnail_link": file_metadata.get('thumbnailLink')
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get video thumbnail")

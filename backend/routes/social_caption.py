@@ -203,9 +203,11 @@ Return ONLY the caption text, no explanations or meta-commentary."""
         logger.info(f"✅ Generated brand-aligned caption (GPT-4o) for user {user_id}: {caption_request.prompt[:50]}")
         return {"caption": caption, "success": True}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Caption generation error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate caption")
 
 @router.get("/trending-topics")
 async def get_trending_topics():
@@ -256,6 +258,8 @@ Provide 5-8 specific, actionable content ideas with suggested hashtags."""
     except httpx.TimeoutException:
         logger.error("Perplexity API timeout")
         raise HTTPException(status_code=504, detail="Trend research timed out")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching trends: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch trending topics")

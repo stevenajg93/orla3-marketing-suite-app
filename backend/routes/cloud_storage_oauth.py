@@ -613,7 +613,7 @@ async def disconnect_cloud_storage(request: Request, provider: str):
         except Exception as e:
             logger.error(f"Error disconnecting {provider}: {e}")
             conn.rollback()
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to disconnect cloud storage")
         finally:
             cur.close()
 

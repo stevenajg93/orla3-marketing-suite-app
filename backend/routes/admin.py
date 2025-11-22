@@ -386,10 +386,12 @@ async def grant_credits(
                 "reason": request.reason
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"Error granting credits: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to grant credits")
         finally:
             cursor.close()
 
@@ -430,10 +432,12 @@ async def update_account_status(
                 "reason": request.reason
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"Error updating account status: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to update account status")
         finally:
             cursor.close()
 
@@ -550,10 +554,12 @@ async def grant_super_admin(
                 "reason": request.reason
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"Error granting super admin: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to grant super admin privileges")
         finally:
             cursor.close()
 
@@ -612,10 +618,12 @@ async def revoke_super_admin(
                 "reason": request.reason
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"Error revoking super admin: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to revoke super admin privileges")
         finally:
             cursor.close()
 
@@ -701,7 +709,7 @@ async def delete_user(
         except Exception as e:
             conn.rollback()
             logger.error(f"Error deleting user: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to delete user")
         finally:
             cursor.close()
 

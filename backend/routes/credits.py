@@ -75,10 +75,12 @@ async def get_credit_balance(request: Request):
 
     except ValueError as e:
         logger.error(f"❌ Error getting credit balance: {str(e)}")
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail="User not found")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error getting credit balance: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get credit balance")
 
 
 @router.get("/credits/history")
@@ -103,9 +105,11 @@ async def get_transaction_history(request: Request, limit: int = 50):
             "count": len(transactions)
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error getting credit history: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get credit history")
 
 
 @router.get("/credits/costs")
@@ -160,4 +164,4 @@ async def check_credit_availability(request: Request, operation_type: str):
         raise
     except Exception as e:
         logger.error(f"❌ Error checking credit availability: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to check credit availability")

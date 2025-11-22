@@ -61,9 +61,11 @@ async def get_brand_assets():
             "secondary_color": brand_assets['secondary_color']
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching brand assets: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch brand assets")
 
 @router.post("/brand-assets/extract")
 async def extract_assets_from_guidelines():
@@ -160,11 +162,13 @@ async def extract_assets_from_guidelines():
             "message": f"Extracted {len(assets['brand_colors'])} colors and {len(assets['brand_fonts'])} fonts"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error extracting brand assets: {str(e)}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to extract brand assets")
 
 @router.get("/brand-assets/logo")
 async def get_logo_file():
@@ -209,6 +213,8 @@ async def get_logo_file():
         else:
             return {"success": False, "error": "No logo found"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching logo: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch logo")

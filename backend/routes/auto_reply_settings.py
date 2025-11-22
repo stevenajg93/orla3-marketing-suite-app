@@ -110,9 +110,11 @@ async def get_auto_reply_settings(request: Request):
             finally:
                 cur.close()
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching auto-reply settings: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch auto-reply settings")
 
 
 @router.put("/settings")
@@ -197,9 +199,11 @@ async def update_auto_reply_settings(settings: AutoReplySettings, request: Reque
             finally:
                 cur.close()
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error updating auto-reply settings: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to update auto-reply settings")
 
 
 @router.post("/settings/toggle")
@@ -244,6 +248,8 @@ async def toggle_auto_reply(request: Request):
             finally:
                 cur.close()
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error toggling auto-reply: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to toggle auto-reply")

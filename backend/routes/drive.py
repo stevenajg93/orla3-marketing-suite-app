@@ -186,9 +186,11 @@ async def list_videos(request: Request, folder_id: Optional[str] = None):
             "files": files,
             "total": len(files)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Drive API error for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Drive API error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to list videos from Google Drive")
 
 
 @router.get("/folders")
@@ -220,9 +222,11 @@ async def list_folders(request: Request, parent_folder_id: Optional[str] = None)
                 folders.append({"id": file['id'], "name": file['name']})
 
         return {"folders": folders}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error loading folders for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to list folders from Google Drive")
 
 
 @router.get("/status")
@@ -260,9 +264,11 @@ async def download_file(request: Request, file_id: str):
             "mimeType": file_metadata['mimeType'],
             "content": file_content
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error downloading file from Drive for user {user_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to download file from Google Drive")
 
 
 @router.get("/folder/{folder_id}/files")
@@ -291,9 +297,11 @@ async def list_folder_files(request: Request, folder_id: str):
 
         logger.info(f"Found {len(files)} files in folder {folder_id} for user {user_id}")
         return {"files": files}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error loading files for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to list files from Google Drive")
 
 
 @router.get("/search")
@@ -322,6 +330,8 @@ async def search_files(request: Request, query: str, file_type: Optional[str] = 
 
         logger.info(f"Search '{query}' found {len(files)} files for user {user_id}")
         return {"files": files}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error searching files for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to search files in Google Drive")

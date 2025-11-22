@@ -255,10 +255,12 @@ async def purchase_credits(data: CreditPurchaseRequest, request: Request):
 
     except stripe.error.StripeError as e:
         logger.error(f"❌ Stripe error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Payment processing error")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error creating credit purchase checkout: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to create checkout session")
 
 
 @router.post("/payment/create-checkout")
@@ -344,10 +346,12 @@ async def create_checkout_session(data: CheckoutRequest, request: Request):
 
     except stripe.error.StripeError as e:
         logger.error(f"❌ Stripe error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Payment processing error")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error creating checkout: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to create checkout session")
 
 
 @router.get("/payment/status")
@@ -380,9 +384,11 @@ async def get_payment_status(request: Request):
             }
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error getting payment status: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get payment status")
 
 
 @router.post("/payment/create-portal-session")
@@ -426,10 +432,12 @@ async def create_customer_portal_session(request: Request):
 
     except stripe.error.StripeError as e:
         logger.error(f"❌ Stripe error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Payment processing error")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error creating portal session: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to create portal session")
 
 
 @router.post("/payment/webhook")
@@ -538,9 +546,11 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
 
             raise processing_error
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Webhook error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Webhook processing error")
 
 
 async def handle_checkout_success(session):

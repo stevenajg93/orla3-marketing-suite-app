@@ -209,10 +209,12 @@ async def update_subscription_plan(plan_key: str, updates: SubscriptionPlanUpdat
                 "plan": dict(updated_plan)
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"❌ Error updating plan {plan_key}: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to update pricing plan")
 
         finally:
             cur.close()
@@ -398,10 +400,12 @@ async def update_credit_package(package_key: str, updates: CreditPackageUpdate, 
                 "package": dict(updated_package)
             }
 
+        except HTTPException:
+            raise
         except Exception as e:
             conn.rollback()
             logger.error(f"❌ Error updating package {package_key}: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="Failed to update credit package")
 
         finally:
             cur.close()

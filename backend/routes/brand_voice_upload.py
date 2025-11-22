@@ -329,9 +329,11 @@ async def upload_brand_assets(
 
         return {"success": True, "uploaded": uploaded_files}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error uploading brand assets: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to upload brand assets")
 
 @router.get("/assets")
 async def list_brand_assets(request: Request, category: str = None):
@@ -368,9 +370,11 @@ async def list_brand_assets(request: Request, category: str = None):
             "categories": UPLOAD_CATEGORIES
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error listing assets: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to list brand assets")
 
 @router.delete("/assets/{asset_id}")
 async def delete_brand_asset(asset_id: str, request: Request):
@@ -401,9 +405,11 @@ async def delete_brand_asset(asset_id: str, request: Request):
         logger.info(f"Deleted asset: {asset_id}")
         return {"success": True}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error deleting asset: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to delete brand asset")
 
 @router.get("/context/full")
 async def get_full_brand_context(request: Request):
@@ -471,9 +477,11 @@ and authentic communication style. Write content that matches this voice natural
             "categories": {cat: len(items) for cat, items in context_by_category.items()}
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting full context: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get brand context")
 
 @router.post("/import-from-drive")
 async def import_from_drive(request: Request, file_id: str, filename: str, category: str):
@@ -577,6 +585,8 @@ async def import_from_drive(request: Request, file_id: str, filename: str, categ
 
         return {"success": True, "asset": asset}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error importing from Drive: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to import from Google Drive")

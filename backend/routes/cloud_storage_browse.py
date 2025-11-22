@@ -281,9 +281,11 @@ async def get_dropbox_file_link(request: Request, file_id: str, context: Dict = 
                 "metadata": data.get('metadata')
             }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting Dropbox file link: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get Dropbox file link")
 
 
 # ============================================================================
@@ -435,9 +437,11 @@ async def get_onedrive_file_link(request: Request, item_id: str, context: Dict =
                 "thumbnail_url": item.get('thumbnails', [{}])[0].get('large', {}).get('url') if 'thumbnails' in item else None
             }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting OneDrive file link: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get OneDrive file link")
 
 
 # ============================================================================
@@ -721,7 +725,7 @@ async def get_google_drive_file_link(request: Request, file_id: str, context: Di
         raise
     except Exception as e:
         logger.error(f"Error getting Google Drive file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get Google Drive file")
 
 
 # ============================================================================
@@ -801,7 +805,7 @@ async def save_folder_selection(request: Request, body: FolderSelectionRequest):
             except Exception as e:
                 logger.error(f"Error saving folder selections: {e}")
                 conn.rollback()
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail="Failed to save folder selections")
             finally:
                 cursor.close()
 
@@ -848,7 +852,7 @@ async def get_selected_folders(request: Request, provider: str):
                 raise
             except Exception as e:
                 logger.error(f"Error getting selected folders: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail="Failed to get selected folders")
             finally:
                 cursor.close()
 
@@ -887,7 +891,7 @@ async def list_all_folders(request: Request, provider: str):
         raise
     except Exception as e:
         logger.error(f"Error listing folders for {provider}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to list cloud storage folders")
 
 
 async def _list_all_dropbox_folders(access_token: str) -> dict:
