@@ -3,7 +3,7 @@ Google Drive Routes - Multi-Tenant Per-User Implementation
 Handles Google Drive integration with per-user OAuth tokens from database
 """
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from google.oauth2.credentials import Credentials
@@ -18,7 +18,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 
 logger = setup_logger(__name__)
 router = APIRouter()
@@ -33,22 +33,6 @@ class DriveFile(BaseModel):
     webViewLink: Optional[str] = None
     thumbnailLink: Optional[str] = None
     size: Optional[str] = None
-
-
-
-def get_user_from_token(request: Request) -> str:
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 
 async def refresh_google_drive_token(user_id: str, refresh_token: str) -> str:
@@ -155,9 +139,8 @@ def get_drive_service(user_id: str):
 
 
 @router.get("/videos")
-async def list_videos(request: Request, folder_id: Optional[str] = None):
+async def list_videos(folder_id: Optional[str] = None, user_id: str = Depends(get_current_user_id)):
     """List video files from user's Google Drive"""
-    user_id = get_user_from_token(request)
     service = get_drive_service(user_id)
 
     if not service:
@@ -194,9 +177,8 @@ async def list_videos(request: Request, folder_id: Optional[str] = None):
 
 
 @router.get("/folders")
-async def list_folders(request: Request, parent_folder_id: Optional[str] = None):
+async def list_folders(parent_folder_id: Optional[str] = None, user_id: str = Depends(get_current_user_id)):
     """List folders in user's Google Drive"""
-    user_id = get_user_from_token(request)
     service = get_drive_service(user_id)
 
     if not service:
@@ -230,9 +212,8 @@ async def list_folders(request: Request, parent_folder_id: Optional[str] = None)
 
 
 @router.get("/status")
-async def drive_status(request: Request):
+async def drive_status(user_id: str = Depends(get_current_user_id)):
     """Check user's Google Drive connection status"""
-    user_id = get_user_from_token(request)
     service = get_drive_service(user_id)
 
     return {
@@ -242,9 +223,8 @@ async def drive_status(request: Request):
 
 
 @router.get("/file/{file_id}/download")
-async def download_file(request: Request, file_id: str):
+async def download_file(file_id: str, user_id: str = Depends(get_current_user_id)):
     """Download a file from user's Google Drive"""
-    user_id = get_user_from_token(request)
 
     try:
         service = get_drive_service(user_id)
@@ -272,9 +252,8 @@ async def download_file(request: Request, file_id: str):
 
 
 @router.get("/folder/{folder_id}/files")
-async def list_folder_files(request: Request, folder_id: str):
+async def list_folder_files(folder_id: str, user_id: str = Depends(get_current_user_id)):
     """List files in a specific folder from user's Google Drive"""
-    user_id = get_user_from_token(request)
     service = get_drive_service(user_id)
 
     if not service:
@@ -305,9 +284,8 @@ async def list_folder_files(request: Request, folder_id: str):
 
 
 @router.get("/search")
-async def search_files(request: Request, query: str, file_type: Optional[str] = None):
+async def search_files(query: str, file_type: Optional[str] = None, user_id: str = Depends(get_current_user_id)):
     """Search files in user's Google Drive"""
-    user_id = get_user_from_token(request)
     service = get_drive_service(user_id)
 
     if not service:

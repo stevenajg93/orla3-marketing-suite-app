@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import json
@@ -12,7 +12,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
 from db_pool import get_db_connection  # Use connection pool
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 from utils.credits import deduct_credits, InsufficientCreditsError
 
 router = APIRouter()
@@ -45,20 +45,6 @@ class CompetitorData(BaseModel):
     last_analyzed: Optional[str] = None
     added_at: str
 
-
-def get_user_from_token(request: Request):
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
 
 def load_brand_strategy(user_id: str):
     """Load brand strategy from PostgreSQL for a specific user"""
@@ -154,10 +140,9 @@ Focus on their MARKETING and CONTENT, not their product features."""
         return ""
 
 @router.post("/add")
-async def add_competitor(request: Request, competitor: Competitor):
+async def add_competitor(competitor: Competitor, user_id: str = Depends(get_current_user_id)):
     """Add a new competitor to track"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -187,10 +172,9 @@ async def add_competitor(request: Request, competitor: Competitor):
         raise HTTPException(status_code=500, detail="Failed to add competitor")
 
 @router.get("/list")
-async def list_competitors(request: Request):
+async def list_competitors(user_id: str = Depends(get_current_user_id)):
     """Get all tracked competitors with their analyses"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -247,10 +231,9 @@ async def list_competitors(request: Request):
         raise HTTPException(status_code=500, detail="Failed to list competitors")
 
 @router.delete("/{competitor_id}")
-async def delete_competitor(competitor_id: str, request: Request):
+async def delete_competitor(competitor_id: str, user_id: str = Depends(get_current_user_id)):
     """Remove a competitor"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -269,10 +252,9 @@ async def delete_competitor(competitor_id: str, request: Request):
         raise HTTPException(status_code=500, detail="Failed to delete competitor")
 
 @router.post("/{competitor_id}/analyze")
-async def analyze_competitor(competitor_id: str, request: Request):
+async def analyze_competitor(competitor_id: str, user_id: str = Depends(get_current_user_id)):
     """Run brand-aware MARKETING analysis on competitor"""
     try:
-        user_id = get_user_from_token(request)
 
         # Check and deduct credits BEFORE analyzing (5 credits)
         try:
@@ -457,10 +439,9 @@ Return ONLY valid JSON with these exact keys. Do not wrap in markdown code block
         raise HTTPException(status_code=500, detail="Failed to analyze competitor")
 
 @router.get("/insights")
-async def get_insights(request: Request):
+async def get_insights(user_id: str = Depends(get_current_user_id)):
     """Get overall competitive MARKETING insights across all competitors"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()
@@ -538,10 +519,9 @@ Be specific and tactical about CONTENT & MARKETING only."""
         raise HTTPException(status_code=500, detail="Failed to get insights")
 
 @router.get("/summary")
-async def get_competitor_summary(request: Request):
+async def get_competitor_summary(user_id: str = Depends(get_current_user_id)):
     """Get structured summary of all competitor MARKETING analyses for Strategy Planner"""
     try:
-        user_id = get_user_from_token(request)
 
         with get_db_connection() as conn:
             cur = conn.cursor()

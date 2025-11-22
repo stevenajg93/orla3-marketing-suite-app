@@ -2,14 +2,14 @@
 Credit Management API Routes
 """
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import setup_logger
-from utils.auth import decode_token
+from utils.auth_dependency import get_current_user_id
 from utils.credits import (
     get_user_credits,
     get_credit_history,
@@ -22,23 +22,8 @@ router = APIRouter()
 logger = setup_logger(__name__)
 
 
-def get_user_from_token(request: Request) -> str:
-    """Extract user_id from JWT token"""
-    auth_header = request.headers.get('authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Missing authorization token")
-
-    token = auth_header.replace('Bearer ', '')
-    payload = decode_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    return payload.get('sub')  # user_id
-
-
 @router.get("/credits/balance")
-async def get_credit_balance(request: Request):
+async def get_credit_balance(user_id: str = Depends(get_current_user_id)):
     """
     Get user's current credit balance and allocation
 
@@ -53,7 +38,6 @@ async def get_credit_balance(request: Request):
         }
     """
     try:
-        user_id = get_user_from_token(request)
         credit_info = get_user_credits(user_id)
 
         # Calculate percentage used this month
@@ -84,7 +68,7 @@ async def get_credit_balance(request: Request):
 
 
 @router.get("/credits/history")
-async def get_transaction_history(request: Request, limit: int = 50):
+async def get_transaction_history(limit: int = 50, user_id: str = Depends(get_current_user_id)):
     """
     Get user's credit transaction history
 
@@ -92,7 +76,6 @@ async def get_transaction_history(request: Request, limit: int = 50):
         limit: Number of transactions to return (default: 50, max: 200)
     """
     try:
-        user_id = get_user_from_token(request)
 
         # Limit the limit
         limit = min(limit, 200)
@@ -126,7 +109,7 @@ async def get_operation_costs():
 
 
 @router.get("/credits/check/{operation_type}")
-async def check_credit_availability(request: Request, operation_type: str):
+async def check_credit_availability(operation_type: str, user_id: str = Depends(get_current_user_id)):
     """
     Check if user has enough credits for a specific operation
 
@@ -142,7 +125,6 @@ async def check_credit_availability(request: Request, operation_type: str):
         }
     """
     try:
-        user_id = get_user_from_token(request)
 
         # Get required credits
         required_credits = get_credit_cost(operation_type)
