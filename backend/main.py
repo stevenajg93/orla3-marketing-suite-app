@@ -129,7 +129,48 @@ async def shutdown_event():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "services": {"openai": bool(Config.OPENAI_API_KEY), "anthropic": bool(Config.ANTHROPIC_API_KEY), "unsplash": bool(Config.UNSPLASH_ACCESS_KEY)}}
+    """
+    Health check endpoint with database connectivity verification.
+    Used by monitoring services (UptimeRobot, etc.) to verify system health.
+    """
+    import os
+    import time
+    from datetime import datetime
+
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "services": {
+            "openai": bool(Config.OPENAI_API_KEY),
+            "anthropic": bool(Config.ANTHROPIC_API_KEY),
+            "unsplash": bool(Config.UNSPLASH_ACCESS_KEY),
+        },
+        "database": {"connected": False, "latency_ms": None},
+    }
+
+    # Check database connectivity
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        try:
+            import psycopg2
+            start_time = time.time()
+            conn = psycopg2.connect(database_url, connect_timeout=5)
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            latency_ms = round((time.time() - start_time) * 1000, 2)
+            conn.close()
+            health_status["database"]["connected"] = True
+            health_status["database"]["latency_ms"] = latency_ms
+        except Exception as e:
+            health_status["database"]["connected"] = False
+            health_status["database"]["error"] = str(e)[:100]  # Truncate error
+            health_status["status"] = "degraded"
+    else:
+        health_status["database"]["error"] = "DATABASE_URL not configured"
+        health_status["status"] = "degraded"
+
+    return health_status
 
 @app.get("/scheduler/status")
 def scheduler_status():
