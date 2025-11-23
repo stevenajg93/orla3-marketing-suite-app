@@ -10,6 +10,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:local": "E2E_LOCAL=true E2E_BASE_URL=http://localhost:3000 playwright test",
+    "type-check": "tsc --noEmit",
     "orla:automate": "node scripts/daily.js",
     "orla:report": "node scripts/report.js",
     "orla:engage": "node scripts/engage.js"
@@ -35,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^29.5.14",

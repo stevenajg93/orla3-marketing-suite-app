@@ -75,6 +75,39 @@ jobs:
       - name: Run tests
         run: npm test -- --passWithNoTests || echo "Test script not found, skipping"
 
+  # E2E Tests (Playwright)
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [frontend]  # Only run after frontend build succeeds
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=chromium
+        env:
+          E2E_BASE_URL: https://marketing.orla3.com
+          E2E_API_URL: https://orla3-marketing-suite-app-production.up.railway.app
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   # Security Scanning
   security:
     runs-on: ubuntu-latest
