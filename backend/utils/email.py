@@ -351,3 +351,124 @@ def send_welcome_email(to_email: str, user_name: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Failed to send welcome email to {to_email}: {str(e)}")
         return False
+
+
+def send_team_invitation_email(to_email: str, invitation_token: str, organization_name: str, inviter_name: str, role: str) -> bool:
+    """
+    Send team invitation email to non-existing user
+
+    Args:
+        to_email: Recipient email address
+        invitation_token: Unique invitation token
+        organization_name: Name of the organization
+        inviter_name: Name of the person who sent the invite
+        role: The role being offered (viewer, member, admin)
+
+    Returns:
+        True if email sent successfully, False otherwise
+    """
+    if not RESEND_API_KEY:
+        logger.warning(f"Skipping team invitation email to {to_email} (Resend not configured)")
+        return False
+
+    invitation_link = f"{FRONTEND_URL}/invite/accept?token={invitation_token}"
+
+    role_descriptions = {
+        'viewer': 'View content and analytics',
+        'member': 'Create and manage content',
+        'admin': 'Full access including team management'
+    }
+    role_description = role_descriptions.get(role, 'Access to the platform')
+
+    try:
+        params = {
+            "from": FROM_EMAIL,
+            "to": [to_email],
+            "subject": f"You're invited to join {organization_name} on Orla³",
+            "html": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a; padding: 40px 0;">
+                    <tr>
+                        <td align="center">
+                            <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #1e293b 0%, #4c1d95 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+                                <!-- Header -->
+                                <tr>
+                                    <td align="center" style="padding-bottom: 30px;">
+                                        <h1 style="margin: 0; font-size: 48px; font-weight: 900; background: linear-gradient(to right, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                            ORLA³
+                                        </h1>
+                                        <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 14px;">Marketing Automation Suite</p>
+                                    </td>
+                                </tr>
+
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 30px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; backdrop-filter: blur(10px);">
+                                        <h2 style="margin: 0 0 20px 0; color: #ffffff; font-size: 24px; font-weight: 700;">
+                                            You're Invited!
+                                        </h2>
+                                        <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 16px; line-height: 1.6;">
+                                            <strong>{inviter_name}</strong> has invited you to join <strong>{organization_name}</strong> on Orla³.
+                                        </p>
+
+                                        <!-- Role Info -->
+                                        <div style="margin: 20px 0; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                            <p style="margin: 0; color: #60a5fa; font-size: 14px; font-weight: 600;">
+                                                Your Role: {role.capitalize()}
+                                            </p>
+                                            <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 14px;">
+                                                {role_description}
+                                            </p>
+                                        </div>
+
+                                        <!-- CTA Button -->
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                                            <tr>
+                                                <td align="center">
+                                                    <a href="{invitation_link}"
+                                                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(to right, #3b82f6, #8b5cf6); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 16px; border-radius: 8px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                                                        Accept Invitation
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <p style="margin: 20px 0 0 0; color: #94a3b8; font-size: 14px; line-height: 1.5;">
+                                            This invitation expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td align="center" style="padding-top: 30px;">
+                                        <p style="margin: 0; color: #64748b; font-size: 12px;">
+                                            © 2024 Orla³ Studio. All rights reserved.
+                                        </p>
+                                        <p style="margin: 8px 0 0 0; color: #64748b; font-size: 12px;">
+                                            <a href="https://orla3.com" style="color: #60a5fa; text-decoration: none;">Learn More</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """
+        }
+
+        response = resend.Emails.send(params)
+        logger.info(f"✅ Team invitation email sent to {to_email} (ID: {response.get('id')})")
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Failed to send team invitation email to {to_email}: {str(e)}")
+        return False
