@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import Config
 from logger import setup_logger
 from middleware import UserContextMiddleware, RateLimitMiddleware
+from utils.monitoring import init_sentry
 
 logger = setup_logger(__name__)
+
+# Initialize Sentry for error monitoring (must be before app creation)
+init_sentry()
 
 app = FastAPI(
     title="Orla3 Marketing Automation API",
