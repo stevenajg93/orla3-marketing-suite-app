@@ -1441,6 +1441,40 @@ git push origin feature/your-feature-name
 
 ---
 
+### 📊 Uptime Monitoring Setup (UptimeRobot)
+
+To set up uptime monitoring with UptimeRobot (free tier: 50 monitors):
+
+1. **Create Account:** https://uptimerobot.com/signUp
+2. **Add Monitors:**
+
+   **Backend API Health (Required)**
+   - Type: HTTP(s)
+   - URL: `https://orla3-marketing-suite-app-production.up.railway.app/health`
+   - Monitoring Interval: 5 minutes
+   - Alert Contacts: Add your email
+
+   **Frontend (Required)**
+   - Type: HTTP(s)
+   - URL: `https://marketing.orla3.com`
+   - Monitoring Interval: 5 minutes
+
+   **Backend Root (Optional)**
+   - Type: HTTP(s)
+   - URL: `https://orla3-marketing-suite-app-production.up.railway.app/`
+   - Monitoring Interval: 5 minutes
+
+3. **Alert Settings:**
+   - Add email contacts for notifications
+   - Optional: Add Slack webhook for team alerts
+   - Optional: Add PagerDuty for critical alerts
+
+4. **Status Page (Optional):**
+   - Create public status page for customers
+   - URL: https://stats.uptimerobot.com/[your-page]
+
+---
+
 ## 📞 Support & Contact
 
 ### For Technical Issues:
