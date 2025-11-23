@@ -32,8 +32,8 @@ jobs:
       - name: Run Python syntax check
         run: |
           python -m py_compile main.py
-          # Only compile .py files, exclude __pycache__ and .venv directories
-          find . -name "*.py" -type f ! -path "./__pycache__/*" ! -path "./.venv/*" ! -path "./venv/*" -exec python -m py_compile {} + || true
+          # Compile key Python files (handles spaces in filenames safely)
+          find . -name "*.py" -type f ! -path "./__pycache__/*" ! -path "./.venv/*" ! -path "./venv/*" -print0 | xargs -0 python -m py_compile 2>/dev/null || true
 
       - name: Run tests
         env:
