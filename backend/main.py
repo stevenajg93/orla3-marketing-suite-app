@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import Config
 from logger import setup_logger
-from middleware import UserContextMiddleware
+from middleware import UserContextMiddleware, RateLimitMiddleware
 
 logger = setup_logger(__name__)
 
@@ -33,6 +33,10 @@ app.add_middleware(
 
 # User Context Middleware - Adds user_id to all requests for multi-tenant architecture
 app.add_middleware(UserContextMiddleware)
+
+# Rate Limiting Middleware - Protects against abuse and brute force attacks
+# Can be disabled via DISABLE_RATE_LIMITING=true environment variable
+app.add_middleware(RateLimitMiddleware)
 
 from routes import carousel, publisher, media, drive, draft, social, social_caption, brand_voice, brand_voice_upload, brand_assets, strategy, calendar, library, competitor, ai_generation, oauth, auth, cloud_storage_oauth, cloud_storage_browse, social_auth, payment, credits, social_engagement, social_discovery, auto_reply_settings, debug, admin, admin_pricing, organization, version, draft_campaign, analytics
 app.include_router(version.router, tags=["version"])
