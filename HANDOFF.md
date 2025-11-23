@@ -1233,35 +1233,38 @@ app/
 
 ### Current Limitations
 
-1. **TikTok Publishing:**
+1. **YouTube API Verification:**
+   - Status: ⏳ **In Progress** (submitted Nov 23, 2025)
+   - Timeline: 4-6 weeks for full review
+   - Progress: Homepage & Branding requirements ✅ passed
+   - Pending: Privacy policy, App functionality, Data access, Minimum scopes
+   - Action: Wait for Google Trust & Safety team review
+   - Note: Domain verification for `orla3.com` completed via Search Console
+
+2. **TikTok Publishing:**
    - Status: OAuth configured, awaiting app approval
    - Timeline: 1-3 business days
    - Impact: Cannot publish to TikTok until approved
    - Action: Monitor developer portal for approval
 
-2. **Analytics API:**
-   - Status: Frontend built with mock data
-   - Backend: Needs `/analytics` endpoint implementation
-   - Data: credit_transactions table exists, needs aggregation endpoint
+3. **Analytics API:** ✅ RESOLVED
+   - Backend endpoint implemented: `/analytics/track`
+   - Frontend integrated with real API
 
-3. **Team Invitations:**
-   - Status: Can add existing users only
-   - Limitation: Cannot invite non-users (no email invitation system)
-   - Workaround: Users must sign up first, then be invited
+4. **Team Invitations:** ✅ RESOLVED
+   - Email invitation system implemented with Resend
+   - Users can now be invited via email
 
 ### Non-Breaking Warnings
 
-1. **Email Deliverability:**
-   - Verification emails may go to spam
-   - Recommendation: Configure SendGrid/Mailgun for production
+1. **Email Deliverability:** ✅ RESOLVED
+   - Resend email service configured for production
 
-2. **Rate Limiting:**
-   - No rate limiting currently enforced
-   - Recommendation: Add rate limiting middleware for production scale
+2. **Rate Limiting:** ✅ RESOLVED
+   - slowapi middleware implemented with configurable limits
 
-3. **Image Upload:**
-   - Profile images use URLs only (not file uploads)
-   - Enhancement: Add S3/Cloudinary for direct uploads
+3. **Image Upload:** ✅ RESOLVED
+   - GCS (Google Cloud Storage) implemented for image uploads
 
 ---
 
@@ -1417,6 +1420,7 @@ git push origin feature/your-feature-name
 - [x] CI/CD pipeline (GitHub Actions) ✅ (November 23, 2025)
 - [ ] TikTok publishing (awaiting approval)
 - [x] Frontend testing (Jest) ✅ (November 23, 2025)
+- [ ] YouTube API verification (in progress - 4-6 weeks, submitted Nov 23, 2025)
 
 ---
 
