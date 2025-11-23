@@ -1422,6 +1422,23 @@ git push origin feature/your-feature-name
 - [x] Frontend testing (Jest) ✅ (November 23, 2025)
 - [ ] YouTube API verification (in progress - 4-6 weeks, submitted Nov 23, 2025)
 
+### 🎯 CTO Roadmap: Production Hardening (Prioritized)
+
+**Priority 1: Critical for Production**
+- [ ] **E2E Testing (Playwright)** - Test critical user flows: signup→verify→login, connect social→publish, subscribe→pay
+- [ ] **Database Backups** - Automated daily backups on Railway with tested restore procedure
+- [ ] **Secrets Audit** - Rotate exposed secrets, verify API key restrictions
+
+**Priority 2: Production Hardening**
+- [ ] **Logging & Observability** - Structured JSON logging, request correlation IDs, performance monitoring
+- [ ] **Health Checks & Alerting** - Enhanced /health endpoint with DB check, uptime monitoring (UptimeRobot)
+- [ ] **Error Handling** - User-friendly messages, retry logic for external APIs, circuit breakers
+
+**Priority 3: Scalability**
+- [ ] **Caching Layer** - Redis for sessions/tokens, cache AI responses
+- [ ] **Background Job Queue** - Move video generation, bulk publishing to workers (Celery/Redis)
+- [ ] **Database Optimization** - Add indexes, tune connection pooling, query monitoring
+
 ---
 
 ## 📞 Support & Contact
